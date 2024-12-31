@@ -236,8 +236,12 @@ public class AssetInfo {
     }
 
 #if UNITY_5_3 || UNITY_5_4 || UNITY_5_5 || UNITY_5_6 || UNITY_2018 || UNITY_2019 || UNITY_2017 || UNITY_2017_1_OR_NEWER
+#if UNITY_WEIXINMINIGAME
+    internal WXAssetBundleAsyncTask AsyncTask {
+#else
     internal BundleCreateAsyncTask AsyncTask {
-        get {
+#endif
+    get {
             return m_AsyncTask;
         }
     }
@@ -245,7 +249,11 @@ public class AssetInfo {
 
     private WWWFileLoadTask m_WWWTask = null;
 #if UNITY_5_3 || UNITY_5_4 || UNITY_5_5 || UNITY_5_6 || UNITY_2018 || UNITY_2019 || UNITY_2017 || UNITY_2017_1_OR_NEWER
+#if UNITY_WEIXINMINIGAME
+    private WXAssetBundleAsyncTask m_AsyncTask = null;
+#else
     private BundleCreateAsyncTask m_AsyncTask = null;
+#endif
 #endif
     private TaskList m_TaskList = null;
     private ITimer m_Timer = null;
@@ -495,8 +503,11 @@ public class AssetInfo {
             AddNoOwnerToTaskList(taskList, m_AsyncTask);
             return true;
         }
-
+#if UNITY_WEIXINMINIGAME
+        m_AsyncTask = WXAssetBundleAsyncTask.Create(mFileName, priority);
+#else
         m_AsyncTask = BundleCreateAsyncTask.Create(mFileName, priority);
+#endif
         if (m_AsyncTask != null) {
             // 优化AB加载
             /* 异步UNITY内部已经直接返回了AssetBundle通过AssetBundleRequest */
@@ -516,15 +527,15 @@ public class AssetInfo {
             m_AsyncTask.AddResultEvent(OnLocalAsyncResult);
         } else
             return false;
-	#if UNITY_EDITOR && UNITY_2017_1_OR_NEWER && USE_RECORD_LOADSCENENAME
+#if UNITY_EDITOR && UNITY_2017_1_OR_NEWER && USE_RECORD_LOADSCENENAME
 		InitLoadSceneName ();
-	#endif
+#endif
         return true;
     }
 
 #endif
 
-    public bool LoadWWW(TaskList taskList) {
+        public bool LoadWWW(TaskList taskList) {
         if (IsVaild())
             return true;
         if (string.IsNullOrEmpty(mFileName))
