@@ -7,8 +7,9 @@ using Utils;
 
 public class MiniGame_HttpRequest: DisposeObject
 {
-    public MiniGame_HttpRequest(string url) {
+    public MiniGame_HttpRequest(string url, bool isByteBufferRet = true) {
         m_Url = url;
+        m_IsByteBufferRet = isByteBufferRet;
     }
 
     private void _CallResult() {
@@ -20,7 +21,10 @@ public class MiniGame_HttpRequest: DisposeObject
             if (OnResult != null)
                 OnResult(false);
         } else if (m_Req.isDone) {
-            m_ResponeBuffer = m_Req.downloadHandler.data;
+            if (m_IsByteBufferRet)
+                m_ResponeBuffer = m_Req.downloadHandler.data;
+            else
+                m_ResponeText = m_Req.downloadHandler.text;
             m_Req = null;
             if (OnResult != null)
                 OnResult(true);
@@ -73,6 +77,7 @@ public class MiniGame_HttpRequest: DisposeObject
                 OnAbort();
         }
         m_ResponeBuffer = null;
+        m_ResponeText = string.Empty;
     }
 
     public Action OnAbort {
@@ -91,7 +96,16 @@ public class MiniGame_HttpRequest: DisposeObject
         }
     }
 
+    public string ResponeText {
+        get {
+            return m_ResponeText;
+        }
+
+    }
+
     private string m_Url = string.Empty;
+    private bool m_IsByteBufferRet = true;
     private UnityWebRequest m_Req = null;
     private byte[] m_ResponeBuffer = null;
+    private string m_ResponeText = string.Empty;
 }
