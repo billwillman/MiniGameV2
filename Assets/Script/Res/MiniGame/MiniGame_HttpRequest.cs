@@ -11,27 +11,53 @@ public class MiniGame_HttpRequest: DisposeObject
         m_Url = url;
     }
 
+    private void _CallResult() {
+        if (m_Req == null)
+            return;
+
+        if (m_Req.isHttpError || m_Req.isNetworkError) {
+            m_Req = null;
+            if (OnResult != null)
+                OnResult(false);
+        } else if (m_Req.isDone) {
+            m_ResponeBuffer = m_Req.downloadHandler.data;
+            m_Req = null;
+            if (OnResult != null)
+                OnResult(true);
+        }
+    }
+
     public IEnumerator Get() {
         Dispose();
         if (!string.IsNullOrEmpty(m_Url)) {
             m_Req = UnityWebRequest.Get(m_Url);
             yield return m_Req.SendWebRequest();
-            if (m_Req.isHttpError || m_Req.isNetworkError) {
-                m_Req = null;
-                if (OnResult != null)
-                    OnResult(false);
-            } else if (m_Req.isDone) {
-                m_ResponeBuffer = m_Req.downloadHandler.data;
-                m_Req = null;
-                if (OnResult != null)
-                    OnResult(true);
-            }
+            _CallResult();
         } else {
             if (OnResult != null) {
                 OnResult(false);
             }
             yield break;
         }
+    }
+
+    public IEnumerator Post(Dictionary<string, string> paramDict) {
+        Dispose();
+        if (paramDict == null || paramDict.Count <= 0 || string.IsNullOrEmpty(m_Url)) {
+            if (OnResult != null) {
+                OnResult(false);
+            }
+            yield break;
+        }
+        WWWForm form = new WWWForm();
+        foreach (var item in paramDict) {
+            if (!string.IsNullOrEmpty(item.Key)) {
+                form.AddField(item.Key, item.Value);
+            }
+        }
+        m_Req = UnityWebRequest.Post(m_Url, form);
+        yield return m_Req.SendWebRequest();
+        _CallResult();
     }
 
     protected override void OnFree(bool isManual) {
