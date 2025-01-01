@@ -81,6 +81,7 @@ public class MiniGame_ResProxyMgr: SingetonMono<MiniGame_ResProxyMgr>
                 // fileListÊý¾Ý
                 WXAssetBundleAsyncTask.Mapper = new FileListDataLoader(req.ResponeText);
                 //-------------------------
+                // ¼ÓÔØAssetBundles.xml
             }, (MiniGame_HttpRequest req) =>
             {
                 if (onAbort != null)
