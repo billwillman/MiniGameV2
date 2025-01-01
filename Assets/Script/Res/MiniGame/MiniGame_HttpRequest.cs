@@ -19,7 +19,7 @@ public class MiniGame_HttpRequest: DisposeObject
         if (m_Req.isHttpError || m_Req.isNetworkError) {
             m_Req = null;
             if (OnResult != null)
-                OnResult(false);
+                OnResult(this, false);
         } else if (m_Req.isDone) {
             if (m_IsByteBufferRet)
                 m_ResponeBuffer = m_Req.downloadHandler.data;
@@ -27,7 +27,7 @@ public class MiniGame_HttpRequest: DisposeObject
                 m_ResponeText = m_Req.downloadHandler.text;
             m_Req = null;
             if (OnResult != null)
-                OnResult(true);
+                OnResult(this, true);
         }
     }
 
@@ -39,7 +39,7 @@ public class MiniGame_HttpRequest: DisposeObject
             _CallResult();
         } else {
             if (OnResult != null) {
-                OnResult(false);
+                OnResult(this, false);
             }
             yield break;
         }
@@ -49,7 +49,7 @@ public class MiniGame_HttpRequest: DisposeObject
         Dispose();
         if (paramDict == null || paramDict.Count <= 0 || string.IsNullOrEmpty(m_Url)) {
             if (OnResult != null) {
-                OnResult(false);
+                OnResult(this, false);
             }
             yield break;
         }
@@ -74,18 +74,18 @@ public class MiniGame_HttpRequest: DisposeObject
             }
             m_Req = null;
             if (isAbort && OnAbort != null)
-                OnAbort();
+                OnAbort(this);
         }
         m_ResponeBuffer = null;
         m_ResponeText = string.Empty;
     }
 
-    public Action OnAbort {
+    public Action<MiniGame_HttpRequest> OnAbort {
         get;
         set;
     }
 
-    public Action<bool> OnResult {
+    public Action<MiniGame_HttpRequest, bool> OnResult {
         get;
         set;
     }
