@@ -10,7 +10,6 @@ public class MiniGame_ResProxyMgr: SingetonMono<MiniGame_ResProxyMgr>
 {
     public string CDNRoot = string.Empty;
     public string AppResVersion = string.Empty;
-    private FileListDataLoader m_FileListLoader = null;
     public string ResVersion {
         get;
         set;
@@ -36,21 +35,20 @@ public class MiniGame_ResProxyMgr: SingetonMono<MiniGame_ResProxyMgr>
     }
 
     protected void Dispose() {
-        m_FileListLoader = null;
         ResVersion = string.Empty;
         StopAllCoroutines(); // 禁用所有Coroutines
 #if UNITY_WEIXINMINIGAME
         WXAssetBundleAsyncTask.CDN_RootDir = string.Empty;
+        WXAssetBundleAsyncTask.Mapper = null;
 #endif
     }
 
     public bool RequestStart(Action<bool> onFinish, Action onAbort) {
+#if UNITY_WEIXINMINIGAME
         Dispose();
         if (string.IsNullOrEmpty(CDNRoot) || string.IsNullOrEmpty(AppResVersion))
             return false;
-#if UNITY_WEIXINMINIGAME
         WXAssetBundleAsyncTask.CDN_RootDir = string.Format("{0}/{1}", CDNRoot, AppResVersion);
-#endif
         string versionUrl = GenerateCDN_AppResVersion_Url("version.txt");
         RequestFile(versionUrl, (MiniGame_HttpRequest req, bool isResult) =>
         {
@@ -81,7 +79,7 @@ public class MiniGame_ResProxyMgr: SingetonMono<MiniGame_ResProxyMgr>
                     return;
                 }
                 // fileList数据
-                m_FileListLoader = new FileListDataLoader(req.ResponeText);
+                WXAssetBundleAsyncTask.Mapper = new FileListDataLoader(req.ResponeText);
                 //-------------------------
             }, (MiniGame_HttpRequest req) =>
             {
@@ -94,5 +92,9 @@ public class MiniGame_ResProxyMgr: SingetonMono<MiniGame_ResProxyMgr>
                 onAbort();
         });
         return true;
+#else
+        onFinish(true);
+        return true;
+#endif
     }
 }

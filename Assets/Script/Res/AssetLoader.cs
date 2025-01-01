@@ -29,6 +29,13 @@ using Utils;
 using WeChatWASM;
 #endif
 
+#if UNITY_WEIXINMINIGAME
+public interface IWXAssetBundleMapper
+{
+    string GetCDNFileName(string oriFileName);
+}
+#endif
+
 public class AsyncLoadKeyComparser : StructComparser<AsyncLoadKey> { }
 
 public struct AsyncLoadKey : IEquatable<AsyncLoadKey> {

@@ -116,11 +116,17 @@ public abstract class ITask
 public class WXAssetBundleAsyncTask: ITask
 {
 	public static string CDN_RootDir = string.Empty; // 设置CDN的地址
+	public static IWXAssetBundleMapper Mapper = null;
 	public WXAssetBundleAsyncTask() {}
 	public WXAssetBundleAsyncTask(string createFileName, int priority = 0) {
 		if (string.IsNullOrEmpty(createFileName)) {
 			TaskFail();
 			return;
+		}
+		if (Mapper != null) {
+			string urlFileName = Mapper.GetCDNFileName(createFileName);
+			if (!string.IsNullOrEmpty(urlFileName))
+				createFileName = urlFileName;
 		}
 		m_FileName = createFileName;
 		m_Priority = priority;
