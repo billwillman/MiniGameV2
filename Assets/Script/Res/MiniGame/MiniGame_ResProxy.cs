@@ -39,12 +39,18 @@ public class MiniGame_ResProxyMgr: SingetonMono<MiniGame_ResProxyMgr>
         m_FileListLoader = null;
         ResVersion = string.Empty;
         StopAllCoroutines(); // Ω˚”√À˘”–Coroutines
+#if UNITY_WEIXINMINIGAME
+        WXAssetBundleAsyncTask.CDN_RootDir = string.Empty;
+#endif
     }
 
     public bool RequestStart(Action<bool> onFinish, Action onAbort) {
         Dispose();
         if (string.IsNullOrEmpty(CDNRoot) || string.IsNullOrEmpty(AppResVersion))
             return false;
+#if UNITY_WEIXINMINIGAME
+        WXAssetBundleAsyncTask.CDN_RootDir = string.Format("{0}/{1}", CDNRoot, AppResVersion);
+#endif
         string versionUrl = GenerateCDN_AppResVersion_Url("version.txt");
         RequestFile(versionUrl, (MiniGame_HttpRequest req, bool isResult) =>
         {
