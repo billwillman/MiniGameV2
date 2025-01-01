@@ -10,7 +10,7 @@ public class MiniGame_ResProxyMgr: SingetonMono<MiniGame_ResProxyMgr>
 {
     public string CDNRoot = string.Empty;
     public string AppResVersion = string.Empty;
-
+    private FileListDataLoader m_FileListLoader = null;
     public string ResVersion {
         get;
         set;
@@ -35,9 +35,14 @@ public class MiniGame_ResProxyMgr: SingetonMono<MiniGame_ResProxyMgr>
         return ret;
     }
 
-    public bool RequestStart(Action<bool> onFinish, Action onAbort) {
+    protected void Dispose() {
+        m_FileListLoader = null;
         ResVersion = string.Empty;
         StopAllCoroutines(); // 禁用所有Coroutines
+    }
+
+    public bool RequestStart(Action<bool> onFinish, Action onAbort) {
+        Dispose();
         if (string.IsNullOrEmpty(CDNRoot) || string.IsNullOrEmpty(AppResVersion))
             return false;
         string versionUrl = GenerateCDN_AppResVersion_Url("version.txt");
@@ -64,7 +69,13 @@ public class MiniGame_ResProxyMgr: SingetonMono<MiniGame_ResProxyMgr>
                         onFinish(false);
                     return;
                 }
+                if (string.IsNullOrEmpty(req.ResponeText)) {
+                    if (onFinish != null)
+                        onFinish(false);
+                    return;
+                }
                 // fileList数据
+                m_FileListLoader = new FileListDataLoader(req.ResponeText);
                 //-------------------------
             }, (MiniGame_HttpRequest req) =>
             {
