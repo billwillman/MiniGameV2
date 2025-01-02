@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: bd1681832b3d9f849b626a52fab41091
+guid: XS4esyKsW3ijxbQ3GJ1UfOhN4VanMKDC6z2Rks45q3g19gA/UaxbSvU=
 PluginImporter:
   externalObjects: {}
   serializedVersion: 2
@@ -20,7 +20,8 @@ PluginImporter:
         Exclude Editor: 0
         Exclude Linux64: 0
         Exclude OSXUniversal: 0
-        Exclude WebGL: 0
+        Exclude WebGL: 1
+        Exclude WeixinMiniGame: 1
         Exclude Win: 0
         Exclude Win64: 0
         Exclude WindowsStoreApps: 0
@@ -44,7 +45,7 @@ PluginImporter:
       settings:
         CPU: x86_64
         DefaultValueInitialized: true
-        OS: AnyOS
+        OS: Windows
   - first:
       Standalone: Linux64
     second:
@@ -72,7 +73,12 @@ PluginImporter:
   - first:
       WebGL: WebGL
     second:
-      enabled: 1
+      enabled: 0
+      settings: {}
+  - first:
+      WeixinMiniGame: WeixinMiniGame
+    second:
+      enabled: 0
       settings: {}
   - first:
       Windows Store Apps: WindowsStoreApps
