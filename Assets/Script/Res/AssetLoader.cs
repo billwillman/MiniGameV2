@@ -2842,7 +2842,8 @@ private string GetCheckFileName(ref Dictionary<string, string> fileRealMap, stri
         LoadConfigProcess = 0f;
         float startTime = Time.realtimeSinceStartup;
         string fileName = GetXmlFileName();
-        fileName = WXAssetBundleAsyncTask.GetCDNFileName(fileName);
+        string transFileName = WXAssetBundleAsyncTask.GetCDNFileName(fileName);
+        bool isLocalFile = transFileName == fileName;
 
         Action doErrorFunc = () =>
         {
@@ -2851,12 +2852,10 @@ private string GetCheckFileName(ref Dictionary<string, string> fileRealMap, stri
             if (OnFinishEvent != null)
                 OnFinishEvent(false);
         };
-#if USE_DEP_BINARY && USE_DEP_BINARY_AB
-        Debug.Log("[DoWxAssetBundleXml] " + fileName);
-        var req = WXAssetBundle.GetAssetBundle(fileName);
-        yield return req.SendWebRequest();
-        if (req.isDone) {
-            AssetBundle bundle = (req.downloadHandler as DownloadHandlerWXAssetBundle).assetBundle;
+
+        AssetBundle bundle = null;
+        Action doOkFunc = () =>
+        {
             if (bundle != null) {
                 float curTime = Time.realtimeSinceStartup;
                 float usedTime = curTime - startTime;
@@ -2887,6 +2886,20 @@ private string GetCheckFileName(ref Dictionary<string, string> fileRealMap, stri
             } else {
                 doErrorFunc();
             }
+        };
+
+#if USE_DEP_BINARY && USE_DEP_BINARY_AB
+        Debug.Log("[DoWxAssetBundleXml] " + fileName);
+        if (isLocalFile) {
+            bundle = WXAssetBundle.LoadFromFile(fileName);
+            doOkFunc();
+            yield break;
+        }
+        var req = WXAssetBundle.GetAssetBundle(fileName);
+        yield return req.SendWebRequest();
+        if (req.isDone) {
+            bundle = (req.downloadHandler as DownloadHandlerWXAssetBundle).assetBundle;
+            doOkFunc();
         } else if (req.isHttpError || req.isNetworkError || req.isNetworkError) {
             doErrorFunc();
         }
