@@ -43,13 +43,11 @@ namespace SOC.GamePlay
 
         void OnRequestStartFinish(bool isOk) {
             if (isOk) {
-                ResourceMgr.Instance.LoadConfigs(OnResConfigResult, this,
 #if UNITY_WEIXINMINIGAME
-                false
+                ResourceMgr.Instance.WxLoadConfigs(OnResConfigResult, this);
 #else
-                true
+                ResourceMgr.Instance.LoadConfigs(OnResConfigResult, null, true);
 #endif
-                );
             } else {
                 Debug.LogError("[OnRequestStartFinish] Failed.");
             }

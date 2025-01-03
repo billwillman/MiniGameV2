@@ -16,7 +16,7 @@ public class MiniGame_HttpRequest: DisposeObject
         if (m_Req == null)
             return;
 
-        if (m_Req.isHttpError || m_Req.isNetworkError) {
+        if (m_Req.isHttpError || m_Req.isNetworkError || m_Req.isNetworkError) {
             m_Req = null;
             if (OnResult != null)
                 OnResult(this, false);
@@ -67,7 +67,7 @@ public class MiniGame_HttpRequest: DisposeObject
     protected override void OnFree(bool isManual) {
         if (m_Req != null) {
             bool isAbort = false;
-            if (!m_Req.isDone && !m_Req.isHttpError && !m_Req.isNetworkError) {
+            if (!m_Req.isDone && !m_Req.isHttpError && !m_Req.isNetworkError && !m_Req.isNetworkError) {
                 m_Req.Abort();
                 m_Req.Dispose();
                 isAbort = true;

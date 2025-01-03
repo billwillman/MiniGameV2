@@ -19,6 +19,15 @@ public class ResourceMgr : Singleton<ResourceMgr>
         }
     }
 
+#if UNITY_WEIXINMINIGAME
+    public void WxLoadConfigs(Action<bool> OnFinish, MonoBehaviour async) {
+        AssetLoader loader = mAssetLoader as AssetLoader;
+        if (loader != null) {
+            loader.LoadConfigs_WxPlatform(OnFinish, async);
+        }
+    }
+#endif
+
     public bool InteralLoadScene(string sceneName) {
         if (mAssetLoader.OnSceneLoad(sceneName)) {
             DebugSceneLoadInfo();

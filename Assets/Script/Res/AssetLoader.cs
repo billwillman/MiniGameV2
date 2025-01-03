@@ -2837,9 +2837,72 @@ private string GetCheckFileName(ref Dictionary<string, string> fileRealMap, stri
     }
 
 #if UNITY_WEIXINMINIGAME
-    // 微信平台专用
-    public void LoadConfigs_WxPlatform(Action<bool> OnFinishEvent, MonoBehaviour async = null, bool isThreadMode = false) {
 
+    IEnumerator DoWxAssetBundleXml(Action<bool> OnFinishEvent, MonoBehaviour async) {
+        LoadConfigProcess = 0f;
+        float startTime = Time.realtimeSinceStartup;
+        string fileName = GetXmlFileName();
+        fileName = WXAssetBundleAsyncTask.GetCDNFileName(fileName);
+
+        Action doErrorFunc = () =>
+        {
+            Debug.LogErrorFormat("[LoadConfig]加載 {0} bundle失敗", fileName);
+            LoadConfigProcess = 1f;
+            if (OnFinishEvent != null)
+                OnFinishEvent(false);
+        };
+#if USE_DEP_BINARY && USE_DEP_BINARY_AB
+        var req = WXAssetBundle.GetAssetBundle(fileName);
+        yield return req.SendWebRequest();
+        if (req.isDone) {
+            AssetBundle bundle = (req.downloadHandler as DownloadHandlerWXAssetBundle).assetBundle;
+            if (bundle != null) {
+                float curTime = Time.realtimeSinceStartup;
+                float usedTime = curTime - startTime;
+                Debug.LogFormat("加载XML AB时间：{0}", usedTime.ToString());
+                startTime = curTime;
+#if USE_HAS_EXT
+                string name = Path.GetFileName(fileName);
+#else
+                string name = Path.GetFileNameWithoutExtension(fileName);
+#endif
+                TextAsset asset = bundle.LoadAsset<TextAsset>(name);
+                if (asset != null) {
+                    // #if USE_DEP_BINARY_HEAD
+                    //          LoadBinaryHeader(asset.bytes);
+                    //  #else
+                    LoadBinary(asset.bytes, OnFinishEvent, async, false);
+                    //  #endif
+                    usedTime = Time.realtimeSinceStartup - startTime;
+                    Debug.LogFormat("解析XML时间：{0}", usedTime.ToString());
+                    bundle.WXUnload(true);
+                } else {
+                    Debug.LogErrorFormat("[LoadConfig]读取TextAsset {0} 失敗", name);
+                    bundle.WXUnload(true);
+                    LoadConfigProcess = 1f;
+                    if (OnFinishEvent != null)
+                        OnFinishEvent(false);
+                }
+            } else {
+                doErrorFunc();
+            }
+        } else if (req.isHttpError || req.isNetworkError || req.isNetworkError) {
+            doErrorFunc();
+        }
+#else
+        doErrorFunc();
+        yield break;
+#endif
+    }
+
+    // 微信平台专用
+    public void LoadConfigs_WxPlatform(Action<bool> OnFinishEvent, MonoBehaviour async) {
+        if (async == null) {
+            OnFinishEvent(false);
+            return;
+        }
+        async.StopAllCoroutines();
+        async.StartCoroutine(DoWxAssetBundleXml(OnFinishEvent, async));
     }
     // ----------------
 #endif
