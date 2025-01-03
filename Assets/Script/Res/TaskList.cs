@@ -212,25 +212,23 @@ public class WXAssetBundleAsyncTask: ITask
 
 	public AssetBundle StartLoad() {
 		if (m_Req == null) {
-			if (m_Req != null) {
-				string url = GetCDNFileName(m_FileName);
-				/*
-				string url = CDN_RootDir;
-				if (string.IsNullOrEmpty(url))
-					url = m_FileName;
-				else {
-					if (url[url.Length - 1] != '/')
-						url += "/";
-					url += m_FileName;
-                }
-				*/
-				m_Req = WXAssetBundle.GetAssetBundle(url);
-				m_AsyncOpt = m_Req.SendWebRequest();
-				if (m_Req.isDone)
-					return (m_Req.downloadHandler as DownloadHandlerWXAssetBundle).assetBundle;
-				if (m_AsyncOpt != null)
-					m_AsyncOpt.priority = m_Priority;
+			string url = GetCDNFileName(m_FileName);
+			/*
+			string url = CDN_RootDir;
+			if (string.IsNullOrEmpty(url))
+				url = m_FileName;
+			else {
+				if (url[url.Length - 1] != '/')
+					url += "/";
+				url += m_FileName;
 			}
+			*/
+			m_Req = WXAssetBundle.GetAssetBundle(url);
+			m_AsyncOpt = m_Req.SendWebRequest();
+			if (m_Req.isDone)
+				return (m_Req.downloadHandler as DownloadHandlerWXAssetBundle).assetBundle;
+			if (m_AsyncOpt != null)
+				m_AsyncOpt.priority = m_Priority;
 		} else if (m_Req.isDone)
 			return (m_Req.downloadHandler as DownloadHandlerWXAssetBundle).assetBundle;
 
