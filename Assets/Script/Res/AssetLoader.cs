@@ -2837,7 +2837,6 @@ private string GetCheckFileName(ref Dictionary<string, string> fileRealMap, stri
     }
 
 #if UNITY_WEIXINMINIGAME
-
     IEnumerator DoWxAssetBundleXml(Action<bool> OnFinishEvent, MonoBehaviour async) {
         LoadConfigProcess = 0f;
         float startTime = Time.realtimeSinceStartup;
@@ -2868,11 +2867,7 @@ private string GetCheckFileName(ref Dictionary<string, string> fileRealMap, stri
 #endif
                 TextAsset asset = bundle.LoadAsset<TextAsset>(name);
                 if (asset != null) {
-                    // #if USE_DEP_BINARY_HEAD
-                    //          LoadBinaryHeader(asset.bytes);
-                    //  #else
                     LoadBinary(asset.bytes, OnFinishEvent, async, false);
-                    //  #endif
                     usedTime = Time.realtimeSinceStartup - startTime;
                     Debug.LogFormat("解析XML时间：{0}", usedTime.ToString());
                     bundle.WXUnload(true);
