@@ -2836,6 +2836,14 @@ private string GetCheckFileName(ref Dictionary<string, string> fileRealMap, stri
         return assetBundleFileName;
     }
 
+#if UNITY_WEIXINMINIGAME
+    // 微信平台专用
+    public void LoadConfigs_WxPlatform(Action<bool> OnFinishEvent, MonoBehaviour async = null, bool isThreadMode = false) {
+
+    }
+    // ----------------
+#endif
+
     // 手动调用读取配置, isThreadMode: 是否是多线程LOOM库的方式
     public void LoadConfigs(Action<bool> OnFinishEvent, MonoBehaviour async = null, bool isThreadMode = false) {
 
