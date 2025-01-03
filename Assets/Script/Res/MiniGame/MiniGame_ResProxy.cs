@@ -46,8 +46,10 @@ public class MiniGame_ResProxyMgr: SingetonMono<MiniGame_ResProxyMgr>
     public bool RequestStart(Action<bool> onFinish, Action onAbort) {
 #if UNITY_WEIXINMINIGAME
         Dispose();
-        if (string.IsNullOrEmpty(CDNRoot) || string.IsNullOrEmpty(AppResVersion))
-            return false;
+        if (string.IsNullOrEmpty(CDNRoot) || string.IsNullOrEmpty(AppResVersion)) {
+            onFinish(true); // 认为是本地读取
+            return true;
+        }
         WXAssetBundleAsyncTask.CDN_RootDir = string.Format("{0}/{1}", CDNRoot, AppResVersion);
         string versionUrl = GenerateCDN_AppResVersion_Url("version.txt");
         RequestFile(versionUrl, (MiniGame_HttpRequest req, bool isResult) =>

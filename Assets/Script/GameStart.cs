@@ -8,6 +8,7 @@ namespace SOC.GamePlay
 {
 
     [LuaCallCSharp]
+    [RequireComponent(typeof(MiniGame_ResProxyMgr))]
     public class GameStart : MonoBehaviour
     {
 
