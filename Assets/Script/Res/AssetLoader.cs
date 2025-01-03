@@ -2852,6 +2852,7 @@ private string GetCheckFileName(ref Dictionary<string, string> fileRealMap, stri
                 OnFinishEvent(false);
         };
 #if USE_DEP_BINARY && USE_DEP_BINARY_AB
+        Debug.Log("[DoWxAssetBundleXml] " + fileName);
         var req = WXAssetBundle.GetAssetBundle(fileName);
         yield return req.SendWebRequest();
         if (req.isDone) {
