@@ -24,6 +24,16 @@ namespace SOC.GamePlay
         [DoNotGen]
         public bool m_LogWriteAsync = true;
 
+        private MiniGame_ResProxyMgr m_ResProxyMgr = null;
+
+        protected MiniGame_ResProxyMgr ResProxyMgr {
+            get {
+                if (m_ResProxyMgr == null)
+                    m_ResProxyMgr = GetComponent<MiniGame_ResProxyMgr>();
+                return m_ResProxyMgr;
+            }
+        }
+
         // Start is called before the first frame update
         void Awake() {
             DontDestroyOnLoad(this.gameObject);
@@ -31,16 +41,25 @@ namespace SOC.GamePlay
             Instance = this;
         }
 
-        private void Start() {
-            ServerAttachLogFile();
-            InitLuaSearchFormatPath();
-            ResourceMgr.Instance.LoadConfigs(OnResConfigResult, this,
+        void OnRequestStartFinish(bool isOk) {
+            if (isOk) {
+                ResourceMgr.Instance.LoadConfigs(OnResConfigResult, this,
 #if UNITY_WEIXINMINIGAME
                 false
-                #else
+#else
                 true
 #endif
                 );
+            } else {
+                Debug.LogError("[OnRequestStartFinish] Failed.");
+            }
+        }
+
+        private void Start() {
+            ServerAttachLogFile();
+            InitLuaSearchFormatPath();
+            var resMgr = this.ResProxyMgr;
+            resMgr.RequestStart(OnRequestStartFinish, null);
         }
 
         void InitLuaSearchFormatPath() {
