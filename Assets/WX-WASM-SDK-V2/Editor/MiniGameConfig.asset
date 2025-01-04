@@ -14,12 +14,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ProjectConf:
     projectName: 
-    Appid: 
+    Appid: wxa303f39034798948
     CDN: 
     assetLoadType: 0
-    compressDataPackage: 0
+    compressDataPackage: 1
     VideoUrl: 
-    DST: 
+    DST: D:/MiniGameV2
     StreamCDN: 
     bundleHashLength: 32
     bundlePathIdentifier: StreamingAssets;
@@ -29,7 +29,7 @@ MonoBehaviour:
     HideAfterCallMain: 1
     preloadFiles: 
     Orientation: 0
-    bgImageSrc: Assets/WX-WASM-SDK-V2/Runtime/wechat-default/images/background.jpg
+    bgImageSrc: Assets/Script/XLua/Doc/logo.png
     dataFileSubPrefix: 
     maxStorage: 200
     defaultReleaseSize: 31457280

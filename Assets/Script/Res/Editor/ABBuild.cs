@@ -38,9 +38,7 @@ public enum eBuildPlatform
 	eBuildIOS,
 	eBuildAndroid,
 	eBuildDS, // DS平台
-#if UNITY_WEIXINMINIGAME
 	eBuildWX, // 微信
-#endif
 }
 
 // AssetBundle 文件打包类型
@@ -5094,12 +5092,11 @@ public static class AssetBundleBuild
 			rootManifest += "/Windows";
 			copyManifest += "/Windows";
 			break;
-#if UNITY_WEIXINMINIGAME
+
 			case eBuildPlatform.eBuildWX:
 				rootManifest += "/MiniGame";
 				copyManifest += "/MiniGame";
 				break;
-#endif
 		}
 
 		/*
@@ -5194,12 +5191,10 @@ public static class AssetBundleBuild
 	}
 #endif
 
-#if UNITY_WEIXINMINIGAME
 	[MenuItem("Assets/发布/Wx小游戏(Lz4)")]
 	static public void Cmd_BuildWx_Lz4() {
 		Cmd_Build(2, true, eBuildPlatform.eBuildWX);
 	}
-#endif
 
 	[MenuItem("Assets/发布/APK_Debug(非压缩)")]
 	static public void Cmd_BuildAPK_DEBUG_UNCOMPRESS()
