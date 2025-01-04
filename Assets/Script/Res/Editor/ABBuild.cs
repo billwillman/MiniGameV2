@@ -1824,12 +1824,10 @@ class AssetBundleMgr
 					target = BuildTarget.StandaloneWindows64;
 					break;
                 }
-#if UNITY_WEIXINMINIGAME
 			case eBuildPlatform.eBuildWX: {
 					target = BuildTarget.WeixinMiniGame;
 					break;
                 }
-#endif
 			default:
 			return false;
 		}
@@ -1902,7 +1900,6 @@ class AssetBundleMgr
 			}
 			break;
 		}
-#if UNITY_WEIXINMINIGAME
 			case eBuildPlatform.eBuildWX: {
 					outPath += "/MiniGame";
 					if (!Directory.Exists(outPath)) {
@@ -1913,7 +1910,6 @@ class AssetBundleMgr
 					}
 					break;
 				}
-#endif
 
 			case eBuildPlatform.eBuildDS:
 		case eBuildPlatform.eBuildWindow:
@@ -2088,10 +2084,8 @@ class AssetBundleMgr
 				return UnityEditor.Build.NamedBuildTarget.Android;
 			case eBuildPlatform.eBuildDS:
 				return UnityEditor.Build.NamedBuildTarget.Server;
-#if UNITY_WEIXINMINIGAME
 			case eBuildPlatform.eBuildWX:
 				return UnityEditor.Build.NamedBuildTarget.WeixinMiniGame;
-#endif
 			case eBuildPlatform.eBuildIOS:
 				return UnityEditor.Build.NamedBuildTarget.iOS;
 			case eBuildPlatform.eBuildWindow:
@@ -3231,11 +3225,9 @@ class AssetBundleMgr
         case eBuildPlatform.eBuildIOS:
             dstRoot += "/IOS";
             break;
-#if UNITY_WEIXINMINIGAME
 			case eBuildPlatform.eBuildWX:
 				dstRoot += "/MiniGame";
 				break;
-#endif
 			default:
             return;
         }
@@ -3276,11 +3268,9 @@ class AssetBundleMgr
         case eBuildPlatform.eBuildIOS:
             dstRoot += "/IOS";
             break;
-#if UNITY_WEIXINMINIGAME
 			case eBuildPlatform.eBuildWX:
 				dstRoot += "/MiniGame";
 				break;
-#endif
 			default:
             return;
         }
@@ -4212,11 +4202,9 @@ public static class AssetBundleBuild
 		case eBuildPlatform.eBuildWindow:
 			ret += "/Windows";
 			break;
-#if UNITY_WEIXINMINIGAME
 			case eBuildPlatform.eBuildWX:
 				ret += "/MiniGame";
 				break;
-#endif
 			default:
 			return null;
 		}
@@ -4361,12 +4349,10 @@ public static class AssetBundleBuild
                     platform = eBuildPlatform.eBuildMac;
 					targetStreamingAssetsPath += "Mac";
                     break;
-#if UNITY_WEIXINMINIGAME
 			case BuildTarget.WeixinMiniGame:
 				platform = eBuildPlatform.eBuildWX;
 				targetStreamingAssetsPath += "MiniGame";
 				break;
-#endif
 			default:
                     return;
             }
@@ -4599,12 +4585,10 @@ public static class AssetBundleBuild
 		BuildPlatform(eBuildPlatform.eBuildWindow, 2);
 	}
 
-#if UNITY_WEIXINMINIGAME
 	[MenuItem("Assets/平台打包/WXMiniGame(Lz4)")]
 	static public void OnBuildPlatformWXMiniGameLz4() {
 		BuildPlatform(eBuildPlatform.eBuildWX, 2);
 	}
-#endif
 
 	[MenuItem("Assets/平台打包/增量Windows(Lz4)")]
     static public void OnAppendBuildPlatformWinLz4() {
@@ -4622,12 +4606,10 @@ public static class AssetBundleBuild
 		BuildPlatform(eBuildPlatform.eBuildWindow, 2, true, true);
 	}
 
-#if UNITY_WEIXINMINIGAME
 	[MenuItem("Assets/平台打包/WXMiniGame Md5(Lz4)")]
 	static public void OnBuildPlatformWXMiniGameMd5Lz4() {
 		BuildPlatform(eBuildPlatform.eBuildWX, 2, true);
 	}
-#endif
 
 	[MenuItem("Assets/平台打包/OSX(Lz4)")]
 	static public void OnBuildPlatformOSXLz4() {
@@ -4976,12 +4958,10 @@ public static class AssetBundleBuild
 			rootManifest += "/Windows";
 			copyManifest += "/Windows";
 			break;
-#if UNITY_WEIXINMINIGAME
 			case eBuildPlatform.eBuildWX:
 				rootManifest += "/MiniGame";
 				copyManifest += "/MiniGame";
 				break;
-#endif
 		}
 
 		/*
