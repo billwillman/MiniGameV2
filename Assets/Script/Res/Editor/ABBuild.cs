@@ -4813,6 +4813,18 @@ public static class AssetBundleBuild
 		mMgr.BuildPackage(eBuildPlatform.eBuildDS, dsOutPath, true);
 	}
 
+	// 打包WX
+	static public void Cmd_WX() {
+		string wxOutPath = "../WX";
+		wxOutPath = System.IO.Path.GetFullPath(wxOutPath);
+		if (Directory.Exists(wxOutPath)) {
+			DeleteDirectorAndFiles(wxOutPath);
+		}
+		Directory.CreateDirectory(wxOutPath);
+		Debug.Log("Build WX: " + wxOutPath);
+		mMgr.BuildPackage(eBuildPlatform.eBuildWX, wxOutPath, true);
+	}
+
 	static public void Cmd_Win()
 	{
 		string winOutPath = "../Win_Build";
@@ -5127,6 +5139,9 @@ public static class AssetBundleBuild
         {
 			logFileName = System.IO.Path.GetDirectoryName(searchProjPath) + '/' + "dsLog.txt";
 			funcName = "AssetBundleBuild.Cmd_DS";
+		} else if (platform == eBuildPlatform.eBuildWX) {
+			logFileName = System.IO.Path.GetDirectoryName(searchProjPath) + '/' + "wxLog.txt";
+			funcName = "AssetBundleBuild.Cmd_WX";
 		}
 
 		if (!string.IsNullOrEmpty(funcName))
@@ -5176,6 +5191,13 @@ public static class AssetBundleBuild
 	static public void Cmd_BuildDS_Lz4()
     {
 		Cmd_Build(2, true, eBuildPlatform.eBuildDS);
+	}
+#endif
+
+#if UNITY_WEIXINMINIGAME
+	[MenuItem("Assets/发布/Wx小游戏(Lz4)")]
+	static public void Cmd_BuildWx_Lz4() {
+		Cmd_Build(2, true, eBuildPlatform.eBuildWX);
 	}
 #endif
 
