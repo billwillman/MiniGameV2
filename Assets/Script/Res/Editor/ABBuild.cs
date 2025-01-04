@@ -5138,7 +5138,7 @@ public static class AssetBundleBuild
 			funcName = "AssetBundleBuild.Cmd_DS";
 		} else if (platform == eBuildPlatform.eBuildWX) {
 			logFileName = System.IO.Path.GetDirectoryName(searchProjPath) + '/' + "wxLog.txt";
-			funcName = "AssetBundleBuild.Cmd_WX";
+			// funcName = "AssetBundleBuild.Cmd_WX"; // 暂时不支持直接导出
 		}
 
 		if (!string.IsNullOrEmpty(funcName))
