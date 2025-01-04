@@ -243,12 +243,8 @@ public class AssetInfo {
     }
 
 #if UNITY_5_3 || UNITY_5_4 || UNITY_5_5 || UNITY_5_6 || UNITY_2018 || UNITY_2019 || UNITY_2017 || UNITY_2017_1_OR_NEWER
-#if UNITY_WEIXINMINIGAME
-    internal WXAssetBundleAsyncTask AsyncTask {
-#else
-    internal BundleCreateAsyncTask AsyncTask {
-#endif
-    get {
+    internal IAssetBundleAsyncTask AsyncTask {
+        get {
             return m_AsyncTask;
         }
     }
@@ -256,11 +252,7 @@ public class AssetInfo {
 
     private WWWFileLoadTask m_WWWTask = null;
 #if UNITY_5_3 || UNITY_5_4 || UNITY_5_5 || UNITY_5_6 || UNITY_2018 || UNITY_2019 || UNITY_2017 || UNITY_2017_1_OR_NEWER
-#if UNITY_WEIXINMINIGAME
-    private WXAssetBundleAsyncTask m_AsyncTask = null;
-#else
-    private BundleCreateAsyncTask m_AsyncTask = null;
-#endif
+    private IAssetBundleAsyncTask m_AsyncTask = null;
 #endif
     private TaskList m_TaskList = null;
     private ITimer m_Timer = null;
@@ -511,7 +503,10 @@ public class AssetInfo {
             return true;
         }
 #if UNITY_WEIXINMINIGAME
-        m_AsyncTask = WXAssetBundleAsyncTask.Create(mFileName, priority);
+        if (WXAssetBundleAsyncTask.HasCDNFile(mFileName)) // 远程文件才使用 WXAssetBundleAsyncTask
+            m_AsyncTask = WXAssetBundleAsyncTask.Create(mFileName, priority);
+        else
+            m_AsyncTask = BundleCreateAsyncTask.Create(mFileName, priority);
 #else
         m_AsyncTask = BundleCreateAsyncTask.Create(mFileName, priority);
 #endif
