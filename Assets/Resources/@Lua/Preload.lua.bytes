@@ -1,0 +1,65 @@
+_MOE = {
+    IsOpenLog = true,
+    IsEditor = false,
+    IsDS = false,
+}
+
+_MOE.Logger = {
+    Log = function (...)
+        if _MOE.IsOpenLog then
+            CS.UnityEngine.Debug.Log(...)
+        end
+    end,
+    LogError = function (...)
+        if _MOE.IsOpenLog then
+            CS.UnityEngine.Debug.LogError(...)
+        end
+    end,
+    LogWarning = function (...)
+        if _MOE.IsOpenLog then
+            CS.UnityEngine.Debug.LogWarning(...)
+        end
+    end,
+    LogFormat = function (fmt, ...)
+        if _MOE.IsOpenLog then
+            CS.UnityEngine.Debug.LogFormat(fmt, ...)
+        end
+    end,
+    LogErrorFormat = function(fmt, ...)
+        if _MOE.IsOpenLog then
+            CS.UnityEngine.Debug.LogErrorFormat(fmt, ...)
+        end
+    end,
+    LogWarningFormat = function(fmt, ...)
+        if _MOE.IsOpenLog then
+            CS.UnityEngine.Debug.LogWarningFormat(fmt, ...)
+        end
+    end
+}
+
+_MOE.Application = CS.UnityEngine.Application
+_MOE.ResourceManager = CS.ResourceMgr:GetInstance()
+_MOE.GameObject = CS.GameObject
+_MOE.GameStart = CS.SOC.GamePlay.GameStart.Instance
+_MOE.GameStartTransform = _MOE.GameStart.transform
+_MOE.RectTransformClass = typeof(CS.UnityEngine.RectTransform)
+_MOE.ObjetDestroy = CS.UnityEngine.Object.Destroy
+_MOE.LoadSceneMode = CS.UnityEngine.SceneManagement.LoadSceneMode
+_MOE.RectClass = CS.UnityEngine.Rect
+_MOE.Vector2 = CS.UnityEngine.Vector2
+_MOE.Vector3 = CS.UnityEngine.Vector3
+_MOE.Quaternion = CS.UnityEngine.Quaternion
+_MOE.ILuaBinder = CS.SOC.GamePlay.ILuaBinder
+_MOE.BaseResLoaderAsyncType = typeof(CS.BaseResLoaderAsyncMono)
+_MOE.StringToBytes = CS.System.Text.Encoding.UTF8.GetBytes
+_MOE.class = require("_Common.BaseClass") -- class框架
+_MOE.Json = require("_Common.json")
+_MOE.TableUtils = require("_Common.TableUtils")
+_G.BaseClass = _MOE.class
+
+_G.ErrorHandler = function (err)
+    _MOE.Logger.LogError(err)
+	_MOE.Logger.LogError(debug.traceback())
+end
+
+return _MOE

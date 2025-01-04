@@ -1,0 +1,39 @@
+if _MOE.IsDS then
+    _MOE.Logger.Log("[Server] LuaPanda Start Debug...")
+    require("LuaPanda").start("127.0.0.1", 31001)
+else
+    _MOE.Logger.Log("[Client] LuaPanda Start Debug...")
+    require("LuaPanda").start("127.0.0.1", 31000)
+end
+
+print(string.format("[Main.lua] IsDS: %s IsEditor: %s", _MOE.IsDS, _MOE.IsEditor))
+
+local function InitGlobalVars()
+    _MOE.BaseModel = require("_Common.BaseModel")
+    _MOE.EventManager = require("_Common.EventManager").New()
+    if not _MOE.IsDS then
+       _MOE.PlayerPrefs = CS.UnityEngine.PlayerPrefs -- 设备相关数据存储
+    end
+end
+
+--- 主函数
+function Main()
+    _MOE.Logger.Log("[xlua] Main Start...")
+    -- 设置调试Lua Panda调试
+    InitGlobalVars()
+    -- CreateApplication()
+end
+
+function QuitGame()
+    if _MOE.GameApp then
+        _MOE.Logger.Log("[QuitGame] GameApp")
+        _MOE.GameApp:Quit()
+    end
+    _MOE.EventManager:ClearAllEvents()
+end
+
+function Update(deltaTime)
+    if _MOE.GameApp and _MOE.GameApp.Update then
+        _MOE.GameApp:Update(deltaTime)
+    end
+end

@@ -1,1 +1,2 @@
+24dc9236b029288491c483880713291b=assets$resources$@lua.assets
 ad9b72b04e57169e0977127bfaf41f71=assets$resources$gameobject.prefab.assets
