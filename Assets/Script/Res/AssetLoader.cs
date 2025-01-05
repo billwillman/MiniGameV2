@@ -38,7 +38,8 @@ public interface IWXAssetBundleMapper
 
 public class AsyncLoadKeyComparser : StructComparser<AsyncLoadKey> { }
 
-public struct AsyncLoadKey : IEquatable<AsyncLoadKey> {
+public struct AsyncLoadKey : IEquatable<AsyncLoadKey>
+{
     public string fileName;
     public System.Type type;
 
@@ -77,7 +78,8 @@ public struct AsyncLoadKey : IEquatable<AsyncLoadKey> {
     }
 }
 
-public class AssetBundleCache : AssetCache {
+public class AssetBundleCache : AssetCache
+{
     public AssetBundleCache(AssetInfo target) {
         mTarget = target;
         IsloadDecDepend = true;
@@ -181,7 +183,8 @@ public class AssetBundleCache : AssetCache {
 }
 
 
-public enum AssetCompressType {
+public enum AssetCompressType
+{
     // 未压缩
     astNone = 0,
     // Unity Zip
@@ -192,13 +195,15 @@ public enum AssetCompressType {
     astZip
 }
 
-public struct DependFileInfo {
+public struct DependFileInfo
+{
     public string fileName;
     public int refCount;
 }
 
 // Asset info
-public class AssetInfo {
+public class AssetInfo
+{
 
     public AssetInfo(string fileName) {
         mFileName = fileName;
@@ -438,8 +443,8 @@ public class AssetInfo {
         if (info == null)
             return;
         if (asycTask.IsDone) {
-			if (asycTask.IsOk)
-				info.mBundle = asycTask.Bundle;
+            if (asycTask.IsOk)
+                info.mBundle = asycTask.Bundle;
 
             if (info.m_AsyncTask != null) {
                 info.m_AsyncTask.Release();
@@ -537,7 +542,7 @@ public class AssetInfo {
 
 #endif
 
-        public bool LoadWWW(TaskList taskList) {
+    public bool LoadWWW(TaskList taskList) {
         if (IsVaild())
             return true;
         if (string.IsNullOrEmpty(mFileName))
@@ -646,12 +651,12 @@ public class AssetInfo {
 #endif
             if (mBundle == null)
                 return false;
-     //       return true;
+            //       return true;
         } else {
             // zan shi
             return false;
         }
-		#if UNITY_EDITOR && UNITY_2017_1_OR_NEWER && USE_RECORD_LOADSCENENAME
+#if UNITY_EDITOR && UNITY_2017_1_OR_NEWER && USE_RECORD_LOADSCENENAME
 		InitLoadSceneName ();
 #endif
         return true;
@@ -662,7 +667,7 @@ public class AssetInfo {
             return null;
 
 #if USE_LOWERCHAR
-		fileName = fileName.ToLower();
+        fileName = fileName.ToLower();
 #endif
         // int hashCode = Animator.StringToHash (fileName);
         if (!ContainFileNameHash(fileName))
@@ -680,7 +685,7 @@ public class AssetInfo {
         if (string.IsNullOrEmpty(fileName))
             return null;
 #if USE_LOWERCHAR
-		fileName = fileName.ToLower();
+        fileName = fileName.ToLower();
 #endif
         // int hashCode = Animator.StringToHash (fileName);
         if (!ContainFileNameHash(fileName))
@@ -751,7 +756,7 @@ public class AssetInfo {
         if (string.IsNullOrEmpty(fileName) || (!IsVaild()))
             return false;
 #if USE_LOWERCHAR
-		fileName = fileName.ToLower();
+        fileName = fileName.ToLower();
 #endif
 
         if (!ContainFileNameHash(fileName))
@@ -848,7 +853,7 @@ public class AssetInfo {
         if (string.IsNullOrEmpty(fileName) || (!IsVaild()))
             return false;
 #if USE_LOWERCHAR
-		fileName = fileName.ToLower();
+        fileName = fileName.ToLower();
 #endif
         //int hashCode = Animator.StringToHash (fileName);
         if (!ContainFileNameHash(fileName))
@@ -1111,13 +1116,12 @@ public class AssetInfo {
         mChildFileNameHashs.Add(fileName);
     }
 
-	internal void _InitDependFileCapity(int cap)
-	{
-		if (cap < 0)
-			cap = 0;
-		if (mDependFileNames == null)
-			mDependFileNames = new List<DependFileInfo>(cap);
-	}
+    internal void _InitDependFileCapity(int cap) {
+        if (cap < 0)
+            cap = 0;
+        if (mDependFileNames == null)
+            mDependFileNames = new List<DependFileInfo>(cap);
+    }
 
     internal void _AddDependFile(string fileName, int refCount = 1) {
         if (string.IsNullOrEmpty(fileName))
@@ -1168,12 +1172,13 @@ public class AssetInfo {
     private static AssetLoader mLoader = null;
 }
 
-public sealed class AssetLoader : IResourceLoader {
+public sealed class AssetLoader : IResourceLoader
+{
     public override bool OnSceneLoad(string sceneName) {
         if (string.IsNullOrEmpty(sceneName))
             return false;
 #if USE_LOWERCHAR
-		sceneName = sceneName.ToLower();
+        sceneName = sceneName.ToLower();
 #endif
         //sceneName += ".unity";
         sceneName = StringHelper.Concat(sceneName, ".unity");
@@ -1194,7 +1199,7 @@ public sealed class AssetLoader : IResourceLoader {
         if (string.IsNullOrEmpty(sceneName))
             return false;
 #if USE_LOWERCHAR
-		sceneName = sceneName.ToLower();
+        sceneName = sceneName.ToLower();
 #endif
         //sceneName += ".unity";
         sceneName = StringHelper.Concat(sceneName, ".unity");
@@ -1250,7 +1255,7 @@ public sealed class AssetLoader : IResourceLoader {
         if (string.IsNullOrEmpty(sceneName))
             return false;
 #if USE_LOWERCHAR
-		sceneName = sceneName.ToLower();
+        sceneName = sceneName.ToLower();
 #endif
         //sceneName += ".unity";
         sceneName = StringHelper.Concat(sceneName, ".unity");
@@ -1358,7 +1363,7 @@ public sealed class AssetLoader : IResourceLoader {
     public override bool LoadSpritesAsync(string fileName, Action<float, bool, UnityEngine.Object[]> onProcess, int priority) {
         fileName = TransFileName(fileName, ".tex");
 #if USE_LOWERCHAR
-		fileName = fileName.ToLower();
+        fileName = fileName.ToLower();
 #endif
         return LoadObjectAsync<Texture>(fileName, ResourceCacheType.rctRefAdd, priority,
             delegate (float process, bool isDone, Texture obj) {
@@ -1449,7 +1454,7 @@ public sealed class AssetLoader : IResourceLoader {
     public override Sprite[] LoadSprites(string fileName) {
         fileName = TransFileName(fileName, ".tex");
 #if USE_LOWERCHAR
-		fileName = fileName.ToLower();
+        fileName = fileName.ToLower();
 #endif
         Texture tex = LoadObject<Texture>(fileName, ResourceCacheType.rctTemp);
         if (tex == null)
@@ -1482,7 +1487,7 @@ public sealed class AssetLoader : IResourceLoader {
 
     public T LoadObject<T>(string fileName, ResourceCacheType cacheType) where T : UnityEngine.Object {
 #if USE_LOWERCHAR
-		fileName = fileName.ToLower();
+        fileName = fileName.ToLower();
 #endif
         AssetInfo asset = FindAssetInfo(fileName);
         if (asset == null)
@@ -1585,7 +1590,7 @@ public sealed class AssetLoader : IResourceLoader {
 
     public bool LoadObjectAsync<T>(string fileName, ResourceCacheType cacheType, int priority, Action<float, bool, T> onProcess) where T : UnityEngine.Object {
 #if USE_LOWERCHAR
-		fileName = fileName.ToLower();
+        fileName = fileName.ToLower();
 #endif
         AssetInfo asset = FindAssetInfo(fileName);
         if (asset == null)
@@ -2078,7 +2083,7 @@ public sealed class AssetLoader : IResourceLoader {
     // fileName为资源文件名
     public string GetAssetBundleFileName(string fileName) {
 #if USE_LOWERCHAR
-		fileName = fileName.ToLower();
+        fileName = fileName.ToLower();
 #endif
         AssetInfo info = FindAssetInfo(fileName);
         if (info == null)
@@ -2334,7 +2339,7 @@ public sealed class AssetLoader : IResourceLoader {
 
 #endif
                                                        ;
-			InitCheckFileNameMap(ref fileRealMap, header.abFileCount);
+            InitCheckFileNameMap(ref fileRealMap, header.abFileCount);
             string assetBundleFileName = GetCheckFileName(ref fileRealMap, abHeader.abFileName,
                                                             false, isUseCreateFromFile);
 
@@ -2370,7 +2375,7 @@ public sealed class AssetLoader : IResourceLoader {
                 DependBinaryFile.DependInfo depInfo = DependBinaryFile.LoadDependInfo(stream);
                 string dependFileName = GetCheckFileName(ref fileRealMap, depInfo.abFileName,
                                                             false, isUseCreateFromFile);
-				asset._InitDependFileCapity(abHeader.dependFileCount);
+                asset._InitDependFileCapity(abHeader.dependFileCount);
                 asset._AddDependFile(dependFileName, depInfo.refCount);
             }
         }
@@ -2417,7 +2422,7 @@ public sealed class AssetLoader : IResourceLoader {
 
 #endif
                                                         ;
-			InitCheckFileNameMap(ref fileRealMap, header.abFileCount);
+            InitCheckFileNameMap(ref fileRealMap, header.abFileCount);
             string assetBundleFileName = GetCheckFileName(ref fileRealMap, abHeader.abFileName,
                                                             false, isUseCreateFromFile);
 
@@ -2461,7 +2466,7 @@ public sealed class AssetLoader : IResourceLoader {
                 DependBinaryFile.DependInfo depInfo = DependBinaryFile.LoadDependInfo(stream);
                 string dependFileName = GetCheckFileName(ref fileRealMap, depInfo.abFileName,
                                                             false, isUseCreateFromFile);
-				asset._InitDependFileCapity(abHeader.dependFileCount);
+                asset._InitDependFileCapity(abHeader.dependFileCount);
                 asset._AddDependFile(dependFileName, depInfo.refCount);
                 if (++iterCnt >= maxAsyncCnt) {
                     iterCnt = 0;
@@ -2506,8 +2511,8 @@ public sealed class AssetLoader : IResourceLoader {
                     || compressType == AssetCompressType.astUnityZip
 #endif
                     ;
-					
-					InitCheckFileNameMap(ref fileRealMap, header.abFileCount);
+
+                    InitCheckFileNameMap(ref fileRealMap, header.abFileCount);
                     string assetBundleFileName = GetCheckFileName(ref fileRealMap, abHeader.abFileName,
                                                                 false, isUseCreateFromFile);
 
@@ -2544,7 +2549,7 @@ public sealed class AssetLoader : IResourceLoader {
 
                         string dependFileName = GetCheckFileName(ref fileRealMap, depInfo.abFileName,
                                                                 false, isUseCreateFromFile);
-						asset._InitDependFileCapity(abHeader.dependFileCount);
+                        asset._InitDependFileCapity(abHeader.dependFileCount);
                         asset._AddDependFile(dependFileName, depInfo.refCount);
                     }
 
@@ -2588,7 +2593,7 @@ public sealed class AssetLoader : IResourceLoader {
         if (isThreadMode) {
             // 真。多线程版本
             LoadBinaryLoomAsync(bytes, onFinish);
-        } else 
+        } else
         if (async != null) {
             async.StartCoroutine(LoadBinaryAsync(bytes, onFinish, maxAsyncCnt));
         } else {
@@ -2807,16 +2812,15 @@ public sealed class AssetLoader : IResourceLoader {
 	private float m_LastUsedTime = 0;
 #endif
 
-private void InitCheckFileNameMap(ref Dictionary<string, string> fileRealMap, int cap)
-{
-	if (cap < 0)
-		cap = 0;
-	if (fileRealMap == null)
-		fileRealMap = new Dictionary<string, string>(cap);
-}
+    private void InitCheckFileNameMap(ref Dictionary<string, string> fileRealMap, int cap) {
+        if (cap < 0)
+            cap = 0;
+        if (fileRealMap == null)
+            fileRealMap = new Dictionary<string, string>(cap);
+    }
 
-private string GetCheckFileName(ref Dictionary<string, string> fileRealMap, string abFileName, bool isWWW,
-               bool isUseABCreateFromFile) {
+    private string GetCheckFileName(ref Dictionary<string, string> fileRealMap, string abFileName, bool isWWW,
+                   bool isUseABCreateFromFile) {
         if (string.IsNullOrEmpty(abFileName))
             return string.Empty;
 
@@ -2847,8 +2851,8 @@ private string GetCheckFileName(ref Dictionary<string, string> fileRealMap, stri
                 OnFinishEvent(false);
         };
 
-        AssetBundle bundle = null;
-        Action doOkFunc = () =>
+
+        Action<AssetBundle> doOkFunc = (AssetBundle bundle) =>
         {
             if (bundle != null) {
                 float curTime = Time.realtimeSinceStartup;
@@ -2881,15 +2885,15 @@ private string GetCheckFileName(ref Dictionary<string, string> fileRealMap, stri
 #if USE_DEP_BINARY && USE_DEP_BINARY_AB
         Debug.Log("[DoWxAssetBundleXml] " + fileName);
         if (isLocalFile) {
-            bundle = WXAssetBundle.LoadFromFile(fileName);
-            doOkFunc();
+            AssetBundle bundle = WXAssetBundle.LoadFromFile(fileName);
+            doOkFunc(bundle);
             yield break;
         }
         var req = WXAssetBundle.GetAssetBundle(fileName);
         yield return req.SendWebRequest();
         if (req.isDone) {
-            bundle = (req.downloadHandler as DownloadHandlerWXAssetBundle).assetBundle;
-            doOkFunc();
+            AssetBundle bundle = (req.downloadHandler as DownloadHandlerWXAssetBundle).assetBundle;
+            doOkFunc(bundle);
         } else if (req.isHttpError || req.isNetworkError || req.isNetworkError) {
             doErrorFunc();
         }
@@ -3000,7 +3004,7 @@ private string GetCheckFileName(ref Dictionary<string, string> fileRealMap, stri
 		}
 #endif
 
-            }
+    }
 
     public bool _ExistsFileName(string localFileName) {
         string fileName;
@@ -3042,7 +3046,8 @@ private string GetCheckFileName(ref Dictionary<string, string> fileRealMap, stri
     private Action<bool> mConfigLoaderEvent = null;
 }
 
-internal abstract class AssetInfoBaseTask : ITask {
+internal abstract class AssetInfoBaseTask : ITask
+{
     public AssetInfoBaseTask(AssetInfo asset) {
         Asset = asset;
     }
@@ -3065,7 +3070,8 @@ internal abstract class AssetInfoBaseTask : ITask {
     private bool mIsMustDone = false;
 }
 
-internal class AssetLoadTask : AssetInfoBaseTask {
+internal class AssetLoadTask : AssetInfoBaseTask
+{
     public AssetLoadTask(AssetInfo asset) : base(asset) {
 
     }
@@ -3074,7 +3080,8 @@ internal class AssetLoadTask : AssetInfoBaseTask {
     }
 }
 
-internal class AssetInfoTaskMgr {
+internal class AssetInfoTaskMgr
+{
 
     public void AddAssetObjLoadAsyncTask<T>(string fileName, ResourceCacheType cacheType, Action<float, bool, T> onProcess) where T : UnityEngine.Object {
     }
