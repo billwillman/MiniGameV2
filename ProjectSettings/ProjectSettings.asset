@@ -844,7 +844,8 @@ PlayerSettings:
   platformArchitecture: {}
   scriptingBackend: {}
   il2cppCompilerConfiguration: {}
-  il2cppCodeGeneration: {}
+  il2cppCodeGeneration:
+    WeixinMiniGame: 1
   managedStrippingLevel:
     ArmLinux: 1
     ArmLinuxServer: 1
@@ -976,7 +977,8 @@ PlayerSettings:
   weixinMiniGameShowDiagnostics: 0
   weixinMiniGameDataCaching: 0
   weixinMiniGameDebugSymbols: 1
-  weixinMiniGameEmscriptenArgs: 
+  weixinMiniGameEmscriptenArgs: ' -s EXPORTED_FUNCTIONS=_sbrk,_emscripten_stack_get_base,_emscripten_stack_get_end
+    -s ERROR_ON_UNDEFINED_SYMBOLS=0 -s TOTAL_MEMORY=256MB --profiling-funcs '
   weixinMiniGameModulesDirectory: 
   weixinMiniGameTemplate: PATH:D:\MiniGameV2\Library\PackageCache\com.qq.weixin.minigame@09760d709e\WebGLTemplates\WXTemplate2022TJ
   weixinMiniGameAnalyzeBuildSize: 0

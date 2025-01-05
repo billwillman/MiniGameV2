@@ -21,7 +21,7 @@ MonoBehaviour:
     VideoUrl: 
     DST: D:/MiniGameV2
     StreamCDN: 
-    bundleHashLength: 32
+    bundleHashLength: 0
     bundlePathIdentifier: StreamingAssets;
     bundleExcludeExtensions: json;
     AssetsUrl: 
