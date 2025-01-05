@@ -58,7 +58,7 @@ public class MiniGame_ResProxyMgr: SingetonMono<MiniGame_ResProxyMgr>
             return true;
         }
         WXAssetBundleAsyncTask.CDN_RootDir = string.Format("{0}/{1}", CDNRoot, AppResVersion);
-        string versionUrl = GenerateCDN_AppResVersion_Url("version.txt");
+        string versionUrl = GenerateCDN_AppResVersion_Url("version.txt", true);
         RequestFile(versionUrl, (MiniGame_HttpRequest req, bool isResult) =>
         {
             if (!isResult) {
