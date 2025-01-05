@@ -13,13 +13,13 @@ MonoBehaviour:
   m_Name: MiniGameConfig
   m_EditorClassIdentifier: 
   ProjectConf:
-    projectName: 
+    projectName: MiniGame
     Appid: wxa303f39034798948
-    CDN: 
+    CDN: https://minigame-1252342341.cos.ap-shanghai.myqcloud.com
     assetLoadType: 0
     compressDataPackage: 1
     VideoUrl: 
-    DST: D:/MiniGameV2
+    DST: D:\MiniGameV2\outPath\WX
     StreamCDN: 
     bundleHashLength: 0
     bundlePathIdentifier: StreamingAssets;
@@ -52,7 +52,7 @@ MonoBehaviour:
     Il2CppOptimizeSize: 1
     profilingFuncs: 1
     Webgl2: 0
-    fbslim: 0
+    fbslim: 1
     DeleteStreamingAssets: 1
     ProfilingMemory: 0
     CleanBuild: 0
