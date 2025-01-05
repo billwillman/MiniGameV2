@@ -29,8 +29,15 @@ public class MiniGame_ResProxyMgr: SingetonMono<MiniGame_ResProxyMgr>
         return StartCoroutine(DoRequestFile(url, onFinish, onAbort));
     }
 
-    protected string GenerateCDN_AppResVersion_Url(string fileName) {
+    protected string GenerateCDN_AppResVersion_Url(string fileName, bool isAddTimer = false) {
         string ret = string.Format("{0}/{1}/{2}", CDNRoot, AppResVersion, fileName);
+        if (isAddTimer) {
+            string timeStr = NsHttpClient.HttpHelper.GetTimeStampStr();
+            if (ret.IndexOf('?') > 0)
+                ret = StringHelper.Concat(ret, StringHelper.Format("&t={0}", timeStr));
+            else
+                ret = StringHelper.Concat(ret, StringHelper.Format("?t={0}", timeStr));
+        }
         return ret;
     }
 
