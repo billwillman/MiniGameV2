@@ -341,7 +341,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: db7bef49b0e224a48aef77dc1fb2b3ea, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  CDNRoot: 
+  CDNRoot: https://minigame-1252342341.cos.ap-shanghai.myqcloud.com
+  AppResVersion: 1.000
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
