@@ -15,6 +15,8 @@ public class FileListDataLoader
     protected void LoadLines(string[] lines) {
         m_FileListMap.Clear();
         foreach (var line in lines) {
+            if (string.IsNullOrEmpty(line))
+                continue;
             var data = line.Split('=');
             var key = data[0];
             var values = data[1].Split(';');
