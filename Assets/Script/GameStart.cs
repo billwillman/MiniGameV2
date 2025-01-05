@@ -149,28 +149,31 @@ namespace SOC.GamePlay
         void Lua_DoMain() {
             if (m_LuaEnv != null) {
                 // ”≈œ»º”‘ÿPreload.lua
-                byte[] lua = ResourceMgr.Instance.LoadBytes("Resources/@Lua/Preload.lua.bytes");
-                System.Object[] result =  m_LuaEnv.DoString(lua);
-                LuaTable _MOE = result[0] as LuaTable;
-                try {
-                    InitNetCodeLuaGlobalVars(_MOE);
-                } finally {
-                    _MOE.Dispose();
-                }
-                //--
-                lua = ResourceMgr.Instance.LoadBytes("Resources/@Lua/Main.lua.bytes");
-                if (lua != null) {
-                   m_LuaEnv.DoString(lua);
-                    LuaFunction MainFunc = m_LuaEnv.Global.Get<LuaFunction>("Main");
-                    if (MainFunc != null) {
-                        try {
-                            MainFunc.Call();
-                        } finally {
-                            MainFunc.Dispose();
-                        }
+                ResourceMgr.Instance.LoadTextAsync("Resources/@Lua/Preload.lua.bytes", (float process, bool isDone, TextAsset text) =>
+                {
+                    byte[] lua = ResourceMgr.Instance.LoadBytes("Resources/@Lua/Preload.lua.bytes");
+                    System.Object[] result = m_LuaEnv.DoString(lua);
+                    LuaTable _MOE = result[0] as LuaTable;
+                    try {
+                        InitNetCodeLuaGlobalVars(_MOE);
+                    } finally {
+                        _MOE.Dispose();
                     }
-                    m_LuaUpdateFunc = m_LuaEnv.Global.Get<LuaFunction>("Update");
-                }
+                    //--
+                    lua = ResourceMgr.Instance.LoadBytes("Resources/@Lua/Main.lua.bytes");
+                    if (lua != null) {
+                        m_LuaEnv.DoString(lua);
+                        LuaFunction MainFunc = m_LuaEnv.Global.Get<LuaFunction>("Main");
+                        if (MainFunc != null) {
+                            try {
+                                MainFunc.Call();
+                            } finally {
+                                MainFunc.Dispose();
+                            }
+                        }
+                        m_LuaUpdateFunc = m_LuaEnv.Global.Get<LuaFunction>("Update");
+                    }
+                });
             }
         }
 
@@ -215,7 +218,7 @@ namespace SOC.GamePlay
                 m_LogFileWriter.Dispose();
                 m_LogFileWriter = null;
             }
-                
+
         }
 
         struct LuaPathFormatData
