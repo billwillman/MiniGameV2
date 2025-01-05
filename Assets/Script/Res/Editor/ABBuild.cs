@@ -5097,6 +5097,7 @@ public static class AssetBundleBuild
 
 		string logFileName = string.Empty;
 		string funcName = string.Empty;
+		string exeName = "Unity.exe";
 		if (platform == eBuildPlatform.eBuildAndroid)
 		{
 			// Copy 渠道包
@@ -5118,14 +5119,15 @@ public static class AssetBundleBuild
 			funcName = "AssetBundleBuild.Cmd_DS";
 		} else if (platform == eBuildPlatform.eBuildWX) {
 			logFileName = System.IO.Path.GetDirectoryName(searchProjPath) + '/' + "wxLog.txt";
-			// funcName = "AssetBundleBuild.Cmd_WX"; // 暂时不支持直接导出
+			funcName = "AssetBundleBuild.Cmd_WX"; // 暂时不支持直接导出
+			exeName = "Tuanjie.exe";
 		}
 
 		if (!string.IsNullOrEmpty(funcName))
 		{
 #if UNITY_EDITOR_WIN
-			string cmdApk = StringHelper.Format("Unity.exe -quit -batchmode -nographics -executeMethod {0} -logFile {1} -projectPath {2}", 
-			                              funcName, logFileName, searchProjPath);
+			string cmdApk = StringHelper.Format("{0} -quit -batchmode -nographics -executeMethod {1} -logFile {2} -projectPath {3}",
+												exeName, funcName, logFileName, searchProjPath);
 			Debug.Log(cmdApk);
 			RunCmd(cmdApk);
 #endif
