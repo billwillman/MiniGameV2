@@ -96,6 +96,7 @@ namespace SOC.GamePlay
         }
 
         void ServerAttachLogFile() {
+#if !UNITY_WEIXINMINIGAME
             if (IsDS) {
 #if !UNITY_EDITOR
                 // DS才能才存储
@@ -108,6 +109,7 @@ namespace SOC.GamePlay
                 m_LogFileWriter.IsLogWriteAsync = m_LogWriteAsync;
 #endif
             }
+#endif
         }
 
         // 初始化Lua环境
