@@ -2842,7 +2842,9 @@ public sealed class AssetLoader : IResourceLoader
         string fileName = GetXmlFileName();
         string transFileName = WXAssetBundleAsyncTask.GetCDNFileName(fileName);
         bool isLocalFile = transFileName == fileName;
-
+        Debug.Log("[DoWxAssetBundleXml] AssetBundle.xml isLocalFile: " + isLocalFile.ToString());
+        if (!isLocalFile)
+            fileName = transFileName;
         Action doErrorFunc = () =>
         {
             Debug.LogErrorFormat("[LoadConfig]加載 {0} bundle失敗", fileName);
