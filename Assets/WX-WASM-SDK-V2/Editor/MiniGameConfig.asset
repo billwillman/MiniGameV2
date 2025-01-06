@@ -16,7 +16,7 @@ MonoBehaviour:
     projectName: MiniGame
     Appid: wxa303f39034798948
     CDN: https://minigame-1252342341.cos.ap-shanghai.myqcloud.com/1.000
-    assetLoadType: 0
+    assetLoadType: 1
     compressDataPackage: 1
     VideoUrl: 
     DST: D:\MiniGameV2\outPath\WX
