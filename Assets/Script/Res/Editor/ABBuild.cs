@@ -1825,7 +1825,7 @@ class AssetBundleMgr
 					break;
                 }
 			case eBuildPlatform.eBuildWX: {
-#if UNITY_WEIXINMINIGAME
+#if TUANJIE_1_0_OR_NEWER
 					target = BuildTarget.WeixinMiniGame;
 					break;
 #else
@@ -2088,7 +2088,7 @@ class AssetBundleMgr
 				return UnityEditor.Build.NamedBuildTarget.Android;
 			case eBuildPlatform.eBuildDS:
 				return UnityEditor.Build.NamedBuildTarget.Server;
-#if UNITY_WEIXINMINIGAME
+#if TUANJIE_1_0_OR_NEWER
 			case eBuildPlatform.eBuildWX:
 				return UnityEditor.Build.NamedBuildTarget.WeixinMiniGame;
 #endif
@@ -4355,7 +4355,7 @@ public static class AssetBundleBuild
                     platform = eBuildPlatform.eBuildMac;
 					targetStreamingAssetsPath += "Mac";
                     break;
-#if UNITY_WEIXINMINIGAME
+#if TUANJIE_1_0_OR_NEWER
 			case BuildTarget.WeixinMiniGame:
 				platform = eBuildPlatform.eBuildWX;
 				targetStreamingAssetsPath += "MiniGame";
