@@ -2862,9 +2862,9 @@ public sealed class AssetLoader : IResourceLoader
                 Debug.LogFormat("加载XML AB时间：{0}", usedTime.ToString());
                 startTime = curTime;
 #if USE_HAS_EXT
-                string name = Path.GetFileName(fileName);
+                string name = "AssetBundles.xml";
 #else
-                string name = Path.GetFileNameWithoutExtension(fileName);
+                string name = "AssetBundles";
 #endif
                 TextAsset asset = bundle.LoadAsset<TextAsset>(name);
                 if (asset != null) {
