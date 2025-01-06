@@ -81,6 +81,7 @@ namespace SOC.GamePlay
         }
 
         void OnResConfigResult(bool isOk) {
+            Debug.Log("[OnResConfigResult] isOk: " + isOk.ToString());
             if (isOk) {
                 OnInit();
             } else {
