@@ -205,8 +205,8 @@ public class WXAssetBundleAsyncTask: IAssetBundleAsyncTask
 	public static string GetCDNFileName(string fileName) {
 		if (string.IsNullOrEmpty(fileName) || string.IsNullOrEmpty(CDN_RootDir))
 			return fileName;
-		string onlyFileName = System.IO.Path.GetFileName(fileName);
 		if (Mapper != null) {
+			string onlyFileName = System.IO.Path.GetFileName(fileName);
 			string targetFileName = Mapper.GetCDNFileName(onlyFileName);
 			if (!string.IsNullOrEmpty(targetFileName)) {
 				fileName = targetFileName;
@@ -223,7 +223,8 @@ public class WXAssetBundleAsyncTask: IAssetBundleAsyncTask
 		if (string.IsNullOrEmpty(fileName))
 			return false;
 		if (Mapper != null) {
-			string targetFileName = Mapper.GetCDNFileName(fileName);
+			string onlyFileName = System.IO.Path.GetFileName(fileName);
+			string targetFileName = Mapper.GetCDNFileName(onlyFileName);
 			bool ret = targetFileName != fileName;
 			return ret;
 		}
