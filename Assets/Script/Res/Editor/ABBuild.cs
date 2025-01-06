@@ -1825,9 +1825,13 @@ class AssetBundleMgr
 					break;
                 }
 			case eBuildPlatform.eBuildWX: {
+#if UNITY_WEIXINMINIGAME
 					target = BuildTarget.WeixinMiniGame;
 					break;
-                }
+#else
+					return false;
+#endif
+				}
 			default:
 			return false;
 		}
@@ -2084,8 +2088,10 @@ class AssetBundleMgr
 				return UnityEditor.Build.NamedBuildTarget.Android;
 			case eBuildPlatform.eBuildDS:
 				return UnityEditor.Build.NamedBuildTarget.Server;
+#if UNITY_WEIXINMINIGAME
 			case eBuildPlatform.eBuildWX:
 				return UnityEditor.Build.NamedBuildTarget.WeixinMiniGame;
+#endif
 			case eBuildPlatform.eBuildIOS:
 				return UnityEditor.Build.NamedBuildTarget.iOS;
 			case eBuildPlatform.eBuildWindow:
@@ -2097,7 +2103,7 @@ class AssetBundleMgr
 	}
 #endif
 
-	private void BuildAssetBundlesInfo_5_x(eBuildPlatform platform, string exportDir, int compressType, bool isForceAppend)
+				private void BuildAssetBundlesInfo_5_x(eBuildPlatform platform, string exportDir, int compressType, bool isForceAppend)
 	{	
 #if USE_UNITY5_X_BUILD
 		if (string.IsNullOrEmpty(exportDir))
@@ -4349,10 +4355,12 @@ public static class AssetBundleBuild
                     platform = eBuildPlatform.eBuildMac;
 					targetStreamingAssetsPath += "Mac";
                     break;
+#if UNITY_WEIXINMINIGAME
 			case BuildTarget.WeixinMiniGame:
 				platform = eBuildPlatform.eBuildWX;
 				targetStreamingAssetsPath += "MiniGame";
 				break;
+#endif
 			default:
                     return;
             }
