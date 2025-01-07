@@ -117,7 +117,7 @@ namespace NsTcpClient
         }
 
         public unsafe bool Send(byte[] pData, int bufSize = -1) {
-            if (pData == null)
+            if (pData == null || m_TcpSocket == null)
                 return false;
             if (bufSize < 0 || bufSize >= pData.Length) {
                 m_TcpSocket.Write(pData);
