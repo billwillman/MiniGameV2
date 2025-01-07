@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 
 namespace NsTcpClient
 {
@@ -12,5 +13,9 @@ namespace NsTcpClient
 		eClient_STATE_ABORT,		
 		eClient_STATE_DISCONNECT,
 	};
-      
+
+	// Tcp Client Socket接口
+	public interface ITcpClient: IDisposable
+	{
+	}  
 }

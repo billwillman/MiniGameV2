@@ -16,7 +16,7 @@ using System.Threading;
 
 namespace NsTcpClient {
 
-    public class TcpClient : IDisposable {
+    public class TcpClient : ITcpClient {
         static public readonly int MAX_TCP_CLIENT_BUFF_SIZE = (64 * 1024);
 
         // public function
