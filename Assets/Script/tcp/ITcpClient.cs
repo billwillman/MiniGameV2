@@ -17,5 +17,15 @@ namespace NsTcpClient
 	// Tcp Client Socket接口
 	public interface ITcpClient: IDisposable
 	{
+		void Release();
+		bool Connect(string pRemoteIp, int uRemotePort, int mTimeOut = -1);
+		eClientState GetState();
+		bool Send(byte[] pData, int bufSize = -1);
+		bool HasReadData();
+
+		Action<TcpClient> OnThreadBufferProcess {
+			get;
+			set;
+		}
 	}  
 }
