@@ -308,18 +308,25 @@ namespace NsTcpClient
             int dstSize = headerSize;
             if (hasBufData)
                 dstSize += bufSize;
-
+#if !UNITY_WEIXINMINIGAME
             var dstStream = NetByteArrayPool.GetByteBufferNode(dstSize);
+#endif
             try {
+#if UNITY_WEIXINMINIGAME
+                byte[] dstBuffer = new byte[dstSize];
+#else
                 byte[] dstBuffer = dstStream.GetBuffer();
+#endif
                 byte* pHeader = (byte*)&header;
                 Marshal.Copy((IntPtr)pHeader, dstBuffer, 0, headerSize);
                 if (hasBufData)
                     Buffer.BlockCopy(buf, 0, dstBuffer, headerSize, bufSize);
                 mTcpClient.Send(dstBuffer, dstSize);
             } finally {
+#if !UNITY_WEIXINMINIGAME
                 dstStream.Dispose();
                 dstStream = null;
+#endif
             }
         }
 
@@ -362,12 +369,18 @@ namespace NsTcpClient
             // 下面注释是未优化代码
             //byte[] dstBuffer = new byte[dstSize];
             // 此处已优化
-			var dstStream = NetByteArrayPool.GetByteBufferNode(dstSize);
+#if !UNITY_WEIXINMINIGAME
+            var dstStream = NetByteArrayPool.GetByteBufferNode(dstSize);
+#endif
             try {
+#if UNITY_WEIXINMINIGAME
+                byte[] dstBuffer = new byte[dstSize];
+#else
                 byte[] dstBuffer = dstStream.GetBuffer();
+#endif
 
                 // 此处可优化，可以考虑后续使用RINGBUF优化，RINGBUF用完可以自动关闭掉连接
-              //  IntPtr pStruct = Marshal.AllocHGlobal(headerSize);
+                //  IntPtr pStruct = Marshal.AllocHGlobal(headerSize);
                 try {
                     //   Marshal.StructureToPtr(header, pStruct, false);
                     //    Marshal.Copy(pStruct, dstBuffer, 0, headerSize);
@@ -402,10 +415,12 @@ namespace NsTcpClient
                     Buffer.BlockCopy(buf, 0, dstBuffer, headerSize, bufSize);
                 mTcpClient.Send(dstBuffer, dstSize);
             } finally {
+#if !UNITY_WEIXINMINIGAME
                 if (dstStream != null) {
                     dstStream.Dispose();
                     dstStream = null;
                 }
+#endif
             }
 		}
 
