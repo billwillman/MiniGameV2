@@ -4,6 +4,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Unity.Collections.LowLevel.Unsafe;
+using Unity.Collections;
 using WeChatWASM;
 
 namespace NsTcpClient
@@ -114,8 +116,23 @@ namespace NsTcpClient
             Dispose();
         }
 
-        public bool Send(byte[] pData, int bufSize = -1) {
-            throw new NotImplementedException();
+        public unsafe bool Send(byte[] pData, int bufSize = -1) {
+            if (pData == null)
+                return false;
+            if (bufSize < 0 || bufSize >= pData.Length) {
+                m_TcpSocket.Write(pData);
+            } else {
+                NativeArray<byte> tempBuffer = new NativeArray<byte>(bufSize, Allocator.Temp);
+                try {
+                    fixed (byte* src = pData) {
+                        Buffer.MemoryCopy(src, tempBuffer.GetUnsafePtr(), bufSize, bufSize);
+                    }
+                    m_TcpSocket.Write(tempBuffer);
+                } finally {
+                    tempBuffer.Dispose();
+                }
+            }
+            return true;
         }
     }
 
