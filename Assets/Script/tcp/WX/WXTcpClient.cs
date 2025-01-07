@@ -65,7 +65,18 @@ namespace NsTcpClient
         protected void Dispose(bool Diposing) {
             if (!m_IsDispose) {
 
+                if (m_TcpSocket != null) {
+                    m_TcpSocket.OffConnect(WXTcpSocket_OnConnect);
+                    m_TcpSocket.OffError(WXTcpSocket_OnAbortOrConnectFail);
+                    m_TcpSocket.OffClose(WXTcpSocket_OnAbortOrConnectFail);
+                }
+
                 if (Diposing) {
+                    if (m_TcpSocket != null) {
+                        m_TcpSocket.Close();
+                        m_TcpSocket = null;
+                    }
+
                     m_HasReadSize = 0;
                 }
 
