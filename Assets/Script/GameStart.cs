@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using XLua;
+#if UNITY_WEIXINMINIGAME
+using WeChatWASM;
+#endif
 
 namespace SOC.GamePlay
 {
@@ -93,7 +96,15 @@ namespace SOC.GamePlay
         }
 
         void OnInit() {
+#if UNITY_WEIXINMINIGAME
+            WX.InitSDK((int code) =>
+            {
+                Debug.Log("WX InitSDK code: " + code);
+                InitLuaEnv();
+            });
+#else
             InitLuaEnv();
+#endif
         }
 
         void ServerAttachLogFile() {

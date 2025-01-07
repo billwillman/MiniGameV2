@@ -12,6 +12,10 @@ namespace NsTcpClient
     {
         private WXTCPSocket m_TcpSocket = null; // н╒пе Tcp Socket
 
+        public WXTcpClient() {
+            m_TcpSocket = WX.CreateTCPSocket();
+        }
+
         public Action<TcpClient> OnThreadBufferProcess { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
         public bool Connect(string pRemoteIp, int uRemotePort, int mTimeOut = -1) {
