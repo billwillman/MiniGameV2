@@ -127,7 +127,7 @@ namespace NsTcpClient
                     fixed (byte* src = pData) {
                         Buffer.MemoryCopy(src, tempBuffer.GetUnsafePtr(), bufSize, bufSize);
                     }
-                    m_TcpSocket.Write(tempBuffer);
+                    m_TcpSocket.Write(tempBuffer.ToArray());
                 } finally {
                     tempBuffer.Dispose();
                 }
