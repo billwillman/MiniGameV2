@@ -27,6 +27,10 @@ namespace NsTcpClient
             else
                 SetClientState(eClientState.eClient_STATE_ABORT);
         }
+
+        private void WXTcpSocket_OnMessage(TCPSocketOnMessageListenerResult msg) {
+
+        }
         // --------------------------------------------------------------
 
         public WXTcpClient() {
@@ -34,6 +38,7 @@ namespace NsTcpClient
             m_TcpSocket.OnConnect(WXTcpSocket_OnConnect);
             m_TcpSocket.OnError(WXTcpSocket_OnAbortOrConnectFail);
             m_TcpSocket.OnClose(WXTcpSocket_OnAbortOrConnectFail);
+            m_TcpSocket.OnMessage(WXTcpSocket_OnMessage);
         }
 
         ~WXTcpClient() {
@@ -54,7 +59,18 @@ namespace NsTcpClient
         }
 
         public bool Connect(string pRemoteIp, int uRemotePort, int mTimeOut = -1) {
-            throw new NotImplementedException();
+            eClientState state = GetState();
+            if ((state == eClientState.eClient_STATE_CONNECTING) || (state == eClientState.eClient_STATE_CONNECTED))
+                return false;
+            if (m_TcpSocket != null) {
+                TCPSocketConnectOption opt = new TCPSocketConnectOption();
+                opt.address = pRemoteIp;
+                opt.port = uRemotePort;
+                opt.timeout = ((double)mTimeOut) / 1000.0f;
+                m_TcpSocket.Connect(opt);
+                return true;
+            }
+            return false;
         }
 
         public void Dispose() {
@@ -69,6 +85,7 @@ namespace NsTcpClient
                     m_TcpSocket.OffConnect(WXTcpSocket_OnConnect);
                     m_TcpSocket.OffError(WXTcpSocket_OnAbortOrConnectFail);
                     m_TcpSocket.OffClose(WXTcpSocket_OnAbortOrConnectFail);
+                    m_TcpSocket.OffMessage(WXTcpSocket_OnMessage);
                 }
 
                 if (Diposing) {
