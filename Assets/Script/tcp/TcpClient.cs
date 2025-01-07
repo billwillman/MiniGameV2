@@ -130,7 +130,7 @@ namespace NsTcpClient {
         }
 
         // 无锁函数（注意线程安全）
-        internal int GetReadDataNoLock(byte[] pBuffer, int offset) {
+        public int GetReadDataNoLock(byte[] pBuffer, int offset) {
             if (pBuffer == null)
                 return 0;
 

@@ -872,7 +872,7 @@ namespace NsTcpClient
             set;
         }
 
-        private TcpClient mTcpClient = null;
+        private ITcpClient mTcpClient = null;
 		private LinkedList<GamePacket> mPacketList = new LinkedList<GamePacket>();
         private LinkedList<MoonGamePacket> mMoonPacketList = new LinkedList<MoonGamePacket>();
 		private Dictionary<int, OnPacketRead> mPacketListenerMap = new Dictionary<int, OnPacketRead>();

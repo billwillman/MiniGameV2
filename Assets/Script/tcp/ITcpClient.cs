@@ -27,5 +27,7 @@ namespace NsTcpClient
 			get;
 			set;
 		}
+
+		int GetReadDataNoLock(byte[] pBuffer, int offset);
 	}  
 }
