@@ -15,8 +15,25 @@ namespace NsTcpClient
         private eClientState m_State = eClientState.eCLIENT_STATE_NONE;
         private int m_HasReadSize = 0;
 
+        // --------------------------- 微信TCP事件回调 ------------------
+        private void WXTcpSocket_OnConnect(GeneralCallbackResult result) {
+            Debug.LogWarning("[WXTcpSocket] OnConnect: " + result.errMsg);
+            SetClientState(eClientState.eClient_STATE_CONNECTED);
+        }
+        private void WXTcpSocket_OnAbortOrConnectFail(GeneralCallbackResult result) {
+            Debug.LogWarning("[WXTcpSocket] OnAbort: " + result.errMsg);
+            if (GetState() == eClientState.eClient_STATE_CONNECTING)
+                SetClientState(eClientState.eClient_STATE_CONNECT_FAIL);
+            else
+                SetClientState(eClientState.eClient_STATE_ABORT);
+        }
+        // --------------------------------------------------------------
+
         public WXTcpClient() {
             m_TcpSocket = WX.CreateTCPSocket();
+            m_TcpSocket.OnConnect(WXTcpSocket_OnConnect);
+            m_TcpSocket.OnError(WXTcpSocket_OnAbortOrConnectFail);
+            m_TcpSocket.OnClose(WXTcpSocket_OnAbortOrConnectFail);
         }
 
         ~WXTcpClient() {
@@ -25,6 +42,10 @@ namespace NsTcpClient
 
         public eClientState GetState() {
             return m_State;
+        }
+
+        private void SetClientState(eClientState uState) {
+            m_State = uState;
         }
 
         public Action<TcpClient> OnThreadBufferProcess {
