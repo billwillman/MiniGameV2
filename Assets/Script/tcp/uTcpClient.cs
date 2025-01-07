@@ -420,7 +420,11 @@ namespace NsTcpClient
         public bool Connect(string ip, int port)
 		{
 			DisConnect ();
-			mTcpClient = new TcpClient ();
+#if UNITY_WEIXINMINIGAME
+            mTcpClient = new WXTcpClient();
+#else
+            mTcpClient = new TcpClient ();
+#endif
             mTcpClient.OnThreadBufferProcess = OnThreadBufferProcess;
             bool ret = mTcpClient.Connect(ip, port, cSocketConnWaitTime);
 			if (ret) {
@@ -629,13 +633,13 @@ namespace NsTcpClient
                         Marshal.Copy(mRecvBuffer, i, (IntPtr)headerBuffer, headerSize);
                        // 优化掉了
                        // header = (GamePackHeader)Marshal.PtrToStructure(headerBuffer, typeof(GamePackHeader));
-                        #if USE_NETORDER
+#if USE_NETORDER
                         // used Net
                         header.headerCrc32 = (uint)IPAddress.NetworkToHostOrder(header.headerCrc32);
                         header.dataCrc32 = (uint)IPAddress.NetworkToHostOrder(header.dataCrc32);
                         header.header = IPAddress.NetworkToHostOrder(header.header);
                         header.dataSize = IPAddress.NetworkToHostOrder(header.dataSize);
-                        #endif
+#endif
                         if ((recvBufSz - i) < (header.dataSize + headerSize))
                             break;
                         // GamePacket packet = new GamePacket();
