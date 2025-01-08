@@ -34,7 +34,33 @@ namespace NsTcpClient
         }
 
         private void WXTcpSocket_OnMessage(TCPSocketOnMessageListenerResult msg) {
-
+            var state = GetState();
+            if (state != eClientState.eClient_STATE_CONNECTED) {
+                return;
+            }
+            int readSize = m_ReadBuffer.Length - m_HasReadSize;
+            if (readSize > 0 && msg.message != null) {
+                int nRet = msg.message.Length;
+                if (nRet > 0) {
+                    if (nRet > readSize) { // 不允许超过可读BUFFER大小
+                        Debug.LogError(string.Format("[WXTcpSocket] nRet({0:D}) > readSize({1:D})", nRet, readSize));
+                        Release();
+                        SetClientState(eClientState.eClient_STATE_ABORT);
+                        return;
+                    }
+                    Buffer.BlockCopy(msg.message, 0, m_ReadBuffer, m_HasReadSize, nRet);
+                    m_HasReadSize += nRet;
+                    if (OnThreadBufferProcess != null)
+                        OnThreadBufferProcess(this);
+                    else
+                        m_HasReadSize = 0;
+                }
+            } else if (msg.message != null && msg.message.Length > 0 && readSize <= 0) { // 不允许超过可读BUFFER大小
+                Debug.LogError("[WXTcpSocket] msg Buffer is Full");
+                Release();
+                SetClientState(eClientState.eClient_STATE_ABORT);
+                return;
+            }
         }
         // --------------------------------------------------------------
 
@@ -58,7 +84,7 @@ namespace NsTcpClient
             m_State = uState;
         }
 
-        public Action<TcpClient> OnThreadBufferProcess {
+        public Action<ITcpClient> OnThreadBufferProcess {
             get;
             set;
         }

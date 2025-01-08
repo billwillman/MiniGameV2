@@ -23,7 +23,7 @@ namespace NsTcpClient
 		bool Send(byte[] pData, int bufSize = -1);
 		bool HasReadData();
 
-		Action<TcpClient> OnThreadBufferProcess {
+		Action<ITcpClient> OnThreadBufferProcess {
 			get;
 			set;
 		}

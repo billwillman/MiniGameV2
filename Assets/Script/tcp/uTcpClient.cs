@@ -576,7 +576,7 @@ namespace NsTcpClient
 		}
 
         // 子线程调用
-        private unsafe void OnMoonPacketThreadBufferProcess(TcpClient tcp) {
+        private unsafe void OnMoonPacketThreadBufferProcess(ITcpClient tcp) {
             if (tcp == null)
                 return;
             int recvsize = mTcpClient.GetReadDataNoLock(mRecvBuffer, mRecvSize);
@@ -626,7 +626,7 @@ namespace NsTcpClient
         }
 
         // 子线程调用
-        private unsafe void OnThreadBufferProcess(TcpClient tcp)
+        private unsafe void OnThreadBufferProcess(ITcpClient tcp)
         {
             if (tcp == null)
                 return;

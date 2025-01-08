@@ -118,7 +118,7 @@ namespace NsTcpClient {
         }
 
         // buffer, recvSize, result int
-        public Action<TcpClient> OnThreadBufferProcess {
+        public Action<ITcpClient> OnThreadBufferProcess {
             get;
             set;
         }
