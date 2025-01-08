@@ -435,7 +435,7 @@ namespace NsTcpClient
         public bool Connect(string ip, int port)
 		{
 			DisConnect ();
-#if UNITY_WEIXINMINIGAME
+#if UNITY_WEIXINMINIGAME && !UNITY_EDITOR
             mTcpClient = new WXTcpClient();
 #else
             mTcpClient = new TcpClient ();
