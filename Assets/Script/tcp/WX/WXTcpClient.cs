@@ -12,10 +12,13 @@ namespace NsTcpClient
 {
     public class WXTcpClient: ITcpClient
     {
+        static public readonly int MAX_TCP_CLIENT_BUFF_SIZE = (64 * 1024);
+
         private WXTCPSocket m_TcpSocket = null; // 微信 Tcp Socket
         private bool m_IsDispose = false;
         private eClientState m_State = eClientState.eCLIENT_STATE_NONE;
         private int m_HasReadSize = 0;
+        private byte[] m_ReadBuffer = new byte[MAX_TCP_CLIENT_BUFF_SIZE];
 
         // --------------------------- 微信TCP事件回调 ------------------
         private void WXTcpSocket_OnConnect(GeneralCallbackResult result) {
@@ -96,6 +99,7 @@ namespace NsTcpClient
                         m_TcpSocket = null;
                     }
 
+                    m_ReadBuffer = null;
                     m_HasReadSize = 0;
                 }
 
@@ -105,7 +109,31 @@ namespace NsTcpClient
         }
 
         public int GetReadDataNoLock(byte[] pBuffer, int offset) {
-            throw new NotImplementedException();
+            if (pBuffer == null)
+                return 0;
+
+            int bufSize = pBuffer.Length;
+            if (bufSize <= 0)
+                return 0;
+
+            int ret = bufSize - offset;
+
+            if (ret <= 0) {
+                // mei you chu li wan
+                ret = 0;
+                return ret;
+            }
+
+            if (ret > m_HasReadSize)
+                ret = m_HasReadSize;
+
+            Buffer.BlockCopy(m_ReadBuffer, 0, pBuffer, offset, ret);
+            int uLast = m_HasReadSize - ret;
+
+            Buffer.BlockCopy(m_ReadBuffer, ret, m_ReadBuffer, 0, uLast);
+            m_HasReadSize = uLast;
+
+            return ret;
         }
 
         public bool HasReadData() {
