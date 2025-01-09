@@ -5505,6 +5505,10 @@ public static class AssetBundleBuild
 		dstAssets = outPath + "/UserSettings";
 		_CreateDirs(dstAssets);
 		_CopyAllFiles("UserSettings", dstAssets, null);
+
+		dstAssets = outPath + "/WebGLPlugins";
+		_CreateDirs(dstAssets);
+		_CopyAllFiles("WebGLPlugins", dstAssets, null);
 	}
 
 	private static void Cmd_RemoveAssetRootFiles(string outPath)
