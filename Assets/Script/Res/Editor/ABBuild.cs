@@ -5428,6 +5428,10 @@ public static class AssetBundleBuild
 		dstAssets = outPath + "/UserSettings";
 		_CreateDirs(dstAssets);
 		_CopyAllFiles("UserSettings", dstAssets, null);
+
+		dstAssets = outPath + "/WebGLPlugins";
+		_CreateDirs(dstAssets);
+		_CopyAllFiles("WebGLPlugins", dstAssets, null);
 	}
 
     // 拷贝非资源文件夹
