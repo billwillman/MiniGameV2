@@ -131,6 +131,7 @@ public static class ExampleGenConfig
                 new List<string>(){"System.IO.DirectoryInfo", "CreateSubdirectory", "System.String", "System.Security.AccessControl.DirectorySecurity"},
                 new List<string>(){"System.IO.DirectoryInfo", "Create", "System.Security.AccessControl.DirectorySecurity"},
                 new List<string>(){"UnityEngine.MonoBehaviour", "runInEditMode"},
+                new List<string>(){"UnityEngine.MonoBehaviour", "EnableScriptReloadInCheckConsistency", "System.Boolean"},
             };
     
     public static List<Type> BlackGenericTypeList = new List<Type>()
