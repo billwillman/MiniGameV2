@@ -16,8 +16,8 @@ end
 local path = table.concat({
     "./?.lua",
     "./?/init.lua",
-    "../lualib/?.lua",   -- moon lualib 搜索路径
-    "../service/?.lua",  -- moon 自带的服务搜索路径，需要用到redisd服务
+    "../Lib/moon/lualib/?.lua",   -- moon lualib 搜索路径
+    "../Lib/moon/service/?.lua",  -- moon 自带的服务搜索路径，需要用到redisd服务
     -- Append your lua module search path
 }, ";")
 
@@ -51,7 +51,6 @@ end)
 require("ServerCommon.GlobalServerConfig")
 require("ServerCommon.GlobalFuncs")
 require("ServerCommon.ServerMsgIds")
-local TableUtils = require("_Common.TableUtils")
 
 local server_ok = false
 
