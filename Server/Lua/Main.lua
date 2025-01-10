@@ -55,6 +55,7 @@ require("ServerCommon.ServerMsgIds")
 local server_ok = false
 
 local Services = {
+    --[[
     -- 登录服务器
     {
         name = "LoginSrv",
@@ -86,6 +87,7 @@ local Services = {
         file = "./GMServer/GMServer.lua",
         unique = true
     },
+    ]]
     --[[
     -- Cluster集群支持
     {
