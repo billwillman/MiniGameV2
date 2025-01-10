@@ -7,8 +7,7 @@ log/
 .vs/
 .utmp/
 .vsconfig
-Assembly-CSharp.csproj
-Assembly-CSharp-Editor.csproj
+*.csproj
 MiniGameV2.sln
 Assets/XLua/Gen/
 Assets/StreamingAssets/
