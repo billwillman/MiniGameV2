@@ -1,0 +1,36 @@
+{
+    "LoginSrv": {
+        "ip": "127.0.0.1",
+        "port": 5000,
+        "Debug": 20000,
+        "isSaveQuit": false
+    },
+    "ServerListSrv": {
+        "ip": "127.0.0.1",
+        "port": 1983,
+        "Debug": 20001,
+        "isSaveQuit": false
+    },
+    "BattleSrv": {
+        "ip": "127.0.0.1",
+        "port": 1990,
+        "Debug": 20002,
+        "isSaveQuit": false
+    },
+    "DSA": {
+        "ip": "127.0.0.1",
+        "port": 1991,
+        "Debug": 20003,
+        "isSaveQuit": false
+    },
+    "GM": {
+        "ip": "127.0.0.1",
+        "port": 1992,
+        "Debug": 20004,
+        "isSaveQuit": false
+    },
+    "Cluster": {
+        "url": "http://127.0.0.1:8003/conf.cluster?node=%s",
+        "isSaveQuit": false
+    }
+}
