@@ -4,16 +4,19 @@ using UnityEngine;
 using UnityEngine.Jobs;
 using Unity.Burst;
 using Unity.Mathematics;
+using Unity.Collections;
 
 namespace SOC.GamePlay
 {
 
     [BurstCompile]
-    public class TestRotJob : IJobParallelForTransform
+    public struct TestRotJob : IJobParallelForTransform
     {
+        [ReadOnly] public float deltaTime;
+
         [BurstCompile]
         public void Execute(int index, TransformAccess transform) {
-             
+            transform.localPosition += Vector3.forward * deltaTime;
         }
     }
 
