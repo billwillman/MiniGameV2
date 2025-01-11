@@ -16,12 +16,28 @@ local function InitGlobalVars()
     end
 end
 
+local function CreateApplication()
+    local appClass
+    if _MOE.IsDS then
+        appClass = require("_DS.DSApp")
+    else
+        appClass = require("_Client.ClientApp")
+    end
+    if not appClass then
+        _MOE.Logger.LogError("[CreateApplication] not found appClass~!")
+        return
+    end
+    _MOE.GameApp = appClass.New()
+    _MOE.GameApp:Init()
+end
+
 --- 主函数
 function Main()
     _MOE.Logger.Log("[xlua] Main Start...")
     -- 设置调试Lua Panda调试
     InitGlobalVars()
-    -- CreateApplication()
+    -- 创建APP
+    CreateApplication()
 end
 
 function QuitGame()

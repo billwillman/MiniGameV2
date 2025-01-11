@@ -1,0 +1,6 @@
+----- Client的L
+local BaseAppClass = require("_Common.BaseApp")
+
+local _M = _MOE.class("ClientApp", BaseAppClass)
+
+return _M
