@@ -165,7 +165,8 @@ namespace SOC.GamePlay
                 // ÓÅÏÈ¼ÓÔØPreload.lua
                 ResourceMgr.Instance.LoadTextAsync("Resources/@Lua/Preload.lua.bytes", (float process, bool isDone, TextAsset text) =>
                 {
-                    byte[] lua = ResourceMgr.Instance.LoadBytes("Resources/@Lua/Preload.lua.bytes");
+                    //byte[] lua = ResourceMgr.Instance.LoadBytes("Resources/@Lua/Preload.lua.bytes");
+                    byte[] lua = text.bytes;
                     System.Object[] result = m_LuaEnv.DoString(lua);
                     LuaTable _MOE = result[0] as LuaTable;
                     try {
