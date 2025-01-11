@@ -188,7 +188,7 @@ namespace SOC.GamePlay
                         }
                         m_LuaUpdateFunc = m_LuaEnv.Global.Get<LuaFunction>("Update");
                     }
-                });
+                }, ResourceCacheType.rctRefAdd);
             }
         }
 
@@ -260,7 +260,7 @@ namespace SOC.GamePlay
                             return ret;
                     }
                 } else {
-                    byte[] ret = ResourceMgr.Instance.LoadBytes(luaPath, ResourceCacheType.rctRefAdd);
+                    byte[] ret = ResourceMgr.Instance.LoadBytes(luaPath);
                     if (ret != null)
                         return ret;
                 }
