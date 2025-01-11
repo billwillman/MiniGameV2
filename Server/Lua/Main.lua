@@ -55,13 +55,13 @@ require("ServerCommon.ServerMsgIds")
 local server_ok = false
 
 local Services = {
-    --[[
     -- 登录服务器
     {
         name = "LoginSrv",
         file = "./LoginServer/LoginServer.lua",
         unique = true
     },
+    --[[
     -- 区服服务器
     {
         name = "ServerListSrv",
