@@ -507,7 +507,7 @@ public class AssetInfo
             AddNoOwnerToTaskList(taskList, m_AsyncTask);
             return true;
         }
-#if UNITY_WEIXINMINIGAME
+#if UNITY_WEIXINMINIGAME && !UNITY_EDITOR
         if (WXAssetBundleAsyncTask.HasCDNFile(mFileName)) // 远程文件才使用 WXAssetBundleAsyncTask
             m_AsyncTask = WXAssetBundleAsyncTask.Create(mFileName, priority);
         else
@@ -2933,7 +2933,7 @@ public sealed class AssetLoader : IResourceLoader
         AssetBundle bundle;
         string fileName = GetXmlFileName();
 #if UNITY_5_3 || UNITY_5_4 || UNITY_5_5 || UNITY_5_6 || UNITY_2018 || UNITY_2019 || UNITY_2017 || UNITY_2017_1_OR_NEWER
-#if UNITY_WEIXINMINIGAME
+#if UNITY_WEIXINMINIGAME && !UNITY_EDITOR
         bundle = WXAssetBundle.LoadFromFile(fileName);
 #else
         bundle = AssetBundle.LoadFromFile(fileName);

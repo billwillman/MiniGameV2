@@ -44,14 +44,14 @@ public class MiniGame_ResProxyMgr: SingetonMono<MiniGame_ResProxyMgr>
     protected void Dispose() {
         ResVersion = string.Empty;
         StopAllCoroutines(); // 禁用所有Coroutines
-#if UNITY_WEIXINMINIGAME
+#if UNITY_WEIXINMINIGAME && !UNITY_EDITOR
         WXAssetBundleAsyncTask.CDN_RootDir = string.Empty;
         WXAssetBundleAsyncTask.Mapper = null;
 #endif
     }
 
     public bool RequestStart(Action<bool> onFinish, Action onAbort) {
-#if UNITY_WEIXINMINIGAME
+#if UNITY_WEIXINMINIGAME && !UNITY_EDITOR
         Dispose();
         if (string.IsNullOrEmpty(CDNRoot) || string.IsNullOrEmpty(AppResVersion)) {
             onFinish(true); // 认为是本地读取

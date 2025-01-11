@@ -385,7 +385,7 @@ public class BundleCreateAsyncTask: IAssetBundleAsyncTask
 
 	public override AssetBundle StartLoad() {
 		if (m_Req == null) {
-#if UNITY_WEIXINMINIGAME
+#if UNITY_WEIXINMINIGAME && !UNITY_EDITOR
 			m_Req = WXAssetBundle.LoadFromFileAsync(m_FileName);
 #else
 			m_Req = AssetBundle.LoadFromFileAsync(m_FileName);
@@ -529,7 +529,7 @@ public class BundleCreateAsyncTask: IAssetBundleAsyncTask
 
 	private string m_FileName = string.Empty;
 	private int m_Priority = 0;
-#if UNITY_WEIXINMINIGAME
+#if UNITY_WEIXINMINIGAME && !UNITY_EDITOR
 	private WXAssetBundleRequest m_Req = null;
 #else
 	private AssetBundleCreateRequest m_Req = null;
