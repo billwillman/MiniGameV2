@@ -96,7 +96,7 @@ namespace SOC.GamePlay
         }
 
         void OnInit() {
-#if UNITY_WEIXINMINIGAME
+#if UNITY_WEIXINMINIGAME && !UNITY_EDITOR
             WX.InitSDK((int code) =>
             {
                 Debug.Log("WX InitSDK code: " + code);
