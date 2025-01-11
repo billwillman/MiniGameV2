@@ -38,6 +38,8 @@ _MOE.Logger = {
 }
 
 _MOE.Application = CS.UnityEngine.Application
+_MOE.NetManager = CS.NsTcpClient.NetManager:GetInstance()
+_MOE.NetClientClass = CS.NsTcpClient.NetClient
 _MOE.ResourceManager = CS.ResourceMgr:GetInstance()
 _MOE.GameObject = CS.GameObject
 _MOE.GameStart = CS.SOC.GamePlay.GameStart.Instance
