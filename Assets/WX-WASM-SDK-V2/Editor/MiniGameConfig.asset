@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ProjectConf:
     projectName: MiniGame
-    Appid: wxa303f39034798948
+    Appid: wxba5f1d73db5bd99f
     CDN: https://minigame-1252342341.cos.ap-shanghai.myqcloud.com/1.000
     assetLoadType: 1
     compressDataPackage: 1
