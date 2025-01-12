@@ -160,6 +160,10 @@ namespace SOC.GamePlay
             _MOE.Set<string, bool>("IsDS", IsDS); // 是否是DS 
         }
 
+        void OnGameStartFinish() {
+
+        }
+
         void Lua_DoMain() {
             if (m_LuaEnv != null) {
                 // 优先加载Preload.lua
@@ -196,6 +200,9 @@ namespace SOC.GamePlay
                                 }
                             }
                             m_LuaUpdateFunc = m_LuaEnv.Global.Get<LuaFunction>("Update");
+
+                            // 游戏正式开始
+                            OnGameStartFinish();
                         }
                     }
                 }, ResourceCacheType.rctRefAdd);
