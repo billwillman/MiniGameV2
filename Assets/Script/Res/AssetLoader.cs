@@ -978,7 +978,7 @@ public class AssetInfo
 
     public void _BundleUnLoadFalse() {
         if (IsVaild()) {
-#if UNITY_WEIXINMINIGAME
+#if UNITY_WEIXINMINIGAME && !UNITY_EDITOR
             mBundle.WXUnload(false);
 #else
             mBundle.Unload(false);
@@ -999,7 +999,7 @@ public class AssetInfo
         m_AsyncLoadDict.Clear();
         ClearUsingCnt();
         if (isVaild) {
-#if UNITY_WEIXINMINIGAME
+#if UNITY_WEIXINMINIGAME && !UNITY_EDITOR
             mBundle.WXUnload(true);
 #else
             mBundle.Unload(true);
@@ -2965,14 +2965,14 @@ public sealed class AssetLoader : IResourceLoader
 #endif
                 usedTime = Time.realtimeSinceStartup - startTime;
                 Debug.LogFormat("解析XML时间：{0}", usedTime.ToString());
-#if UNITY_WEIXINMINIGAME
+#if UNITY_WEIXINMINIGAME && !UNITY_EDITOR
                 bundle.WXUnload(true);
 #else
                 bundle.Unload(true);
 #endif
             } else {
                 Debug.LogErrorFormat("[LoadConfig]读取TextAsset {0} 失敗", name);
-#if UNITY_WEIXINMINIGAME
+#if UNITY_WEIXINMINIGAME && !UNITY_EDITOR
                 bundle.WXUnload(true);
 #else
                 bundle.Unload(true);
