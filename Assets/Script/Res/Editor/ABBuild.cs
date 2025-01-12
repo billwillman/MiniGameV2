@@ -304,6 +304,14 @@ class AssetBunbleInfo: IDependBinary
 
 	}
 
+	internal static readonly string _SceneExt =
+#if TUANJIE_1_0_OR_NEWER
+		".scene"
+#else
+		".unity"
+#endif
+		;
+
 	private void CheckIsScene()
 	{
 		if (FileType == AssetBundleFileType.abError) {
@@ -315,7 +323,7 @@ class AssetBunbleInfo: IDependBinary
 		if (FileType == AssetBundleFileType.abMainFile) {
 			// 判断是否是场景
 			string ext = System.IO.Path.GetExtension (FullPath);
-			IsScene = (string.Compare (ext, ".unity", true) == 0);
+			IsScene = (string.Compare (ext, SceneExt, true) == 0);
 			return;
 		}*/
 
@@ -325,7 +333,7 @@ class AssetBunbleInfo: IDependBinary
 		{
 			string fileName = GetSubFiles(i);
 			string ext = System.IO.Path.GetExtension(fileName);
-			bool b = (string.Compare (ext, ".unity", true) == 0);
+			bool b = (string.Compare (ext, _SceneExt, true) == 0);
 			if ((i > 0) && (isSceneFiles != b))
 			{
                 // string errStr = StringHelper.Format("AssetBundle [{0}] don't has Scene and other type files", Path);
@@ -350,7 +358,7 @@ class AssetBunbleInfo: IDependBinary
 				{
 					string fileName = mFileList[i];
 					string ext = System.IO.Path.GetExtension(fileName);
-					bool b = (string.Compare (ext, ".unity", true) == 0);
+					bool b = (string.Compare (ext, _SceneExt, true) == 0);
 					if (!b)
 						fileList.Add(fileName);
 				}
@@ -1085,7 +1093,7 @@ static class AssetBundleRefHelper
 				if (string.IsNullOrEmpty(srcSubFile))
 					continue;
 				string srcExt = Path.GetExtension(srcSubFile);
-				bool isSceneFile = string.Compare(srcExt, ".unity") == 0;
+				bool isSceneFile = string.Compare(srcExt, AssetBunbleInfo._SceneExt) == 0;
 				string yaml = GetYamlStr(srcSubFile);
 				if (string.IsNullOrEmpty(yaml))
 					continue;
@@ -1132,7 +1140,7 @@ static class AssetBundleRefHelper
 		return ret;
 	}
 
-	private static string[] _cYamlFileExts = {".unity", ".prefab", ".mat", ".controller", ".mask",
+	private static string[] _cYamlFileExts = {".unity", ".scene", ".prefab", ".mat", ".controller", ".mask",
 		".flare", ".renderTexture", ".mixer", ".giparams", ".anim", ".overrideController",
 		".physicMaterial", ".physicsMaterial2D", ".guiskin", ".fontsettings", ".shadervariants",
 		".cubemap"};
@@ -3743,7 +3751,7 @@ public static class AssetBundleBuild
 	private static readonly string[] ResourceExts = {".prefab", ".fbx",
 													 ".png", ".jpg", ".dds", ".gif", ".psd", ".tga", ".bmp",
 													 ".txt", ".bytes", ".xml", ".csv", ".json",
-													 ".controller", ".shader", ".anim", ".unity", ".mat",
+													 ".controller", ".shader", ".anim", ".unity", ".scene", ".mat",
 													 ".wav", ".mp3", ".ogg",
 													 ".ttf", ".otf",
 													 ".shadervariants", ".asset", ".shadergraph"};
@@ -3751,7 +3759,7 @@ public static class AssetBundleBuild
 	private static readonly string[] ResourceXmlExts = {".prefab", ".fbx",
 														".tex", ".tex",  ".tex", ".tex", ".tex", ".tex", ".tex",
 														".bytes", ".bytes", ".bytes", ".bytes", ".bytes",
-														".controller", ".shader", ".anim", ".unity", ".mat",
+														".controller", ".shader", ".anim", ".unity", ".scene", ".mat",
 														".audio", ".audio", ".audio",
 													    ".ttf", ".otf",
 														".shaderVar", ".asset", ".shadergraph"};
@@ -3760,7 +3768,7 @@ public static class AssetBundleBuild
 														typeof(UnityEngine.GameObject), typeof(UnityEngine.GameObject),
 														typeof(UnityEngine.Texture), typeof(UnityEngine.Texture), typeof(UnityEngine.Texture), typeof(UnityEngine.Texture), typeof(UnityEngine.Texture), typeof(UnityEngine.Texture), typeof(UnityEngine.Texture),
 														typeof(UnityEngine.TextAsset), typeof(UnityEngine.TextAsset), typeof(UnityEngine.TextAsset), typeof(UnityEngine.TextAsset), typeof(UnityEngine.TextAsset),
-														typeof(UnityEngine.Object), typeof(UnityEngine.Shader), typeof(UnityEngine.AnimationClip), null, typeof(UnityEngine.Material),
+														typeof(UnityEngine.Object), typeof(UnityEngine.Shader), typeof(UnityEngine.AnimationClip), null, null, typeof(UnityEngine.Material),
 														typeof(UnityEngine.AudioClip), typeof(UnityEngine.AudioClip), typeof(UnityEngine.AudioClip),
 														typeof(UnityEngine.Font), typeof(UnityEngine.Font),
 														typeof(UnityEngine.ShaderVariantCollection), typeof(UnityEngine.ScriptableObject), typeof(UnityEngine.Shader)
@@ -3801,7 +3809,7 @@ public static class AssetBundleBuild
 		string newExt = GetXmlExt (ext);
 		if (string.IsNullOrEmpty (newExt))
 			return string.Empty;
-		if (string.Compare (newExt, ".unity", true) == 0)
+		if (string.Compare (newExt, AssetBunbleInfo._SceneExt, true) == 0)
 			fileName = Path.GetFileName (fileName);
 		return Path.ChangeExtension (fileName, newExt);
 	}
@@ -3964,7 +3972,7 @@ public static class AssetBundleBuild
 					if (name.IndexOf('@') >= 0)
 						return false;
 				} else
-				if (ResourceExts[i] == ".unity")
+				if (ResourceExts[i] == AssetBunbleInfo._SceneExt)
 				{
 					if (!IsVaildSceneResource(fileName))
 						return false;
@@ -4003,7 +4011,7 @@ public static class AssetBundleBuild
 						if (name.IndexOf('@') >= 0)
 							return false;
 					} else
-					if (ResourceExts[j] == ".unity")
+					if (ResourceExts[j] == AssetBunbleInfo._SceneExt)
 					{
 						if (!IsVaildSceneResource(files[i]))
 							return false;

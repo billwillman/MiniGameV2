@@ -1180,8 +1180,8 @@ public sealed class AssetLoader : IResourceLoader
 #if USE_LOWERCHAR
         sceneName = sceneName.ToLower();
 #endif
-        //sceneName += ".unity";
-        sceneName = StringHelper.Concat(sceneName, ".unity");
+        //sceneName += _SceneExt;
+        sceneName = StringHelper.Concat(sceneName, _SceneExt);
         AssetInfo asset = FindAssetInfo(sceneName);
         if (asset == null)
             return false;
@@ -1195,14 +1195,22 @@ public sealed class AssetLoader : IResourceLoader
         return true;
     }
 
+    internal static readonly string _SceneExt =
+#if TUANJIE_1_0_OR_NEWER
+        ".scene"
+#else
+        ".unity"
+#endif
+        ;
+
     public override bool OnSceneLoadAsync(string sceneName, Action onEnd, int priority = 0) {
         if (string.IsNullOrEmpty(sceneName))
             return false;
 #if USE_LOWERCHAR
         sceneName = sceneName.ToLower();
 #endif
-        //sceneName += ".unity";
-        sceneName = StringHelper.Concat(sceneName, ".unity");
+        //sceneName += _SceneExt;
+        sceneName = StringHelper.Concat(sceneName, _SceneExt);
         AssetInfo asset = FindAssetInfo(sceneName);
         if (asset == null)
             return false;
@@ -1257,8 +1265,8 @@ public sealed class AssetLoader : IResourceLoader
 #if USE_LOWERCHAR
         sceneName = sceneName.ToLower();
 #endif
-        //sceneName += ".unity";
-        sceneName = StringHelper.Concat(sceneName, ".unity");
+        //sceneName += _SceneExt;
+        sceneName = StringHelper.Concat(sceneName, _SceneExt);
         AssetInfo asset = FindAssetInfo(sceneName);
         if (asset == null)
             return false;
