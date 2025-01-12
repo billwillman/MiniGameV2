@@ -161,7 +161,7 @@ namespace SOC.GamePlay
         }
 
         void OnGameStartFinish() {
-
+            ResourceMgr.Instance.LoadSceneAsync("Test", false, null);
         }
 
         void Lua_DoMain() {
