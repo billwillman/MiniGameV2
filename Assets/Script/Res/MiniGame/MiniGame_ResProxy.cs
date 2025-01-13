@@ -46,6 +46,7 @@ public class MiniGame_ResProxyMgr: SingetonMono<MiniGame_ResProxyMgr>
     protected void Dispose() {
         ResVersion = string.Empty;
         StopAllCoroutines(); // Ω˚”√À˘”–Coroutines
+        AssetLoader.UseCDNMapper = false;
         WebAsseetBundleAsyncTask.CDN_RootDir = string.Empty;
         WebAsseetBundleAsyncTask.Mapper = null;
 #if UNITY_WEIXINMINIGAME && !UNITY_EDITOR
