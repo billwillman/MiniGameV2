@@ -10,6 +10,8 @@ public class MiniGame_ResProxyMgr: SingetonMono<MiniGame_ResProxyMgr>
 {
     public string CDNRoot = string.Empty;
     public string AppResVersion = string.Empty;
+    [Tooltip("编辑模式下使用CDN的Mapper")]
+    public bool UseCDNMapperInEditor = false;
     public string ResVersion {
         get;
         set;
@@ -55,6 +57,9 @@ public class MiniGame_ResProxyMgr: SingetonMono<MiniGame_ResProxyMgr>
     public bool RequestStart(Action<bool> onFinish, Action onAbort) {
 #if UNITY_WEIXINMINIGAME
         Dispose();
+#if UNITY_EDITOR
+        AssetLoader.UseCDNMapper = UseCDNMapperInEditor;
+#endif
         if (!AssetLoader.UseCDNMapper || string.IsNullOrEmpty(CDNRoot) || string.IsNullOrEmpty(AppResVersion)) {
             onFinish(true); // 认为是本地读取
             return true;
