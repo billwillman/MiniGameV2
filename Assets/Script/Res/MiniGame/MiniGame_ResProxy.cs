@@ -57,12 +57,13 @@ public class MiniGame_ResProxyMgr: SingetonMono<MiniGame_ResProxyMgr>
     public bool RequestStart(Action<bool> onFinish, Action onAbort)
     {
         Dispose();
-        AssetLoader.UseCDNMapper = UseCDNMapper;
-        if (!AssetLoader.UseCDNMapper || string.IsNullOrEmpty(CDNRoot) || string.IsNullOrEmpty(AppResVersion))
+        if (!UseCDNMapper || string.IsNullOrEmpty(CDNRoot) || string.IsNullOrEmpty(AppResVersion))
         {
+            AssetLoader.UseCDNMapper = UseCDNMapper;
             onFinish(true); // 认为是本地读取
             return true;
         }
+        AssetLoader.UseCDNMapper = UseCDNMapper;
         string baseUrl = string.Format("{0}/{1}", CDNRoot, AppResVersion);
 #if UNITY_WEIXINMINIGAME && !UNITY_EDITOR
         WXAssetBundleAsyncTask.CDN_RootDir = baseUrl;

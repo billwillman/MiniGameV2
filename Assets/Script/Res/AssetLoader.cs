@@ -2850,14 +2850,14 @@ public sealed class AssetLoader : IResourceLoader
         LoadConfigProcess = 0f;
         float startTime = Time.realtimeSinceStartup;
         string fileName = GetXmlFileName();
-#if UNITY_EDITOR
+#if UNITY_WEIXINMINIGAME && !UNITY_EDITOR
+        string transFileName = WXAssetBundleAsyncTask.GetCDNFileName(fileName);
+#else
         string transFileName;
         if (AssetLoader.UseCDNMapper)
             transFileName = WebAsseetBundleAsyncTask.GetCDNFileName(fileName);
         else
             transFileName = fileName;
-#else
-        string transFileName = WXAssetBundleAsyncTask.GetCDNFileName(fileName);
 #endif
         bool isLocalFile = transFileName == fileName;
         Debug.Log("[DoWxAssetBundleXml] AssetBundle.xml isLocalFile: " + isLocalFile.ToString());
