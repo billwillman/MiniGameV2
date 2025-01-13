@@ -64,7 +64,8 @@ namespace SOC.GamePlay
         }
 
         void InitLuaSearchFormatPath() {
-            string luaSearchPath;
+            string luaSearchPath = string.Empty;
+#if !UNITY_WEIXINMINIGAME // 微信小游戏不要从可写目录读取
             if (IsDS) {
                 luaSearchPath = Application.dataPath + "/Lua/{0}.lua.bytes";
             } else {
@@ -73,6 +74,7 @@ namespace SOC.GamePlay
                 else
                     luaSearchPath = Application.persistentDataPath + "/Lua/{0}.lua.bytes";
             }
+#endif
 #if !UNITY_EDITOR
             if (!string.IsNullOrEmpty(luaSearchPath)) {
                 Debug.LogFormat("AddDynicLuaSearchPath: {0}", luaSearchPath);
