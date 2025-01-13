@@ -2914,7 +2914,11 @@ public sealed class AssetLoader : IResourceLoader
 #if USE_DEP_BINARY && USE_DEP_BINARY_AB
         Debug.Log("[DoWebAssetBundleXml] " + fileName);
         if (isLocalFile) {
+#if UNITY_WEIXINMINIGAME && !UNITY_EDITOR
             AssetBundle bundle = WXAssetBundle.LoadFromFile(fileName);
+#else
+            AssetBundle bundle = AssetBundle.LoadFromFile(fileName);
+#endif
             doOkFunc(bundle);
             yield break;
         }

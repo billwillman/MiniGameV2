@@ -5,9 +5,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Utils;
+using UnityEngine.Networking;
 #if UNITY_WEIXINMINIGAME
 using WeChatWASM;
-using UnityEngine.Networking;
 //using Unity.InstantGame;
 //using Unity.AutoStreaming;
 #endif
