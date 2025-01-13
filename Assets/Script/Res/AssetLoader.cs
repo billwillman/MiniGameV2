@@ -2846,7 +2846,6 @@ public sealed class AssetLoader : IResourceLoader
         return assetBundleFileName;
     }
 
-#if UNITY_WEIXINMINIGAME
     IEnumerator DoWebAssetBundleXml(Action<bool> OnFinishEvent, MonoBehaviour async) {
         LoadConfigProcess = 0f;
         float startTime = Time.realtimeSinceStartup;
@@ -2934,7 +2933,6 @@ public sealed class AssetLoader : IResourceLoader
         async.StartCoroutine(DoWebAssetBundleXml(OnFinishEvent, async));
     }
     // ----------------
-#endif
 
         // 手动调用读取配置, isThreadMode: 是否是多线程LOOM库的方式
         public void LoadConfigs(Action<bool> OnFinishEvent, MonoBehaviour async = null, bool isThreadMode = false) {

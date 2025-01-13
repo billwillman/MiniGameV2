@@ -11,7 +11,7 @@ public class MiniGame_ResProxyMgr: SingetonMono<MiniGame_ResProxyMgr>
     public string CDNRoot = string.Empty;
     public string AppResVersion = string.Empty;
     [Tooltip("编辑模式下使用CDN的Mapper")]
-    public bool UseCDNMapperInEditor = false;
+    public bool UseCDNMapper = false;
     public string ResVersion {
         get;
         set;
@@ -54,33 +54,34 @@ public class MiniGame_ResProxyMgr: SingetonMono<MiniGame_ResProxyMgr>
 #endif
     }
 
-    public bool RequestStart(Action<bool> onFinish, Action onAbort) {
-#if UNITY_WEIXINMINIGAME
+    public bool RequestStart(Action<bool> onFinish, Action onAbort)
+    {
         Dispose();
-#if UNITY_EDITOR
-        AssetLoader.UseCDNMapper = UseCDNMapperInEditor;
-#endif
-        if (!AssetLoader.UseCDNMapper || string.IsNullOrEmpty(CDNRoot) || string.IsNullOrEmpty(AppResVersion)) {
+        AssetLoader.UseCDNMapper = UseCDNMapper;
+        if (!AssetLoader.UseCDNMapper || string.IsNullOrEmpty(CDNRoot) || string.IsNullOrEmpty(AppResVersion))
+        {
             onFinish(true); // 认为是本地读取
             return true;
         }
         string baseUrl = string.Format("{0}/{1}", CDNRoot, AppResVersion);
-#if UNITY_EDITOR
-        WebAsseetBundleAsyncTask.CDN_RootDir = baseUrl;
-#else
+#if UNITY_WEIXINMINIGAME && !UNITY_EDITOR
         WXAssetBundleAsyncTask.CDN_RootDir = baseUrl;
+#else
+        WebAsseetBundleAsyncTask.CDN_RootDir = baseUrl;
 #endif
         string versionUrl = GenerateCDN_AppResVersion_Url("version.txt", true);
         Debug.Log("[RequestStart] versionUrl: " + versionUrl);
         RequestFile(versionUrl, (WebGame_HttpRequest req, bool isResult) =>
         {
-            if (!isResult) {
+            if (!isResult)
+            {
                 if (onFinish != null)
                     onFinish(false);
                 return;
             }
             string versionData = req.ResponeText;
-            if (string.IsNullOrEmpty(versionData)) {
+            if (string.IsNullOrEmpty(versionData))
+            {
                 if (onFinish != null)
                     onFinish(false);
                 return;
@@ -91,21 +92,23 @@ public class MiniGame_ResProxyMgr: SingetonMono<MiniGame_ResProxyMgr>
             Debug.Log("[RequestStart] fileListUrl: " + fileListUrl);
             RequestFile(fileListUrl, (WebGame_HttpRequest req, bool isResult) =>
             {
-                if (!isResult) {
+                if (!isResult)
+                {
                     if (onFinish != null)
                         onFinish(false);
                     return;
                 }
-                if (string.IsNullOrEmpty(req.ResponeText)) {
+                if (string.IsNullOrEmpty(req.ResponeText))
+                {
                     if (onFinish != null)
                         onFinish(false);
                     return;
                 }
                 // fileList数据
-#if UNITY_EDITOR
-                WebAsseetBundleAsyncTask.Mapper = new FileListDataLoader(req.ResponeText);
-#else
+#if UNITY_WEIXINMINIGAME && !UNITY_EDITOR
                 WXAssetBundleAsyncTask.Mapper = new FileListDataLoader(req.ResponeText);
+#else
+                WebAsseetBundleAsyncTask.Mapper = new FileListDataLoader(req.ResponeText);
 #endif
                 //-------------------------
                 onFinish(true);
@@ -114,15 +117,11 @@ public class MiniGame_ResProxyMgr: SingetonMono<MiniGame_ResProxyMgr>
                 if (onAbort != null)
                     onAbort();
             });
-        }, (WebGame_HttpRequest req)=>
+        }, (WebGame_HttpRequest req) =>
         {
             if (onAbort != null)
                 onAbort();
         });
         return true;
-#else
-        onFinish(true);
-        return true;
-#endif
-            }
+    }
 }

@@ -19,14 +19,12 @@ public class ResourceMgr : Singleton<ResourceMgr>
         }
     }
 
-#if UNITY_WEIXINMINIGAME
     public void WebLoadConfigs(Action<bool> OnFinish, MonoBehaviour async) {
         AssetLoader loader = mAssetLoader as AssetLoader;
         if (loader != null) {
             loader.LoadConfigs_WebPlatform(OnFinish, async);
         }
     }
-#endif
 
     public bool InteralLoadScene(string sceneName) {
         if (mAssetLoader.OnSceneLoad(sceneName)) {
