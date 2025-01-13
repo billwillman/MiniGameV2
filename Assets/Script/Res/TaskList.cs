@@ -120,11 +120,273 @@ public abstract class IAssetBundleAsyncTask: ITask
     }
 }
 
+// 使用UnityWebRequest来加载AB
+public class WebAsseetBundleAsyncTask: IAssetBundleAsyncTask
+{
+	public static string CDN_RootDir = string.Empty; // 设置CDN的地址
+	public static IWebAssetBundleMapper Mapper = null;
+	public WebAsseetBundleAsyncTask() { }
+	public WebAsseetBundleAsyncTask(string createFileName, int priority = 0)
+    {
+		if (string.IsNullOrEmpty(createFileName))
+		{
+			TaskFail();
+			return;
+		}
+		if (Mapper != null)
+		{
+			string urlFileName = Mapper.GetCDNFileName(createFileName);
+			if (!string.IsNullOrEmpty(urlFileName))
+				createFileName = urlFileName;
+		}
+		m_FileName = createFileName;
+		m_Priority = priority;
+	}
+
+	public static int GetPoolCount()
+	{
+		return m_Pool.Count;
+	}
+
+	public Action<WebAsseetBundleAsyncTask> OnProcess
+	{
+		get;
+		set;
+	}
+
+	public string FileName
+	{
+		get
+		{
+			return m_FileName;
+		}
+	}
+
+	private static WebAsseetBundleAsyncTask GetNewTask()
+	{
+		if (m_UsePool)
+		{
+			InitPool();
+			WebAsseetBundleAsyncTask ret = m_Pool.GetObject();
+			if (ret != null)
+				ret.m_IsInPool = false;
+			return ret;
+		}
+
+		return new WebAsseetBundleAsyncTask();
+	}
+
+	public static WebAsseetBundleAsyncTask Create(string createFileName, int priority = 0)
+	{
+		if (string.IsNullOrEmpty(createFileName))
+			return null;
+		WebAsseetBundleAsyncTask ret = GetNewTask();
+		ret.m_FileName = createFileName;
+		ret.m_Priority = priority;
+		return ret;
+	}
+
+	public override AssetBundle Bundle
+	{
+		get
+		{
+			return m_Bundle;
+		}
+	}
+
+	public float Progress
+	{
+		get
+		{
+			return m_Progress;
+		}
+	}
+
+
+
+	public override void QuickLoaded()
+	{
+		if (m_Req != null)
+		{
+			m_Bundle = (m_Req.downloadHandler as DownloadHandlerAssetBundle).assetBundle; // 快速加载下，这样打断异步立马加载
+		}
+	}
+
+	public override void Release()
+	{
+		base.Release();
+		ItemPoolReset();
+		InPool(this);
+	}
+
+	public static string GetCDNFileName(string fileName)
+	{
+		if (string.IsNullOrEmpty(fileName) || string.IsNullOrEmpty(CDN_RootDir))
+			return fileName;
+		if (Mapper != null)
+		{
+			string onlyFileName = System.IO.Path.GetFileName(fileName);
+			string targetFileName = Mapper.GetCDNFileName(onlyFileName);
+			if (!string.IsNullOrEmpty(targetFileName))
+			{
+				fileName = targetFileName;
+				string url = CDN_RootDir;
+				if (url[url.Length - 1] != '/')
+					url += "/";
+				fileName = url + fileName;
+			}
+		}
+		return fileName;
+	}
+
+	public static bool HasCDNFile(string fileName)
+	{
+		if (string.IsNullOrEmpty(fileName))
+			return false;
+		if (Mapper != null)
+		{
+			string onlyFileName = System.IO.Path.GetFileName(fileName);
+			string targetFileName = Mapper.GetCDNFileName(onlyFileName);
+			bool ret = targetFileName != fileName;
+			return ret;
+		}
+		return false;
+	}
+
+	public override AssetBundle StartLoad()
+	{
+		if (m_Req == null)
+		{
+			string url = GetCDNFileName(m_FileName);
+			/*
+			string url = CDN_RootDir;
+			if (string.IsNullOrEmpty(url))
+				url = m_FileName;
+			else {
+				if (url[url.Length - 1] != '/')
+					url += "/";
+				url += m_FileName;
+			}
+			*/
+			m_Req = UnityWebRequestAssetBundle.GetAssetBundle(url);
+			m_AsyncOpt = m_Req.SendWebRequest();
+			if (m_Req.isDone)
+				return (m_Req.downloadHandler as DownloadHandlerAssetBundle).assetBundle;
+			if (m_AsyncOpt != null)
+				m_AsyncOpt.priority = m_Priority;
+		}
+		else if (m_Req.isDone)
+			return (m_Req.downloadHandler as DownloadHandlerAssetBundle).assetBundle;
+
+		return null;
+	}
+
+	public override void Process()
+	{
+		// 可以加载后面的LOAD
+		StartLoad();
+
+		if (m_Req == null)
+		{
+			TaskFail();
+			return;
+		}
+
+		if (m_Req.isDone)
+		{
+			DownloadHandlerAssetBundle handler = m_Req.downloadHandler as DownloadHandlerAssetBundle;
+			if (handler.assetBundle != null)
+			{
+				m_Progress = 1.0f;
+				TaskOk();
+				m_Bundle = handler.assetBundle;
+			}
+			else
+				TaskFail();
+
+			m_Req = null;
+		}
+		else if (m_Req.isHttpError || m_Req.isNetworkError || m_Req.isNetworkError)
+		{
+			TaskFail();
+		}
+		else
+		{
+			if (m_AsyncOpt != null)
+				m_Progress = m_AsyncOpt.progress;
+			else
+				m_Progress = 0;
+		}
+
+		if (OnProcess != null)
+			OnProcess(this);
+
+	}
+
+
+	private static void PoolReset(WebAsseetBundleAsyncTask task)
+	{
+		if (task == null)
+			return;
+		task.ItemPoolReset();
+	}
+
+	private static void InitPool()
+	{
+		if (m_PoolInited)
+			return;
+		m_PoolInited = true;
+		m_Pool.Init(0, null, PoolReset);
+	}
+
+	private static void InPool(WebAsseetBundleAsyncTask task)
+	{
+		if (!m_UsePool || task == null || task.m_IsInPool)
+			return;
+		InitPool();
+		m_Pool.Store(task);
+		task.m_IsInPool = true;
+	}
+
+	private void ItemPoolReset()
+	{
+		if (m_Req != null)
+		{
+			m_Req = null;
+		}
+
+		m_AsyncOpt = null;
+		m_Priority = 0;
+		OnResult = null;
+		OnProcess = null;
+		m_Bundle = null;
+		m_Progress = 0;
+		m_FileName = string.Empty;
+		mResult = 0;
+		UserData = null;
+		_Owner = null;
+	}
+
+	private string m_FileName = string.Empty;
+	private bool m_IsInPool = false;
+	private UnityWebRequest m_Req = null;
+	private UnityWebRequestAsyncOperation m_AsyncOpt = null;
+	private int m_Priority = 0;
+
+	private float m_Progress = 0;
+	private AssetBundle m_Bundle = null;
+
+	private static bool m_UsePool = true;
+	private static bool m_PoolInited = false;
+	private static Utils.ObjectPool<WebAsseetBundleAsyncTask> m_Pool = new Utils.ObjectPool<WebAsseetBundleAsyncTask>();
+
+}
+
 #if UNITY_WEIXINMINIGAME
 public class WXAssetBundleAsyncTask: IAssetBundleAsyncTask
 {
 	public static string CDN_RootDir = string.Empty; // 设置CDN的地址
-	public static IWXAssetBundleMapper Mapper = null;
+	public static IWebAssetBundleMapper Mapper = null;
 	public WXAssetBundleAsyncTask() {}
 	public WXAssetBundleAsyncTask(string createFileName, int priority = 0) {
 		if (string.IsNullOrEmpty(createFileName)) {

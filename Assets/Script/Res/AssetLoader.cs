@@ -29,12 +29,10 @@ using Utils;
 using WeChatWASM;
 #endif
 
-#if UNITY_WEIXINMINIGAME
-public interface IWXAssetBundleMapper
+public interface IWebAssetBundleMapper
 {
     string GetCDNFileName(string oriFileName);
 }
-#endif
 
 public class AsyncLoadKeyComparser : StructComparser<AsyncLoadKey> { }
 

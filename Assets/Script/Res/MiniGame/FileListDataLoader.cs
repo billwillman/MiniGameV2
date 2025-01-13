@@ -2,10 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class FileListDataLoader
-#if UNITY_WEIXINMINIGAME
-    : IWXAssetBundleMapper
-#endif
+public class FileListDataLoader: IWebAssetBundleMapper
 {
     public FileListDataLoader(string fileListStr) {
         string[] lines = fileListStr.Split('\n');
