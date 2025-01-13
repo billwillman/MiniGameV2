@@ -2917,13 +2917,17 @@ public sealed class AssetLoader : IResourceLoader
 #endif
         yield return req.SendWebRequest();
         if (req.isDone) {
+#if UNITY_WEIXINMINIGAME && !UNITY_EDITOR
             AssetBundle bundle = (req.downloadHandler as DownloadHandlerWXAssetBundle).assetBundle;
+#else
+            AssetBundle bundle = (req.downloadHandler as DownloadHandlerAssetBundle).assetBundle;
+#endif
             doOkFunc(bundle);
         } else if (req.isHttpError || req.isNetworkError || req.isNetworkError) {
             doErrorFunc();
         }
 #else
-        doErrorFunc();
+            doErrorFunc();
         yield break;
 #endif
     }
