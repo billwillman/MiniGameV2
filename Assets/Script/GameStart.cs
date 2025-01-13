@@ -46,8 +46,16 @@ namespace SOC.GamePlay
 
         void OnRequestStartFinish(bool isOk) {
             if (isOk) {
-#if UNITY_WEIXINMINIGAME && !UNITY_EDITOR
-                ResourceMgr.Instance.WxLoadConfigs(OnResConfigResult, this);
+#if UNITY_WEIXINMINIGAME
+#if UNITY_EDITOR
+                if (AssetLoader.UseCDNMapper)
+                {
+                    ResourceMgr.Instance.WebLoadConfigs(OnResConfigResult, this);
+                } else
+                    ResourceMgr.Instance.LoadConfigs(OnResConfigResult, null, true);
+#else
+                ResourceMgr.Instance.WebLoadConfigs(OnResConfigResult, this);
+#endif
 #else
                 ResourceMgr.Instance.LoadConfigs(OnResConfigResult, null, true);
 #endif

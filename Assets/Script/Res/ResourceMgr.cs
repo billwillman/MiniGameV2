@@ -20,10 +20,10 @@ public class ResourceMgr : Singleton<ResourceMgr>
     }
 
 #if UNITY_WEIXINMINIGAME
-    public void WxLoadConfigs(Action<bool> OnFinish, MonoBehaviour async) {
+    public void WebLoadConfigs(Action<bool> OnFinish, MonoBehaviour async) {
         AssetLoader loader = mAssetLoader as AssetLoader;
         if (loader != null) {
-            loader.LoadConfigs_WxPlatform(OnFinish, async);
+            loader.LoadConfigs_WebPlatform(OnFinish, async);
         }
     }
 #endif

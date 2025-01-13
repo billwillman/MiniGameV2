@@ -511,7 +511,10 @@ public class AssetInfo
         else
             m_AsyncTask = BundleCreateAsyncTask.Create(mFileName, priority);
 #else
-        m_AsyncTask = BundleCreateAsyncTask.Create(mFileName, priority);
+        if (AssetLoader.UseCDNMapper)
+            m_AsyncTask = WebAsseetBundleAsyncTask.Create(mFileName, priority);
+        else
+            m_AsyncTask = BundleCreateAsyncTask.Create(mFileName, priority);
 #endif
         if (m_AsyncTask != null) {
             // 优化AB加载
@@ -619,7 +622,7 @@ public class AssetInfo
         if (mCompressType == AssetCompressType.astNone) {
             //	ClearTaskData();
 #if UNITY_5_3 || UNITY_5_4 || UNITY_5_5 || UNITY_5_6 || UNITY_2018 || UNITY_2019 || UNITY_2017 || UNITY_2017_1_OR_NEWER
-#if UNITY_WEIXINMINIGAME
+#if UNITY_WEIXINMINIGAME && !UNITY_EDITOR
             mBundle = WXAssetBundle.LoadFromFile(mFileName);
 #else
             mBundle = AssetBundle.LoadFromFile(mFileName);
@@ -639,7 +642,7 @@ public class AssetInfo
             // Lz4 new compressType
             //	ClearTaskData();
 #if UNITY_5_3 || UNITY_5_4 || UNITY_5_5 || UNITY_5_6 || UNITY_2018 || UNITY_2019 || UNITY_2017 || UNITY_2017_1_OR_NEWER
-#if UNITY_WEIXINMINIGAME
+#if UNITY_WEIXINMINIGAME && !UNITY_EDITOR
             mBundle = WXAssetBundle.LoadFromFile(mFileName);
 #else
             mBundle = AssetBundle.LoadFromFile(mFileName);
@@ -1192,6 +1195,8 @@ public sealed class AssetLoader : IResourceLoader
 
         return true;
     }
+
+    public static bool UseCDNMapper = true; // 是否使用CDN Mapper
 
     internal static readonly string _SceneExt =
 #if TUANJIE_1_0_OR_NEWER
@@ -2842,11 +2847,19 @@ public sealed class AssetLoader : IResourceLoader
     }
 
 #if UNITY_WEIXINMINIGAME
-    IEnumerator DoWxAssetBundleXml(Action<bool> OnFinishEvent, MonoBehaviour async) {
+    IEnumerator DoWebAssetBundleXml(Action<bool> OnFinishEvent, MonoBehaviour async) {
         LoadConfigProcess = 0f;
         float startTime = Time.realtimeSinceStartup;
         string fileName = GetXmlFileName();
+#if UNITY_EDITOR
+        string transFileName;
+        if (AssetLoader.UseCDNMapper)
+            transFileName = WebAsseetBundleAsyncTask.GetCDNFileName(fileName);
+        else
+            transFileName = fileName;
+#else
         string transFileName = WXAssetBundleAsyncTask.GetCDNFileName(fileName);
+#endif
         bool isLocalFile = transFileName == fileName;
         Debug.Log("[DoWxAssetBundleXml] AssetBundle.xml isLocalFile: " + isLocalFile.ToString());
         if (!isLocalFile)
@@ -2912,19 +2925,19 @@ public sealed class AssetLoader : IResourceLoader
     }
 
     // 微信平台专用
-    public void LoadConfigs_WxPlatform(Action<bool> OnFinishEvent, MonoBehaviour async) {
+    public void LoadConfigs_WebPlatform(Action<bool> OnFinishEvent, MonoBehaviour async) {
         if (async == null) {
             OnFinishEvent(false);
             return;
         }
         async.StopAllCoroutines();
-        async.StartCoroutine(DoWxAssetBundleXml(OnFinishEvent, async));
+        async.StartCoroutine(DoWebAssetBundleXml(OnFinishEvent, async));
     }
     // ----------------
 #endif
 
-    // 手动调用读取配置, isThreadMode: 是否是多线程LOOM库的方式
-    public void LoadConfigs(Action<bool> OnFinishEvent, MonoBehaviour async = null, bool isThreadMode = false) {
+        // 手动调用读取配置, isThreadMode: 是否是多线程LOOM库的方式
+        public void LoadConfigs(Action<bool> OnFinishEvent, MonoBehaviour async = null, bool isThreadMode = false) {
 
         LoadConfigProcess = 0f;
 

@@ -5,9 +5,9 @@ using UnityEngine;
 using UnityEngine.Networking;
 using Utils;
 
-public class MiniGame_HttpRequest: DisposeObject
+public class WebGame_HttpRequest: DisposeObject
 {
-    public MiniGame_HttpRequest(string url, bool isByteBufferRet = true) {
+    public WebGame_HttpRequest(string url, bool isByteBufferRet = true) {
         m_Url = url;
         m_IsByteBufferRet = isByteBufferRet;
     }
@@ -80,12 +80,12 @@ public class MiniGame_HttpRequest: DisposeObject
         m_ResponeText = string.Empty;
     }
 
-    public Action<MiniGame_HttpRequest> OnAbort {
+    public Action<WebGame_HttpRequest> OnAbort {
         get;
         set;
     }
 
-    public Action<MiniGame_HttpRequest, bool> OnResult {
+    public Action<WebGame_HttpRequest, bool> OnResult {
         get;
         set;
     }

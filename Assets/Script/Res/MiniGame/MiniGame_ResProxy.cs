@@ -15,15 +15,15 @@ public class MiniGame_ResProxyMgr: SingetonMono<MiniGame_ResProxyMgr>
         set;
     }
 
-    static IEnumerator DoRequestFile(string url, Action<MiniGame_HttpRequest, bool> onFinish, Action<MiniGame_HttpRequest> onAbort) {
+    static IEnumerator DoRequestFile(string url, Action<WebGame_HttpRequest, bool> onFinish, Action<WebGame_HttpRequest> onAbort) {
         // string versionUrl = string.Format("{0}/{1}/version.txt");
-        MiniGame_HttpRequest req = new MiniGame_HttpRequest(url, false);
+        WebGame_HttpRequest req = new WebGame_HttpRequest(url, false);
         req.OnAbort = onAbort;
         req.OnResult = onFinish;
         return req.Get();
     }
 
-    protected Coroutine RequestFile(string url, Action<MiniGame_HttpRequest, bool> onFinish, Action<MiniGame_HttpRequest> onAbort) {
+    protected Coroutine RequestFile(string url, Action<WebGame_HttpRequest, bool> onFinish, Action<WebGame_HttpRequest> onAbort) {
         if (string.IsNullOrEmpty(url))
             return null;
         return StartCoroutine(DoRequestFile(url, onFinish, onAbort));
@@ -44,6 +44,8 @@ public class MiniGame_ResProxyMgr: SingetonMono<MiniGame_ResProxyMgr>
     protected void Dispose() {
         ResVersion = string.Empty;
         StopAllCoroutines(); // 禁用所有Coroutines
+        WebAsseetBundleAsyncTask.CDN_RootDir = string.Empty;
+        WebAsseetBundleAsyncTask.Mapper = null;
 #if UNITY_WEIXINMINIGAME && !UNITY_EDITOR
         WXAssetBundleAsyncTask.CDN_RootDir = string.Empty;
         WXAssetBundleAsyncTask.Mapper = null;
@@ -51,16 +53,21 @@ public class MiniGame_ResProxyMgr: SingetonMono<MiniGame_ResProxyMgr>
     }
 
     public bool RequestStart(Action<bool> onFinish, Action onAbort) {
-#if UNITY_WEIXINMINIGAME && !UNITY_EDITOR
+#if UNITY_WEIXINMINIGAME
         Dispose();
-        if (string.IsNullOrEmpty(CDNRoot) || string.IsNullOrEmpty(AppResVersion)) {
+        if (!AssetLoader.UseCDNMapper || string.IsNullOrEmpty(CDNRoot) || string.IsNullOrEmpty(AppResVersion)) {
             onFinish(true); // 认为是本地读取
             return true;
         }
-        WXAssetBundleAsyncTask.CDN_RootDir = string.Format("{0}/{1}", CDNRoot, AppResVersion);
+        string baseUrl = string.Format("{0}/{1}", CDNRoot, AppResVersion);
+#if UNITY_EDITOR
+        WebAsseetBundleAsyncTask.CDN_RootDir = baseUrl;
+#else
+        WXAssetBundleAsyncTask.CDN_RootDir = baseUrl;
+#endif
         string versionUrl = GenerateCDN_AppResVersion_Url("version.txt", true);
         Debug.Log("[RequestStart] versionUrl: " + versionUrl);
-        RequestFile(versionUrl, (MiniGame_HttpRequest req, bool isResult) =>
+        RequestFile(versionUrl, (WebGame_HttpRequest req, bool isResult) =>
         {
             if (!isResult) {
                 if (onFinish != null)
@@ -77,7 +84,7 @@ public class MiniGame_ResProxyMgr: SingetonMono<MiniGame_ResProxyMgr>
             ResVersion = versionDataLoader.Version; // 资源版本号
             string fileListUrl = GenerateCDN_AppResVersion_Url(versionDataLoader.FileListFileName);
             Debug.Log("[RequestStart] fileListUrl: " + fileListUrl);
-            RequestFile(fileListUrl, (MiniGame_HttpRequest req, bool isResult) =>
+            RequestFile(fileListUrl, (WebGame_HttpRequest req, bool isResult) =>
             {
                 if (!isResult) {
                     if (onFinish != null)
@@ -90,15 +97,19 @@ public class MiniGame_ResProxyMgr: SingetonMono<MiniGame_ResProxyMgr>
                     return;
                 }
                 // fileList数据
+#if UNITY_EDITOR
+                WebAsseetBundleAsyncTask.Mapper = new FileListDataLoader(req.ResponeText);
+#else
                 WXAssetBundleAsyncTask.Mapper = new FileListDataLoader(req.ResponeText);
+#endif
                 //-------------------------
                 onFinish(true);
-            }, (MiniGame_HttpRequest req) =>
+            }, (WebGame_HttpRequest req) =>
             {
                 if (onAbort != null)
                     onAbort();
             });
-        }, (MiniGame_HttpRequest req)=>
+        }, (WebGame_HttpRequest req)=>
         {
             if (onAbort != null)
                 onAbort();
@@ -108,5 +119,5 @@ public class MiniGame_ResProxyMgr: SingetonMono<MiniGame_ResProxyMgr>
         onFinish(true);
         return true;
 #endif
-    }
+            }
 }
