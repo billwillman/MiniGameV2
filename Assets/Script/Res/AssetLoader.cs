@@ -2890,10 +2890,18 @@ public sealed class AssetLoader : IResourceLoader
                     LoadBinary(asset.bytes, OnFinishEvent, async, false);
                     usedTime = Time.realtimeSinceStartup - startTime;
                     Debug.LogFormat("解析XML时间：{0}", usedTime.ToString());
+#if UNITY_WEIXINMINIGAME && !UNITY_EDITOR
                     bundle.WXUnload(true);
+#else
+                    bundle.Unload(true);
+#endif
                 } else {
                     Debug.LogErrorFormat("[LoadConfig]读取TextAsset {0} 失敗", name);
+#if UNITY_WEIXINMINIGAME && !UNITY_EDITOR
                     bundle.WXUnload(true);
+#else
+                    bundle.Unload(true);
+#endif
                     LoadConfigProcess = 1f;
                     if (OnFinishEvent != null)
                         OnFinishEvent(false);
