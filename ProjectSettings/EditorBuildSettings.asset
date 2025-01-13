@@ -8,6 +8,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Main.scene
     guid: 9daca9a9e32cec54894d68d1817671fb
+  - enabled: 1
+    path: Assets/Resources/TestDots/Test.scene
+    guid: 6da89bf6ac7360041a0763ccddc12f9a
   m_configObjects: {}
   m_SlimFeaturesWeixinMiniGame:
     AllocateOverhead: 1

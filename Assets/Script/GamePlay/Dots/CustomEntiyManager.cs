@@ -8,6 +8,7 @@ using Unity.Burst;
 using Unity.Mathematics;
 using Unity.Collections;
 
+
 namespace SOC.GamePlay
 {
     [BurstCompile]
