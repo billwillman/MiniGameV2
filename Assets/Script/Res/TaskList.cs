@@ -135,7 +135,7 @@ public class WebAsseetBundleAsyncTask: IAssetBundleAsyncTask
 		}
 		if (Mapper != null)
 		{
-			string urlFileName = Mapper.GetCDNFileName(createFileName);
+			string urlFileName = GetCDNFileName(createFileName);
 			if (!string.IsNullOrEmpty(urlFileName))
 				createFileName = urlFileName;
 		}
@@ -182,7 +182,7 @@ public class WebAsseetBundleAsyncTask: IAssetBundleAsyncTask
 			return null;
 		if (Mapper != null)
 		{
-			string urlFileName = Mapper.GetCDNFileName(createFileName);
+			string urlFileName = GetCDNFileName(createFileName);
 			if (!string.IsNullOrEmpty(urlFileName))
 				createFileName = urlFileName;
 		}
@@ -400,7 +400,7 @@ public class WXAssetBundleAsyncTask: IAssetBundleAsyncTask
 			return;
 		}
 		if (Mapper != null) {
-			string urlFileName = Mapper.GetCDNFileName(createFileName);
+			string urlFileName = GetCDNFileName(createFileName);
 			if (!string.IsNullOrEmpty(urlFileName))
 				createFileName = urlFileName;
 		}
@@ -440,7 +440,7 @@ public class WXAssetBundleAsyncTask: IAssetBundleAsyncTask
 			return null;
 		if (Mapper != null)
 		{
-			string urlFileName = Mapper.GetCDNFileName(createFileName);
+			string urlFileName = GetCDNFileName(createFileName);
 			if (!string.IsNullOrEmpty(urlFileName))
 				createFileName = urlFileName;
 		}
