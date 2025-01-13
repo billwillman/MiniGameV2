@@ -161,6 +161,7 @@ namespace SOC.GamePlay
         }
 
         void OnGameStartFinish() {
+            Debug.Log("[GameStart] OnGameStartFinish");
             ResourceMgr.Instance.LoadSceneAsync("Test", false, null);
         }
 
