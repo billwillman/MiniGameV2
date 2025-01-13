@@ -2050,7 +2050,10 @@ public sealed class AssetLoader : IResourceLoader
         return ret;
     }
 
-    private string GetXmlFileName() {
+    private string GetXmlFileName()
+    {
+        if (IsUseCDNFile())
+            return "AssetBundles.xml";
 #if USE_DEP_BINARY_AB
         string ret = GetCheckFileName("AssetBundles.xml", false, true);
 #else
@@ -2845,6 +2848,15 @@ public sealed class AssetLoader : IResourceLoader
         }
 
         return assetBundleFileName;
+    }
+
+    protected static bool IsUseCDNFile()
+    {
+#if UNITY_WEIXINMINIGAME && !UNITY_EDITOR
+        return true;
+#else
+        return AssetLoader.UseCDNMapper;
+#endif
     }
 
     IEnumerator DoWebAssetBundleXml(Action<bool> OnFinishEvent, MonoBehaviour async) {
