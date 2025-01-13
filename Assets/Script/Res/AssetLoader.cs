@@ -2052,8 +2052,6 @@ public sealed class AssetLoader : IResourceLoader
 
     private string GetXmlFileName()
     {
-        if (IsUseCDNFile())
-            return "AssetBundles.xml";
 #if USE_DEP_BINARY_AB
         string ret = GetCheckFileName("AssetBundles.xml", false, true);
 #else
@@ -2437,15 +2435,9 @@ public sealed class AssetLoader : IResourceLoader
 
 #endif
                                                         ;
-            string assetBundleFileName;
-            if (IsUseCDNFile())
-                assetBundleFileName = abHeader.abFileName;
-            else
-            {
-                InitCheckFileNameMap(ref fileRealMap, header.abFileCount);
-                assetBundleFileName = GetCheckFileName(ref fileRealMap, abHeader.abFileName,
-                    false, isUseCreateFromFile);
-            }
+            InitCheckFileNameMap(ref fileRealMap, header.abFileCount);
+            string assetBundleFileName = GetCheckFileName(ref fileRealMap, abHeader.abFileName,
+                false, isUseCreateFromFile);
 
             AssetInfo asset;
             if (!mAssetFileNameMap.TryGetValue(assetBundleFileName, out asset)) {
@@ -2485,12 +2477,8 @@ public sealed class AssetLoader : IResourceLoader
             // 依赖
             for (int j = 0; j < abHeader.dependFileCount; ++j) {
                 DependBinaryFile.DependInfo depInfo = DependBinaryFile.LoadDependInfo(stream);
-                string dependFileName;
-                if (IsUseCDNFile())
-                    dependFileName = depInfo.abFileName;
-                else
-                    dependFileName = GetCheckFileName(ref fileRealMap, depInfo.abFileName,
-                                                            false, isUseCreateFromFile);
+                string dependFileName = GetCheckFileName(ref fileRealMap, depInfo.abFileName,
+                    false, isUseCreateFromFile);
                 asset._InitDependFileCapity(abHeader.dependFileCount);
                 asset._AddDependFile(dependFileName, depInfo.refCount);
                 if (++iterCnt >= maxAsyncCnt) {
@@ -2858,15 +2846,6 @@ public sealed class AssetLoader : IResourceLoader
         }
 
         return assetBundleFileName;
-    }
-
-    protected static bool IsUseCDNFile()
-    {
-#if UNITY_WEIXINMINIGAME && !UNITY_EDITOR
-        return true;
-#else
-        return AssetLoader.UseCDNMapper;
-#endif
     }
 
     IEnumerator DoWebAssetBundleXml(Action<bool> OnFinishEvent, MonoBehaviour async) {
