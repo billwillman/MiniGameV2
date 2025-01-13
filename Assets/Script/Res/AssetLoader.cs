@@ -25,6 +25,7 @@ using UnityEngine;
 using System.IO;
 using XmlParser;
 using Utils;
+using UnityEngine.Networking;
 #if UNITY_WEIXINMINIGAME
 using WeChatWASM;
 #endif
@@ -2860,7 +2861,7 @@ public sealed class AssetLoader : IResourceLoader
             transFileName = fileName;
 #endif
         bool isLocalFile = transFileName == fileName;
-        Debug.Log("[DoWxAssetBundleXml] AssetBundle.xml isLocalFile: " + isLocalFile.ToString());
+        Debug.Log("[DoWebAssetBundleXml] AssetBundle.xml isLocalFile: " + isLocalFile.ToString());
         if (!isLocalFile)
             fileName = transFileName;
         Action doErrorFunc = () =>
@@ -2903,13 +2904,17 @@ public sealed class AssetLoader : IResourceLoader
         };
 
 #if USE_DEP_BINARY && USE_DEP_BINARY_AB
-        Debug.Log("[DoWxAssetBundleXml] " + fileName);
+        Debug.Log("[DoWebAssetBundleXml] " + fileName);
         if (isLocalFile) {
             AssetBundle bundle = WXAssetBundle.LoadFromFile(fileName);
             doOkFunc(bundle);
             yield break;
         }
+#if UNITY_WEIXINMINIGAME && !UNITY_EDITOR
         var req = WXAssetBundle.GetAssetBundle(fileName);
+#else
+        var req = UnityWebRequestAssetBundle.GetAssetBundle(fileName);
+#endif
         yield return req.SendWebRequest();
         if (req.isDone) {
             AssetBundle bundle = (req.downloadHandler as DownloadHandlerWXAssetBundle).assetBundle;
