@@ -545,7 +545,9 @@ PlayerSettings:
       m_SubKind: 
   m_BuildTargetBatching: []
   m_BuildTargetShaderSettings: []
-  m_BuildTargetGraphicsJobs: []
+  m_BuildTargetGraphicsJobs:
+  - m_BuildTarget: WeixinMiniGameSupport
+    m_GraphicsJobs: 0
   m_BuildTargetGraphicsJobMode: []
   m_BuildTargetGraphicsAPIs:
   - m_BuildTarget: iOSSupport
@@ -867,7 +869,7 @@ PlayerSettings:
     tvOS: 1
   incrementalIl2cppBuild: {}
   suppressCommonWarnings: 1
-  allowUnsafeCode: 0
+  allowUnsafeCode: 1
   useDeterministicCompilation: 1
   additionalIl2CppArgs: 
   scriptingRuntimeVersion: 1
@@ -980,7 +982,7 @@ PlayerSettings:
   weixinMiniGameEmscriptenArgs: ' -s EXPORTED_FUNCTIONS=_sbrk,_emscripten_stack_get_base,_emscripten_stack_get_end
     -s ERROR_ON_UNDEFINED_SYMBOLS=0 -s TOTAL_MEMORY=256MB --profiling-funcs '
   weixinMiniGameModulesDirectory: 
-  weixinMiniGameTemplate: PATH:D:\MiniGameV2\Library\PackageCache\com.qq.weixin.minigame@09760d709e\WebGLTemplates\WXTemplate2022TJ
+  weixinMiniGameTemplate: APPLICATION:Default
   weixinMiniGameAnalyzeBuildSize: 0
   weixinMiniGameUseEmbeddedResources: 0
   weixinMiniGameCompressionFormat: 2
