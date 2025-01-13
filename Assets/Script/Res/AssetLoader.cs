@@ -1196,7 +1196,7 @@ public sealed class AssetLoader : IResourceLoader
         return true;
     }
 
-    public static bool UseCDNMapper = true; // 是否使用CDN Mapper
+    public static bool UseCDNMapper = false; // 是否使用CDN Mapper
 
     internal static readonly string _SceneExt =
 #if TUANJIE_1_0_OR_NEWER
