@@ -2437,9 +2437,15 @@ public sealed class AssetLoader : IResourceLoader
 
 #endif
                                                         ;
-            InitCheckFileNameMap(ref fileRealMap, header.abFileCount);
-            string assetBundleFileName = GetCheckFileName(ref fileRealMap, abHeader.abFileName,
-                                                            false, isUseCreateFromFile);
+            string assetBundleFileName;
+            if (IsUseCDNFile())
+                assetBundleFileName = abHeader.abFileName;
+            else
+            {
+                InitCheckFileNameMap(ref fileRealMap, header.abFileCount);
+                assetBundleFileName = GetCheckFileName(ref fileRealMap, abHeader.abFileName,
+                    false, isUseCreateFromFile);
+            }
 
             AssetInfo asset;
             if (!mAssetFileNameMap.TryGetValue(assetBundleFileName, out asset)) {
@@ -2479,7 +2485,11 @@ public sealed class AssetLoader : IResourceLoader
             // 依赖
             for (int j = 0; j < abHeader.dependFileCount; ++j) {
                 DependBinaryFile.DependInfo depInfo = DependBinaryFile.LoadDependInfo(stream);
-                string dependFileName = GetCheckFileName(ref fileRealMap, depInfo.abFileName,
+                string dependFileName;
+                if (IsUseCDNFile())
+                    dependFileName = depInfo.abFileName;
+                else
+                    dependFileName = GetCheckFileName(ref fileRealMap, depInfo.abFileName,
                                                             false, isUseCreateFromFile);
                 asset._InitDependFileCapity(abHeader.dependFileCount);
                 asset._AddDependFile(dependFileName, depInfo.refCount);
