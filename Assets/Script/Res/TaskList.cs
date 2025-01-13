@@ -180,6 +180,12 @@ public class WebAsseetBundleAsyncTask: IAssetBundleAsyncTask
 	{
 		if (string.IsNullOrEmpty(createFileName))
 			return null;
+		if (Mapper != null)
+		{
+			string urlFileName = Mapper.GetCDNFileName(createFileName);
+			if (!string.IsNullOrEmpty(urlFileName))
+				createFileName = urlFileName;
+		}
 		WebAsseetBundleAsyncTask ret = GetNewTask();
 		ret.m_FileName = createFileName;
 		ret.m_Priority = priority;
@@ -432,6 +438,12 @@ public class WXAssetBundleAsyncTask: IAssetBundleAsyncTask
 	public static WXAssetBundleAsyncTask Create(string createFileName, int priority = 0) {
 		if (string.IsNullOrEmpty(createFileName))
 			return null;
+		if (Mapper != null)
+		{
+			string urlFileName = Mapper.GetCDNFileName(createFileName);
+			if (!string.IsNullOrEmpty(urlFileName))
+				createFileName = urlFileName;
+		}
 		WXAssetBundleAsyncTask ret = GetNewTask();
 		ret.m_FileName = createFileName;
 		ret.m_Priority = priority;

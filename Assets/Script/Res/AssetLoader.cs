@@ -1607,7 +1607,7 @@ public sealed class AssetLoader : IResourceLoader
         AssetInfo asset = FindAssetInfo(fileName);
         if (asset == null)
             return false;
-
+        
         int addCount = 0;
         //	bool isNew = asset.IsNew();
 #if UNITY_5_3 || UNITY_5_4 || UNITY_5_5 || UNITY_5_6 || UNITY_2018 || UNITY_2019 || UNITY_2017 || UNITY_2017_1_OR_NEWER
