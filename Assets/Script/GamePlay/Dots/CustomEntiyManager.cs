@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.Jobs;
 using Unity.Jobs.LowLevel.Unsafe;
 using Unity.Jobs;
+using Unity.Jobs.LowLevel;
 using Unity.Burst;
 using Unity.Mathematics;
 using Unity.Collections;
@@ -23,7 +24,7 @@ namespace SOC.GamePlay
             //  for (int i = 0; i < 1000000; ++i) {
             float3 transformPos = transformPosArray[index] + forward * deltaTime;
             transformPosArray[index] = transformPos;
-            //}
+          //  }
             Debug.Log(string.Format("[TestMyJob] ThreadId: {0:D}", System.Threading.Thread.GetCurrentProcessorId()));
         }
     }
