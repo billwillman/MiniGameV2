@@ -77,6 +77,7 @@ namespace SOC.GamePlay
                    // Debug.Log(string.Format("[TestMyJob] index: {0:D} position: {1}", i, transPosArray[i].ToString()));
                 }
                 transPosArray.Dispose();
+               // Debug.LogWarning(System.Threading.Thread.CurrentThread.ManagedThreadId);
             }
         }
 
