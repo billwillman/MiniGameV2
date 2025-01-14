@@ -173,10 +173,8 @@ namespace SOC.GamePlay
                 // ÓÅÏÈ¼ÓÔØPreload.lua
                 ResourceMgr.Instance.LoadTextAsync("Resources/@Lua/Preload.lua.bytes", (float process, bool isDone, TextAsset text) =>
                 {
-                    Debug.Log("[Preload] Preload.lua.bytes: " + process.ToString());
                     if (isDone)
                     {
-                        Debug.Log("[IsDone] Preload.lua.bytes");
                         byte[] lua = text.bytes;
                         System.Object[] result = m_LuaEnv.DoString(lua);
                         LuaTable _MOE = result[0] as LuaTable;
@@ -192,7 +190,6 @@ namespace SOC.GamePlay
                         lua = ResourceMgr.Instance.LoadBytes("Resources/@Lua/Main.lua.bytes");
                         if (lua != null)
                         {
-                            Debug.Log("[IsDone] Main.lua.bytes");
                             m_LuaEnv.DoString(lua);
                             LuaFunction MainFunc = m_LuaEnv.Global.Get<LuaFunction>("Main");
                             if (MainFunc != null)
