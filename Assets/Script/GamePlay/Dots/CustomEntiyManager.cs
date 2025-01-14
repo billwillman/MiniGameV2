@@ -14,7 +14,7 @@ namespace SOC.GamePlay
     [BurstCompile]
     public struct TestMyJob : IJobParallelFor
     {
-        public NativeArray<float3> transformPosArray;
+        public NativeArray<float3> transformPosArray; // ç”¨Unity.Mathematics çš„float3ç±»å‹BurstCompileç¼–è¯‘æœ‰ä¼˜åŒ–æ•ˆæœ
         [ReadOnly] public float deltaTime;
         [ReadOnly] static readonly float3 forward = new float3(0, 0, 1);
 
@@ -53,7 +53,7 @@ namespace SOC.GamePlay
                     job.deltaTime = Time.deltaTime;
                     m_JobHandle = job.Schedule(m_TransAccesArray); 
                 } else {
-                    Debug.LogWarning("Job Running"); // ±ØÈ»²»»áÖ´ĞĞ£¬ÒòÎªtransformÊÇÔÚÖ÷Ïß³Ì£¬ĞèÒªÍ¬²½µ½Ö÷Ïß³Ì
+                    Debug.LogWarning("Job Running"); // å¿…ç„¶ä¸ä¼šæ‰§è¡Œï¼Œå› ä¸ºtransformæ˜¯åœ¨ä¸»çº¿ç¨‹ï¼Œéœ€è¦åŒæ­¥åˆ°ä¸»çº¿ç¨‹
                 }
             }
             */
@@ -69,8 +69,10 @@ namespace SOC.GamePlay
                 };
                 var handle = job.Schedule(transPosArray.Length, 1);
                 handle.Complete();
-                for (int i = 0; i < transPosArray.Length; ++i) {
+                for (int i = 0; i < transPosArray.Length; ++i)
+                {
                     m_InstanceObject[i].position = transPosArray[i];
+                    Debug.Log(string.Format("[TestMyJob] index: {0:D} position: {1}", i, transPosArray[i].ToString()));
                 }
                 transPosArray.Dispose();
             }
