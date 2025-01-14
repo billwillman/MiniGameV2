@@ -2976,16 +2976,21 @@ class AssetBundleMgr
         }
     }
 	
-	// 设置UNITY里面的版本号
-    static public void SetUnityPackageVersion(string apkVersion) {
-        PlayerSettings.bundleVersion = apkVersion;
-		// 立即保存设置
+	static void SaveSettings()
+    {
 #if UNITY_5_6 || UNITY_2018 || UNITY_2019 || UNITY_2017 || UNITY_2017_1_OR_NEWER
 		AssetDatabase.SaveAssets();
 #else
         EditorApplication.SaveAssets();
 #endif
-    }
+	}
+
+	// 设置UNITY里面的版本号
+	static public void SetUnityPackageVersion(string apkVersion) {
+        PlayerSettings.bundleVersion = apkVersion;
+		// 立即保存设置
+		SaveSettings();
+	}
 
 	private void CreateBundleResUpdateFiles(string streamAssetsPath, string outPath, string version, bool isRemoveVersionDir)
 	{
@@ -3635,6 +3640,7 @@ class AssetBundleMgr
 	{
 		var scenes = EditorBuildSettings.scenes;
 		List<string> sceneNameList = new List<string> ();
+		List<EditorBuildSettingsScene> invaildSceneList = new List<EditorBuildSettingsScene>(); // 无效的场景
 		for (int i = 0; i < scenes.Length; ++i) {
 			var scene = scenes[i];
 			if (scene != null)
@@ -3648,13 +3654,50 @@ class AssetBundleMgr
 						if (!string.IsNullOrEmpty(scene.path))
 							sceneNameList.Add(scene.path);
 					}
+					else
+						invaildSceneList.Add(scene);
+				} else
+                {
+					if (!string.IsNullOrEmpty(scene.path) && !System.IO.File.Exists(scene.path))
+                    {
+						invaildSceneList.Add(scene);
+					}
+
 				}
 			}
 		}
-		
+
+
 		if (sceneNameList.Count <= 0)
 			return;
-		
+
+		// 处理无效的场景
+		if (invaildSceneList.Count > 0)
+		{
+			List<EditorBuildSettingsScene> vaildSceneList = new List<EditorBuildSettingsScene>();
+			for (int i = 0; i < scenes.Length; ++i)
+            {
+				var scene = scenes[i];
+				if (invaildSceneList.IndexOf(scene) >= 0)
+					continue;
+				vaildSceneList.Add(scene);
+			}
+			EditorBuildSettings.scenes = vaildSceneList.ToArray();
+			// 保存
+			SaveSettings();
+		}
+
+#if UNITY_WEIXINMINIGAME
+		PlayerSettings.WeixinMiniGame.threadsSupport = true;
+		SaveSettings();
+#elif UNITY_WEBGL
+		PlayerSettings.WebGL.threadsSupport = true;
+		SaveSettings();
+#endif
+
+		// ------------------------------
+
+
 		string[] levelNames = sceneNameList.ToArray ();
 		
 		BuildOptions opts;
