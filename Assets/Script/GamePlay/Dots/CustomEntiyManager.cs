@@ -73,7 +73,7 @@ namespace SOC.GamePlay
                 for (int i = 0; i < transPosArray.Length; ++i)
                 {
                     m_InstanceObject[i].position = transPosArray[i];
-                    Debug.Log(string.Format("[TestMyJob] index: {0:D} position: {1}", i, transPosArray[i].ToString()));
+                   // Debug.Log(string.Format("[TestMyJob] index: {0:D} position: {1}", i, transPosArray[i].ToString()));
                 }
                 transPosArray.Dispose();
             }
