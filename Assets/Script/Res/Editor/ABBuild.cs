@@ -3636,6 +3636,19 @@ class AssetBundleMgr
 #endif
     }
 
+	// 删除非首包资源AB
+	private void RemoveNoFirstPackageAB()
+    {
+#if UNITY_WEIXINMINIGAME || UNITY_WEBGL
+		string targetStreamingAssetsPath = string.Empty; // 无所谓的值
+		eBuildPlatform platform = eBuildPlatform.eBuildWindow; // 无所谓的值
+		if (!AssetBundleBuild.GetCurrentStreamingAssetABDirAndBuildPlatform(ref targetStreamingAssetsPath, ref platform))
+			return;
+		// 删除目标目标StreamingAssets的资源并创建一个空目录
+		AssetBundleBuild.RemoveStreaingAssetsDirAndFilesAndCreateEmptyDir(targetStreamingAssetsPath);
+#endif
+	}
+
 	private void ProcessPackage(BuildTarget platform, string outputFileName, bool isNew, bool canProfilter, bool isDebug, bool isDevelop, bool isServer)
 	{
 		var scenes = EditorBuildSettings.scenes;
@@ -3694,6 +3707,8 @@ class AssetBundleMgr
 		PlayerSettings.WebGL.threadsSupport = true;
 		SaveSettings();
 #endif
+		// 删除非首包资源AB
+		RemoveNoFirstPackageAB();
 
 		// ------------------------------
 
@@ -4352,6 +4367,78 @@ public static class AssetBundleBuild
 	{
 		mMgr.ExternSplitABDirs = list;
 	}
+
+	internal static bool GetCurrentStreamingAssetABDirAndBuildPlatform(ref string targetStreamingAssetsPath, ref eBuildPlatform platform)
+    {
+		targetStreamingAssetsPath = "Assets/StreamingAssets/";
+		BuildTarget buildTarget = EditorUserBuildSettings.activeBuildTarget;
+		switch (buildTarget)
+		{
+			case BuildTarget.Android:
+				platform = eBuildPlatform.eBuildAndroid;
+				targetStreamingAssetsPath += "Android";
+				break;
+			case BuildTarget.iOS:
+				platform = eBuildPlatform.eBuildIOS;
+				targetStreamingAssetsPath += "IOS";
+				break;
+			case BuildTarget.StandaloneWindows:
+				platform = eBuildPlatform.eBuildWindow;
+				targetStreamingAssetsPath += "Windows";
+				break;
+			case BuildTarget.StandaloneWindows64:
+				platform = eBuildPlatform.eBuildWindow;
+				targetStreamingAssetsPath += "Windows";
+				break;
+			case BuildTarget.StandaloneOSXIntel:
+				platform = eBuildPlatform.eBuildMac;
+				targetStreamingAssetsPath += "Mac";
+				break;
+			case BuildTarget.StandaloneOSXIntel64:
+				platform = eBuildPlatform.eBuildMac;
+				targetStreamingAssetsPath += "Mac";
+				break;
+#if TUANJIE_1_0_OR_NEWER
+			case BuildTarget.WeixinMiniGame:
+				platform = eBuildPlatform.eBuildWX;
+				targetStreamingAssetsPath += "MiniGame";
+				break;
+#endif
+			default:
+				return false;
+		}
+		return true;
+	}
+
+	internal static void RemoveStreaingAssetsDirAndFilesAndCreateEmptyDir(string targetStreamingAssetsPath)
+    {
+		if (string.IsNullOrEmpty(targetStreamingAssetsPath))
+			return;
+		if (System.IO.Directory.Exists(targetStreamingAssetsPath))
+		{
+			string[] subDirs = System.IO.Directory.GetDirectories(targetStreamingAssetsPath);
+			if (subDirs != null)
+			{
+				for (int i = 0; i < subDirs.Length; ++i)
+				{
+					System.IO.Directory.Delete(subDirs[i], true);
+				}
+			}
+
+			string[] subFiles = System.IO.Directory.GetFiles(targetStreamingAssetsPath);
+			if (subFiles != null)
+			{
+				for (int i = 0; i < subFiles.Length; ++i)
+				{
+					System.IO.File.Delete(subFiles[i]);
+				}
+			}
+		}
+		else
+		{
+			System.IO.Directory.CreateDirectory(targetStreamingAssetsPath);
+		}
+	}
 	
 	// 打AB根据路径列表，用于BuildPkg.txt中AssetBundles项
 	static void BuildABFromPathList(string outPath, string[] list) {
@@ -4378,63 +4465,15 @@ public static class AssetBundleBuild
                 return;
             }
 
-			string targetStreamingAssetsPath = "Assets/StreamingAssets/";
-            BuildTarget buildTarget = EditorUserBuildSettings.activeBuildTarget;
-            eBuildPlatform platform;
-            switch (buildTarget) {
-                case BuildTarget.Android:
-					platform = eBuildPlatform.eBuildAndroid;		
-					targetStreamingAssetsPath += "Android";
-                    break;
-                case BuildTarget.iOS:
-                    platform = eBuildPlatform.eBuildIOS;
-					targetStreamingAssetsPath += "IOS";
-                    break;
-                case BuildTarget.StandaloneWindows:
-                    platform = eBuildPlatform.eBuildWindow;
-					targetStreamingAssetsPath += "Windows";
-                    break;
-                case BuildTarget.StandaloneWindows64:
-                    platform = eBuildPlatform.eBuildWindow;
-					targetStreamingAssetsPath += "Windows";
-                    break;
-                case BuildTarget.StandaloneOSXIntel:
-                    platform = eBuildPlatform.eBuildMac;
-					targetStreamingAssetsPath += "Mac";
-                    break;
-                case BuildTarget.StandaloneOSXIntel64:
-                    platform = eBuildPlatform.eBuildMac;
-					targetStreamingAssetsPath += "Mac";
-                    break;
-#if TUANJIE_1_0_OR_NEWER
-			case BuildTarget.WeixinMiniGame:
-				platform = eBuildPlatform.eBuildWX;
-				targetStreamingAssetsPath += "MiniGame";
-				break;
-#endif
-			default:
-                    return;
-            }
+			string targetStreamingAssetsPath = string.Empty; // 无所谓的值
+			eBuildPlatform platform = eBuildPlatform.eBuildWindow; // 无所谓的值
+			if (!GetCurrentStreamingAssetABDirAndBuildPlatform(ref targetStreamingAssetsPath, ref platform))
+				return;
 
 			// Delete outPath StreaingAssets subDirs
 			targetStreamingAssetsPath = outPath + '/' + targetStreamingAssetsPath;
-			if (System.IO.Directory.Exists (targetStreamingAssetsPath)) {
-				string[] subDirs = System.IO.Directory.GetDirectories (targetStreamingAssetsPath);
-				if (subDirs != null) {
-					for (int i = 0; i < subDirs.Length; ++i) {
-						System.IO.Directory.Delete (subDirs [i], true);
-					}
-				}
-
-				string[] subFiles = System.IO.Directory.GetFiles (targetStreamingAssetsPath);
-				if (subFiles != null) {
-					for (int i = 0; i < subFiles.Length; ++i) {
-						System.IO.File.Delete (subFiles [i]);
-					}
-				}
-			} else {
-				System.IO.Directory.CreateDirectory(targetStreamingAssetsPath);
-			}
+			// 删除目标目标StreamingAssets的资源并创建一个空目录
+			RemoveStreaingAssetsDirAndFilesAndCreateEmptyDir(targetStreamingAssetsPath);
 
 			List<string> buildList = GetResAllDirPath (resList);
 
