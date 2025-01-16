@@ -1,0 +1,17 @@
+_MOE.WindowName = {
+    Login = "Login",
+    GM_DS = "GM_DS"
+}
+
+_MOE.WindowConfig = {
+    Login = {
+        resPath = "@Login/Login",
+        LayerId = 1,
+        class = "Login.LoginView",
+    },
+    GM_DS = {
+        resPath = "@GM/GM_DS",
+        LayerId = 1,
+        class = "GM.GM_DS_View"
+    },
+}
