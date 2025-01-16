@@ -1,0 +1,254 @@
+local CSharpEventContainer = require("_Common.CSharpEventContainer")
+local BaseView = _MOE.class("BaseView", CSharpEventContainer)
+
+local function GetControlName(control)
+    if not control then
+        return
+    end
+    return control.gameObject.name
+end
+
+function BaseView:Ctor(gameObj, loader)
+    self.bp = {}
+    self.RootGameObject = gameObj
+    self.RootTransform = gameObj.transform
+    self.Loader = loader
+end
+
+function BaseView:Init()
+    xpcall(self.OnInit, _G.ErrorHandler, self)
+end
+
+function BaseView:GetTransform()
+    return self.RootTransform
+end
+
+function BaseView:GetLayerId()
+    return self.LayerId
+end
+
+-- 清理调所有delegete
+function BaseView:ClearUIEvents()
+    if self.__UIEvents then
+        for name, params in pairs(self.__UIEvents) do
+            local ctl = self:GetControl(name)
+            if ctl then
+                for eventName, _ in pairs(params) do
+                    if eventName and string.len(eventName) > 0 then
+                        if ctl[eventName] then
+                            local ctlEvt = ctl[eventName]
+                            ctlEvt:RemoveAllListeners()
+                        end
+                    end
+                end
+            end
+        end
+        self.__UIEvents = nil
+    end
+end
+
+function BaseView:_RegisterUIEvent(name, eventName, func)
+    self.__UIEvents = self.__UIEvents or {}
+    local ctl = self:GetControl(name)
+    if ctl then
+        local params = self.__UIEvents[name]
+        if not params then
+            params = {}
+            self.__UIEvents[name] = params
+        end
+        local OnEvent = function(...)
+            func(self, ...)
+        end
+        params[eventName] = OnEvent
+        local ctlEvt = ctl[eventName]
+        ctlEvt:RemoveAllListeners()
+        ctlEvt:AddListener(OnEvent)
+        return true
+    end
+    return false
+end
+
+function BaseView:_UnRegisterUIEvent(name, eventName)
+    if self.__UIEvents then
+        local ctl = self:GetControl(name)
+        if ctl then
+            local params = self.__UIEvents[name]
+            if params then
+                params[eventName] = nil
+                if next(params) == nil then
+                    self.__UIEvents[name] = nil
+                end
+            end
+            local ctlEvt = ctl[eventName]
+            ctlEvt:RemoveAllListeners()
+            return true
+        end
+    end
+    return false
+end
+
+function BaseView:UnRegisterCustomEvents()
+    _MOE.EventManager:UnRegisterEvents(self)
+end
+
+function BaseView:RegisterCustomEvent(eventName, func)
+    _MOE.EventManager:RegisterEvent(eventName, self, func)
+end
+
+function BaseView:_ClearAllUIControls()
+    self.bp = {}
+    self.Loader = nil
+    self.RootGameObject = nil
+    self.RootTransform = nil
+end
+
+function BaseView:GetControl(name)
+    if not self.bp or not name then
+        return
+    end
+    local ret = self.bp[name]
+    return ret
+end
+
+function BaseView:SetEnabled(control, isEnable)
+    if not control or isEnable == nil then
+        return
+    end
+    control.enabled = isEnable
+end
+
+function BaseView:IsInteractable(control)
+    if not control then
+        return
+    end
+    return control.interactable
+end
+
+function BaseView:SetInteractable(control, IsInteractable)
+    if not control or IsInteractable == nil then
+        return
+    end
+    control.interactable = IsInteractable
+end
+
+function BaseView:IsEnabled(control)
+    if not control then
+        return
+    end
+    return control.enabled
+end
+
+-- Lua上的加载器
+function BaseView:GetLoader()
+    local ret = self.Loader
+    return ret
+end
+
+function BaseView:Open(...)
+    xpcall(self.OnOpen, _G.ErrorHandler, self, ...)
+end
+
+function BaseView:Close()
+    xpcall(self.OnClose, _G.ErrorHandler, self)
+end
+
+--- UI释放
+function BaseView:Destroy()
+    xpcall(self.OnDestroy, _G.ErrorHandler, self)
+    self:ClearUIEvents()
+    self:UnRegisterCustomEvents()
+    self:UnRegsterAllCsharpEvents()
+    self:_ClearAllUIControls()
+end
+
+function BaseView:ReOpen(...)
+    xpcall(self.OnReOpen, _G.ErrorHandler, self, ...)
+end
+
+function BaseView:AddUIEvent(control, eventName, func)
+    if not eventName or not func or not control then
+        return false
+    end
+    if type(eventName) ~= "string" or type(func) ~= "function" then
+        _MOE.Logger.LogError("[BaseView] AddUIEvent: Param is not vaild~!")
+        return false
+    end
+
+    return self:_RegisterUIEvent(GetControlName(control), eventName, func)
+end
+
+function BaseView:AddButtonClick(control, func)
+    if not func or not control then
+        return false
+    end
+    return self:AddUIEvent(control, "onClick", func)
+end
+
+function BaseView:RemoveUIEvent(control, eventName)
+    if not eventName or not control then
+        return false
+    end
+    if type(eventName) ~= "string" then
+        _MOE.Logger.LogError("[BaseView] RemoveUIEvent: Param is not vaild~!")
+        return false
+    end
+    return self:_UnRegisterUIEvent(GetControlName(control), eventName)
+end
+
+function BaseView:DropListSetOptionData(dropList, optionArray)
+    if not dropList or not dropList.options then
+        return false
+    end
+    dropList.options:Clear()
+    -- 设置数据
+    if optionArray and next(optionArray) ~= nil then
+        dropList.options.Capacity = #optionArray
+        local OptionDataClass = CS.UnityEngine.UI.Dropdown.OptionData
+        local loader = self:GetLoader()
+        for idx, item in ipairs(optionArray) do
+            local optaion = OptionDataClass()
+            if item.text then
+                optaion.text = item.text
+            else
+                optaion.text = ""
+            end
+            if loader and item.imagePath then
+                local _, opt = loader:LoadSprite(dropList, optaion, idx, item.imagePath)
+                optaion = opt
+            end
+            dropList.options:Add(optaion)
+        end
+        if dropList.captionText then
+            local item0 = optionArray[1]
+            if item0 then
+                dropList.captionText.text = item0.text or ""
+            end
+        end
+    end
+    -- 精简
+    dropList.options:TrimExcess()
+end
+
+function BaseView:DoCloseSelf()
+    if self.__wndName then
+        _MOE.UIManager:CloseWindow(self.__wndName)
+    end
+end
+
+--------------------------------------- 虚方法
+function BaseView:OnDestroy()
+end
+
+function BaseView:OnOpen(...)
+end
+
+function BaseView:OnReOpen(...)
+end
+
+function BaseView:OnClose()
+end
+
+function BaseView:OnInit()
+end
+
+return BaseView
