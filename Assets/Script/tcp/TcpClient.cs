@@ -43,6 +43,13 @@ namespace NsTcpClient {
             Dispose();
         }
 
+        // 需要注意线程问题，这里没有做线程保护
+        private void ResetBufferPos()
+        {
+            m_WaitSendSize = 0;
+            m_HasReadSize = 0;
+        }
+
         protected void Dispose(bool Diposing) {
             if (!m_IsDispose) {
                 // 优先Abort
@@ -72,8 +79,7 @@ namespace NsTcpClient {
 
                     CloseSocket();
 
-                    m_WaitSendSize = 0;
-                    m_HasReadSize = 0;
+                    ResetBufferPos();
                     m_Waiting = null;
                     m_Thread = null;
                     m_Mutex = null;
