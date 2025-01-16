@@ -99,9 +99,16 @@ namespace NsTcpClient
                 opt.port = uRemotePort;
                 opt.timeout = ((double)mTimeOut) / 1000.0f;
                 m_TcpSocket.Connect(opt);
+                ResetBufferPos();
                 return true;
             }
             return false;
+        }
+
+        // 断线重连不要重新创建TCPSocket,微信有限制5分钟内只能创建20个Socket(来自微信小游戏文档)
+        void ResetBufferPos()
+        {
+            m_HasReadSize = 0;
         }
 
         public void Dispose() {
@@ -126,7 +133,7 @@ namespace NsTcpClient
                     }
 
                     m_ReadBuffer = null;
-                    m_HasReadSize = 0;
+                    ResetBufferPos();
                 }
 
                 // 释放非托管对象资源
