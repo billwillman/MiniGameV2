@@ -1,0 +1,160 @@
+local UILayer = _MOE.class("UILayer")
+
+UILayer.Type = {
+    MainLayer = 0,
+    NormalLayer1 = 1,
+    NormalLayer2 = 2,
+    NormalLayer3 = 3,
+    PopLayer1 = 4,
+    PopLayer2 = 5,
+    PopLayer3 = 6,
+}
+
+local function GetLayerName(layerId)
+    for name, id in pairs(UILayer.Type) do
+        if id == layerId then
+            return name
+        end
+    end
+end
+
+local function GetLayerRootGameObject(layerName)
+    local trans = _MOE.GameStartTransform
+    local path = "UI Root/Root/" .. layerName
+    local ret = trans:Find(path)
+    if ret then
+        ret = ret.gameObject
+    end
+    return ret
+end
+
+function UILayer:Ctor(layerId, mgr)
+    self.LayerId = layerId
+    self.LayerName = GetLayerName(layerId)
+    self.RootGameObject = GetLayerRootGameObject(self.LayerName)
+    if self.RootGameObject then
+        self.RootTransform = self.RootGameObject.transform
+    end
+    self.UIManager = mgr
+    self.WndNames = {}
+    self.WndNameList = {}
+    self.MaxZOrder = 0
+end
+
+function UILayer:GetName()
+    return self.LayerName
+end
+
+function UILayer:GetLayerId()
+    return self.LayerId
+end
+
+local _rootAnchorMin = _MOE.Vector2(0, 0)
+local _rootAnchorMax = _MOE.Vector2(1, 1)
+
+local function GetUseZOrder(self)
+    local ret = self.MaxZOrder
+    self.MaxZOrder = self.MaxZOrder + 1
+    return ret
+end
+
+function UILayer:BringToFront(wndName)
+    if not wndName then
+        return false
+    end
+    local data = self.WndNames[wndName]
+    if not data then
+        return false
+    end
+    local index = self:_FindWndNameIndex(wndName)
+    if index <= 0 then
+        return false
+    end
+    if index == #self.WndNameList then
+        return true
+    end
+    table.remove(self.WndNameList, index)
+    data.ZOrder = GetUseZOrder(self)
+    table.insert(self.WndNameList, data)
+    local view = data.View
+    if view and view.bp and view.bp._Canvas then
+        local canvas = view.bp._Canvas
+        -- canvas.overrideSorting = true
+        canvas.sortingOrder = self.LayerId * 100 + data.ZOrder
+    end
+    return true
+end
+
+function UILayer:_AppendWindow(wndName)
+    if not self.RootTransform then
+        return false
+    end
+    local view = self.UIManager:GetWindowView(wndName)
+    if view then
+        local viewTrans = view:GetTransform()
+        if viewTrans then
+            viewTrans:SetParent(self.RootTransform, false)
+            --local rectTrans = cast(viewTrans, _MOE.RectTransformClass)
+            viewTrans.anchorMin = _rootAnchorMin
+            viewTrans.anchorMax = _rootAnchorMax
+            viewTrans.offsetMin = _rootAnchorMin
+            viewTrans.offsetMax = _rootAnchorMin
+        end
+        local zorder = GetUseZOrder(self)
+        local data = {
+            View = view,
+            ZOrder = zorder,
+        }
+        self.WndNames[wndName] = data
+        table.insert(self.WndNameList, data)
+        if view.bp and view.bp._Canvas then
+            local canvas = view.bp._Canvas
+            canvas.overrideSorting = true
+            canvas.sortingOrder = self.LayerId * 100 + zorder
+        end
+    end
+    return true
+end
+
+function UILayer:_FindWndNameIndex(wndName)
+    if not wndName then
+        return -1
+    end
+    local data = self.WndNames[wndName]
+    if not data then
+        return -1
+    end
+    local index = -1
+    for i, d in ipairs(self.WndNameList) do
+        if d == data then
+            index = i
+            break
+        end
+    end
+    return index
+end
+
+function UILayer:_RemoveWindow(wndName)
+    local index = self:_FindWndNameIndex(wndName)
+    local data = self.WndNames[wndName]
+    if data then
+        self.WndNames[wndName] = nil
+        if index and index > 0 then
+            table.remove(self.WndNameList, index)
+            if data.ZOrder and data.ZOrder == self.MaxZOrder - 1 then
+                local topData = self.WndNameList[#self.WndNameList]
+                if topData then
+                    self.MaxZOrder = topData.ZOrder + 1
+                else
+                    self.MaxZOrder  = 0
+                end
+            end
+        else
+            _MOE.Logger.LogErrorFormat("[UILayer] wndName: {0} is not found in WndNameList", wndName)
+        end
+        return true
+    end
+    return false
+end
+
+return UILayer

@@ -1,0 +1,263 @@
+require("_Client.Views.UIConfig")
+
+-- UI管理器
+local UIManager = _MOE.class("UIManager")
+local UIBinderType = typeof(CS.SOC.GamePlay.UIBinder)
+local UILayerClass = require("_Client.UILayer")
+
+function UIManager:Ctor()
+    self.Wnds = {}
+    -- 创建层
+    self:_CreateLayers()
+end
+
+function UIManager:_CreateLayers()
+    self.Layers = {}
+    if UILayerClass.Type then
+        for _, layerId in pairs(UILayerClass.Type) do
+            if layerId then
+                self.Layers[layerId] = UILayerClass.New(layerId, self)
+            end
+        end
+    end
+    self.RemoveLayerTransform = _MOE.GameStartTransform:Find("UI Root/RemoveLayer")
+end
+
+function UIManager:_GetWindowConfig(wndName)
+    if not wndName or not _MOE.WindowConfig then
+        return
+    end
+    local ret = _MOE.WindowConfig[wndName]
+    return ret
+end
+
+function UIManager:_CreateUIPrefab(wndName, loaderType, fairyDepPackages)
+    if not wndName then
+        return
+    end
+    local cfg = self:_GetWindowConfig(wndName)
+    if not cfg then
+        return
+    end
+    local path = cfg.resPath
+    if not path then
+        return
+    end
+    path = string.format("Resources/UI/%s.prefab", path)
+    local ret = _MOE.ResourceManager:CreateGameObject(path)
+    local loader = nil
+    if ret then
+        if loaderType == nil then
+            loaderType = _MOE.BaseResLoaderAsyncType
+        end
+        loader = ret:AddComponent(loaderType)
+        -- FairyGUI界面
+        if loader and loaderType == _MOE.FairyGUILoaderAsyncType then
+            -- FairyGUI
+            if fairyDepPackages ~= nil then
+                for _, depPackageName in ipairs(fairyDepPackages) do
+                    if depPackageName and string.len(depPackageName) > 0 then
+                        local packagePath = string.format("Resources/FairyGUIPackages/%s_fui.bytes", depPackageName)
+                        loader:LoadPackageNoReturn(packagePath) -- 加载Package
+                    end
+                end
+            end
+        end
+        --
+    end
+    return ret, loader
+end
+
+function UIManager:GetWindowView(wndName)
+    if not wndName then
+        return
+    end
+    local view = self.Wnds[wndName]
+    return view
+end
+
+function UIManager:_AppendLayerToLayer(wndName, layerId)
+    if not wndName or not layerId then
+        return
+    end
+    local layer = self.Layers[layerId]
+    if not layer then
+        return
+    end
+    return layer:_AppendWindow(wndName)
+end
+
+function UIManager:_AppendWndToLayerFromCfg(wndName)
+    local cfg = self:_GetWindowConfig(wndName)
+    if not cfg then
+        return
+    end
+    return self:_AppendLayerToLayer(wndName, cfg.LayerId)
+end
+
+function UIManager:_AppendWndToRemoveLayer(wndName)
+    if not wndName then
+        return
+    end
+    local view = self:GetWindowView(wndName)
+    if not view then
+        return
+    end
+    self:_RemoveWndToLayer(wndName)
+    if view.RootTransform and self.RemoveLayerTransform then
+        view.RootTransform:SetParent(self.RemoveLayerTransform, false)
+    end
+end
+
+function UIManager:_RemoveWndToLayer(wndName)
+    local view = self:GetWindowView(wndName)
+    if not view then
+        return
+    end
+    local layerId = view:GetLayerId()
+    if not layerId then
+        return
+    end
+    local layer = self.Layers[layerId]
+    if not layer then
+        return
+    end
+    local ret = layer:_RemoveWindow(wndName)
+    return ret
+end
+
+function UIManager:_CreateUIWindow(wndName, ...)
+    if not wndName then
+        return
+    end
+    local config = self:_GetWindowConfig(wndName)
+    if not config then
+        return
+    end
+    local viewClass
+    if not config.class or string.len(config.class) <= 0  then
+        viewClass = _MOE.BaseViewClass
+    else
+        local path = string.format("_Client.Views.%s", config.class)
+        viewClass = require(path)
+    end
+    if not viewClass then
+        return
+    end
+    local fairyGUIType = config.isFairyGUI and _MOE.FairyGUILoaderAsyncType or _MOE.BaseResLoaderAsyncType
+    local gameObj, loader = self:_CreateUIPrefab(wndName, fairyGUIType, config.depPackages) -- depPackages 依赖的Package
+    if not gameObj then
+        return
+    end
+    local view = viewClass.New(gameObj, loader)
+    if view then
+        local UIBinder = gameObj:GetComponent(UIBinderType)
+        if UIBinder then
+            UIBinder:InitRegisterControls(view)
+        end
+        self.Wnds[wndName] = view
+        view.__wndName = wndName
+        self:_AppendWndToLayerFromCfg(wndName)
+        view:Init()
+        view:Open(...)
+    end
+    return view
+end
+
+function UIManager:ChangeWindowToRemoveLayer(wndName)
+    return self:ChangeWndowLayer(wndName, UILayerClass.Type.RemoveLayer)
+end
+
+-- 打开界面
+function UIManager:OpenWindow(wndName, ...)
+    if not wndName then
+        return
+    end
+    local view = self:GetWindowView(wndName)
+    if view then
+        self:BringToFront(wndName)
+        view:ReOpen(...)
+        return view
+    end
+    view = self:_CreateUIWindow(wndName, ...)
+    return view
+end
+
+local function _FreeWindowView(self, view, wndName)
+    if view and wndName then
+        local gameObj = view.RootGameObject
+        view:Destroy()
+        self:_AppendWndToRemoveLayer(wndName)
+        -- 删除GameObject
+        if gameObj then
+            _MOE.ResourceManager:DestroyObject(gameObj)
+        end
+    end
+end
+
+function UIManager:_FreeWindow(wndName)
+    if not wndName then
+        return
+    end
+    local view = self.Wnds[wndName]
+    if view then
+        _FreeWindowView(self, view, wndName)
+        self.Wnds[wndName] = nil
+    end
+end
+
+function UIManager:BringToFront(wndName)
+    if not wndName then
+        return false
+    end
+    local config = self:_GetWindowConfig(wndName)
+    if not config then
+        return false
+    end
+    local layerId = config.LayerId
+    if not layerId then
+        return false
+    end
+    local layer = self.Layers[layerId]
+    if not layer then
+        return false
+    end
+    return layer:BringToFront(wndName)
+end
+
+function UIManager:CloseWindow(wndName)
+    if not wndName then
+        return
+    end
+    local view = self.Wnds[wndName]
+    if view then
+        view:Close()
+        ---- 释放流程
+        self:_FreeWindow(wndName)
+    end
+end
+
+function UIManager:FreeAllWindow()
+    if self.Wnds then
+        for wndName, view in pairs(self.Wnds) do
+            if view and wndName then
+                _FreeWindowView(self, view, wndName)
+            end
+        end
+        self.Wnds = {}
+    end
+end
+
+function UIManager:CloseAllWindow()
+    if self.Wnds then
+        for wndName, view in pairs(self.Wnds) do
+            if view and wndName then
+                view:Close()
+                _FreeWindowView(self, view, wndName)
+            end
+        end
+        self.Wnds = {}
+    end
+end
+
+return UIManager
