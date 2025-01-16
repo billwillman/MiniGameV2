@@ -2,6 +2,10 @@ local ModelContainerClass = require("_Common.ModelContainer")
 local BaseApp = _MOE.class("BaseApp", ModelContainerClass)
 
 function BaseApp:Init()
+    self:RegisterModel("TimerManager", "_Common.TimerManager", false)
+    self.TimerManager = self:GetModel("TimerManager")
+    _MOE.TimerManager = self.TimerManager
+
     xpcall(self.OnInit, _G.ErrorHandler, self)
 end
 
@@ -11,6 +15,10 @@ function BaseApp:Quit()
 end
 
 function BaseApp:Update(deltaTime)
+    if self.TimerManager and self.TimerManager.OnUpdate then
+        self.TimerManager:OnUpdate(deltaTime)
+    end
+
     xpcall(self.OnUpdate, _G.ErrorHandler, self, deltaTime)
 end
 

@@ -1,6 +1,12 @@
------ Client的L
+----- Client的App
 local BaseAppClass = require("_Common.BaseApp")
 
 local _M = _MOE.class("ClientApp", BaseAppClass)
+
+------------------------------ 继承方法 -------------------------------
+function _M:OnInit()
+    _MOE.BaseViewClass = require("_Client.BaseView")
+    _MOE.UIManager = require("_Client.UIManager").New()
+end
 
 return _M
