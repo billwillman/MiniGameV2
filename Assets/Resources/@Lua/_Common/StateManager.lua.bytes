@@ -1,0 +1,100 @@
+local StateManager = _MOE.class("StateManager")
+
+local function ResetVar(self)
+    if self.m_State then
+        self.m_State:DoUnRegisterEvents()
+        self.m_State:DoDispose()
+    end
+    self.m_State = nil
+end
+
+function StateManager:Ctor()
+    self.RegisterStateClassMap = {}
+    ResetVar(self)
+    self:RegisterStateClasses()
+end
+
+function StateManager:RegisterStateClasses()
+    xpcall(self.OnRegisterStateClass, _G.ErrorHandler, self)
+end
+
+function StateManager:FindStateClass(stateType)
+    if not self.RegisterStateClassMap then
+        return
+    end
+    return self.RegisterStateClassMap[stateType]
+end
+
+-- 当前在的状态对象
+function StateManager:GetCurrentState()
+    return self.m_State
+end
+
+--[[
+-- 哪些消息可以跨所有场景
+function StateManager:CanStateAllSceneChange(stateType)
+    local ret = (stateType == StateManager.StateType.None) or (stateType == StateManager.StateType.InBattle)
+    return ret
+end
+]]
+
+function StateManager:ChangeState(stateType, isForce, ...)
+    --[[
+    if not _MOE.SceneManager:IsInLobbyScene() and not _MOE.SceneManager:IsHomeScene() and
+        (not self:CanStateAllSceneChange(stateType)) then
+        self.m_TempData = {stateType = stateType, isForce = isForce, args = {...}}
+        return false
+    end
+    self.m_TempData = nil
+    ]]
+    local stateClass = self:FindStateClass(stateType)
+    if not stateClass then
+        return false
+    end
+    if isForce == nil then
+        isForce = false
+    end
+    if not isForce then
+        if stateType == self:GetStateType() then
+            return false
+        end
+    end
+    if self.m_State then
+        if not self.m_State:CheckCanExit(stateType) then
+            return false
+        end
+    end
+    local state = stateClass.New(self, stateType, ...)
+    if state:CheckCanEnter() then
+        _MOE.Logger.LogWarning("[StateManager] Exit State:", self:GetStateType())
+        if self.m_State then
+            self.m_State:DoExit(stateType)
+            self.m_State:DoUnRegisterEvents()
+            self.m_State:DoDispose()
+        end
+        self.m_State = state
+        _MOE.Logger.LogWarning("[StateManager] Enter State:", self:GetStateType())
+        self.m_State:DoRegisterEvents()
+        self.m_State:DoEnter()
+    else
+        state:DoDispose()
+    end
+end
+
+function StateManager:GetStateType()
+    if not self.m_State then
+        return StateManager.StateType.None
+    end
+    return self.m_State:GetStateType()
+end
+
+-- 清理
+function StateManager:Dispose()
+    ResetVar(self)
+end
+
+------------------------------------------------- 虚方法
+function StateManager:OnRegisterStateClass()
+end
+
+return StateManager

@@ -1,0 +1,110 @@
+local IState = _MOE.class("IState")
+
+function IState:Ctor(mgr, stateType, ...)
+    self.m_StateMgr = mgr
+    self.m_StateType = stateType
+    self:OnInit(...)
+end
+
+function IState:GetStateType()
+    return self.m_StateType
+end
+
+------------------------------------------------------------- StateMgr调用 -------------------------------
+
+function IState:CheckCanEnter()
+    local ret = false
+    xpcall(
+            function ()
+                ret = self:CanEnter()
+            end,
+            _G.ErrorHandler
+        )
+    return ret
+end
+
+function IState:CheckCanExit(newStateType)
+    local ret = false
+    xpcall(
+            function ()
+                ret = self:CanExit(newStateType)
+            end,
+            _G.ErrorHandler
+        )
+    return ret
+end
+
+function IState:DoEnter()
+    xpcall(
+            function ()
+                self:OnEnter()
+            end,
+            _G.ErrorHandler
+        )
+end
+
+function IState:DoExit(newStateType)
+    xpcall(
+            function ()
+                self:OnExit(newStateType)
+            end,
+            _G.ErrorHandler
+        )
+end
+
+function IState:DoDispose()
+    xpcall(
+            function ()
+                self:OnDispose()
+            end,
+            _G.ErrorHandler
+        )
+end
+
+function IState:DoRegisterEvents()
+    xpcall(
+            function ()
+                self:RegisterEvents()
+            end,
+            _G.ErrorHandler
+        )
+end
+
+function IState:DoUnRegisterEvents()
+    xpcall(
+           function ()
+                self:UnRegisterEvents()
+           end,
+            _G.ErrorHandler
+        )
+end
+
+-------------------------------------------------------------- 可继承 ------------------------------------
+function IState:CanEnter()
+    return true
+end
+
+function IState:CanExit(newStateType)
+    return true
+end
+
+function IState:OnEnter()
+end
+
+function IState:OnExit(newStateType)
+end
+
+function IState:OnInit(...)
+end
+
+-- 清理
+function IState:OnDispose()
+end
+
+function IState:RegisterEvents()
+end
+
+function IState:UnRegisterEvents()
+end
+
+return IState

@@ -1,0 +1,90 @@
+--[[
+    定时器
+]]
+--local weak_tb = {__mode = "v"}
+
+local function Timer(owner, delay, one_shot, use_frame, obj, func, ...)
+    local t = {}
+    t.owner = owner
+    -- 时长，秒或帧
+    t.delay = delay
+    -- 调用目标
+    t.obj = obj
+    t.func = func
+    t.param = {...}
+    -- 是否一次性定时器
+    t.one_shot = one_shot
+    -- 是否是帧定时器
+    t.use_frame = use_frame
+    -- 是否已经启用
+    t.started = false
+    -- 倒计时
+    t.left = delay
+    -- 是否已经结束
+    t.over = false
+    -- 本次的时间间隔
+    t.deltaTime = 0
+
+    function t:Start()
+        if not self.started then
+            self.started = true
+        end
+    end
+
+    function t:Pause()
+        self.started = false
+    end
+
+    function t:Resume()
+        self.started = true
+    end
+
+    function t:Stop()
+        self.over = true
+        self.owner:CheckDel()
+    end
+
+    function t:IsOver()
+        -- 检查弱引用
+        if not self.obj then
+            return true
+        end
+        return self.over
+    end
+
+    function t:Update(deltaTime)
+        if not self.started or self.over then
+            return
+        end
+        self.deltaTime = deltaTime
+        if self.use_frame then
+            self.left = self.left - 1
+        else
+            self.left = self.left - deltaTime
+        end
+
+        if self.left <= 0 then
+            if self.one_shot then
+                self:Stop()
+            else
+                self.left = self.delay
+            end
+            if self.obj then
+
+                local correct, errorMsg = pcall(self.func, self.obj, table.unpack(self.param))
+
+                if not correct then
+                    self:Stop()
+                    _MOE.Logger.LogError(errorMsg)
+                end
+            else
+                self:Stop()
+            end
+        end
+    end
+
+    return t
+end
+
+return Timer
+

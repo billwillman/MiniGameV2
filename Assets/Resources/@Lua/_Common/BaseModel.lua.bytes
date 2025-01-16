@@ -1,0 +1,49 @@
+local CSharpEventContainer = require("_Common.CSharpEventContainer")
+local BaseModel = _MOE.class("BaseModel", CSharpEventContainer)
+
+function BaseModel:Init()
+    xpcall(self.OnInit, _G.ErrorHandler, self)
+    xpcall(self.RegisterEvents, _G.ErrorHandler, self)
+end
+
+function BaseModel:UnInit()
+    xpcall(self.UnRegisterEvents, _G.ErrorHandler, self)
+    self:UnRegsterAllCsharpEvents()
+    xpcall(self.OnUnInit, _G.ErrorHandler, self)
+end
+
+-- 登出
+function BaseModel:Loginout()
+    self:OnLoginout()
+end
+
+-- 断线重连成功
+function BaseModel:ReConnected()
+    self:OnReConnected()
+end
+
+------------------------------------------------ 虚方法 ----------------------------------
+function BaseModel:OnInit()
+end
+
+function BaseModel:OnUnInit()
+end
+
+function BaseModel:OnLoginout()
+end
+
+function BaseModel:OnReConnected()
+end
+
+function BaseModel:RegisterEvents()
+end
+
+function BaseModel:UnRegisterEvents()
+end
+
+-- 是否在Unluad后释放Path的require文件
+function BaseModel:IsUnRequireInUnInit()
+    return false
+end
+
+return BaseModel

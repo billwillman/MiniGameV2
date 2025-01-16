@@ -1,0 +1,290 @@
+local Timer = require("_Common.Timer")
+
+local TimerManager = _MOE.class("TimerManager", _MOE.BaseModel)
+
+--时间戳事件key
+TimerManager.k_keys_timeEvent = {
+    --origin = 1,
+    --mailRed = 2,
+    defaultStart = 1000000,
+}
+
+---@protected
+function TimerManager:OnInit()
+    -- self.__scope = _MOE.EnumScope.BothClientServer
+    -- _MOE.EventManager:RegisterEvent(_MOE.EventEnum.ON_ACCOUNT_LOGOUT, self, self.InitTimeEvents)
+
+    self.m_timers = {}
+    self.m_toAddTimers = {}
+    self.m_isDel = false
+    self.m_timeSeconds = os.time()
+    self:InitTimeEvents()
+end
+
+---@protected
+function TimerManager:OnUnInit()
+    self.m_timers = nil
+    self.m_toAddTimers = nil
+end
+
+function TimerManager:InitTimeEvents()
+    self.m_timeEventDt = 0
+    self.m_timeEvents = {}
+    self.m_timeEventsToAdd = {}
+    self.m_timeEventsToRemove = {}
+    self.m_timeEventDefaultKey = TimerManager.k_keys_timeEvent.defaultStart
+end
+
+---@public
+---TimerManager.AddTimer 增加一个单次定时器
+---@param delay number 单位:秒
+---@param obj   table ref
+---@param func  function tick方法
+---@param ...   args 参数列表
+---@return  Timer 计时器
+function TimerManager:AddTimer(delay, obj, func, ...)
+    assert(delay and obj and func)
+    assert(type(delay) == "number" and delay > 0)
+    assert(type(func) == "function")
+    assert(not self.m_timers[obj])
+    local timer = self:CreateTimer(delay, true, false, obj, func, ...)
+    return timer
+end
+
+---@public
+---TimerManager.AddLoopTimer 增加一个循环定时器
+---@param delay number 单位:秒
+---@param obj   table ref
+---@param func  function tick方法
+---@param ...   args 参数列表
+---@return  Timer 计时器
+function TimerManager:AddLoopTimer(delay, obj, func, ...)
+    assert(delay and obj and func)
+    assert(type(delay) == "number" and delay > 0)
+    assert(type(func) == "function")
+    assert(not self.m_timers[obj])
+    local timer = self:CreateTimer(delay, false, false, obj, func, ...)
+    return timer
+end
+
+---@public
+---TimerManager.AddLoopTimer 移除一个定时器
+function TimerManager:RemoveTimer(timer)
+    if self.m_timers and timer then
+        local tempTimer = self.m_timers[timer]
+        if tempTimer then
+            tempTimer:Stop()
+        else
+            tempTimer = self.m_toAddTimers[timer]
+            if tempTimer then
+                tempTimer:Stop()
+            end
+        end
+    end
+end
+
+
+--remove all Timers registered by this object
+function TimerManager:ClearRefTimers(RefObj)
+
+    --clear exist timers
+    for key, timer in pairs(self.m_timers) do
+        if timer and timer.obj == RefObj then
+            timer:Stop()
+        end
+
+    end
+
+    --clear pending added timers
+    for key, timer in pairs(self.m_toAddTimers) do
+        if timer and timer.obj == RefObj then
+            timer:Stop()
+        end
+
+    end
+
+end
+
+---@public
+---TimerManager.AddFrame 增加一个单次定帧器
+---@param delay number 单位:秒
+---@param obj   table ref
+---@param func  function tick方法
+---@param ...   args 参数列表
+---@return  Timer 计时器
+function TimerManager:AddFrame(delay, obj, func, ...)
+    assert(delay and func)
+    assert(type(delay) == "number" and delay > 0)
+    assert(type(func) == "function")
+    assert(not self.m_timers[obj])
+    local timer = self:CreateTimer(delay, true, true, obj, func, ...)
+    return timer
+end
+
+---@public
+---TimerManager.AddLoopFrame 增加一个循环定帧器
+---@param delay number 单位:秒
+---@param obj   table ref
+---@param func  function tick方法
+---@param ...   args 参数列表
+---@return  Timer 计时器
+function TimerManager:AddLoopFrame(delay, obj, func, ...)
+    assert(delay and func)
+    assert(type(delay) == "number" and delay > 0)
+    assert(type(func) == "function")
+    assert(not self.m_timers[obj])
+    local timer = self:CreateTimer(delay, false, true, obj, func, ...)
+    return timer
+end
+
+---@public
+---移除一个定时/帧器
+---@param timer Timer 计时器对象
+function TimerManager:RemoveFrame(timer)
+    self:RemoveTimer(timer)
+end
+
+---@private
+function TimerManager:CreateTimer(delay, one_shot, use_frame, obj, func, ...)
+    local timer = Timer(self, delay, one_shot, use_frame, obj, func, ...)
+    timer:Start()
+    self.m_toAddTimers[timer] = timer
+    return timer
+end
+
+---@private
+function TimerManager:OnUpdate(deltaTime)
+    if self.m_timers then
+        if next(self.m_toAddTimers) then
+            for _, timer in pairs(self.m_toAddTimers) do
+                if not timer:IsOver() then
+                    self.m_timers[timer] = timer
+                end
+            end
+            self.m_toAddTimers = {}
+        end
+
+        for _, timer in pairs(self.m_timers) do
+            if not timer:IsOver() then
+                timer:Update(deltaTime)
+            end
+        end
+
+        if self.m_isDel then
+            local del = {}
+            for _, timer in pairs(self.m_timers) do
+                if timer:IsOver() then
+                    table.insert(del, timer)
+                end
+            end
+            for _, obj in ipairs(del) do
+                self.m_timers[obj] = nil
+            end
+            self.m_isDel = false
+        end
+
+        --时间戳检测
+        self:TimeEventDoUpdate(deltaTime)
+    end
+    self.m_timeSeconds = self.m_timeSeconds and self.m_timeSeconds + deltaTime or deltaTime
+end
+
+function TimerManager:CheckDel()
+    self.m_isDel = true
+end
+
+--[[
+    添加一个时间戳事件，检测间隔为一秒
+    time：服务器时间戳
+    func：触发函数
+    key：默认递增，填写使用文件开头的枚举
+]]
+function TimerManager:AddTimeEvent(time, func, key)
+    if not key then
+        key = self.m_timeEventDefaultKey
+        self.m_timeEventDefaultKey = self.m_timeEventDefaultKey + 1
+    end
+    local event = { time = time, func = func }
+    self.m_timeEventsToAdd[key] = event
+    self.m_timeEventsToRemove[key] = nil
+    return key
+end
+
+function TimerManager:RemoveTimeEvent(key)
+    self.m_timeEventsToAdd[key] = nil
+    self.m_timeEventsToRemove[key] = true
+end
+
+-------- 在客户端上，服务器的时间戳
+function TimerManager:GetClientServerTime()
+    -- _MOE.Models.HeartBeatModel:GetServerTime()
+    local ret = os.time()
+    return ret
+end
+----------------------
+
+--update
+function TimerManager:TimeEventDoUpdate(dt)
+    if _MOE.IsDS then
+        return
+    end
+
+    if not _MOE.LoginModel or not _MOE.LoginModel:IsLogged() then
+        return
+    end
+
+    self.m_timeEventDt = self.m_timeEventDt + dt
+    if self.m_timeEventDt > 1 then
+        self.m_timeEventDt = 0
+
+        local now = self:GetClientServerTime()
+        for k,v in pairs(self.m_timeEvents) do
+            if now >= v.time then
+                self:RemoveTimeEvent(k)
+                --超过触发时间10秒的情况,说明出现了异常，就不要触发了
+                if now - v.time < 10 then
+                    v.func()
+                end
+            end
+        end
+        for k,v in pairs(self.m_timeEventsToAdd) do
+            self.m_timeEvents[k] = v
+        end
+        self.m_timeEventsToAdd = {}
+        for k,_ in pairs(self.m_timeEventsToRemove) do
+            self.m_timeEvents[k] = nil
+        end
+        self.m_timeEventsToRemove = {}
+    end
+end
+
+--添加每日触发函数(timeOffset为与0点的时间偏移)
+function TimerManager:AddEveryDayTimeEventByTimeOffset(timeOffset, func, key)
+    if timeOffset > 86400 then
+        print("timeOffset need less than 86400!")
+        return
+    end
+    local now = self:GetClientServerTime()
+    local todayStart = _MOE.Utils.TimeUtils.getTimeStampOfToday(now, 0, 0, 0)
+    local triggerTime = todayStart + timeOffset
+    if now < triggerTime then
+        self:AddEveryDayTimeEvent(triggerTime, func, key)
+    else
+        self:AddEveryDayTimeEvent(triggerTime+86400, func, key)
+    end
+end
+
+--添加每日触发函数(triggerTime为第一次触发的时间戳)
+function TimerManager:AddEveryDayTimeEvent(triggerTime, func, key)
+    self:AddTimeEvent(triggerTime, function()
+        func()
+        self:AddEveryDayTimeEvent(triggerTime+86400, func, key)
+    end, key)
+end
+
+--获取游戏启动至当前的时间
+function TimerManager:GetTimeSeconds()
+    return self.m_timeSeconds or 0
+end
+
+return TimerManager.New()

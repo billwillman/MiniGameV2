@@ -1,0 +1,48 @@
+local ModelContainerClass = require("_Common.ModelContainer")
+local BaseApp = _MOE.class("BaseApp", ModelContainerClass)
+
+function BaseApp:Init()
+    xpcall(self.OnInit, _G.ErrorHandler, self)
+end
+
+function BaseApp:Quit()
+    xpcall(self.OnQuit, _G.ErrorHandler, self)
+    self:UnRegisterModels()
+end
+
+function BaseApp:Update(deltaTime)
+    xpcall(self.OnUpdate, _G.ErrorHandler, self, deltaTime)
+end
+
+function BaseApp:GetPlayerControllerByIndex(index)
+    if not index then
+        return
+    end
+    if _MOE.PlayerControllerList then
+        return _MOE.PlayerControllerList[index]
+    end
+end
+
+function BaseApp:GetPlayerControllerByClientId(clientId)
+    if not clientId then
+        return
+    end
+    if _MOE.PlayerControllers then
+        local data = _MOE.PlayerControllers[clientId]
+        if data then
+            return data.target
+        end
+    end
+end
+
+------------------------------------------------------ 虚方法 ---------------------------------------------------
+function BaseApp:OnInit()
+end
+
+function BaseApp:OnQuit()
+end
+
+function BaseApp:OnUpdate(deltaTime)
+end
+
+return BaseApp

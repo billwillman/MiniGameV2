@@ -1,0 +1,296 @@
+---- Task节点一旦添加并不会有执行顺序的关系，如果需要执行顺序关系，请自行逻辑处理，这里可以并行执行节点可以全部丢进去
+---- 因为Task系统本来就是为异步来处理用，所以本身顺序也很难保证执行结果一致性
+
+-- 支持分步骤封装
+local UGC_Task = _MOE.class("UGC_Task")
+
+UGC_Task.Status = {
+    None = 0,
+    Runing = 1, -- 正在运行
+    Pending = 2, -- 挂起
+    AllDone = 3  -- 全部完毕
+}
+
+-- 事件类型
+UGC_Task.EventType = {
+    FirstStart = 0, -- 第一次运行的事件名称
+    Pending = 1, -- 挂起事件名称
+    AllDone = 2, -- 全部完成的事件名称
+    Resume = 3, -- 重试唤醒事件名称
+    Stop = 4    -- 任务全部关闭
+}
+
+function UGC_Task:Ctor(maxRunCount)
+    self.m_MaxRunCount = maxRunCount or 1 -- 同时运行节点数量
+    self:_Reset()
+    self.EvetNamesMap = {}
+end
+
+function UGC_Task:_Reset()
+    self.m_WaitFirst = nil -- 等待列表
+    self.m_RuningFirst = nil -- 当前运行列表
+    self.m_FailFirst = nil -- 失败列表(不对外)
+    self.m_ResumeCount = 0 -- 重试次数（不包括第一次运行)
+    self.m_RunCount = 0
+    self.m_Stats = UGC_Task.Status.None -- 初始化状态
+end
+
+-- 注册事件
+-- eventType对应 UGC_Task.EventType
+function UGC_Task:RegisterTaskEventName(eventType, eventName)
+    if not eventType or not eventName or string.len(eventName) <= 0 then
+        return
+    end
+    self.EvetNamesMap[eventType] = eventName
+end
+
+-- taskNode要重新创建的Node
+function UGC_Task:AddTaskNode(taskNode)
+    -- 不允许添加有状态的节点
+    if not taskNode or not taskNode:IsNoneStatus() then
+        return
+    end
+    if self.m_WaitFirst ~= taskNode then
+        taskNode:_RemoveFromList()
+        if self.m_WaitFirst then
+            taskNode:_AddToNodePrev(self.m_WaitFirst)
+        end
+        self.m_WaitFirst = taskNode
+    end
+end
+
+-- 添加节点列表
+function UGC_Task:AddSeqTaskNodes(NodesSeq)
+    if not NodesSeq then
+        return
+    end
+    for i = #NodesSeq, 1, -1  do
+        local node = NodesSeq[i]
+        if node then
+            self:AddTaskNode(node)
+        end
+    end
+end
+
+function UGC_Task:NodeRemoveList(taskNode)
+    if not taskNode then
+        return
+    end
+    local nextNode = taskNode.m_Next
+    local isRuning = taskNode:IsRuning()
+    taskNode:_RemoveFromList()
+    if self.m_WaitFirst == taskNode then
+        self.m_WaitFirst = nextNode
+    elseif self.m_RuningFirst == taskNode then
+        self.m_RuningFirst = nextNode
+    elseif self.m_FailFirst == taskNode then
+        self.m_FailFirst = nextNode
+    end
+
+    if isRuning then
+        self.m_RunCount = self.m_RunCount - 1
+    end
+end
+
+function UGC_Task:Stop()
+    self:_StopTimer()
+    if self:IsRuning() or self:IsPending() then
+        -- 只管正在运行的全部停止
+        local node = self.m_RuningFirst
+        while node do
+            local next = node.m_Next
+            node:_RunToStop()
+            node = next
+        end
+        --
+        self:_DispatchEvent(UGC_Task.EventType.Stop)
+    end
+
+    -- 不管什么状态，都Reset
+    self:_Reset()
+end
+
+-- 挂起状态
+function UGC_Task:IsPending()
+    return self.m_Stats == UGC_Task.Status.Pending
+end
+
+function UGC_Task:IsRuning()
+    return self.m_Stats == UGC_Task.Status.Runing
+end
+
+function UGC_Task:IsAllDone()
+    return self.m_Stats == UGC_Task.Status.AllDone
+end
+
+function UGC_Task:Start()
+    -- 如果正在执行不允许二次调用
+    if self:IsRuning() or self:IsPending() then
+        return
+    end
+    self.m_Stats = UGC_Task.Status.Runing
+    -- 调用事件
+    self:_DispatchEvent(UGC_Task.EventType.FirstStart)
+    self:_StartTimer()
+end
+
+function UGC_Task:_StartTimer()
+    self:_StopTimer()
+    self.m_Timer = _MOE.TimerManager:AddLoopTimer(0.02, self, self._OnRun)
+end
+
+function UGC_Task:_StopTimer()
+    if self.m_Timer then
+        _MOE.TimerManager:RemoveTimer(self.m_Timer)
+        self.m_Timer = nil
+    end
+end
+
+function UGC_Task:_OnWaitListRun()
+    if not self.m_WaitFirst then
+        return
+    end
+    while self.m_RunCount < self.m_MaxRunCount do
+        local node = self.m_WaitFirst
+        if not node then
+            break
+        end
+        self.m_WaitFirst = node.m_Next
+        node:_RemoveFromList()
+        if self.m_RuningFirst then
+            node:_AddToNodePrev(self.m_RuningFirst)
+        end
+        self.m_RuningFirst = node
+        node:_Start()
+        self.m_RunCount = self.m_RunCount + 1
+    end
+end
+
+function UGC_Task:_CheckAllDone()
+    return self.m_WaitFirst == nil and self.m_RuningFirst == nil and self.m_Stats == UGC_Task.Status.Runing
+end
+
+function UGC_Task:_Done()
+    self:_StopTimer()
+    self.m_Stats = UGC_Task.Status.AllDone
+    self:_DispatchEvent(UGC_Task.EventType.AllDone)
+end
+
+-- 重新重试
+function UGC_Task:Resume()
+    if not self:IsPending() then
+        return
+    end
+
+    -- 直接把失败的放到Wait列表
+    local node = self.m_FailFirst
+    while node do
+        local next = node.m_Next
+
+        node:_RemoveFromList()
+        node:_ResetStatus()
+        self.m_FailFirst = next
+
+        if self.m_WaitFirst then
+            node:_AddToNodePrev(self.m_WaitFirst)
+        end
+        self.m_WaitFirst = node
+
+        node = next
+    end
+
+    self.m_ResumeCount = self.m_ResumeCount + 1
+    self.m_Stats = UGC_Task.Status.Runing
+    self:_DispatchEvent(UGC_Task.EventType.Resume)
+end
+
+function UGC_Task:_OnRuningListRun()
+    if self:_CheckAllDone() then
+        self:_Done()
+        return
+    end
+
+    local isDoPending = false -- 是否需要挂起
+    -- 判断状态
+    local node = self.m_RuningFirst
+    while node do
+        local next = node.m_Next
+
+        local delNode = nil
+        if node:IsDone() then
+            delNode = node
+            node:_RemoveFromList() -- 成功了不需要存储
+        elseif node:IsFail() then
+            delNode = node
+            node:_RemoveFromList()
+            if node:IsMustDone() then
+                --  不是必须的，都不丢失败列表，直接就不用管理了，不重要信息
+                if self.m_FailFirst then
+                    node:_AddToNodePrev(self.m_FailFirst)
+                end
+                self.m_FailFirst = node
+            end
+
+            -- 判断是否是必要任务，如果是必要任务则设置挂起状态
+            if not isDoPending then
+                isDoPending = node:IsMustDone() or false
+            end
+            --
+        elseif node.OnTick then
+            xpcall(node.OnTick,
+                function (err)
+                    node:Fail()
+                    _G.ErrorHandler(err)
+                end
+            , node) -- 调用执行Tick
+        end
+
+        if delNode then
+            if delNode == self.m_RuningFirst then
+                self.m_RuningFirst = next
+            end
+            self.m_RunCount = self.m_RunCount - 1
+        end
+
+        node = next
+    end
+
+    if isDoPending then
+        self:_DoPending()
+    end
+end
+
+function UGC_Task:_DoPending()
+    if not self:IsRuning() then
+        return
+    end
+    self.m_Stats = UGC_Task.Status.Pending
+    self:_DispatchEvent(UGC_Task.EventType.Pending)
+end
+
+function UGC_Task:_OnRun()
+    -- 如果是挂起状态
+    if self:IsPending() then
+        return
+    end
+    self:_OnWaitListRun()
+    self:_OnRuningListRun()
+end
+
+function UGC_Task:_DispatchEvent(eventType)
+    if not eventType or not self.EvetNamesMap then
+        return
+    end
+    local eventName = self.EvetNamesMap[eventType]
+    if not eventName or string.len(eventName) <= 0 then
+        return
+    end
+    _MOE.EventManager:DispatchEvent(eventName, self)
+end
+
+function UGC_Task:GetResumeCount()
+    return self.m_ResumeCount or 0
+end
+
+return UGC_Task
+--

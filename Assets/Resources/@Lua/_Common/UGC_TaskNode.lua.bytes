@@ -1,0 +1,140 @@
+local UGC_TaskNode = _MOE.class("UGC_TaskNode")
+
+UGC_TaskNode.Status = {
+    None = 0,
+    Runing = 1,
+    Done = 2,
+    Fail = 3,
+}
+
+function UGC_TaskNode:Ctor(...)
+    self.m_Status = UGC_TaskNode.Status.None
+    self.m_Prev = nil
+    self.m_Next = nil
+    self.m_IsMustDone = true -- 是否必须是重要步骤
+    self:OnInit(...)
+end
+
+function UGC_TaskNode:SetIsMustDone(isMustDone)
+    self.m_IsMustDone = isMustDone
+end
+
+-- 是否是重要步骤
+function UGC_TaskNode:IsMustDone()
+    return self.m_IsMustDone
+end
+
+function UGC_TaskNode:_RemoveFromList()
+    if self.m_Prev then
+        self.m_Prev.m_Next = self.m_Next
+    end
+    if self.m_Next then
+        self.m_Next.m_Prev = self.m_Prev
+    end
+    self.m_Prev = nil
+    self.m_Next = nil
+end
+
+function UGC_TaskNode:_AddToNodeNext(targetNode)
+    if not targetNode then
+        return
+    end
+    self:_RemoveFromList()
+    self.m_Next = targetNode.m_Next
+    targetNode.m_Next = self
+    self.m_Prev = targetNode
+end
+
+function UGC_TaskNode:_AddToNodePrev(targetNode)
+    if not targetNode then
+        return
+    end
+    self:_RemoveFromList()
+    self.m_Prev = targetNode.m_Prev
+    targetNode.m_Prev = self
+    self.m_Next = targetNode
+end
+
+function UGC_TaskNode:_ResetStatus()
+    self.m_Status = UGC_TaskNode.Status.None
+end
+
+function UGC_TaskNode:_Start()
+    if self:IsNoneStatus() then
+        self.m_Status = UGC_TaskNode.Status.Runing
+        xpcall(self.OnStart,  function(err)
+            self:Fail()
+            _G.ErrorHandler(err)
+        end, self)
+    end
+end
+
+-- 各自自己管自己的调用
+function UGC_TaskNode:Done()
+    if self:IsRuning() then
+        self.m_Status = UGC_TaskNode.Status.Done
+        xpcall(self.OnDone,  _G.ErrorHandler, self)
+    end
+end
+
+-- 各自自己管自己的调用
+function UGC_TaskNode:Fail()
+    if self:IsRuning() then
+        self.m_Status = UGC_TaskNode.Status.Fail
+        xpcall(self.OnFail,  _G.ErrorHandler, self)
+    end
+end
+
+-- 不允许外部调用
+function UGC_TaskNode:_RunToStop()
+    if self:IsRuning() then
+        xpcall(self.OnRunToStop,  _G.ErrorHandler, self)
+        -- 状态变成None,唯一这个操作状态变化在调用之后
+        self.m_Status = UGC_TaskNode.Status.None
+    end
+end
+
+function UGC_TaskNode:IsDone()
+    return self.m_Status == UGC_TaskNode.Status.Done
+end
+
+function UGC_TaskNode:IsRuning()
+    return self.m_Status == UGC_TaskNode.Status.Runing
+end
+
+function UGC_TaskNode:IsFail()
+    return self.m_Status == UGC_TaskNode.Status.Fail
+end
+
+function UGC_TaskNode:IsNoneStatus()
+    return self.m_Status == UGC_TaskNode.Status.None
+end
+
+------------------------------------------ 纯虚函数定义 ------------------------------------
+function UGC_TaskNode:OnInit(...)
+end
+
+-- 开始运行
+function UGC_TaskNode:OnStart()
+end
+
+-- 成功
+function UGC_TaskNode:OnDone()
+end
+
+-- 失败
+function UGC_TaskNode:OnFail()
+end
+
+-- 正在运行到Stop
+function UGC_TaskNode:OnRunToStop()
+end
+
+-- 如果有需要可以自己实现OnTick，用来异步的方法判断状态
+--[[
+function UGC_TaskNode:OnTick()
+end
+--]]
+-------------------------------------------------------------------------------------------
+
+return UGC_TaskNode

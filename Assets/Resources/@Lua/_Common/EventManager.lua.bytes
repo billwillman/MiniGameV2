@@ -1,0 +1,69 @@
+----- Lua的事件管理器
+local EventManager = _MOE.class("EventManager")
+
+function EventManager:Ctor()
+    self:ClearAllEvents()
+end
+
+function EventManager:RegisterEvent(eventName, target, func)
+    local event = self.Events[eventName]
+    if not event then
+        event = {}
+        self.Events[eventName] = event
+    end
+    event[target] = func
+    local t = self.Targets[target]
+    if not t then
+        t = {}
+        self.Targets[target] = t
+    end
+    t[eventName] = func
+end
+
+function EventManager:UnRegisterEvent(eventName, target)
+    local event = self.Events[eventName]
+    if event then
+        event[target] = nil
+        if next(event) == nil then
+            self.Events[eventName] = nil
+        end
+    end
+    local t = self.Targets[target]
+    if t then
+        t[eventName] = nil
+        if next(t) == nil then
+            self.Targets[target] = nil
+        end
+    end
+end
+
+function EventManager:UnRegisterEvents(target)
+    local t = self.Targets[target]
+    if t then
+        for eventName, _ in pairs(t) do
+            local event = self.Events[eventName]
+            if event then
+                event[target] = nil
+            end
+        end
+        self.Targets[target] = nil
+    end
+end
+
+function EventManager:DispatchEvent(eventName, ...)
+    local event = self.Events[eventName]
+    if event then
+        for this, func in pairs(event) do
+            if func and this then
+                func(this, ...)
+            end
+        end
+    end
+end
+
+function EventManager:ClearAllEvents()
+    self.Events = {}
+    self.Targets = {}
+end
+
+return EventManager

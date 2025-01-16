@@ -1,0 +1,148 @@
+-- Trie树优化字符串查找，适合StartsWith的字符串判断
+
+local TrieTreeNode = _MOE.class("TrieTreeNode")
+
+function TrieTreeNode:Ctor(char)
+    self.Char = char
+end
+
+function TrieTreeNode:SetItem(item)
+    self.Item = item
+end
+
+function TrieTreeNode:GetItem()
+    return self.Item
+end
+
+function TrieTreeNode:HasItem()
+    return self.Item ~= nil
+end
+
+-- node类型为：TrieTreeNode
+function TrieTreeNode:AddChildNode(char, node)
+    if not char or not node then
+        return false
+    end
+
+    self.Childs = self.Childs or {}
+    self.Childs[char] = node
+
+    return true
+end
+
+function TrieTreeNode:ContainsChar(char)
+    if char then
+        local ret = self.Childs and self.Childs[char] ~= nil
+        return ret
+    end
+    return false
+end
+
+function TrieTreeNode:GetChildNode(char)
+    if not char then
+        return nil
+    end
+    if self.Childs then
+        return self.Childs[char]
+    end
+    return nil
+end
+
+function TrieTreeNode:IsRootNode()
+    return self.Char == nil
+end 
+
+----------------------------------------------------------------------------------------------
+
+local TrieTree = _MOE.class("TrieTree")
+
+local function _InitValue(self, value, item)
+    if not value or not item then
+        return
+    end
+    -- 添加
+    local len = string.len(value)
+    if len > 0 then
+        self.RootNode = self.RootNode or TrieTreeNode.New(nil)
+        local parentNode = self.RootNode
+        for idx = 1, len do
+            local char = string.byte(value, idx)
+            if char then
+                local currentNode = parentNode:GetChildNode(char)
+                if not currentNode then
+                    currentNode = TrieTreeNode.New(char)
+                    parentNode:AddChildNode(char, currentNode)
+                end
+                if idx == len then
+                    currentNode:SetItem(item)
+                else
+                    parentNode = currentNode
+                end
+            end
+        end
+    end
+end
+
+local function _InitItems(self, items, itemStrKey)
+    for _, item in pairs(items) do
+        if item then
+            local content = items[itemStrKey]
+            -- 添加
+            _InitValue(self, content, item)
+        end
+    end
+end
+
+------------ 入口函数 ---------------
+--[[
+    示例：
+    local items = {
+        LifeTime = "LifeTime"
+    }
+]]
+------------------------------------
+function TrieTree:InitByValue(items)
+    if items then
+        for _, value in pairs(items) do
+            if value then
+                _InitValue(self, value, value)
+            end
+        end
+    end
+end
+
+function TrieTree:Init(items, itemStrKey)
+    if items and itemStrKey then
+        _InitItems(self, items, itemStrKey)
+    end
+end
+
+function TrieTree:GetRootNode()
+    return self.RootNode
+end
+
+-- 查找以这个开头的字的item
+function TrieTree:FindStartWithStrNode(str)
+    if not str or string.len(str) <= 0 then
+        return nil
+    end
+    local parentNode = self:GetRootNode()
+    if not parentNode then
+        return nil
+    end
+    local len = string.len(str)
+    for idx = 1, len do
+        local char = string.byte(str, idx)
+        local currentNode = parentNode:GetChildNode(char)
+        if not currentNode then
+            return nil
+        end
+        if idx == len then
+            return currentNode:GetItem()
+        end
+        parentNode = currentNode
+    end
+    return nil
+end
+
+return TrieTree

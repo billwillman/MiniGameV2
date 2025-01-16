@@ -1,0 +1,56 @@
+local CSharpEventContainer = _MOE.class("CSharpEventContainer")
+
+function CSharpEventContainer:RegsterCSharpEvent(csharpObj, eventName, func)
+    if not csharpObj or not eventName or not func then
+        return
+    end
+    self.CSharpEvents = self.CSharpEvents or {}
+    local events = self.CSharpEvents[csharpObj]
+    if not events then
+        events = {}
+        self.CSharpEvents[csharpObj] = events
+    end
+    if events[eventName] == func then
+        return
+    end
+    events[eventName] = func
+    csharpObj[eventName] = function (...)
+        func(self, ...)
+    end
+end
+
+function CSharpEventContainer:UnRegsterCSharpEvent(csharpObj, eventName)
+    if not csharpObj or not eventName or not self.CSharpEvents then
+        return
+    end
+    local events = self.CSharpEvents[csharpObj]
+    if not events then
+        return
+    end
+    if events[eventName] then
+        events[eventName] = nil
+        if next(events) == nil then
+            self.CSharpEvents[csharpObj] = nil
+        end
+        csharpObj[eventName] = nil
+        if next(self.CSharpEvents) == nil then
+            self.CSharpEvents = nil
+        end
+    end
+end
+
+function CSharpEventContainer:UnRegsterAllCsharpEvents()
+    if not self.CSharpEvents then
+        return
+    end
+    for csharpObj, events in pairs(self.CSharpEvents) do
+        if csharpObj and events then
+            for eventName, _ in pairs(events) do
+                csharpObj[eventName] = nil
+            end
+        end
+    end
+    self.CSharpEvents = nil
+end
+
+return CSharpEventContainer

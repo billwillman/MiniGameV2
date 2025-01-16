@@ -1,0 +1,90 @@
+local ModelContainer = _MOE.class("ModelContainer")
+
+function ModelContainer:Ctor()
+    self.RegisterModels = {}
+end
+
+function ModelContainer:GetModel(modelName)
+    if not modelName then
+        return
+    end
+    if self.Models then
+        local ret = self.Models[modelName]
+        if ret then
+            return ret
+        end
+    end
+    local modelPath = self.RegisterModels[modelName]
+    if not modelPath then
+        return
+    end
+    local registerClass = require(modelPath)
+    if not registerClass then
+        return
+    end
+    local ret
+    if registerClass.New then
+        ret = registerClass.New()
+    else
+        ret = registerClass
+    end
+    self.Models = self.Models or {}
+    self.Models[modelName] = ret
+    -- 初始化
+    if ret and ret.Init then
+        ret:Init()
+    end
+    return ret
+end
+
+-- @typpe string modelFilePath, bool isLazyCreate
+function ModelContainer:RegisterModel(modelName, modelFilePath, isLazyCreate)
+    if not modelName or not modelFilePath then
+        return false
+    end
+    self.RegisterModels[modelName] = modelFilePath
+    if isLazyCreate == nil then
+        isLazyCreate = true
+    end
+    if not isLazyCreate then
+        self:GetModel(modelName)
+    end
+    return true
+end
+
+function ModelContainer:UnRegisterModel(modelName)
+    if self.Models and self.Models[modelName] then
+        local model = self.Models[modelName]
+        if model.UnInit then
+            model:UnInit()
+        end
+        if model.IsUnRequireInUnInit and model:IsUnRequireInUnInit() then
+            local path = self.RegisterModels[modelName]
+            _G.package.loaded[path] = nil -- 清理调LUA的require文件
+        end
+        self.Models[modelName] = nil
+    end
+    self.RegisterModels[modelName] = nil
+end
+
+function ModelContainer:UnRegisterModels()
+    if self.Models and next(self.Models) ~= nil then
+        for modelName, model in pairs(self.Models) do
+            if model then
+                if model.UnInit then
+                    model:UnInit()
+                end
+                if model.IsUnRequireInUnInit and model:IsUnRequireInUnInit() then
+                    local path = self.RegisterModels[modelName]
+                    _G.package.loaded[path] = nil -- 清理调LUA的require文件
+                end
+            end
+        end
+        self.Models = {}
+    end
+    if next(self.RegisterModels) ~= nil then
+        self.RegisterModels = {}
+    end
+end
+
+return ModelContainer
