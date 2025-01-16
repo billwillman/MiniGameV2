@@ -12,7 +12,5 @@ MiniGameV2.sln
 Assets/XLua/Gen/
 Assets/StreamingAssets/
 Assets/AssetBundles.xml
-Assets/Resources/@Lua/_Common
 Assets/Resources/@Lua/_NetMsg
-Common/Lua/_Common/*.lua
 Common/Lua/_NetMsg/*.lua
