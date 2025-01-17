@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Document>
+  <Header
+    UnityVersion="2017.4.23f1" />
+  <Events>
+    <Event>
+      <floatParameter>0</floatParameter>
+      <functionName>OnAnimationPostEffect</functionName>
+      <intParameter>131585</intParameter>
+      <messageOptions>0</messageOptions>
+      <objectReferenceParameterPath />
+      <stringParameter>{"Time":1.2,"CurveIndex":0,"Power":0.3}</stringParameter>
+      <time>0.005076142</time>
+    </Event>
+  </Events>
+</Document>

@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Document>
+  <Header
+    UnityVersion="2017.4.23f1" />
+  <Events>
+    <Event>
+      <floatParameter>0</floatParameter>
+      <functionName>OnAnimationEvent</functionName>
+      <intParameter>131330</intParameter>
+      <messageOptions>0</messageOptions>
+      <objectReferenceParameterPath />
+      <stringParameter>{"state":"dmg","speed":"0.01","height":"0","distance":"0","finishblend":"False"}</stringParameter>
+      <time>0.555</time>
+    </Event>
+  </Events>
+</Document>

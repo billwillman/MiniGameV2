@@ -1,0 +1,138 @@
+fileFormatVersion: 2
+guid: cf3da251b5938504bbf59d710d9bdbc7
+ModelImporter:
+  serializedVersion: 22
+  fileIDToRecycleName:
+    100000: Bip001
+    100002: Bip001 Head
+    100004: Bip001 Neck
+    100006: Bip001 Pelvis
+    100008: Bip001 Ponytail1
+    100010: Bip001 Ponytail11
+    100012: Bip001 Ponytail12
+    100014: Bip001 Ponytail13
+    100016: Bip001 Spine
+    100018: Bip001 Spine1
+    100020: Bip001 Xtra04
+    100022: Bip001 Xtra0402
+    100024: Bip001 Xtra0403
+    100026: Bip001 Xtra04Opp
+    100028: Bip001 Xtra04Opp02
+    100030: Bip001 Xtra04Opp03
+    100032: Bone_eye_L
+    100034: Bone_eye_R
+    100036: fx_spawn_head
+    100038: hero_kof_mai_hair_0001
+    100040: //RootNode
+    100042: hero_kof_mai_head_0001
+    100044: move001
+    100046: Neck_Dmy
+    400000: Bip001
+    400002: Bip001 Head
+    400004: Bip001 Neck
+    400006: Bip001 Pelvis
+    400008: Bip001 Ponytail1
+    400010: Bip001 Ponytail11
+    400012: Bip001 Ponytail12
+    400014: Bip001 Ponytail13
+    400016: Bip001 Spine
+    400018: Bip001 Spine1
+    400020: Bip001 Xtra04
+    400022: Bip001 Xtra0402
+    400024: Bip001 Xtra0403
+    400026: Bip001 Xtra04Opp
+    400028: Bip001 Xtra04Opp02
+    400030: Bip001 Xtra04Opp03
+    400032: Bone_eye_L
+    400034: Bone_eye_R
+    400036: fx_spawn_head
+    400038: hero_kof_mai_hair_0001
+    400040: hero_kof_mai_head_0001
+    400042: //RootNode
+    400044: move001
+    400046: Neck_Dmy
+    4300000: hero_kof_mai_hair_0001
+    4300002: hero_kof_mai_head_0001
+    9500000: //RootNode
+    13700000: hero_kof_mai_hair_0001
+    13700002: hero_kof_mai_head_0001
+  externalObjects: {}
+  materials:
+    importMaterials: 0
+    materialName: 0
+    materialSearch: 1
+    materialLocation: 1
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    resampleCurves: 1
+    optimizeGameObjects: 0
+    motionNodeName: 
+    rigImportErrors: 
+    rigImportWarnings: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    importAnimatedCustomProperties: 0
+    animationCompression: 1
+    animationRotationError: 1
+    animationPositionError: 2
+    animationScaleError: 2
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    extraUserProperties: []
+    clipAnimations: []
+    isReadable: 0
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 2
+    addColliders: 0
+    importVisibility: 1
+    importBlendShapes: 1
+    importCameras: 1
+    importLights: 1
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    optimizeMeshForGPU: 1
+    keepQuads: 0
+    weldVertices: 1
+    preserveHierarchy: 0
+    indexFormat: 0
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVPackMargin: 4
+    useFileScale: 1
+  tangentSpace:
+    normalSmoothAngle: 60
+    normalImportMode: 0
+    tangentImportMode: 3
+    normalCalculationMode: 4
+  importAnimation: 1
+  copyAvatar: 0
+  humanDescription:
+    serializedVersion: 2
+    human: []
+    skeleton: []
+    armTwist: 0.5
+    foreArmTwist: 0.5
+    upperLegTwist: 0.5
+    legTwist: 0.5
+    armStretch: 0.05
+    legStretch: 0.05
+    feetSpacing: 0
+    rootMotionBoneName: 
+    rootMotionBoneRotation: {x: 0, y: 0, z: 0, w: 1}
+    hasTranslationDoF: 0
+    hasExtraRoot: 0
+    skeletonHasParents: 1
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  animationType: 2
+  humanoidOversampling: 1
+  additionalBone: 0
+  userData: wrote
+  assetBundleName: 
+  assetBundleVariant: 

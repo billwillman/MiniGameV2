@@ -1,0 +1,202 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: hero_kof_mai_head_0001
+  m_Shader: {fileID: 4800000, guid: f422d8c960de0c944aa52fb6c42d41b1, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords:
+  - _REFLECT_ON
+  m_InvalidKeywords:
+  - OUTLINES
+  - TCP2_BUMP
+  - TCP2_RIM
+  - _ANISOTROPIC_ON
+  - _EMISSION
+  - _OUTLINE_ON
+  - _SELECTDIFFUSE_PHYSICALLY_BASED_LIGHTING
+  - _SELECTLIGHTTYPE_OUTLINE
+  - _SELECTLINETYPE_SIMPLE_COLOR
+  - _SHADOW_ON
+  m_LightmapFlags: 1
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: 900
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _AnisoTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _BumpMap:
+        m_Texture: {fileID: 2800000, guid: 5a26d05badaa0a24890d8c0a54b5473a, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Cubemap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DetailAlbedoMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DetailMask:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DetailNormalMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _EmissionMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MainTex:
+        m_Texture: {fileID: 2800000, guid: 43c09faf161e0e1429fee212ece37b83, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MaskTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MatcapDiff:
+        m_Texture: {fileID: 2800000, guid: 866231b27226dbf4eb05a28159d4c4f5, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MatcapReflA:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MatcapReflB:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MatcapReflG:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MatcapReflR:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MetallicGlossMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _NormalTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _OcclusionMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _ParallaxMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Ramp:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _SpecTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _AnisoNormal: 0
+    - _AnisoOffset: -0.4
+    - _Anisotropic: 1
+    - _BumpScale: 1
+    - _CharacterAlpha: 1
+    - _Cutoff: 0.5
+    - _DetailNormalMapScale: 1
+    - _DiffRot: 0
+    - _DiffuseBlend: 0.009
+    - _DiffuseLight: 0.191
+    - _DstBlend: 0
+    - _FXMulAmount: 1
+    - _GlossMapScale: 1
+    - _Glossiness: 0.5
+    - _GlossyReflections: 1
+    - _LessenDistance: 2
+    - _LightDir: 0
+    - _Metallic: 0
+    - _Mode: 0
+    - _NormalIntensity: 1
+    - _OcclusionStrength: 1
+    - _Offset1: 0
+    - _Offset2: 0
+    - _OffsetFactor: 0
+    - _OffsetUnits: 1000000
+    - _OutLineWidth: 8
+    - _Outline: 0.27
+    - _OutlineSaturation: 1.5
+    - _OutlineWidth: 1
+    - _Parallax: 0.02
+    - _RampSmooth: 0.1
+    - _RampThreshold: 0.5
+    - _ReflAmount: 0.713
+    - _Reflect: 1
+    - _ReflectA: 0
+    - _ReflectB: 0
+    - _ReflectG: 0
+    - _Reflection: 0
+    - _RimDirToggle: 0
+    - _RimLight: 0
+    - _RimMax: 1
+    - _RimMin: 0.5
+    - _RimPower: 0.1
+    - _RimWidth: 0.5
+    - _SelectDiffuse: 2
+    - _SelectLightType: 0
+    - _SelectLineType: 0
+    - _SelectSpecType: 0
+    - _Shadow: 1
+    - _ShadowHeight: 0.01
+    - _ShadowLength: 0
+    - _Shininess: 0.1
+    - _SmoothnessTextureChannel: 0
+    - _SpecSmooth: 0.05
+    - _SpecularGloss: 0.696
+    - _SpecularHighlights: 1
+    - _SpecularSize: 0.821
+    - _SrcBlend: 1
+    - _TexLod: 5
+    - _UVSec: 0
+    - _ZSmooth: -0.5
+    - _ZWrite: 1
+    m_Colors:
+    - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _DamageColor: {r: 1, g: 1, b: 1, a: 0}
+    - _DarkColor: {r: 0.6911765, g: 0.6911765, b: 0.6911765, a: 1}
+    - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
+    - _FXAddColor: {r: 0, g: 0, b: 0, a: 1}
+    - _FXMulColor: {r: 1, g: 1, b: 1, a: 0}
+    - _HColor: {r: 0.7058823, g: 0.7058823, b: 0.7058823, a: 1}
+    - _HighColor: {r: 1, g: 1, b: 1, a: 1}
+    - _MainColor: {r: 1, g: 1, b: 1, a: 1}
+    - _MatcapFXColor: {r: 1, g: 1, b: 1, a: 1}
+    - _OutlineColor: {r: 0, g: 0, b: 0, a: 1}
+    - _ReflColor: {r: 1, g: 1, b: 1, a: 1}
+    - _ReflectColor: {r: 1, g: 1, b: 1, a: 0.5}
+    - _RimColor: {r: 0.8, g: 0.8, b: 0.8, a: 0.6}
+    - _RimDir: {r: 0, g: 0, b: 1, a: 0}
+    - _SColor: {r: 0.31617647, g: 0.31617647, b: 0.31617647, a: 1}
+    - _ShadowColor: {r: 0, g: 0, b: 0, a: 0.219}
+    - _SpecColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+    - _SpecularColor: {r: 0, g: 0, b: 0, a: 0.5}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1

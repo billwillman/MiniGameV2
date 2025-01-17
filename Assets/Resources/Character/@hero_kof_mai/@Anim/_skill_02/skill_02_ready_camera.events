@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Document>
+  <Header
+    UnityVersion="2017.4.23f1" />
+  <Events>
+    <Event>
+      <floatParameter>0</floatParameter>
+      <functionName>OnAnimationCamera</functionName>
+      <intParameter>0</intParameter>
+      <messageOptions>0</messageOptions>
+      <objectReferenceParameterPath>Assets/_CamAni/Skill/kof_mai/skill_02_cam.anim</objectReferenceParameterPath>
+      <stringParameter />
+      <time>0</time>
+    </Event>
+  </Events>
+</Document>
