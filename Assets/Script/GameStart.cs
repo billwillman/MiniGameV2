@@ -231,6 +231,10 @@ namespace SOC.GamePlay
             }
         }
 
+        private void OnApplicationQuit() {
+            ResourceMgr.Instance.OnApplicationQuit();
+        }
+
         private void OnDestroy() {
             if (m_LuaEnv != null) {
                 var QuitGame = m_LuaEnv.Global.Get<LuaFunction>("QuitGame");

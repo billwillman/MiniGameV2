@@ -1,0 +1,3 @@
+local _M = _MOE.class("SceneManager", _MOE.BaseModel)
+
+return _M
