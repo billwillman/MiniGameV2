@@ -6,7 +6,7 @@ function BaseApp:Init()
     self.TimerManager = self:GetModel("TimerManager")
     _MOE.TimerManager = self.TimerManager
     
-    self:RegisterModels("SceneManager", "_Common.SceneManager", false)
+    self:RegisterModel("SceneManager", "_Common.SceneManager", false)
     _MOE.SceneManager = self:GetModel("SceneManager")
 
     xpcall(self.OnInit, _G.ErrorHandler, self)

@@ -343,7 +343,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CDNRoot: https://minigame-1252342341.cos.ap-shanghai.myqcloud.com
   AppResVersion: 1.000
-  UseCDNMapper: 0
+  UseCDNMapper: 1
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
