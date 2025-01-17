@@ -4414,6 +4414,7 @@ public static class AssetBundleBuild
     {
 		if (string.IsNullOrEmpty(targetStreamingAssetsPath))
 			return;
+		Debug.Log("[RemoveStreaingAssetsDirAndFilesAndCreateEmptyDir]");
 		if (System.IO.Directory.Exists(targetStreamingAssetsPath))
 		{
 			string[] subDirs = System.IO.Directory.GetDirectories(targetStreamingAssetsPath);
