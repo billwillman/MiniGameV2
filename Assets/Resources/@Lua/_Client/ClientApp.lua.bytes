@@ -19,9 +19,23 @@ local function CreateUIRoot()
     return ret
 end
 
+local function CreateMyPlayerInput()
+    local ret = _MOE.ResourceManager:CreateGameObjectAsync("Resources/@Input/PlayerInput.prefab",
+    function(process, isDone, playerInput)
+        if isDone then
+            if playerInput then
+                playerInput.name = "PlayerInput"
+                playerInput.transform:SetParent(_MOE.GameStartTransform, false)
+            end
+        end
+    end
+    )
+    return ret
+end
+
 ------------------------------ 继承方法 -------------------------------
 function _M:OnInit()
-    if CreateUIRoot() then
+    if CreateUIRoot() and CreateMyPlayerInput() then
         _MOE.BaseViewClass = require("_Client.BaseView")
         _MOE.UIManager = require("_Client.UIManager").New()
         -- 切换到登录场景（不一定有资源场景）
