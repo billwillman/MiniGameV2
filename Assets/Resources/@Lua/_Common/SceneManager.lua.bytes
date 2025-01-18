@@ -55,7 +55,7 @@ function _M:SwitchScene(sceneName)
     self.IsSceneLoading = true
     self.CurrentScene = cfg
     if self.CurrentScene.LuaScene and string.len(self.CurrentScene.LuaScene) > 0 then
-        self.CurrentScene.LuaTarget = require(self.CurrentScene.LuaScene).New()
+        self.CurrentScene.LuaTarget = require(self.CurrentScene.LuaScene).New(sceneName)
         luaScene = self.CurrentScene.LuaTarget
     end
     local onLoadNewScene = nil
