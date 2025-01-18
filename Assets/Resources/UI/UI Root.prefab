@@ -1,18 +1,19 @@
 %YAML 1.1
-%TAG !u! tag:unity3d.com,2011:
+%TAG !u! tag:yousandi.cn,2023:
 --- !u!1 &350236583567580834
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 1747925440821089932}
   - component: {fileID: 1471010629102295358}
   - component: {fileID: 1127734259179586843}
   - component: {fileID: 3133428122215526078}
   m_Layer: 5
+  m_HasEditorInfo: 1
   m_Name: PopLayer2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -107,10 +108,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 324380820277353610}
   m_Layer: 0
+  m_HasEditorInfo: 1
   m_Name: UI Root
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -125,7 +127,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 791141755778887708}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -141,13 +143,14 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 1710256877593510918}
   - component: {fileID: 5841160224691035557}
   - component: {fileID: 4323122673575666471}
   - component: {fileID: 38618645131014773}
   m_Layer: 5
+  m_HasEditorInfo: 1
   m_Name: PopLayer3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -242,13 +245,14 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 4371757718492624705}
   - component: {fileID: 7538345539947398714}
   - component: {fileID: 5057323394603775598}
   - component: {fileID: 2707349727854863461}
   m_Layer: 5
+  m_HasEditorInfo: 1
   m_Name: PopLayer1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -343,13 +347,14 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 6063837779647706690}
   - component: {fileID: 8089214120196861299}
   - component: {fileID: 3351061680062149603}
   - component: {fileID: 138379759631038739}
   m_Layer: 0
+  m_HasEditorInfo: 1
   m_Name: Main Camera
   m_TagString: MainCamera
   m_Icon: {fileID: 0}
@@ -417,6 +422,8 @@ Camera:
   m_TargetEye: 3
   m_HDR: 0
   m_AllowMSAA: 0
+  m_enableGDRP: 1
+  m_backfaceCulling: 0
   m_AllowDynamicResolution: 0
   m_ForceIntoRT: 0
   m_OcclusionCulling: 1
@@ -468,25 +475,26 @@ MonoBehaviour:
   m_RequiresColorTexture: 0
   m_Version: 2
   m_TaaSettings:
-    quality: 3
-    frameInfluence: 0.1
-    jitterScale: 1
-    mipBias: 0
-    varianceClampScale: 0.9
-    contrastAdaptiveSharpening: 0
+    m_Quality: 3
+    m_FrameInfluence: 0.1
+    m_JitterScale: 1
+    m_MipBias: 0
+    m_VarianceClampScale: 0.9
+    m_ContrastAdaptiveSharpening: 0
 --- !u!1 &4894413691585522778
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 7098164612044659108}
   - component: {fileID: 4827014722552923625}
   - component: {fileID: 2940572921767614842}
   - component: {fileID: 4378101817720641620}
   m_Layer: 5
+  m_HasEditorInfo: 1
   m_Name: NormalLayer2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -581,10 +589,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 8885658086586649078}
   m_Layer: 5
+  m_HasEditorInfo: 1
   m_Name: RemoveLayer
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -616,13 +625,14 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 4658419950851738305}
   - component: {fileID: 7408160410474838031}
   - component: {fileID: 6476767194395642573}
   - component: {fileID: 3791880256008705820}
   m_Layer: 5
+  m_HasEditorInfo: 1
   m_Name: MainLayer
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -717,12 +727,13 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 8410166682737480144}
   - component: {fileID: 3665440006017869079}
-  - component: {fileID: 2564304909015110153}
+  - component: {fileID: 1138756091295868982}
   m_Layer: 0
+  m_HasEditorInfo: 1
   m_Name: EventSystem
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -759,7 +770,7 @@ MonoBehaviour:
   m_FirstSelected: {fileID: 0}
   m_sendNavigationEvents: 1
   m_DragThreshold: 10
---- !u!114 &2564304909015110153
+--- !u!114 &1138756091295868982
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -768,30 +779,44 @@ MonoBehaviour:
   m_GameObject: {fileID: 7009068735311611521}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4f231c4fb786f3946a6b90b886c48677, type: 3}
+  m_Script: {fileID: 11500000, guid: 01614664b831546d2ae94a42149d80ac, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   m_SendPointerHoverToParent: 1
-  m_HorizontalAxis: Horizontal
-  m_VerticalAxis: Vertical
-  m_SubmitButton: Submit
-  m_CancelButton: Cancel
-  m_InputActionsPerSecond: 10
-  m_RepeatDelay: 0.5
-  m_ForceModuleActive: 0
+  m_MoveRepeatDelay: 0.5
+  m_MoveRepeatRate: 0.1
+  m_XRTrackingOrigin: {fileID: 0}
+  m_ActionsAsset: {fileID: -944628639613478452, guid: 38fe465717e5d6b44ac5d021ee025f08,
+    type: 3}
+  m_PointAction: {fileID: 0}
+  m_MoveAction: {fileID: 362603467870481119, guid: 38fe465717e5d6b44ac5d021ee025f08,
+    type: 3}
+  m_SubmitAction: {fileID: 0}
+  m_CancelAction: {fileID: 0}
+  m_LeftClickAction: {fileID: 0}
+  m_MiddleClickAction: {fileID: 0}
+  m_RightClickAction: {fileID: 0}
+  m_ScrollWheelAction: {fileID: 0}
+  m_TrackedDevicePositionAction: {fileID: 0}
+  m_TrackedDeviceOrientationAction: {fileID: 0}
+  m_DeselectOnBackgroundClick: 1
+  m_PointerBehavior: 0
+  m_CursorLockBehavior: 0
+  m_ScrollDeltaPerTick: 6
 --- !u!1 &7151498156252815418
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 7098795472526057827}
   - component: {fileID: 1403323896832423747}
   - component: {fileID: 6492803527189015153}
   - component: {fileID: 394678684826433711}
   m_Layer: 5
+  m_HasEditorInfo: 1
   m_Name: NormalLayer3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -886,13 +911,14 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 6791519662071832645}
   - component: {fileID: 1351433749555040600}
   - component: {fileID: 2249111968027702656}
   - component: {fileID: 3605649337049016575}
   m_Layer: 5
+  m_HasEditorInfo: 1
   m_Name: NormalLayer1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -987,13 +1013,14 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 2531266331246474547}
   - component: {fileID: 2093472538749905323}
   - component: {fileID: 1033193248058604700}
   - component: {fileID: 554097355367291319}
   m_Layer: 5
+  m_HasEditorInfo: 1
   m_Name: Root
   m_TagString: Untagged
   m_Icon: {fileID: 0}
