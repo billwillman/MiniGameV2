@@ -45,10 +45,8 @@ function _M:SwitchScene(sceneName)
             return true
         end
     end
+    local lastHasResScene = self:HasResScene()
     local resSceneName = cfg.resSceneName
-    if not resSceneName or string.len(resSceneName) <= 0 then
-        return false
-    end
     local luaScene = self:GetCurrentLuaScene()
     if luaScene then
         luaScene:Exit()
@@ -60,37 +58,60 @@ function _M:SwitchScene(sceneName)
         self.CurrentScene.LuaTarget = require(self.CurrentScene.LuaScene).New()
         luaScene = self.CurrentScene.LuaTarget
     end
-    if luaScene then
+    local onLoadNewScene = nil
+    if luaScene and resSceneName and string.len(resSceneName) > 0 then
         luaScene:SceneStartLoad()
-    end
-    CloseCurrentSceneAsync(self,
-        function (opt1, isDone1)
-                if isDone1 then
+        onLoadNewScene = function (startProcess)
+            if luaScene then
+                startProcess = startProcess or 0
+                luaScene:SceneProcessLoad(startProcess)
+            end
+            local loadRet = _MOE.ResourceManager:LoadSceneAsync(resSceneName, function(opt2, isDone2)
+                if isDone2 then
+                    self.IsSceneLoading = false
                     if luaScene then
-                        luaScene:SceneProcessLoad(0.3 * 1.0)
+                        luaScene:SceneFinishLoad()
+                        luaScene:Enter() -- 进入
                     end
-                    local loadRet = _MOE.ResourceManager:LoadSceneAsync(resSceneName, function(opt2, isDone2)
-                        if isDone2 then
+                elseif luaScene and opt2 then
+                    luaScene:SceneProcessLoad(startProcess + 0.7 * opt2.progress)
+                end
+            end)
+            if not loadRet then
+                self.IsSceneLoading = false
+                if luaScene then
+                    luaScene:SceneLoadFail()
+                end
+            end
+            return loadRet
+        end
+    end
+
+    if lastHasResScene then
+        CloseCurrentSceneAsync(self,
+            function (opt1, isDone1)
+                    if isDone1 then
+                        if onLoadNewScene then
+                            onLoadNewScene(0.3)
+                        else
                             self.IsSceneLoading = false
                             if luaScene then
-                                luaScene:SceneFinishLoad()
-                                luaScene:Enter() -- 进入
+                                luaScene:Enter()
                             end
-                        elseif luaScene and opt2 then
-                            luaScene:SceneProcessLoad(0.3 + 0.7 * opt2.progress)
                         end
-                    end)
-                    if not loadRet then
-                        self.IsSceneLoading = false
-                        if luaScene then
-                            luaScene:SceneLoadFail()
-                        end
+                    elseif luaScene and opt1 then
+                        luaScene:SceneProcessLoad(0.3 * opt1.progress)
                     end
-                elseif luaScene and opt1 then
-                    luaScene:SceneProcessLoad(0.3 * opt1.progress)
-                end
+            end
+        )
+    elseif onLoadNewScene then
+        return onLoadNewScene()
+    else
+        self.IsSceneLoading = false
+        if luaScene then
+            luaScene:Enter()
         end
-    )
+    end
     return true
 end
 
@@ -102,6 +123,13 @@ end
 --- 获得LuaScene
 function _M:GetCurrentLuaScene()
     return self.CurrentScene and self.CurrentScene.LuaTarget or nil
+end
+
+function _M:HasResScene()
+    if self.CurrentScene and self.CurrentScene.resSceneName then
+        return string.len(self.CurrentScene.resSceneName) > 0
+    end
+    return false
 end
 
 return _M
