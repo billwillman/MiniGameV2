@@ -9,21 +9,39 @@ function _M:GetSceneName()
 end
 
 function _M:SceneStartLoad()
+    xpcall(function()
+        self:OnStartLoad()
+    end, _G.ErrorHandler)
 end
 
 function _M:SceneFinishLoad()
+    xpcall(function ()
+        self:OnSceneLoadFinish()
+    end, _G.ErrorHandler)
 end
 
 function _M:SceneLoadFail()
+    xpcall(function ()
+        self:OnSceneLoadFail()
+    end, _G.ErrorHandler)
 end
 
 function _M:SceneProcessLoad(process)
+    xpcall(function ()
+        self:OnSceneLoadProcess(process)
+    end, _G.ErrorHandler)
 end
 
 function _M:Enter()
+    xpcall(function ()
+        self:OnEnter()
+    end, _G.ErrorHandler)
 end
 
 function _M:Exit()
+    xpcall(function ()
+        self:OnExit()
+    end, _G.ErrorHandler)
 end
 
 --------------------------- 需要继承 -----------------------------
@@ -37,6 +55,9 @@ function _M:OnStartLoad()
 end
 
 function _M:OnSceneLoadFinish()
+end
+
+function _M:OnSceneLoadFail()
 end
 
 function _M:OnSceneLoadProcess(process)
