@@ -165,7 +165,7 @@ namespace SOC.GamePlay
 
         void OnGameStartFinish() {
             Debug.Log("[GameStart] OnGameStartFinish");
-            ResourceMgr.Instance.LoadSceneAsync("TestBuldInScene", false, null);
+            // ResourceMgr.Instance.LoadSceneAsync("TestBuldInScene", false, null);
         }
 
         void Lua_DoMain() {

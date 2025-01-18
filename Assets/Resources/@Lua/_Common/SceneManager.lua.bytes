@@ -1,3 +1,107 @@
 local _M = _MOE.class("SceneManager", _MOE.BaseModel)
 
+local SceneCfg = require("_Scene.SceneConfig")
+
+-------------------------------- 继承 -----------------------------------
+
+function _M:OnInit()
+    self.CurrentScene = nil
+    self.IsSceneLoading = false;
+end
+
+----------------------- 私有方法 ----------------------
+
+local function CloseCurrentSceneAsync(self, onFinish)
+    if self.CurrentScene then
+        local resSceneName = self.CurrentScene.resSceneName
+        if resSceneName and string.len(resSceneName) > 0 then
+            _MOE.ResourceManager:CloseSceneAsync(resSceneName, onFinish)
+        end
+        self.CurrentScene = nil
+    elseif onFinish then
+        onFinish(nil, true)
+    end
+end
+
+-------------------------------------------------------------------------
+
+---@param sceneName string 切换场景名
+---@return boolean 返回是否切换成功
+function _M:SwitchScene(sceneName)
+    if not sceneName then
+        return false
+    end
+    local cfg = SceneCfg[sceneName]
+    if not cfg then
+        return false
+    end
+    if self.IsSceneLoading then
+        _MOE.Logger.LogError("[SceneManager] isSceneLoading not support SwitchScene")
+        return false
+    end
+    local currentSceneName = self:GetCurrentSceneName()
+    if currentSceneName == sceneName then
+        if not cfg.canLoadSame then
+            return true
+        end
+    end
+    local resSceneName = cfg.resSceneName
+    if not resSceneName or string.len(resSceneName) <= 0 then
+        return false
+    end
+    local luaScene = self:GetCurrentLuaScene()
+    if luaScene then
+        luaScene:Exit()
+        luaScene = nil
+    end
+    self.IsSceneLoading = true
+    self.CurrentScene = cfg
+    if self.CurrentScene.LuaScene and string.len(self.CurrentScene.LuaScene) > 0 then
+        self.CurrentScene.LuaTarget = require(self.CurrentScene.LuaScene).New()
+        luaScene = self.CurrentScene.LuaTarget
+    end
+    if luaScene then
+        luaScene:SceneStartLoad()
+    end
+    CloseCurrentSceneAsync(self,
+        function (opt1, isDone1)
+                if isDone1 then
+                    if luaScene then
+                        luaScene:SceneProcessLoad(0.3 * 1.0)
+                    end
+                    local loadRet = _MOE.ResourceManager:LoadSceneAsync(resSceneName, function(opt2, isDone2)
+                        if isDone2 then
+                            self.IsSceneLoading = false
+                            if luaScene then
+                                luaScene:SceneFinishLoad()
+                                luaScene:Enter() -- 进入
+                            end
+                        elseif luaScene and opt2 then
+                            luaScene:SceneProcessLoad(0.3 + 0.7 * opt2.progress)
+                        end
+                    end)
+                    if not loadRet then
+                        self.IsSceneLoading = false
+                        if luaScene then
+                            luaScene:SceneLoadFail()
+                        end
+                    end
+                elseif luaScene and opt1 then
+                    luaScene:SceneProcessLoad(0.3 * opt1.progress)
+                end
+        end
+    )
+    return true
+end
+
+---@return string 获得当前场景名
+function _M:GetCurrentSceneName()
+    return self.CurrentScene and self.CurrentScene.resSceneName or ""
+end
+
+--- 获得LuaScene
+function _M:GetCurrentLuaScene()
+    return self.CurrentScene and self.CurrentScene.LuaTarget or nil
+end
+
 return _M

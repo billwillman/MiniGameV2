@@ -1,0 +1,9 @@
+local _M = {
+    [""] = {
+        resSceneName = "", -- 场景名
+        canLoadSame = false, -- 是否能反复加载
+        LuaScene = "",
+    }
+}
+
+return _M

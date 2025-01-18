@@ -14,6 +14,9 @@ end
 function _M:SceneFinishLoad()
 end
 
+function _M:SceneLoadFail()
+end
+
 function _M:SceneProcessLoad(process)
 end
 
