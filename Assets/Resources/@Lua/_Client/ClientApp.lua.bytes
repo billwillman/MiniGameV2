@@ -1,6 +1,8 @@
 ----- Client的App
 local BaseAppClass = require("_Common.BaseApp")
 
+require("_Client.SceneEnum")
+
 local _M = _MOE.class("ClientApp", BaseAppClass)
 
 local function CreateUIRoot()
@@ -22,6 +24,9 @@ function _M:OnInit()
     if CreateUIRoot() then
         _MOE.BaseViewClass = require("_Client.BaseView")
         _MOE.UIManager = require("_Client.UIManager").New()
+        -- 切换到登录场景（不一定有资源场景）
+        _MOE.SceneManager:SwitchScene(_MOE.SceneEnum.LoginScene)
+        --
     end
 end
 

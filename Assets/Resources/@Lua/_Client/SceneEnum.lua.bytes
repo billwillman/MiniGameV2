@@ -1,0 +1,3 @@
+_MOE.SceneEnum = {
+    LoginScene = "LoginScene",
+}
