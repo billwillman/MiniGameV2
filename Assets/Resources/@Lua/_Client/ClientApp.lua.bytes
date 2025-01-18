@@ -3,10 +3,26 @@ local BaseAppClass = require("_Common.BaseApp")
 
 local _M = _MOE.class("ClientApp", BaseAppClass)
 
+local function CreateUIRoot()
+    local ret = _MOE.ResourceManager:CreateGameObjectAsync("Resources/UI/UI Root.prefab",
+    function(process, isDone, root)
+        if isDone then
+            if root then
+                root.name = "UI Root"
+                root.transform:SetParent(_MOE.GameStartTransform, false)
+            end
+        end
+    end
+    )
+    return ret
+end
+
 ------------------------------ 继承方法 -------------------------------
 function _M:OnInit()
-    _MOE.BaseViewClass = require("_Client.BaseView")
-    _MOE.UIManager = require("_Client.UIManager").New()
+    if CreateUIRoot() then
+        _MOE.BaseViewClass = require("_Client.BaseView")
+        _MOE.UIManager = require("_Client.UIManager").New()
+    end
 end
 
 return _M
