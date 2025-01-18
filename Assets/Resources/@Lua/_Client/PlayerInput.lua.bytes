@@ -1,0 +1,58 @@
+local CSharpEventContainer = require("_Common.CSharpEventContainer")
+local PlayerInput = _MOE.class("PlayerInput", CSharpEventContainer)
+
+local CSharUtils = require("_Common.CSharpUtils")
+
+function PlayerInput:Ctor(target, binder)
+    _MOE.Logger.Log("[PlayerInput] PlayerInput Create")
+    self.PlayerInput = target
+    self.Binder = binder
+
+    local EventType = _MOE.LuaEvent_MonoEventType
+
+    --_MOE.Logger.Log(EventType.Awake:GetHashCode())
+    self.Binder:RegisterLuaEvent(EventType.Awake:GetHashCode(), self.OnAwake)
+    self.Binder:RegisterLuaEvent(EventType.Destroyed:GetHashCode(), self.OnDestroy)
+end
+
+function PlayerInput:InitEvents()
+    local asset = self.PlayerInput.actions
+    if asset then
+        local PlayerMode = asset:FindActionMap("Player", true)
+        if PlayerMode then
+            local MoveAction = PlayerMode:FindAction("Move", true)
+            if MoveAction then -- w,a,s,d
+                local actionType = CS.UnityEngine.InputSystem.PlayerInput.ActionEvent
+                local events = CSharUtils.CreateArray(actionType, 1)
+                self.MoveCSharpEvt = actionType(MoveAction)
+                self.MoveCSharpEvt, self.MoveLuaEvt = CSharUtils.AddUnityEvent(self, self.MoveCSharpEvt, self.OnInputEvent)
+                events[0] = self.MoveCSharpEvt
+                --_MOE.Logger.Log(events.Length)
+                self.PlayerInput.actionEvents = _MOE.ILuaBinder.CreatePlayerInputActionEvents(events)
+                --[[
+                self:RegsterCSharpEvent(MoveAction, "started", self.OnMoveAction)
+                self:RegsterCSharpEvent(MoveAction, "canceled", self.OnCanceled)
+                self:RegsterCSharpEvent(MoveAction, "performed", self.OnPerformed)
+                ]]
+            end
+        end
+    end
+end
+
+function PlayerInput:OnInputEvent(CallbackContext)
+    _MOE.Logger.Log("OnInputEvent")
+end
+
+function PlayerInput:OnAwake()
+    self:InitEvents()
+end
+
+function PlayerInput:OnDestroy()
+    self:UnRegsterAllCsharpEvents()
+    CSharUtils.RemoveUnityEvent(self.MoveCSharpEvt, self.MoveLuaEvt)
+    self.MoveCSharpEvt = nil
+    self.MoveLuaEvt = nil
+    _MOE.Logger.Log("[PlayerInput] OnDestroy")
+end
+
+return PlayerInput
