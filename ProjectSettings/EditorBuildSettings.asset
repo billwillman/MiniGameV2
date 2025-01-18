@@ -14,7 +14,11 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Resources/TestBuldInScene.scene
     guid: 196642c7ef80bdb4d91447d110a0684d
-  m_configObjects: {}
+  m_configObjects:
+    com.unity.input.settings: {fileID: 11400000, guid: d9c741eccf34e56458380d7b54fee565,
+      type: 2}
+    com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 38fe465717e5d6b44ac5d021ee025f08,
+      type: 3}
   m_SlimFeaturesWeixinMiniGame:
     AllocateOverhead: 1
     DecompressASTC: 0
