@@ -32,8 +32,8 @@ function UIManager:_GetWindowConfig(wndName)
     return ret
 end
 
-function UIManager:_CreateUIPrefabAsync(wndName, loaderType, fairyDepPackages)
-    if not wndName then
+function UIManager:_CreateUIPrefabAsync(wndName, viewClass, loaderType, fairyDepPackages)
+    if not wndName or not viewClass then
         return false
     end
     local cfg = self:_GetWindowConfig(wndName)
@@ -49,11 +49,10 @@ function UIManager:_CreateUIPrefabAsync(wndName, loaderType, fairyDepPackages)
         function(process, isDone, gameObject)
             if isDone then
                 if gameObject then
-                    local loader = nil
                     if loaderType == nil then
                         loaderType = _MOE.BaseResLoaderAsyncType
                     end
-                    loader = gameObject:AddComponent(loaderType)
+                    local loader = gameObject:AddComponent(loaderType)
                     -- FairyGUI界面
                     if loader and loaderType == _MOE.FairyGUILoaderAsyncType then
                         -- FairyGUI
@@ -67,6 +66,7 @@ function UIManager:_CreateUIPrefabAsync(wndName, loaderType, fairyDepPackages)
                         end
                     end
                     --
+                    self:_CreateView(wndName, viewClass, loader, gameObject)
                 else
                     self.loadingWnds[wndName] = nil
                 end
@@ -240,7 +240,7 @@ function UIManager:_CreateUIWindow(wndName, isAsync, ...)
     self.loadingWnds[wndName] = {...}
     ----------------------------- 异步加载 --------------------------------------------------------------
     if isAsync then
-        self:_CreateUIPrefabAsync(wndName, fairyGUIType, config.depPackages)
+        self:_CreateUIPrefabAsync(wndName, viewClass, fairyGUIType, config.depPackages)
     else
         ----------------------------- 同步加载不支持小游戏 ---------------------------------------------------
         local gameObj, loader = self:_CreateUIPrefab(wndName, fairyGUIType, config.depPackages) -- depPackages 依赖的Package
