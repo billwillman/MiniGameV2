@@ -65,6 +65,7 @@ public static class ExampleGenConfig
                 typeof(Action<string, int>),
                 typeof(Action<string, int, int>),
                 typeof(Action<string, int, int, int>),
+                typeof(Action<float, bool, GameObject>),
                 //typeof(Action<NetworkManager, ConnectionEventData>),
                 //--
             };
@@ -95,6 +96,7 @@ public static class ExampleGenConfig
                 typeof(System.Collections.IEnumerator),
                 typeof(Action<HttpClient, HttpListenerStatus>),
                 typeof(UnityEngine.Events.UnityAction<UnityEngine.InputSystem.InputAction.CallbackContext>),
+                typeof(Action<float, bool, GameObject>),
                 //typeof(Action<NetworkManager.ConnectionApprovalRequest, NetworkManager.ConnectionApprovalResponse>)
             };
 

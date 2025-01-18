@@ -7,6 +7,7 @@ local UILayerClass = require("_Client.UILayer")
 
 function UIManager:Ctor()
     self.Wnds = {}
+    self.loadingWnds = {} -- 加载界面状态
     -- 创建层
     self:_CreateLayers()
 end
@@ -28,6 +29,50 @@ function UIManager:_GetWindowConfig(wndName)
         return
     end
     local ret = _MOE.WindowConfig[wndName]
+    return ret
+end
+
+function UIManager:_CreateUIPrefabAsync(wndName, loaderType, fairyDepPackages)
+    if not wndName then
+        return false
+    end
+    local cfg = self:_GetWindowConfig(wndName)
+    if not cfg then
+        return false
+    end
+    local path = cfg.resPath
+    if not path then
+        return false
+    end
+    path = string.format("Resources/UI/%s.prefab", path)
+    local ret = _MOE.ResourceManager:CreateGameObjectAsync(path,
+        function(process, isDone, gameObject)
+            if isDone then
+                if gameObject then
+                    local loader = nil
+                    if loaderType == nil then
+                        loaderType = _MOE.BaseResLoaderAsyncType
+                    end
+                    loader = gameObject:AddComponent(loaderType)
+                    -- FairyGUI界面
+                    if loader and loaderType == _MOE.FairyGUILoaderAsyncType then
+                        -- FairyGUI
+                        if fairyDepPackages ~= nil then
+                            for _, depPackageName in ipairs(fairyDepPackages) do
+                                if depPackageName and string.len(depPackageName) > 0 then
+                                    local packagePath = string.format("Resources/FairyGUIPackages/%s_fui.bytes", depPackageName)
+                                    loader:LoadPackageNoReturn(packagePath) -- 加载Package
+                                end
+                            end
+                        end
+                    end
+                    --
+                else
+                    self.loadingWnds[wndName] = nil
+                end
+            end
+        end
+    )
     return ret
 end
 
@@ -126,8 +171,53 @@ function UIManager:_RemoveWndToLayer(wndName)
     return ret
 end
 
-function UIManager:_CreateUIWindow(wndName, ...)
+function UIManager:_IsWndIsLoading(wndName)
     if not wndName then
+        return false
+    end
+    local ret = self.loadingWnds[wndName]
+    if ret ~= nil then
+        return ret
+    end
+    return false
+end
+
+function UIManager:_GetAndClearLoadingData(wndName)
+    if not wndName then
+        return
+    end
+    local ret = self.loadingWnds[wndName]
+    if ret then
+        self.loadingWnds[wndName] = nil
+        return table.unpack(ret)
+    end
+end
+
+function UIManager:_CreateView(wndName, viewClass, loader, gameObj)
+    if not wndName or not gameObj or not viewClass then
+        self.loadingWnds[wndName] = nil
+        return
+    end
+    local view = viewClass.New(gameObj, loader)
+    if view then
+        local UIBinder = gameObj:GetComponent(UIBinderType)
+        if UIBinder then
+            UIBinder:InitRegisterControls(view)
+        end
+        self.Wnds[wndName] = view
+        view.__wndName = wndName
+        self:_AppendWndToLayerFromCfg(wndName)
+        view:Init()
+        view:Open(self:_GetAndClearLoadingData(wndName))
+    end
+end
+
+function UIManager:_CreateUIWindow(wndName, isAsync, ...)
+    if not wndName then
+        return
+    end
+    if self:_IsWndIsLoading(wndName) then
+        self.loadingWnds[wndName] = {...}
         return
     end
     local config = self:_GetWindowConfig(wndName)
@@ -142,26 +232,20 @@ function UIManager:_CreateUIWindow(wndName, ...)
         viewClass = require(path)
     end
     if not viewClass then
+        self.loadingWnds[wndName] = nil -- 清理掉加载信息
         return
     end
+
     local fairyGUIType = config.isFairyGUI and _MOE.FairyGUILoaderAsyncType or _MOE.BaseResLoaderAsyncType
-    local gameObj, loader = self:_CreateUIPrefab(wndName, fairyGUIType, config.depPackages) -- depPackages 依赖的Package
-    if not gameObj then
-        return
+    self.loadingWnds[wndName] = {...}
+    ----------------------------- 异步加载 --------------------------------------------------------------
+    if isAsync then
+        self:_CreateUIPrefabAsync(wndName, fairyGUIType, config.depPackages)
+    else
+        ----------------------------- 同步加载不支持小游戏 ---------------------------------------------------
+        local gameObj, loader = self:_CreateUIPrefab(wndName, fairyGUIType, config.depPackages) -- depPackages 依赖的Package
+        self:_CreateView(wndName, viewClass, loader, gameObj)
     end
-    local view = viewClass.New(gameObj, loader)
-    if view then
-        local UIBinder = gameObj:GetComponent(UIBinderType)
-        if UIBinder then
-            UIBinder:InitRegisterControls(view)
-        end
-        self.Wnds[wndName] = view
-        view.__wndName = wndName
-        self:_AppendWndToLayerFromCfg(wndName)
-        view:Init()
-        view:Open(...)
-    end
-    return view
 end
 
 function UIManager:ChangeWindowToRemoveLayer(wndName)
@@ -177,10 +261,8 @@ function UIManager:OpenWindow(wndName, ...)
     if view then
         self:BringToFront(wndName)
         view:ReOpen(...)
-        return view
     end
-    view = self:_CreateUIWindow(wndName, ...)
-    return view
+    self:_CreateUIWindow(wndName, true, ...)
 end
 
 local function _FreeWindowView(self, view, wndName)
@@ -204,6 +286,7 @@ function UIManager:_FreeWindow(wndName)
         _FreeWindowView(self, view, wndName)
         self.Wnds[wndName] = nil
     end
+    self.loadingWnds[wndName] = nil
 end
 
 function UIManager:BringToFront(wndName)
@@ -235,6 +318,7 @@ function UIManager:CloseWindow(wndName)
         ---- 释放流程
         self:_FreeWindow(wndName)
     end
+    self.loadingWnds[wndName] = nil
 end
 
 function UIManager:FreeAllWindow()
@@ -246,6 +330,7 @@ function UIManager:FreeAllWindow()
         end
         self.Wnds = {}
     end
+    self.loadingWnds = {}
 end
 
 function UIManager:CloseAllWindow()
@@ -258,6 +343,7 @@ function UIManager:CloseAllWindow()
         end
         self.Wnds = {}
     end
+    self.loadingWnds = {}
 end
 
 return UIManager
