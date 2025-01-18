@@ -63,8 +63,10 @@ function _M:SwitchScene(sceneName)
         luaScene:SceneStartLoad()
         onLoadNewScene = function (startProcess)
             if luaScene then
-                startProcess = startProcess or 0
-                luaScene:SceneProcessLoad(startProcess)
+                if luaScene:CanProcessCallBack() then
+                    startProcess = startProcess or 0
+                    luaScene:SceneProcessLoad(startProcess)
+                end
             end
             local loadRet = _MOE.ResourceManager:LoadSceneAsync(resSceneName, function(opt2, isDone2)
                 if isDone2 then
@@ -73,7 +75,8 @@ function _M:SwitchScene(sceneName)
                         luaScene:SceneFinishLoad()
                         luaScene:Enter() -- 进入
                     end
-                elseif luaScene and opt2 then
+                elseif luaScene and luaScene:CanProcessCallBack() and opt2 then
+                    startProcess = startProcess or 0
                     luaScene:SceneProcessLoad(startProcess + 0.7 * opt2.progress)
                 end
             end)
@@ -99,7 +102,7 @@ function _M:SwitchScene(sceneName)
                                 luaScene:Enter()
                             end
                         end
-                    elseif luaScene and opt1 then
+                    elseif luaScene and luaScene:CanProcessCallBack() and opt1 then
                         luaScene:SceneProcessLoad(0.3 * opt1.progress)
                     end
             end
