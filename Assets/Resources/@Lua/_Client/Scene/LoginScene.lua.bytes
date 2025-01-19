@@ -1,0 +1,3 @@
+local _M = _MOE.class("LoginScene", _MOE.BaseScene)
+
+return _M
