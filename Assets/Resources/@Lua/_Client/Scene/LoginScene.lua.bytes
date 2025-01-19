@@ -1,3 +1,10 @@
 local _M = _MOE.class("LoginScene", _MOE.BaseScene)
 
+function _M:OnEnter()
+    _MOE.Logger.Log("LoginScene Enter")
+end
+
+function _M:OnExit()
+end
+
 return _M
