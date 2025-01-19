@@ -5,13 +5,17 @@ require("_Client.SceneEnum")
 
 local _M = _MOE.class("ClientApp", BaseAppClass)
 
-local function CreateUIRoot()
+local function CreateUIRoot(self, onFinish)
     local ret = _MOE.ResourceManager:CreateGameObjectAsync("Resources/UI/UI Root.prefab",
     function(process, isDone, root)
         if isDone then
             if root then
                 root.name = "UI Root"
                 root.transform:SetParent(_MOE.GameStartTransform, false)
+                self.UIRoot = root
+                if onFinish then
+                    onFinish(self)
+                end
             end
         end
     end
@@ -19,13 +23,17 @@ local function CreateUIRoot()
     return ret
 end
 
-local function CreateMyPlayerInput()
+local function CreateMyPlayerInput(self, onFinish)
     local ret = _MOE.ResourceManager:CreateGameObjectAsync("Resources/@Input/PlayerInput.prefab",
     function(process, isDone, playerInput)
         if isDone then
             if playerInput then
                 playerInput.name = "PlayerInput"
                 playerInput.transform:SetParent(_MOE.GameStartTransform, false)
+                self.PlayerInput = playerInput
+                if onFinish then
+                    onFinish(self)
+                end
             end
         end
     end
@@ -33,14 +41,18 @@ local function CreateMyPlayerInput()
     return ret
 end
 
+function _M:OnPreloadFinish()
+    if self.UIRoot and self.PlayerInput then
+        _MOE.Logger.Log("[ClientApp] OnPreloadFinish")
+        _MOE.SceneManager:SwitchScene(_MOE.SceneEnum.LoginScene)
+    end
+end
+
 ------------------------------ 继承方法 -------------------------------
 function _M:OnInit()
-    if CreateUIRoot() and CreateMyPlayerInput() then
+    if CreateUIRoot(self, self.OnPreloadFinish) and CreateMyPlayerInput(self, self.OnPreloadFinish) then
         _MOE.BaseViewClass = require("_Client.BaseView")
         _MOE.UIManager = require("_Client.UIManager").New()
-        -- 切换到登录场景（不一定有资源场景）
-        _MOE.SceneManager:SwitchScene(_MOE.SceneEnum.LoginScene)
-        --
     end
 end
 
