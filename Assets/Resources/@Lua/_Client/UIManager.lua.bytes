@@ -49,6 +49,11 @@ function UIManager:_CreateUIPrefabAsync(wndName, viewClass, loaderType, fairyDep
         function(process, isDone, gameObject)
             if isDone then
                 if gameObject then
+                    if not self:_IsWndIsLoading(wndName) then
+                        -- loadingData没数据，就清理掉
+                        _MOE.ObjetDestroy(gameObject)
+                        return
+                    end
                     if loaderType == nil then
                         loaderType = _MOE.BaseResLoaderAsyncType
                     end
