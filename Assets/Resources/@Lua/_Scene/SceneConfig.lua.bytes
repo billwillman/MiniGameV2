@@ -1,5 +1,5 @@
 local _M = {
-    [""] = {
+    ["LoginScene"] = {
         resSceneName = "", -- 场景名
         canLoadSame = false, -- 是否能反复加载
         LuaScene = "",
