@@ -8,4 +8,5 @@ using Animancer;
 public class AnimancerTrack : TrackAsset
 {
     public AnimancerComponent m_Animancer = null;
+    public int layerIndex = -1;
 }
