@@ -252,6 +252,16 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 3674949967950942855, guid: 06d499d9cf77f3e4ab5f45d83dd68291,
+        type: 3}
+      propertyPath: _PlayAutomatically
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3674949967950942855, guid: 06d499d9cf77f3e4ab5f45d83dd68291,
+        type: 3}
+      propertyPath: _Animations.Array.size
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6294176820038654315, guid: 06d499d9cf77f3e4ab5f45d83dd68291,
         type: 3}
       propertyPath: m_Name
@@ -307,44 +317,22 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 8930046011456046367, guid: 06d499d9cf77f3e4ab5f45d83dd68291,
+        type: 3}
+      propertyPath: m_PlayOnAwake
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8930046011456046367, guid: 06d499d9cf77f3e4ab5f45d83dd68291,
+        type: 3}
+      propertyPath: m_CurrentTimeline._Asset
+      value: 
+      objectReference: {fileID: 11400000, guid: a315fcd96a0738546aa5650ae6777c88,
+        type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 404413876433985022, guid: 06d499d9cf77f3e4ab5f45d83dd68291,
-        type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 764372787}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 06d499d9cf77f3e4ab5f45d83dd68291, type: 3}
---- !u!1 &764372786 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 404413876433985022, guid: 06d499d9cf77f3e4ab5f45d83dd68291,
-    type: 3}
-  m_PrefabInstance: {fileID: 764372785}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &764372787
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 764372786}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3f9d65bbca5c5c349aafecfb86923f39, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_CurrentTimeline:
-    _FadeDuration: 0.25
-    _Events:
-      _NormalizedTimes: []
-      _Callbacks: []
-      _Names: []
-    _Asset: {fileID: 0}
-    _Speed: 1
-    _NormalizedStartTime: NaN
-    _Bindings: []
-  m_PlayOnAwake: 0
 --- !u!1 &961739749
 GameObject:
   m_ObjectHideFlags: 0

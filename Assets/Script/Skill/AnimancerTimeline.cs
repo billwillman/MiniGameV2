@@ -18,4 +18,13 @@ public class AnimancerTimeline : MonoBehaviour
             return m_Playable;
         }
     }
+
+    private void Awake() {
+        if (m_PlayOnAwake && m_CurrentTimeline != null) {
+            var playGraph = this.Playable;
+            if (playGraph != null) {
+                playGraph.Play(m_CurrentTimeline);
+            }
+        }
+    }
 }

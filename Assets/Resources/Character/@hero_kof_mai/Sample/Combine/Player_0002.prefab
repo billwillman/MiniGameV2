@@ -224,9 +224,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _Animator: {fileID: 2793286635245911982}
   _ActionOnDisable: 0
-  _PlayAutomatically: 1
-  _Animations:
-  - {fileID: 7400000, guid: 647dc47c832a5714e8357b3f72dee354, type: 2}
+  _PlayAutomatically: 0
+  _Animations: []
 --- !u!82 &953100892969584356
 AudioSource:
   m_ObjectHideFlags: 0
@@ -341,11 +340,11 @@ MonoBehaviour:
       _NormalizedTimes: []
       _Callbacks: []
       _Names: []
-    _Asset: {fileID: 0}
+    _Asset: {fileID: 11400000, guid: a315fcd96a0738546aa5650ae6777c88, type: 2}
     _Speed: 1
     _NormalizedStartTime: NaN
     _Bindings: []
-  m_PlayOnAwake: 0
+  m_PlayOnAwake: 1
 --- !u!1 &513920212099119506
 GameObject:
   m_ObjectHideFlags: 0
