@@ -148,6 +148,7 @@ GameObject:
   - component: {fileID: 3674949967950942855}
   - component: {fileID: 953100892969584356}
   - component: {fileID: 8930046011456046367}
+  - component: {fileID: 3535031080836430114}
   m_Layer: 0
   m_HasEditorInfo: 1
   m_Name: hero_kof_mai_body_0002
@@ -345,6 +346,25 @@ MonoBehaviour:
     _NormalizedStartTime: NaN
     _Bindings: []
   m_PlayOnAwake: 1
+--- !u!320 &3535031080836430114
+PlayableDirector:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 404413876433985022}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_PlayableAsset: {fileID: 11400000, guid: a315fcd96a0738546aa5650ae6777c88, type: 2}
+  m_InitialState: 0
+  m_WrapMode: 2
+  m_DirectorUpdateMode: 1
+  m_InitialTime: 0
+  m_SceneBindings:
+  - key: {fileID: 8392691938782624736, guid: a315fcd96a0738546aa5650ae6777c88, type: 2}
+    value: {fileID: 2793286635245911982}
+  m_ExposedReferences:
+    m_References: []
 --- !u!1 &513920212099119506
 GameObject:
   m_ObjectHideFlags: 0
@@ -3583,7 +3603,20 @@ SkinnedMeshRenderer:
   - {fileID: 6294817343794424714}
   - {fileID: 4982444941569870494}
   - {fileID: 4712310995803319658}
-  m_BlendShapeWeights: []
+  m_BlendShapeWeights:
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
   m_RootBone: {fileID: 6294817343794424714}
   m_AABB:
     m_Center: {x: -0.15884823, y: 0.020400763, z: -0.00000017881393}

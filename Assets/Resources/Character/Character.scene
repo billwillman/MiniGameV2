@@ -252,16 +252,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 3674949967950942855, guid: 06d499d9cf77f3e4ab5f45d83dd68291,
-        type: 3}
-      propertyPath: _PlayAutomatically
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3674949967950942855, guid: 06d499d9cf77f3e4ab5f45d83dd68291,
-        type: 3}
-      propertyPath: _Animations.Array.size
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 6294176820038654315, guid: 06d499d9cf77f3e4ab5f45d83dd68291,
         type: 3}
       propertyPath: m_Name
@@ -317,17 +307,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 8930046011456046367, guid: 06d499d9cf77f3e4ab5f45d83dd68291,
-        type: 3}
-      propertyPath: m_PlayOnAwake
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 8930046011456046367, guid: 06d499d9cf77f3e4ab5f45d83dd68291,
-        type: 3}
-      propertyPath: m_CurrentTimeline._Asset
-      value: 
-      objectReference: {fileID: 11400000, guid: a315fcd96a0738546aa5650ae6777c88,
-        type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -415,7 +394,7 @@ Camera:
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 1
-  m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
+  m_BackGroundColor: {r: 0, g: 0, b: 0, a: 1}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
