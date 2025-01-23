@@ -146,8 +146,8 @@ GameObject:
   - component: {fileID: 2793286635245911982}
   - component: {fileID: 4180495854232384868}
   - component: {fileID: 3674949967950942855}
-  - component: {fileID: 4384240082884777415}
   - component: {fileID: 953100892969584356}
+  - component: {fileID: 8930046011456046367}
   m_Layer: 0
   m_HasEditorInfo: 1
   m_Name: hero_kof_mai_body_0002
@@ -227,25 +227,6 @@ MonoBehaviour:
   _PlayAutomatically: 1
   _Animations:
   - {fileID: 7400000, guid: 647dc47c832a5714e8357b3f72dee354, type: 2}
---- !u!320 &4384240082884777415
-PlayableDirector:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 404413876433985022}
-  m_Enabled: 1
-  serializedVersion: 3
-  m_PlayableAsset: {fileID: 11400000, guid: a315fcd96a0738546aa5650ae6777c88, type: 2}
-  m_InitialState: 1
-  m_WrapMode: 2
-  m_DirectorUpdateMode: 1
-  m_InitialTime: 0
-  m_SceneBindings:
-  - key: {fileID: -4702215220828757585, guid: a315fcd96a0738546aa5650ae6777c88, type: 2}
-    value: {fileID: 953100892969584356}
-  m_ExposedReferences:
-    m_References: []
 --- !u!82 &953100892969584356
 AudioSource:
   m_ObjectHideFlags: 0
@@ -342,6 +323,29 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!114 &8930046011456046367
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 404413876433985022}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f9d65bbca5c5c349aafecfb86923f39, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_CurrentTimeline:
+    _FadeDuration: 0.25
+    _Events:
+      _NormalizedTimes: []
+      _Callbacks: []
+      _Names: []
+    _Asset: {fileID: 0}
+    _Speed: 1
+    _NormalizedStartTime: NaN
+    _Bindings: []
+  m_PlayOnAwake: 0
 --- !u!1 &513920212099119506
 GameObject:
   m_ObjectHideFlags: 0
