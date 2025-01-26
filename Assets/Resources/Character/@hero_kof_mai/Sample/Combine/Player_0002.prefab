@@ -2688,7 +2688,9 @@ MonoBehaviour:
   SelfTarget: {fileID: 0}
   CustomLuaFunctionName: []
   bInitCustomLuaFunctionInStart: 0
-  RegisterSkillLuaClassNames: []
+  RegisterSkillLuaClassNames:
+  - idle
+  SkillAssetRoot: Resources/Character/@hero_kof_mai/@Skill/
 --- !u!114 &3192900567394804339
 MonoBehaviour:
   m_ObjectHideFlags: 0

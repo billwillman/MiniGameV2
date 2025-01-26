@@ -127,8 +127,9 @@ namespace SOC.GamePlay
             foreach (var skillName in RegisterSkillLuaClassNames) {
                 if (string.IsNullOrEmpty(skillName) || m_SkillAssetMap.ContainsKey(skillName))
                     continue;
-                string fileName = string.Format("{0}_{1}/{1}.asset", rootPath, name);
-                if (!loader.LoadScriptObjectAsync(fileName, this, name, _cAnimancerResTag, loadPriority)) {
+                string fileName = string.Format("{0}_{1}/{1}.asset", rootPath, skillName);
+                Debug.LogErrorFormat("[RegisterSkills] Error: {0:D}", fileName);
+                if (!loader.LoadScriptObjectAsync(fileName, this, skillName, _cAnimancerResTag, loadPriority)) {
                     Debug.LogErrorFormat("[RegisterSkills] Error: {0:D}", fileName);
                 }
             }
