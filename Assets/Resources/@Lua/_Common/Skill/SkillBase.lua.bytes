@@ -1,0 +1,3 @@
+local SkillBase = _MOE.class("SkillBase", _MOE.StateBase)
+
+return SkillBase
