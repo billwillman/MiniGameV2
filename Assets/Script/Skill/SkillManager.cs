@@ -8,6 +8,7 @@ using XLua;
 namespace SOC.GamePlay
 {
     [LuaCallCSharp]
+    [RequireComponent(typeof(BaseResLoaderAsyncMono))]
     public class SkillManager : ILuaBinder
     {
         private AnimancerComponent m_AnimancerComponent = null;
