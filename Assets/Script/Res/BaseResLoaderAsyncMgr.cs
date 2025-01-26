@@ -19,8 +19,10 @@ namespace NsLib.ResMgr {
         bool _OnTextLoaded(TextAsset target, ulong subID);
 		bool _OnMaterialLoaded (Material target, ulong subID);
 		bool _OnPrefabLoaded (GameObject target, ulong subID);
+        bool _OnScriptObjectLoaded(ScriptableObject target, ulong subID);
 
-		void _OnLoadFail (ulong subID);
+
+        void _OnLoadFail (ulong subID);
     }
 
 
@@ -247,6 +249,32 @@ namespace NsLib.ResMgr {
                             }
                         }
             }, true, loadPriority);
+        }
+
+        public bool LoadScriptObjectAsync(string fileName, IBaseResLoaderAsyncListener listener, ulong subID, int loadPriority = 0) {
+            if (listener == null || string.IsNullOrEmpty(fileName))
+                return false;
+            int uuid = listener.UUID;
+            listener = null;
+            return ResourceMgr.Instance.LoadScriptableObjectAsync(fileName, ResourceCacheType.rctRefAdd, (float process, bool isDone, ScriptableObject target) =>
+            {
+                if (isDone) {
+                    if (target != null) {
+                        IBaseResLoaderAsyncListener listen;
+
+                        if (m_ListernMap.TryGetValue(uuid, out listen) && listen != null) {
+                            if (!listen._OnScriptObjectLoaded(target, subID))
+                                ResourceMgr.Instance.DestroyObject(target);
+                        } else {
+                            ResourceMgr.Instance.DestroyObject(target);
+                        }
+                    } else {
+                        IBaseResLoaderAsyncListener listen;
+                        if (m_ListernMap.TryGetValue(uuid, out listen) && listen != null)
+                            listen._OnLoadFail(subID);
+                    }
+                }
+            });
         }
 
         public bool LoadAniControllerAsync(string fileName, IBaseResLoaderAsyncListener listener, ulong subID, int loadPriority = 0) {

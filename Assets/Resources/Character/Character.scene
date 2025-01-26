@@ -252,6 +252,26 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 83069152288906626, guid: 06d499d9cf77f3e4ab5f45d83dd68291,
+        type: 3}
+      propertyPath: SkillAssetRoot
+      value: Resources/Character/@hero_kof_mai/@Skill/_Idle/
+      objectReference: {fileID: 0}
+    - target: {fileID: 83069152288906626, guid: 06d499d9cf77f3e4ab5f45d83dd68291,
+        type: 3}
+      propertyPath: RegisterSkillLuaClassNames.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 83069152288906626, guid: 06d499d9cf77f3e4ab5f45d83dd68291,
+        type: 3}
+      propertyPath: RegisterSkillLuaClassNames.Array.data[0]
+      value: idle
+      objectReference: {fileID: 0}
+    - target: {fileID: 4180495854232384868, guid: 06d499d9cf77f3e4ab5f45d83dd68291,
+        type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6294176820038654315, guid: 06d499d9cf77f3e4ab5f45d83dd68291,
         type: 3}
       propertyPath: m_Name
@@ -306,6 +326,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8930046011456046367, guid: 06d499d9cf77f3e4ab5f45d83dd68291,
+        type: 3}
+      propertyPath: m_PlayOnAwake
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

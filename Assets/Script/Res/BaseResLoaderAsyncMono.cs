@@ -22,6 +22,7 @@ using NsLib.ResMgr;
 		NGUIUIFontFont,
 		NGUIUISpriteAtlas,
         FairyGUIPackage,
+        ScriptObject,
         LoadScene, // 可加载SCENE也可只加载SCENE的AB和依赖AB
     }
 
@@ -260,6 +261,22 @@ using NsLib.ResMgr;
             return false;
         }
 
+        public bool LoadScriptObjectAsync(string fileName, ICustomLoaderEvent obj, string resName = "", string tag = "", int loadPriority = 0) {
+        if (obj == null || obj.CustomLoaderBehaviour == null)
+            return false;
+        var mgr = BaseResLoaderAsyncMgr.GetInstance();
+        if (mgr != null) {
+            ulong id;
+            int rk = ReMake(fileName, obj.CustomLoaderBehaviour, BaseResLoaderAsyncType.ScriptObject, false, out id, resName, tag);
+            if (rk < 0)
+                return false;
+            if (rk == 0)
+                return true;
+            return mgr.LoadScriptObjectAsync(fileName, this, id, loadPriority);
+        }
+        return false;
+    }
+
         public bool LoadAniControllerAsync(string fileName, Animator obj, int loadPriority = 0) {
             if (obj == null)
                 return false;
@@ -492,6 +509,23 @@ using NsLib.ResMgr;
         return obj != null;
     }
 
+    protected virtual bool OnScriptObjectLoaded(ScriptableObject target, ICustomLoaderEvent obj, BaseResLoaderAsyncType asyncType, string resName, string tag) {
+        if (target != null && obj != null) {
+            switch (asyncType) {
+                case BaseResLoaderAsyncType.ScriptObject:
+                    if (!obj.OnLoaded(target, asyncType, resName, tag))
+                        return false;
+                    break;
+                default:
+                    return false;
+
+            }
+            SetResource<ScriptableObject>(obj.CustomLoaderBehaviour, target, resName, tag);
+            return true;
+        }
+        return false;
+    }
+
         protected virtual bool OnAniControlLoaded(RuntimeAnimatorController target, UnityEngine.Object obj, BaseResLoaderAsyncType asyncType, string resName, string tag) {
             if (target != null && obj != null) {
                 switch (asyncType) {
@@ -544,6 +578,17 @@ using NsLib.ResMgr;
             }
             return obj != null;
         }
+
+    public bool _OnScriptObjectLoaded(ScriptableObject target, ulong subID) {
+        bool isMatInst;
+        string resName, tag;
+        UnityEngine.Object obj = RemoveSubID(subID, out isMatInst, out resName, out tag);
+        if (obj != null) {
+            if (!OnScriptObjectLoaded(target, obj as ICustomLoaderEvent, GetSubType(subID), resName, tag))
+                return false;
+        }
+        return obj != null;
+    }
 
     public bool _OnMainSceneLoaded(ulong subID) {
         bool isMatInst;
