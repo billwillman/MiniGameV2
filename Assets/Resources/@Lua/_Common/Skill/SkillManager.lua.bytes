@@ -8,6 +8,24 @@ local function _RegisterInitSkill(self)
     if not registerSkillClassNames then
         return
     end
+    local rootPath = self:GetLuaRoot()
+    if not rootPath then
+        return
+    end
+    for idx = 0, registerSkillClassNames.Length - 1 do
+        local name = registerSkillClassNames[idx]
+        if name and string.len(name) > 0 then
+            local skillLuaPath = rootPath .. name
+            local skillClass = require(skillLuaPath)
+            self.RegisterStateClassMap[name] = skillClass -- 注册状态类
+        end
+    end
+end
+
+function SkillManagerBase:GetLuaRoot()
+    if self.LuaRoot then
+        return self.LuaRoot
+    end
     local binder = self.Binder
     if not binder then
         return
@@ -20,19 +38,14 @@ local function _RegisterInitSkill(self)
         rootPath = rootPath .. "/"
     end
     rootPath = string.gsub(rootPath, "/", ".")
-    for idx = 0, registerSkillClassNames.Length - 1 do
-        local name = registerSkillClassNames[idx]
-        if name and string.len(name) > 0 then
-            local skillLuaPath = rootPath .. name
-            local skillClass = require(skillLuaPath)
-            self.RegisterStateClassMap[name] = skillClass -- 注册状态类
-        end
-    end
+    self.LuaRoot = rootPath
+    return rootPath
 end
 
 function SkillManagerBase:Ctor(skillManagerCS, binder)
     self.SkillManagerCS = skillManagerCS
     self.Binder = binder
+    self.RegisterStateClassMap = {}
     _RegisterInitSkill(self)
     -- 调用父类方法
     _MOE.StateManagerBase.CallSuper(self, "Ctor", skillManagerCS, binder)
@@ -47,6 +60,35 @@ end
 
 function SkillManagerBase:GetSkillManagerCS()
     return self.SkillManagerCS
+end
+
+function SkillManagerBase:RegisterSkills(skillNames, isClearAll)
+    if not skillNames then
+        return false
+    end
+    local rootPath = self:GetLuaRoot()
+    if not rootPath then
+        return
+    end
+    if isClearAll == nil then
+        isClearAll = false
+    end
+    if isClearAll then
+        self.RegisterStateClassMap = {}
+    end
+    for _, name in ipairs(skillNames) do
+        if name and string.len(name) > 0 then
+            if not self.RegisterStateClassMap[name] then
+                local skillLuaPath = rootPath .. name
+                local skillClass = require(skillLuaPath)
+                self.RegisterStateClassMap[name] = skillClass -- 注册状态类
+            end
+        end
+    end
+    local csSkillMgr = self:GetSkillManagerCS()
+    if csSkillMgr then
+        csSkillMgr:RegisterSkills(skillNames, isClearAll)
+    end
 end
 
 ---------------------------------------- 继承方法 ------------------------
