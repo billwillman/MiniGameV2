@@ -2535,6 +2535,7 @@ GameObject:
   - component: {fileID: 6099609240935183846}
   - component: {fileID: 9043922037106480977}
   - component: {fileID: 1356213617054258573}
+  - component: {fileID: 1686610667085432409}
   m_Layer: 0
   m_HasEditorInfo: 1
   m_Name: Player_0002
@@ -2670,6 +2671,22 @@ MonoBehaviour:
   m_Weapon: {fileID: 0}
   m_Hair: {fileID: 8187291284540959682}
   m_OtherSkinedMeshList: []
+--- !u!114 &1686610667085432409
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6294176820038654315}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7dc4dea05f2be8b4c83538c0e3a2690f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  LuaPath: 
+  SelfTarget: {fileID: 0}
+  CustomLuaFunctionName: []
+  bInitCustomLuaFunctionInStart: 0
 --- !u!1 &6573747670674831657
 GameObject:
   m_ObjectHideFlags: 0
