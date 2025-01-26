@@ -39,10 +39,12 @@ namespace SOC.GamePlay
                     int index = System.Array.IndexOf(RegisterSkillLuaClassNames, resName);
                     if (index < 0)
                         return false;
+                   // Debug.Log(targetRes);
                     if (tag == _cAnimancerResTag) {
                         AnimancerTransitionAssetBase translition = targetRes as AnimancerTransitionAssetBase;
-                        if (translition == null)
+                        if (translition == null) {
                             return false;
+                        }
                         m_SkillAssetMap[resName] = translition;
                         Debug.Log("[SkillManager] SkillLoaded: " + resName);
                     } else
@@ -51,7 +53,6 @@ namespace SOC.GamePlay
                 default:
                     return false;
             }
-            return false;
         }
 
         public AnimancerComponent Animancer {
@@ -127,7 +128,7 @@ namespace SOC.GamePlay
             foreach (var skillName in RegisterSkillLuaClassNames) {
                 if (string.IsNullOrEmpty(skillName) || m_SkillAssetMap.ContainsKey(skillName))
                     continue;
-                string fileName = string.Format("{0}_{1}/{1}.asset", rootPath, skillName);
+                string fileName = string.Format("{0}_{1}/{1}_C.asset", rootPath, skillName);
                 Debug.LogErrorFormat("[RegisterSkills] Error: {0:D}", fileName);
                 if (!loader.LoadScriptObjectAsync(fileName, this, skillName, _cAnimancerResTag, loadPriority)) {
                     Debug.LogErrorFormat("[RegisterSkills] Error: {0:D}", fileName);

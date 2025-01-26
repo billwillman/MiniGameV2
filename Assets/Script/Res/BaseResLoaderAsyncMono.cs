@@ -512,7 +512,7 @@ using NsLib.ResMgr;
     protected virtual bool OnScriptObjectLoaded(ScriptableObject target, ICustomLoaderEvent obj, BaseResLoaderAsyncType asyncType, string resName, string tag) {
         if (target != null && obj != null) {
             switch (asyncType) {
-                case BaseResLoaderAsyncType.ScriptObject:
+                case BaseResLoaderAsyncType.ScriptObject: 
                     if (!obj.OnLoaded(target, asyncType, resName, tag))
                         return false;
                     break;
