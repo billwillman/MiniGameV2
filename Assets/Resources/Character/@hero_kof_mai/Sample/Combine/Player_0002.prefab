@@ -2689,7 +2689,7 @@ MonoBehaviour:
   CustomLuaFunctionName: []
   bInitCustomLuaFunctionInStart: 0
   RegisterSkillLuaClassNames:
-  - idle
+  - Idle
   SkillAssetRoot: Resources/Character/@hero_kof_mai/@Skill/
 --- !u!114 &3192900567394804339
 MonoBehaviour:
