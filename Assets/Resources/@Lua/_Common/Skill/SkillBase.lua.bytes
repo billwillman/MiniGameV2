@@ -1,3 +1,8 @@
 local SkillBase = _MOE.class("SkillBase", _MOE.StateBase)
 
+function SkillBase:GetSkillManagerCS()
+    local ret = self.m_StateMgr and self.m_StateMgr:GetSkillManagerCS() or nil
+    return ret
+end
+
 return SkillBase

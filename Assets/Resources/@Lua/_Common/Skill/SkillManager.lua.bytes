@@ -45,4 +45,8 @@ function SkillManagerBase:Dispose()
     _MOE.StateManagerBase.CallSuper(self, "Dispose")
 end
 
+function SkillManagerBase:GetSkillManagerCS()
+    return self.SkillManagerCS
+end
+
 return SkillManagerBase
