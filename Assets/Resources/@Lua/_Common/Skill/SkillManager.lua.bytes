@@ -1,6 +1,6 @@
 local SkillManagerBase = _MOE.class("SkillManagerBase", _MOE.StateManagerBase)
 
-local function _RegisterSkill(self)
+local function _RegisterInitSkill(self)
     if not self.SkillManagerCS then
         return
     end
@@ -33,7 +33,7 @@ end
 function SkillManagerBase:Ctor(skillManagerCS, binder)
     self.SkillManagerCS = skillManagerCS
     self.Binder = binder
-    _RegisterSkill(self)
+    _RegisterInitSkill(self)
     -- 调用父类方法
     _MOE.StateManagerBase.CallSuper(self, "Ctor", skillManagerCS, binder)
 end
