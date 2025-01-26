@@ -257,6 +257,11 @@ PrefabInstance:
       propertyPath: SelfTarget
       value: 
       objectReference: {fileID: 0}
+    - target: {fileID: 83069152288906626, guid: 06d499d9cf77f3e4ab5f45d83dd68291,
+        type: 3}
+      propertyPath: bInitCustomLuaFunctionInStart
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 3535031080836430114, guid: 06d499d9cf77f3e4ab5f45d83dd68291,
         type: 3}
       propertyPath: m_PlayableAsset
