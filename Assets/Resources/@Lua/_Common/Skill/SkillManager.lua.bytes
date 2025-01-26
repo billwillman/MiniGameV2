@@ -38,4 +38,11 @@ function SkillManagerBase:Ctor(skillManagerCS, binder)
     _MOE.StateManagerBase.CallSuper(self, "Ctor", skillManagerCS, binder)
 end
 
+function SkillManagerBase:Dispose()
+    self.SkillManagerCS = nil
+    self.Binder = nil
+    -- 调用父类方法
+    _MOE.StateManagerBase.CallSuper(self, "Dispose")
+end
+
 return SkillManagerBase
