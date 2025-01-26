@@ -44,6 +44,7 @@ namespace SOC.GamePlay
                         if (translition == null)
                             return false;
                         m_SkillAssetMap[resName] = translition;
+                        Debug.Log("[SkillManager] SkillLoaded: " + resName);
                     } else
                         return false; // 暂时不支持其他类型
                     return true;

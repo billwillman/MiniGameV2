@@ -837,7 +837,7 @@ public class BaseResLoader: CachedMonoBehaviour
 	public void ClearScriptObject(ICustomLoaderEvent target, string resName, string resTag) {
 		if (target == null || target.CustomLoaderBehaviour == null)
 			return;
-		SetResource(target.CustomLoaderBehaviour.GetInstanceID(), null, resNmae, resTag);
+		SetResource(target.CustomLoaderBehaviour.GetInstanceID(), null, typeof(ScriptableObject), resName, resTag);
 	}
 
 	public bool LoadMaterial(ref Material target, string fileName)
