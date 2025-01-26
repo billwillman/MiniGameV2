@@ -59,6 +59,8 @@ _MOE.class = require("_Common.BaseClass") -- class框架
 _MOE.Json = require("_Common.json")
 _MOE.BaseScene = require("_Common.BaseScene")
 _MOE.TableUtils = require("_Common.TableUtils")
+_MOE.StateManagerBase = require("_Common.StateManager")
+_MOE.SkillManagerBase = require("_Common.Skill.SkillManager")
 _G.BaseClass = _MOE.class
 
 _G.ErrorHandler = function (err)

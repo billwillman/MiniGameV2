@@ -193,7 +193,7 @@ namespace SOC.GamePlay
         }
 
         [DoNotGen]
-        private void Awake() {
+        protected void Awake() {
             LoadLua();
             // º”‘ÿLua
             if (CallLuaFunc(LuaEvent_MonoEventType.Awake)) {
@@ -203,7 +203,7 @@ namespace SOC.GamePlay
 
         [DoNotGen]
 
-        private void Start() {
+        protected void Start() {
             if (CallLuaFunc(LuaEvent_MonoEventType.Start)) {
                 OnStart();
             }
@@ -211,7 +211,7 @@ namespace SOC.GamePlay
 
         [DoNotGen]
 
-        private void Update() {
+        protected void Update() {
             if (CallLuaFunc(LuaEvent_MonoEventType.Update)) {
                 OnUpdate();
             }
@@ -219,7 +219,7 @@ namespace SOC.GamePlay
 
         [DoNotGen]
 
-        private void FixedUpdate()
+        protected void FixedUpdate()
         {
             if (CallLuaFunc(LuaEvent_MonoEventType.FixedUpdate))
             {

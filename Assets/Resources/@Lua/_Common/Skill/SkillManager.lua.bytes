@@ -1,0 +1,41 @@
+local SkillManagerBase = _MOE.class("SkillManagerBase", _MOE.StateManagerBase)
+
+local function _RegisterSkill(self)
+    if not self.SkillManagerCS then
+        return
+    end
+    local registerSkillClassNames = self.SkillManagerCS.RegisterSkillLuaClassNames
+    if not registerSkillClassNames then
+        return
+    end
+    local binder = self.Binder
+    if not binder then
+        return
+    end
+    local rootPath = binder.LuaPath
+    if not rootPath or string.len(rootPath) <= 0 then
+        return
+    end
+    if rootPath[#rootPath] ~= "/" then
+        rootPath = rootPath .. "/"
+    end
+    rootPath = string.gsub(rootPath, "/", ".")
+    for idx = 0, registerSkillClassNames.Length - 1 do
+        local name = registerSkillClassNames[idx]
+        if name and string.len(name) > 0 then
+            local skillLuaPath = rootPath .. name
+            local skillClass = require(skillLuaPath)
+            self.RegisterStateClassMap[name] = skillClass -- 注册状态类
+        end
+    end
+end
+
+function SkillManagerBase:Ctor(skillManagerCS, binder)
+    self.SkillManagerCS = skillManagerCS
+    self.Binder = binder
+    _RegisterSkill(self)
+    -- 调用父类方法
+    _MOE.StateManagerBase.CallSuper(self, "Ctor", skillManagerCS, binder)
+end
+
+return SkillManagerBase
