@@ -355,7 +355,7 @@ PlayableDirector:
   m_GameObject: {fileID: 404413876433985022}
   m_Enabled: 1
   serializedVersion: 3
-  m_PlayableAsset: {fileID: 11400000, guid: a315fcd96a0738546aa5650ae6777c88, type: 2}
+  m_PlayableAsset: {fileID: 0}
   m_InitialState: 0
   m_WrapMode: 2
   m_DirectorUpdateMode: 1
@@ -2535,7 +2535,7 @@ GameObject:
   - component: {fileID: 6099609240935183846}
   - component: {fileID: 9043922037106480977}
   - component: {fileID: 1356213617054258573}
-  - component: {fileID: 1686610667085432409}
+  - component: {fileID: 83069152288906626}
   m_Layer: 0
   m_HasEditorInfo: 1
   m_Name: Player_0002
@@ -2671,7 +2671,7 @@ MonoBehaviour:
   m_Weapon: {fileID: 0}
   m_Hair: {fileID: 8187291284540959682}
   m_OtherSkinedMeshList: []
---- !u!114 &1686610667085432409
+--- !u!114 &83069152288906626
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
