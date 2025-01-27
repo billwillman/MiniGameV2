@@ -98,6 +98,17 @@ namespace SOC.GamePlay
         public void UnRegisterSkills(LuaTable skillNames) {
             if (skillNames == null)
                 return;
+            if (RegisterSkillLuaClassNames != null) {
+                for (int i = 1; i <= skillNames.Length; ++i) {
+                    string skillName;
+                    skillNames.Get<int, string>(i, out skillName);
+                    if (!string.IsNullOrEmpty(skillName)) {
+                        int index = System.Array.IndexOf(RegisterSkillLuaClassNames, skillName);
+                        if (index >= 0)
+
+                    }
+                }
+            }
         }
 
         public void UnRegisterAllSkills() {
