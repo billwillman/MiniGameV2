@@ -76,11 +76,11 @@ namespace SOC.GamePlay
                 } else
                     return false;
             } else {
-                var newLuaClasses = new string[actionNames.Length];
+                var newLuaClasses = new List<string>();
                 for (int i = 1; i <= actionNames.Length; ++i) {
                     string value;
                     actionNames.Get<int, string>(i, out value);
-                    newLuaClasses[i - 1] = value;
+                    newLuaClasses.Add(value);
                 }
                 m_RegisterActions.AddRange(newLuaClasses);
             }
