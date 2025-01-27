@@ -108,6 +108,14 @@ function SkillManagerBase:UnRegisterSkills(removeSkillNames)
     end
 end
 
+function SkillManagerBase:UnRegisterAllSkills()
+    self.RegisterStateClassMap = {}
+    local csSkillMgr = self:GetSkillManagerCS()
+    if csSkillMgr then
+        csSkillMgr:UnRegisterAllSkills()
+    end
+end
+
 ---------------------------------------- 继承方法 ------------------------
 
 return SkillManagerBase

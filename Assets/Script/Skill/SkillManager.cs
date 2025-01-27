@@ -96,7 +96,8 @@ namespace SOC.GamePlay
 
         // 清理掉技能
         public void UnRegisterSkills(LuaTable skillNames) {
-            
+            if (skillNames == null)
+                return;
         }
 
         public void UnRegisterAllSkills() {
