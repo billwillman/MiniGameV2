@@ -40,6 +40,10 @@ function SkillManagerBase:GetSkillManagerCS()
     return self.SkillManagerCS
 end
 
+function SkillManagerBase:GetBinder()
+    return self.Binder
+end
+
 -- 动态注册技能
 function SkillManagerBase:RegisterSkills(skillNames, isClearAll)
     if not skillNames then

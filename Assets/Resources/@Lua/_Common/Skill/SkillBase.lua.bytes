@@ -5,6 +5,11 @@ function SkillBase:GetSkillManagerCS()
     return ret
 end
 
+function SkillBase:GetBinder()
+    local ret = self.m_StateMgr and self.m_StateMgr:GetBinder() or nil
+    return ret
+end
+
 --------------------------------------- 可继承方法 --------------------------------
 function SkillBase:GetActionNames()
 end
