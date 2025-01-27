@@ -188,7 +188,11 @@ namespace KinematicCharacterController
         [SerializeField]
         [Tooltip("Physics material of the Character Capsule (Does not affect character movement. Only affects things colliding with it)")]
 #pragma warning disable 0649
+#if UNITY_6000_0_OR_NEWER
+        private PhysicsMaterial CapsulePhysicsMaterial;
+#else
         private PhysicMaterial CapsulePhysicsMaterial;
+#endif
 #pragma warning restore 0649
 
 
@@ -527,7 +531,7 @@ namespace KinematicCharacterController
         public const float CorrelationForVerticalObstruction = 0.01f;
         public const float ExtraSteppingForwardDistance = 0.01f;
         public const float ExtraStepHeightPadding = 0.01f;
-#pragma warning restore 0414 
+#pragma warning restore 0414
 
         private void OnEnable()
         {
@@ -797,7 +801,7 @@ namespace KinematicCharacterController
             _overlapsCount = 0;
             _lastSolvedOverlapNormalDirty = false;
 
-            #region Handle Move Position
+#region Handle Move Position
             if (_movePositionDirty)
             {
                 if (_solveMovementCollisions)
@@ -818,7 +822,7 @@ namespace KinematicCharacterController
 
                 _movePositionDirty = false;
             }
-            #endregion
+#endregion
 
             LastGroundingStatus.CopyFrom(GroundingStatus);
             GroundingStatus = new CharacterGroundingReport();
@@ -826,7 +830,7 @@ namespace KinematicCharacterController
 
             if (_solveMovementCollisions)
             {
-                #region Resolve initial overlaps
+#region Resolve initial overlaps
                 Vector3 resolutionDirection = _cachedWorldUp;
                 float resolutionDistance = 0f;
                 int iterationsMade = 0;
@@ -882,10 +886,10 @@ namespace KinematicCharacterController
 
                     iterationsMade++;
                 }
-                #endregion
+#endregion
             }
 
-            #region Ground Probing and Snapping
+#region Ground Probing and Snapping
             // Handle ungrounding
             if (_solveGrounding)
             {
@@ -929,7 +933,7 @@ namespace KinematicCharacterController
                 _mustUngroundTimeCounter -= deltaTime;
             }
             _mustUnground = false;
-            #endregion
+#endregion
 
             if (_solveGrounding)
             {
@@ -938,7 +942,7 @@ namespace KinematicCharacterController
 
             if (InteractiveRigidbodyHandling)
             {
-                #region Interactive Rigidbody Handling 
+#region Interactive Rigidbody Handling 
                 _lastAttachedRigidbody = _attachedRigidbody;
                 if (AttachedRigidbodyOverride)
                 {
@@ -1013,7 +1017,7 @@ namespace KinematicCharacterController
 
                     _isMovingFromAttachedRigidbody = false;
                 }
-                #endregion
+#endregion
             }
         }
 
@@ -1044,7 +1048,7 @@ namespace KinematicCharacterController
             {
                 if (InteractiveRigidbodyHandling)
                 {
-                    #region Solve potential attached rigidbody overlap
+#region Solve potential attached rigidbody overlap
                     if (_attachedRigidbody)
                     {
                         float upwardsOffset = Capsule.radius;
@@ -1064,12 +1068,12 @@ namespace KinematicCharacterController
                             }
                         }
                     }
-                    #endregion
+#endregion
                 }
 
                 if (InteractiveRigidbodyHandling)
                 {
-                    #region Resolve overlaps that could've been caused by rotation or physics movers simulation pushing the character
+#region Resolve overlaps that could've been caused by rotation or physics movers simulation pushing the character
                     Vector3 resolutionDirection = _cachedWorldUp;
                     float resolutionDistance = 0f;
                     int iterationsMade = 0;
@@ -1148,7 +1152,7 @@ namespace KinematicCharacterController
 
                         iterationsMade++;
                     }
-                    #endregion
+#endregion
                 }
             }
 
@@ -1161,7 +1165,7 @@ namespace KinematicCharacterController
                 BaseVelocity = Vector3.zero;
             }
 
-            #region Calculate Character movement from base velocity   
+#region Calculate Character movement from base velocity   
             // Perform the move from base velocity
             if (BaseVelocity.sqrMagnitude > 0f)
             {
@@ -1180,7 +1184,7 @@ namespace KinematicCharacterController
             {
                 ProcessVelocityForRigidbodyHits(ref BaseVelocity, deltaTime);
             }
-            #endregion
+#endregion
 
             // Handle planar constraint
             if (HasPlanarConstraint)
