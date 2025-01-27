@@ -108,14 +108,25 @@ function SkillManagerBase:UnRegisterSkills(removeSkillNames)
     if not removeSkillNames then
         return
     end
+    local actionNames = nil
     for _, name in ipairs(removeSkillNames) do
         if name and string.len(name) > 0 then
+            local skillClass = self.RegisterStateClassMap[name]
+            if skillClass and skillClass.GetActionNames then
+                actionNames = actionNames or {}
+                local newActionNames = skillClass.GetActionNames()
+                if newActionNames and next(newActionNames) ~= nil then
+                    actionNames = _MOE.TableUtils.CombineTable(actionNames, newActionNames)
+                end
+            end
             self.RegisterStateClassMap[name] = nil
         end
     end
-    local csSkillMgr = self:GetSkillManagerCS()
-    if csSkillMgr then
-        csSkillMgr:UnRegisterSkills(removeSkillNames)
+    if actionNames ~= nil and next(actionNames) ~= nil then
+        local csSkillMgr = self:GetSkillManagerCS()
+        if csSkillMgr then
+            csSkillMgr:UnRegisterSkills(actionNames)
+        end
     end
 end
 
