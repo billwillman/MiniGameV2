@@ -5,4 +5,8 @@ function SkillBase:GetSkillManagerCS()
     return ret
 end
 
+--------------------------------------- 可继承方法 --------------------------------
+function SkillBase:GetActionNames()
+end
+
 return SkillBase
