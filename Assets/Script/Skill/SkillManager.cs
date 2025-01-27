@@ -15,11 +15,8 @@ namespace SOC.GamePlay
         private AnimancerComponent m_AnimancerComponent = null;
         private BaseResLoaderAsyncMono m_Loader = null;
 
-        /// <summary>
-        /// 注册的技能类（对应Lua），一个技能支持多个Layer,一个Layer支持多个State(每个Layer可以State独立)
-        /// </summary>
-        public string[] RegisterSkillLuaClassNames = null;
-        public string SkillAssetRootPath = null;
+        public string[] m_RegisterActions = null;
+        public string m_ActionAssetRootPath = null;
 
         public MonoBehaviour CustomLoaderBehaviour {
             get {
@@ -34,9 +31,9 @@ namespace SOC.GamePlay
                 return false;
             switch (asyncType) {
                 case BaseResLoaderAsyncType.ScriptObject:
-                    if (RegisterSkillLuaClassNames  == null || string.IsNullOrEmpty(resName))
+                    if (m_RegisterActions == null || string.IsNullOrEmpty(resName))
                         return false;
-                    int index = System.Array.IndexOf(RegisterSkillLuaClassNames, resName);
+                    int index = System.Array.IndexOf(m_RegisterActions, resName);
                     if (index < 0)
                         return false;
                    // Debug.Log(targetRes);
@@ -65,52 +62,52 @@ namespace SOC.GamePlay
 
         static readonly string _cAnimancerResTag = "Animancer_Assets";
 
-        public bool RegisterSkills(LuaTable skillNames, bool isClearAll = false, int loadPriority = 0) {
+        public bool RegisterActions(LuaTable actionNames, bool isClearAll = false, int loadPriority = 0) {
             if (isClearAll)
-                UnRegisterAllSkills();
-            if (RegisterSkillLuaClassNames == null) {
-                if (skillNames != null && skillNames.Length > 0) {
-                    RegisterSkillLuaClassNames = new string[skillNames.Length];
-                    for (int i = 1; i <= skillNames.Length; ++i) {
+                UnRegisterAllActions();
+            if (m_RegisterActions == null) {
+                if (actionNames != null && actionNames.Length > 0) {
+                    m_RegisterActions = new string[actionNames.Length];
+                    for (int i = 1; i <= actionNames.Length; ++i) {
                         string value;
-                        skillNames.Get<int, string>(i, out value);
-                        RegisterSkillLuaClassNames[i - 1] = value;
+                        actionNames.Get<int, string>(i, out value);
+                        m_RegisterActions[i - 1] = value;
                     }
                 } else
                     return false;
             } else {
-                var newLuaClasses = new string[skillNames.Length];
-                for (int i = 1; i <= skillNames.Length; ++i) {
+                var newLuaClasses = new string[actionNames.Length];
+                for (int i = 1; i <= actionNames.Length; ++i) {
                     string value;
-                    skillNames.Get<int, string>(i, out value);
+                    actionNames.Get<int, string>(i, out value);
                     newLuaClasses[i - 1] = value;
                 }
-                RegisterSkillLuaClassNames.AddRange(newLuaClasses);
+                m_RegisterActions.AddRange(newLuaClasses);
             }
 
             // 加载资源
-            LoadAllRegisterSkills();
+            LoadAllRegisterActions();
             // ------------
             return true;
         }
 
         // 清理掉技能
-        public void UnRegisterSkills(LuaTable skillNames) {
-            if (skillNames == null)
+        public void UnRegisterActions(LuaTable actionNames) {
+            if (actionNames == null)
                 return;
             int newLen;
-            if (RegisterSkillLuaClassNames != null)
-                newLen = RegisterSkillLuaClassNames.Length;
+            if (m_RegisterActions != null)
+                newLen = m_RegisterActions.Length;
             else
                 newLen = 0;
-            for (int i = 1; i <= skillNames.Length; ++i) {
+            for (int i = 1; i <= actionNames.Length; ++i) {
                 string skillName;
-                skillNames.Get<int, string>(i, out skillName);
+                actionNames.Get<int, string>(i, out skillName);
                 if (!string.IsNullOrEmpty(skillName)) {
-                    if (RegisterSkillLuaClassNames != null) {
-                        int index = System.Array.IndexOf(RegisterSkillLuaClassNames, skillName);
+                    if (m_RegisterActions != null) {
+                        int index = System.Array.IndexOf(m_RegisterActions, skillName);
                         if (index >= 0) {
-                            RegisterSkillLuaClassNames[index] = RegisterSkillLuaClassNames[newLen - 1];
+                            m_RegisterActions[index] = m_RegisterActions[newLen - 1];
                             --newLen;
                         }
                     }
@@ -123,12 +120,12 @@ namespace SOC.GamePlay
                 }
             }
 
-            if (RegisterSkillLuaClassNames != null)
-                System.Array.Resize<string>(ref RegisterSkillLuaClassNames, newLen);
+            if (m_RegisterActions != null)
+                System.Array.Resize<string>(ref m_RegisterActions, newLen);
 
         }
 
-        public void UnRegisterAllSkills() {
+        public void UnRegisterAllActions() {
             var loader = this.Loader;
             if (loader == null)
                 return;
@@ -139,22 +136,22 @@ namespace SOC.GamePlay
             }
             iter.Dispose();
             m_SkillAssetMap.Clear();
-            RegisterSkillLuaClassNames = null;
+            m_RegisterActions = null;
         }
 
-        public bool LoadAllRegisterSkills(int loadPriority = 0) {
-            if (RegisterSkillLuaClassNames == null)
+        public bool LoadAllRegisterActions(int loadPriority = 0) {
+            if (m_RegisterActions == null)
                 return false;
             // 加载资源
             var loader = this.Loader;
             if (loader == null)
                 return false;
-            string rootPath = this.SkillAssetRootPath;
+            string rootPath = this.m_ActionAssetRootPath;
             if (string.IsNullOrEmpty(rootPath))
                 return false;
             if (!rootPath.EndsWith('/'))
                 rootPath += "/";
-            foreach (var skillName in RegisterSkillLuaClassNames) {
+            foreach (var skillName in m_RegisterActions) {
                 if (string.IsNullOrEmpty(skillName) || m_SkillAssetMap.ContainsKey(skillName))
                     continue;
                 string fileName = string.Format("{0}_{1}/{1}_C.asset", rootPath, skillName);
@@ -182,7 +179,7 @@ namespace SOC.GamePlay
 
         [DoNotGen]
         protected new void Start() {
-            LoadAllRegisterSkills();
+            LoadAllRegisterActions();
             base.Start();
         }
     }

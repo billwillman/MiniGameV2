@@ -45,6 +45,7 @@ end
 function SkillManagerBase:Ctor(skillManagerCS, binder)
     self.SkillManagerCS = skillManagerCS
     self.Binder = binder
+    -- 注册的技能类（对应Lua），一个技能支持多个Layer,一个Layer支持多个State(每个Layer可以State独立)
     self.RegisterStateClassMap = {}
     _RegisterInitSkill(self)
     -- 调用父类方法
@@ -77,18 +78,28 @@ function SkillManagerBase:RegisterSkills(skillNames, isClearAll)
     if isClearAll then
         self.RegisterStateClassMap = {}
     end
+    local actionNames = nil
     for _, name in ipairs(skillNames) do
         if name and string.len(name) > 0 then
             if not self.RegisterStateClassMap[name] then
                 local skillLuaPath = rootPath .. name
                 local skillClass = require(skillLuaPath)
                 self.RegisterStateClassMap[name] = skillClass -- 注册状态类
+                if skillClass.GetActionNames then
+                    actionNames = actionNames or {}
+                    local newActionNames = skillClass.GetActionNames()
+                    if newActionNames and next(newActionNames) ~= nil then
+                        actionNames = _MOE.TableUtils.CombineTable(actionNames, newActionNames)
+                    end
+                end
             end
         end
     end
-    local csSkillMgr = self:GetSkillManagerCS()
-    if csSkillMgr then
-        csSkillMgr:RegisterSkills(skillNames, isClearAll)
+    if actionNames ~= nil and next(actionNames) ~= nil then
+        local csSkillMgr = self:GetSkillManagerCS()
+        if csSkillMgr then
+            csSkillMgr:RegisterActions(actionNames, isClearAll)
+        end
     end
 end
 
@@ -112,7 +123,7 @@ function SkillManagerBase:UnRegisterAllSkills()
     self.RegisterStateClassMap = {}
     local csSkillMgr = self:GetSkillManagerCS()
     if csSkillMgr then
-        csSkillMgr:UnRegisterAllSkills()
+        csSkillMgr:UnRegisterAllActions()
     end
 end
 
