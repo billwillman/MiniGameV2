@@ -1,27 +1,5 @@
 local SkillManagerBase = _MOE.class("SkillManagerBase", _MOE.StateManagerBase)
 
-local function _RegisterInitSkill(self)
-    if not self.SkillManagerCS then
-        return
-    end
-    local registerSkillClassNames = self.SkillManagerCS.RegisterSkillLuaClassNames
-    if not registerSkillClassNames then
-        return
-    end
-    local rootPath = self:GetLuaRoot()
-    if not rootPath then
-        return
-    end
-    for idx = 0, registerSkillClassNames.Length - 1 do
-        local name = registerSkillClassNames[idx]
-        if name and string.len(name) > 0 then
-            local skillLuaPath = rootPath .. name
-            local skillClass = require(skillLuaPath)
-            self.RegisterStateClassMap[name] = skillClass -- 注册状态类
-        end
-    end
-end
-
 function SkillManagerBase:GetLuaRoot()
     if self.LuaRoot then
         return self.LuaRoot
@@ -47,7 +25,6 @@ function SkillManagerBase:Ctor(skillManagerCS, binder)
     self.Binder = binder
     -- 注册的技能类（对应Lua），一个技能支持多个Layer,一个Layer支持多个State(每个Layer可以State独立)
     self.RegisterStateClassMap = {}
-    _RegisterInitSkill(self)
     -- 调用父类方法
     _MOE.StateManagerBase.CallSuper(self, "Ctor", skillManagerCS, binder)
 end
