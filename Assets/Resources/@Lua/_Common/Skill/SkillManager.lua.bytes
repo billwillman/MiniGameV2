@@ -62,6 +62,7 @@ function SkillManagerBase:GetSkillManagerCS()
     return self.SkillManagerCS
 end
 
+-- 动态注册技能
 function SkillManagerBase:RegisterSkills(skillNames, isClearAll)
     if not skillNames then
         return false
@@ -88,6 +89,22 @@ function SkillManagerBase:RegisterSkills(skillNames, isClearAll)
     local csSkillMgr = self:GetSkillManagerCS()
     if csSkillMgr then
         csSkillMgr:RegisterSkills(skillNames, isClearAll)
+    end
+end
+
+-- 动态卸载技能
+function SkillManagerBase:UnRegisterSkills(removeSkillNames)
+    if not removeSkillNames then
+        return
+    end
+    for _, name in ipairs(removeSkillNames) do
+        if name and string.len(name) > 0 then
+            self.RegisterStateClassMap[name] = nil
+        end
+    end
+    local csSkillMgr = self:GetSkillManagerCS()
+    if csSkillMgr then
+        csSkillMgr:UnRegisterSkills(removeSkillNames)
     end
 end
 

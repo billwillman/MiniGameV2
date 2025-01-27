@@ -19,7 +19,7 @@ namespace SOC.GamePlay
         /// 注册的技能类（对应Lua），一个技能支持多个Layer,一个Layer支持多个State(每个Layer可以State独立)
         /// </summary>
         public string[] RegisterSkillLuaClassNames = null;
-        public string SkillAssetRoot = null;
+        public string SkillAssetRootPath = null;
 
         public MonoBehaviour CustomLoaderBehaviour {
             get {
@@ -120,7 +120,7 @@ namespace SOC.GamePlay
             var loader = this.Loader;
             if (loader == null)
                 return false;
-            string rootPath = this.SkillAssetRoot;
+            string rootPath = this.SkillAssetRootPath;
             if (string.IsNullOrEmpty(rootPath))
                 return false;
             if (!rootPath.EndsWith('/'))
