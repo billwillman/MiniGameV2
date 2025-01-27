@@ -98,17 +98,34 @@ namespace SOC.GamePlay
         public void UnRegisterSkills(LuaTable skillNames) {
             if (skillNames == null)
                 return;
-            if (RegisterSkillLuaClassNames != null) {
-                for (int i = 1; i <= skillNames.Length; ++i) {
-                    string skillName;
-                    skillNames.Get<int, string>(i, out skillName);
-                    if (!string.IsNullOrEmpty(skillName)) {
+            int newLen;
+            if (RegisterSkillLuaClassNames != null)
+                newLen = RegisterSkillLuaClassNames.Length;
+            else
+                newLen = 0;
+            for (int i = 1; i <= skillNames.Length; ++i) {
+                string skillName;
+                skillNames.Get<int, string>(i, out skillName);
+                if (!string.IsNullOrEmpty(skillName)) {
+                    if (RegisterSkillLuaClassNames != null) {
                         int index = System.Array.IndexOf(RegisterSkillLuaClassNames, skillName);
-                        if (index >= 0)
-
+                        if (index >= 0) {
+                            RegisterSkillLuaClassNames[index] = RegisterSkillLuaClassNames[newLen - 1];
+                            --newLen;
+                        }
+                    }
+                    if (m_SkillAssetMap.Remove(skillName)) {
+                        var loader = this.Loader;
+                        if (loader != null) {
+                            loader.ClearScriptObject(this, skillName, _cAnimancerResTag);
+                        }
                     }
                 }
             }
+
+            if (RegisterSkillLuaClassNames != null)
+                System.Array.Resize<string>(ref RegisterSkillLuaClassNames, newLen);
+
         }
 
         public void UnRegisterAllSkills() {
