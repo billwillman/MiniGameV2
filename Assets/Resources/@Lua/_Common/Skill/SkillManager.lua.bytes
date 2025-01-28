@@ -64,6 +64,7 @@ function SkillManagerBase:RegisterSkills(skillNames, isClearAll)
         self.RegisterStateClassMap = {}
     end
     local actionNames = nil
+    local actionMap = nil
     for _, name in ipairs(skillNames) do
         if name and string.len(name) > 0 then
             if not self.RegisterStateClassMap[name] then
@@ -74,7 +75,14 @@ function SkillManagerBase:RegisterSkills(skillNames, isClearAll)
                     actionNames = actionNames or {}
                     local newActionNames = skillClass.GetActionNames()
                     if newActionNames and next(newActionNames) ~= nil then
-                        actionNames = _MOE.TableUtils.CombineTable(actionNames, newActionNames)
+                        for _, newActionName in ipairs(newActionNames) do
+                            if newActionName and string.len(newActionName) > 0 and
+                                (actionMap == nil or not actionMap[newActionName]) then
+                                    table.insert(actionNames, newActionName)
+                                    actionMap = actionMap or {}
+                                    actionMap[newActionName] = true
+                            end
+                        end
                     end
                 end
             end
@@ -94,6 +102,7 @@ function SkillManagerBase:UnRegisterSkills(removeSkillNames)
         return
     end
     local actionNames = nil
+    local actionMap = nil
     for _, name in ipairs(removeSkillNames) do
         if name and string.len(name) > 0 then
             local skillClass = self.RegisterStateClassMap[name]
@@ -101,7 +110,14 @@ function SkillManagerBase:UnRegisterSkills(removeSkillNames)
                 actionNames = actionNames or {}
                 local newActionNames = skillClass.GetActionNames()
                 if newActionNames and next(newActionNames) ~= nil then
-                    actionNames = _MOE.TableUtils.CombineTable(actionNames, newActionNames)
+                    for _, newActionName in ipairs(newActionNames) do
+                        if newActionName and string.len(newActionName) > 0 and
+                                (actionMap == nil or not actionMap[newActionName]) then
+                            table.insert(actionNames, newActionName)
+                            actionMap = actionMap or {}
+                            actionMap[newActionName] = true
+                        end
+                    end
                 end
             end
             self.RegisterStateClassMap[name] = nil
