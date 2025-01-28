@@ -20,6 +20,7 @@ namespace SOC.GamePlay
         [DoNotGen]
         public string m_ActionAssetRootPath = null;
 
+        [DoNotGen]
         public MonoBehaviour CustomLoaderBehaviour {
             get {
                 return this;
