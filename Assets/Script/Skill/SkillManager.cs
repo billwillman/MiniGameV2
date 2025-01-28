@@ -80,7 +80,10 @@ namespace SOC.GamePlay
                 for (int i = 1; i <= actionNames.Length; ++i) {
                     string value;
                     actionNames.Get<int, string>(i, out value);
-                    newLuaClasses.Add(value);
+                    if (newLuaClasses.IndexOf(value) < 0 && System.Array.IndexOf(m_RegisterActions, value) < 0)
+                    {
+                        newLuaClasses.Add(value);
+                    }
                 }
                 m_RegisterActions.AddRange(newLuaClasses);
             }
