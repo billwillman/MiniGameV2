@@ -23,6 +23,9 @@ end
 function SkillManagerBase:Ctor(skillManagerCS, binder)
     self.SkillManagerCS = skillManagerCS
     self.Binder = binder
+    if skillManagerCS then
+        self.AnimancerComponent = skillManagerCS.Animancer
+    end
     -- 注册的技能类（对应Lua），一个技能支持多个Layer,一个Layer支持多个State(每个Layer可以State独立)
     self.RegisterStateClassMap = {}
     -- 调用父类方法
@@ -32,6 +35,7 @@ end
 function SkillManagerBase:Dispose()
     self.SkillManagerCS = nil
     self.Binder = nil
+    self.AnimancerComponent = nil
     -- 调用父类方法
     _MOE.StateManagerBase.CallSuper(self, "Dispose")
 end
@@ -117,6 +121,10 @@ function SkillManagerBase:UnRegisterAllSkills()
     if csSkillMgr then
         csSkillMgr:UnRegisterAllActions()
     end
+end
+
+function SkillManagerBase:GetAnimancerComponent()
+    return self.AnimancerComponent
 end
 
 ---------------------------------------- 继承方法 ------------------------

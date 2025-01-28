@@ -10,6 +10,11 @@ function SkillBase:GetBinder()
     return ret
 end
 
+function SkillBase:GetAnimancerComponent()
+    local ret = self.m_StateMgr and self.m_StateMgr:GetAnimancerComponent() or nil
+    return ret
+end
+
 --------------------------------------- 可继承方法 --------------------------------
 function SkillBase:GetActionNames()
 end
