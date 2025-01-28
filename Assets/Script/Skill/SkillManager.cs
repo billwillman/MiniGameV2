@@ -15,7 +15,9 @@ namespace SOC.GamePlay
         private AnimancerComponent m_AnimancerComponent = null;
         private BaseResLoaderAsyncMono m_Loader = null;
 
+        [DoNotGen]
         public string[] m_RegisterActions = null;
+        [DoNotGen]
         public string m_ActionAssetRootPath = null;
 
         public MonoBehaviour CustomLoaderBehaviour {
