@@ -103,6 +103,7 @@ namespace SOC.GamePlay
                 newLen = m_RegisterActions.Length;
             else
                 newLen = 0;
+            HashSet<string> removeMap = null;
             for (int i = 1; i <= actionNames.Length; ++i) {
                 string skillName;
                 actionNames.Get<int, string>(i, out skillName);
@@ -110,6 +111,12 @@ namespace SOC.GamePlay
                     if (m_RegisterActions != null) {
                         int index = System.Array.IndexOf(m_RegisterActions, skillName);
                         if (index >= 0) {
+                            if (removeMap == null)
+                            {
+                                removeMap = new HashSet<string>();
+                            } else if (removeMap.Contains(skillName))
+                                continue;
+                            removeMap.Add(skillName);
                             m_RegisterActions[index] = m_RegisterActions[newLen - 1];
                             --newLen;
                         }
