@@ -15,12 +15,12 @@ namespace SOC.GamePlay
         private AnimancerComponent m_AnimancerComponent = null;
         private BaseResLoaderAsyncMono m_Loader = null;
 
-        [DoNotGen]
+        [BlackList]
         public string[] m_RegisterActions = null;
-        [DoNotGen]
+        [BlackList]
         public string m_ActionAssetRootPath = null;
 
-        [DoNotGen]
+        [BlackList]
         public MonoBehaviour CustomLoaderBehaviour {
             get {
                 return this;
