@@ -147,7 +147,6 @@ GameObject:
   - component: {fileID: 4180495854232384868}
   - component: {fileID: 3674949967950942855}
   - component: {fileID: 953100892969584356}
-  - component: {fileID: 3535031080836430114}
   m_Layer: 0
   m_HasEditorInfo: 1
   m_Name: hero_kof_mai_body_0002
@@ -322,29 +321,6 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
---- !u!320 &3535031080836430114
-PlayableDirector:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 404413876433985022}
-  m_Enabled: 1
-  serializedVersion: 3
-  m_PlayableAsset: {fileID: 11400000, guid: a315fcd96a0738546aa5650ae6777c88, type: 2}
-  m_InitialState: 1
-  m_WrapMode: 2
-  m_DirectorUpdateMode: 1
-  m_InitialTime: 0
-  m_SceneBindings:
-  - key: {fileID: 0}
-    value: {fileID: 2793286635245911982}
-  - key: {fileID: -467683602816871786, guid: a315fcd96a0738546aa5650ae6777c88, type: 2}
-    value: {fileID: 2793286635245911982}
-  - key: {fileID: 1433425188997408243, guid: a315fcd96a0738546aa5650ae6777c88, type: 2}
-    value: {fileID: 4855190055725953662}
-  m_ExposedReferences:
-    m_References: []
 --- !u!1 &513920212099119506
 GameObject:
   m_ObjectHideFlags: 0
@@ -2699,6 +2675,9 @@ MonoBehaviour:
     m_Events:
     - m_PersistentCalls:
         m_Calls: []
+  m_LuaEvents:
+    m_Signals: []
+    m_LuaEventNames: []
 --- !u!1 &6573747670674831657
 GameObject:
   m_ObjectHideFlags: 0
