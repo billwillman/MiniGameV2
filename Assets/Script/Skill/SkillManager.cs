@@ -9,7 +9,7 @@ using XLua;
 namespace SOC.GamePlay
 {
     [LuaCallCSharp]
-    [RequireComponent(typeof(BaseResLoaderAsyncMono))]
+    [RequireComponent(typeof(BaseResLoaderAsyncMono), typeof(TimelineEventLuaReceiver))]
     public class SkillManager : ILuaBinder, ICustomLoaderEvent
     {
         private AnimancerComponent m_AnimancerComponent = null;
