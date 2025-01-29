@@ -37,9 +37,10 @@ namespace SOC.GamePlay
         private LuaTable m_LuaClass = null;
         private Dictionary<string, LuaFunction> m_LuaCustomFuncs = null;
 
-        public void SignalReceiver_OnNotify_Lua(Playable origin, INotification notification, object context)
+        [BlackList]
+        public void SignalReceiver_OnNotify_Lua(string evtName, Playable origin, INotification notification, object context)
         {
-
+            CallCustomLuaFunc(evtName, m_LuaSelf, context, origin, notification);
         }
 
         // 需要获取的Lua的方法
@@ -67,7 +68,7 @@ namespace SOC.GamePlay
             m_LuaEventMap[evtType] = func;
         }
 
-        public System.Object[] CallCustomLuaFunc(string evtName, System.Object[] param) {
+        public System.Object[] CallCustomLuaFunc(string evtName, params System.Object[] param) {
             if (m_LuaCustomFuncs != null)
             {
                 LuaFunction func;
@@ -88,6 +89,7 @@ namespace SOC.GamePlay
                 if (m_LuaCustomFuncs == null)
                     m_LuaCustomFuncs = new Dictionary<string, LuaFunction>();
                 m_LuaCustomFuncs[evtName] = func;
+                return func.Call(param);
             }
             return null;
         }

@@ -6,11 +6,40 @@ using UnityEngine.Timeline;
 
 namespace SOC.GamePlay
 {
+    [System.Serializable]
+    public class TimeLuaReceiveEvent
+    {
+        [SerializeField]
+        List<SignalAsset> m_Signals = new List<SignalAsset>();
+
+        [SerializeField]
+        List<string> m_LuaEventNames = new List<string>();
+
+        public bool TryGetValue(SignalAsset key, out string eventName)
+        {
+            eventName = string.Empty;
+            if (key == null)
+                return false;
+            int index = m_Signals.IndexOf(key);
+            if (index < 0)
+                return false;
+            if (index < m_LuaEventNames.Count)
+            {
+                eventName = m_LuaEventNames[index];
+                return true;
+            }
+            return false;
+        }
+    }
+
     [RequireComponent(typeof(ILuaBinder))]
 
     public class TimelineEventLuaReceiver : SignalReceiver, INotificationReceiver
     {
         private ILuaBinder m_LuaBinder = null;
+
+        [SerializeField]
+        TimeLuaReceiveEvent m_LuaEvents = new TimeLuaReceiveEvent();
 
         protected ILuaBinder LuaBinder
         {
@@ -28,7 +57,15 @@ namespace SOC.GamePlay
             var luaBinder = this.LuaBinder;
             if (luaBinder != null)
             {
-                luaBinder.SignalReceiver_OnNotify_Lua(origin, notification, context);
+                var signal = notification as SignalEmitter;
+                if (signal != null && signal.asset != null)
+                {
+                    string evtName;
+                    if (m_LuaEvents.TryGetValue(signal.asset, out evtName) && !string.IsNullOrEmpty(evtName))
+                    {
+                        luaBinder.SignalReceiver_OnNotify_Lua(evtName, origin, notification, context);
+                    }
+                }
             }
         }
     }
