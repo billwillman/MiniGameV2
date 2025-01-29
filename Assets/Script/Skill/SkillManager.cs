@@ -47,6 +47,9 @@ namespace SOC.GamePlay
                         }
                         m_SkillAssetMap[resName] = translition;
                         Debug.Log("[SkillManager] SkillLoaded: " + resName);
+                        // 调用Lua加载回调
+                        CallCustomLuaFunc("OnScriptObjectLoaded", this.LuaSelf, translition);
+                        //----------
                     } else
                         return false; // 暂时不支持其他类型
                     return true;

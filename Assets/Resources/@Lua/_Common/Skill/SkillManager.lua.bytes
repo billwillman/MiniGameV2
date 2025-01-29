@@ -150,6 +150,14 @@ function SkillManagerBase:GetAnimancerComponent()
     return self.AnimancerComponent
 end
 
+--- 动作片段加载回调
+function SkillManagerBase:OnScriptObjectLoaded(...)
+    local curState = self:GetCurrentState()
+    if curState and curState.OnScriptObjectLoaded then
+        curState:OnScriptObjectLoaded(...)
+    end
+end
+
 ---------------------------------------- 继承方法 ------------------------
 
 function SkillManagerBase:OnStart()
