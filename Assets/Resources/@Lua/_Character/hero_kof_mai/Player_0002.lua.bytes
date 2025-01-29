@@ -1,1 +1,5 @@
 --- Player_0002技能管理器
+
+local Player_0002 = _MOE.class("Player_0002", _MOE.SkillManagerBase)
+
+return Player_0002
