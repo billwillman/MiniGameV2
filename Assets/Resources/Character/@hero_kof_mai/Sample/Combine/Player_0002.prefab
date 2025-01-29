@@ -147,7 +147,6 @@ GameObject:
   - component: {fileID: 4180495854232384868}
   - component: {fileID: 3674949967950942855}
   - component: {fileID: 953100892969584356}
-  - component: {fileID: 8930046011456046367}
   - component: {fileID: 3535031080836430114}
   m_Layer: 0
   m_HasEditorInfo: 1
@@ -323,29 +322,6 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
---- !u!114 &8930046011456046367
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 404413876433985022}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3f9d65bbca5c5c349aafecfb86923f39, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_CurrentTimeline:
-    _FadeDuration: 0.25
-    _Events:
-      _NormalizedTimes: []
-      _Callbacks: []
-      _Names: []
-    _Asset: {fileID: 11400000, guid: a315fcd96a0738546aa5650ae6777c88, type: 2}
-    _Speed: 1
-    _NormalizedStartTime: NaN
-    _Bindings: []
-  m_PlayOnAwake: 1
 --- !u!320 &3535031080836430114
 PlayableDirector:
   m_ObjectHideFlags: 0
@@ -356,7 +332,7 @@ PlayableDirector:
   m_Enabled: 1
   serializedVersion: 3
   m_PlayableAsset: {fileID: 11400000, guid: a315fcd96a0738546aa5650ae6777c88, type: 2}
-  m_InitialState: 0
+  m_InitialState: 1
   m_WrapMode: 2
   m_DirectorUpdateMode: 1
   m_InitialTime: 0
@@ -366,7 +342,7 @@ PlayableDirector:
   - key: {fileID: -467683602816871786, guid: a315fcd96a0738546aa5650ae6777c88, type: 2}
     value: {fileID: 2793286635245911982}
   - key: {fileID: 1433425188997408243, guid: a315fcd96a0738546aa5650ae6777c88, type: 2}
-    value: {fileID: 0}
+    value: {fileID: 4855190055725953662}
   m_ExposedReferences:
     m_References: []
 --- !u!1 &513920212099119506
@@ -2539,7 +2515,7 @@ GameObject:
   - component: {fileID: 1356213617054258573}
   - component: {fileID: 83069152288906626}
   - component: {fileID: 3192900567394804339}
-  - component: {fileID: 7602622963051728687}
+  - component: {fileID: 4855190055725953662}
   m_Layer: 0
   m_HasEditorInfo: 1
   m_Name: Player_0002
@@ -2706,7 +2682,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   bClearAllResourcesOnDestroy: 1
---- !u!114 &7602622963051728687
+--- !u!114 &4855190055725953662
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -2715,12 +2691,14 @@ MonoBehaviour:
   m_GameObject: {fileID: 6294176820038654315}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ce74d2a1c8ef32e41808d70203256e58, type: 3}
+  m_Script: {fileID: 11500000, guid: fea863da3f8109849b0884bda4a64cb3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   m_Events:
     m_Signals: []
-    m_Events: []
+    m_Events:
+    - m_PersistentCalls:
+        m_Calls: []
 --- !u!1 &6573747670674831657
 GameObject:
   m_ObjectHideFlags: 0

@@ -252,35 +252,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 3535031080836430114, guid: 06d499d9cf77f3e4ab5f45d83dd68291,
-        type: 3}
-      propertyPath: m_SceneBindings.Array.data[2].value
-      value: 
-      objectReference: {fileID: 764372786}
     - target: {fileID: 6294176820038654315, guid: 06d499d9cf77f3e4ab5f45d83dd68291,
         type: 3}
       propertyPath: m_Name
       value: Player_0002
-      objectReference: {fileID: 0}
-    - target: {fileID: 7602622963051728687, guid: 06d499d9cf77f3e4ab5f45d83dd68291,
-        type: 3}
-      propertyPath: m_Events.m_Events.Array.size
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7602622963051728687, guid: 06d499d9cf77f3e4ab5f45d83dd68291,
-        type: 3}
-      propertyPath: m_Events.m_Signals.Array.size
-      value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 7602622963051728687, guid: 06d499d9cf77f3e4ab5f45d83dd68291,
-        type: 3}
-      propertyPath: m_Events.m_Events.Array.data[0].m_PersistentCalls.m_Calls.Array.size
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7602622963051728687, guid: 06d499d9cf77f3e4ab5f45d83dd68291,
-        type: 3}
-      propertyPath: m_Events.m_Events.Array.data[0].m_PersistentCalls.m_Calls.Array.data[0].m_CallState
-      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7784779259174347879, guid: 06d499d9cf77f3e4ab5f45d83dd68291,
         type: 3}
@@ -337,18 +312,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 06d499d9cf77f3e4ab5f45d83dd68291, type: 3}
---- !u!114 &764372786 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 7602622963051728687, guid: 06d499d9cf77f3e4ab5f45d83dd68291,
-    type: 3}
-  m_PrefabInstance: {fileID: 764372785}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ce74d2a1c8ef32e41808d70203256e58, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &961739749
 GameObject:
   m_ObjectHideFlags: 0

@@ -5,6 +5,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using XLua;
+using UnityEngine.Playables;
+
 
 #if UNITY_INPUT
 using UnityEngine.InputSystem;
@@ -34,6 +36,11 @@ namespace SOC.GamePlay
         private LuaTable m_LuaSelf = null;
         private LuaTable m_LuaClass = null;
         private Dictionary<string, LuaFunction> m_LuaCustomFuncs = null;
+
+        public void SignalReceiver_OnNotify_Lua(Playable origin, INotification notification, object context)
+        {
+
+        }
 
         // 需要获取的Lua的方法
         [BlackList]
