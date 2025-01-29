@@ -51,7 +51,7 @@ namespace SOC.GamePlay
                         Debug.Log("[SkillManager] SkillLoaded: " + resName);
                         // 调用Lua加载回调
                         if (m_CallLuaActionLoadedEvt)
-                            CallCustomLuaFunc("OnScriptObjectLoaded", this.LuaSelf, translition);
+                            CallCustomLuaFunc("OnScriptObjectLoaded", this.LuaSelf, resName, translition);
                         //----------
                     } else
                         return false; // 暂时不支持其他类型
