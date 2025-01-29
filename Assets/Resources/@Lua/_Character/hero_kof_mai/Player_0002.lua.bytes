@@ -7,4 +7,8 @@ local Player_0002 = _MOE.class("Player_0002", _MOE.SkillManagerBase)
 function Player_0002:OnRegisterStateClass()
 end
 
+function Player_0002:OnStart()
+    -- 切到默认技能：Idle
+end
+
 return Player_0002
