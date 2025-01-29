@@ -30,6 +30,13 @@ function SkillManagerBase:Ctor(skillManagerCS, binder)
     -- self.RegisterStateClassMap = {}
     -- 调用父类方法
     _MOE.StateManagerBase.CallSuper(self, "Ctor", skillManagerCS, binder)
+
+    -- 注册CS事件
+    if binder ~= nil then
+        binder:RegisterLuaEvent(_MOE.LuaEvent_MonoEventType.Start, self.OnStart)
+        binder:RegisterLuaEvent(_MOE.LuaEvent_MonoEventType.Destroyed, self.OnDestroyed)
+    end
+    --
 end
 
 function SkillManagerBase:Dispose()
@@ -144,5 +151,11 @@ function SkillManagerBase:GetAnimancerComponent()
 end
 
 ---------------------------------------- 继承方法 ------------------------
+
+function SkillManagerBase:OnStart()
+end
+
+function SkillManagerBase:OnDestroyed()
+end
 
 return SkillManagerBase
