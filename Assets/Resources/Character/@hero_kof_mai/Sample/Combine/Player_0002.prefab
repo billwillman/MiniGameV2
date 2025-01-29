@@ -2643,7 +2643,8 @@ MonoBehaviour:
   SelfTarget: {fileID: 83069152288906626}
   CustomLuaFunctionName: []
   bInitCustomLuaFunctionInStart: 0
-  m_RegisterActions: []
+  m_RegisterActions:
+  - Idle
   m_ActionAssetRootPath: Resources/Character/@hero_kof_mai/@Skill/
 --- !u!114 &3192900567394804339
 MonoBehaviour:
