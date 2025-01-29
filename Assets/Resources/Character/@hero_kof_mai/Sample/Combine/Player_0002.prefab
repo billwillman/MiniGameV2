@@ -355,7 +355,7 @@ PlayableDirector:
   m_GameObject: {fileID: 404413876433985022}
   m_Enabled: 1
   serializedVersion: 3
-  m_PlayableAsset: {fileID: 0}
+  m_PlayableAsset: {fileID: 11400000, guid: a315fcd96a0738546aa5650ae6777c88, type: 2}
   m_InitialState: 0
   m_WrapMode: 2
   m_DirectorUpdateMode: 1
@@ -365,6 +365,8 @@ PlayableDirector:
     value: {fileID: 2793286635245911982}
   - key: {fileID: -467683602816871786, guid: a315fcd96a0738546aa5650ae6777c88, type: 2}
     value: {fileID: 2793286635245911982}
+  - key: {fileID: 1433425188997408243, guid: a315fcd96a0738546aa5650ae6777c88, type: 2}
+    value: {fileID: 0}
   m_ExposedReferences:
     m_References: []
 --- !u!1 &513920212099119506
@@ -2537,6 +2539,7 @@ GameObject:
   - component: {fileID: 1356213617054258573}
   - component: {fileID: 83069152288906626}
   - component: {fileID: 3192900567394804339}
+  - component: {fileID: 7602622963051728687}
   m_Layer: 0
   m_HasEditorInfo: 1
   m_Name: Player_0002
@@ -2688,9 +2691,8 @@ MonoBehaviour:
   SelfTarget: {fileID: 0}
   CustomLuaFunctionName: []
   bInitCustomLuaFunctionInStart: 0
-  RegisterSkillLuaClassNames:
-  - Idle
-  SkillAssetRoot: Resources/Character/@hero_kof_mai/@Skill/
+  m_RegisterActions: []
+  m_ActionAssetRootPath: 
 --- !u!114 &3192900567394804339
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2704,6 +2706,21 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   bClearAllResourcesOnDestroy: 1
+--- !u!114 &7602622963051728687
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6294176820038654315}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ce74d2a1c8ef32e41808d70203256e58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Events:
+    m_Signals: []
+    m_Events: []
 --- !u!1 &6573747670674831657
 GameObject:
   m_ObjectHideFlags: 0
