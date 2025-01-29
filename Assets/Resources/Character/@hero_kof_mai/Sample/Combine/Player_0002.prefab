@@ -2639,12 +2639,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7dc4dea05f2be8b4c83538c0e3a2690f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  LuaPath: 
-  SelfTarget: {fileID: 0}
+  LuaPath: Resources/@Lua/_Character/hero_kof_mai/
+  SelfTarget: {fileID: 83069152288906626}
   CustomLuaFunctionName: []
   bInitCustomLuaFunctionInStart: 0
   m_RegisterActions: []
-  m_ActionAssetRootPath: 
+  m_ActionAssetRootPath: Resources/Character/@hero_kof_mai/@Skill/
 --- !u!114 &3192900567394804339
 MonoBehaviour:
   m_ObjectHideFlags: 0
