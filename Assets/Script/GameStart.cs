@@ -213,7 +213,7 @@ namespace SOC.GamePlay
             }
         }
 
-        [DoNotGen]
+        [BlackList]
         public static LuaEnv EnvLua {
             get {
                 if (Instance != null) {

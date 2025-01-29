@@ -184,13 +184,13 @@ namespace SOC.GamePlay
             }
         }
 
-        [DoNotGen]
+        [BlackList]
         protected new void Awake() {
             SelfTarget = this; // 强制设置为自己
             base.Awake();
         }
 
-        [DoNotGen]
+        [BlackList]
         protected new void Start() {
             LoadAllRegisterActions();
             base.Start();
