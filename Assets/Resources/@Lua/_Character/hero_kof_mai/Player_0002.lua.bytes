@@ -2,4 +2,9 @@
 
 local Player_0002 = _MOE.class("Player_0002", _MOE.SkillManagerBase)
 
+------------------------- 继承实现方法 -----------------------
+
+function Player_0002:OnRegisterStateClass()
+end
+
 return Player_0002
