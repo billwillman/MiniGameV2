@@ -18,13 +18,13 @@ namespace SOC.GamePlay
         public static GameStart Instance = null;
         private LuaFunction m_LuaUpdateFunc = null;
 
-        [DoNotGen]
+        [BlackList]
         public bool m_DS_OutputOldLogHandle = true;
 
-        [DoNotGen]
+        [BlackList]
         public bool m_ClientOutputOldLogHandle = true;
 
-        [DoNotGen]
+        [BlackList]
         public bool m_LogWriteAsync = true;
 
         private MiniGame_ResProxyMgr m_ResProxyMgr = null;

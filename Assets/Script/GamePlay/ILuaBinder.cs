@@ -36,10 +36,10 @@ namespace SOC.GamePlay
         private Dictionary<string, LuaFunction> m_LuaCustomFuncs = null;
 
         // 需要获取的Lua的方法
-        [DoNotGen]
+        [BlackList]
         public string[] CustomLuaFunctionName = null;
 
-        [DoNotGen]
+        [BlackList]
         public bool bInitCustomLuaFunctionInStart = false;
 
         public LuaTable LuaSelf {
@@ -97,7 +97,7 @@ namespace SOC.GamePlay
         }
 #endif
 
-        [DoNotGen]
+        [BlackList]
         void DoDestroyLuaObject() {
             DisposeCustomLuaFuncs();
             if (m_LuaEventMap != null) {
@@ -121,7 +121,7 @@ namespace SOC.GamePlay
             }
         }
 
-        [DoNotGen]
+        [BlackList]
         void LoadLua() {
             DoDestroyLuaObject();
             if (string.IsNullOrEmpty(LuaPath) || SelfTarget == null)
@@ -145,7 +145,7 @@ namespace SOC.GamePlay
             }
         }
 
-        [DoNotGen]
+        [BlackList]
         void InitCustomLuaFuncs()
         {
             if (!bInitCustomLuaFunctionInStart || CustomLuaFunctionName == null || m_LuaSelf == null)
@@ -167,7 +167,7 @@ namespace SOC.GamePlay
                
         }
 
-        [DoNotGen]
+        [BlackList]
         void DisposeCustomLuaFuncs()
         {
             if (m_LuaCustomFuncs == null)
@@ -181,7 +181,7 @@ namespace SOC.GamePlay
             m_LuaCustomFuncs.TrimExcess();
         }
 
-        [DoNotGen]
+        [BlackList]
         private bool CallLuaFunc(LuaEvent_MonoEventType evtType) {
             if (m_LuaEventMap == null)
                 return true;
@@ -192,7 +192,7 @@ namespace SOC.GamePlay
             return true;
         }
 
-        [DoNotGen]
+        [BlackList]
         protected void Awake() {
             LoadLua();
             // 加载Lua
@@ -201,7 +201,7 @@ namespace SOC.GamePlay
             }
         }
 
-        [DoNotGen]
+        [BlackList]
 
         protected void Start() {
             if (CallLuaFunc(LuaEvent_MonoEventType.Start)) {
@@ -209,7 +209,7 @@ namespace SOC.GamePlay
             }
         }
 
-        [DoNotGen]
+        [BlackList]
 
         protected void Update() {
             if (CallLuaFunc(LuaEvent_MonoEventType.Update)) {
@@ -217,7 +217,7 @@ namespace SOC.GamePlay
             }
         }
 
-        [DoNotGen]
+        [BlackList]
 
         protected void FixedUpdate()
         {
@@ -234,15 +234,15 @@ namespace SOC.GamePlay
             DoDestroyLuaObject();
         }
 
-        [DoNotGen]
+        [BlackList]
         public virtual void OnStart() { }
-        [DoNotGen]
+        [BlackList]
         public virtual void OnDestroyed() { }
-        [DoNotGen]
+        [BlackList]
         public virtual void OnUpdate() { }
-		[DoNotGen]
+		[BlackList]
         public virtual void OnAwake() { }
-        [DoNotGen]
+        [BlackList]
         public virtual void OnFixedUpdate() { }
     }
 }
