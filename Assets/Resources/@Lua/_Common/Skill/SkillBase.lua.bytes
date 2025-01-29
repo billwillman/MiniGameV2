@@ -1,4 +1,5 @@
-local SkillBase = _MOE.class("SkillBase", _MOE.StateBase)
+local CSharpEventContainer = require("_Common.CSharpEventContainer") -- 事件
+local SkillBase = _MOE.class("SkillBase", _MOE.StateBase, CSharpEventContainer)
 
 function SkillBase:GetSkillManagerCS()
     local ret = self.m_StateMgr and self.m_StateMgr:GetSkillManagerCS() or nil
