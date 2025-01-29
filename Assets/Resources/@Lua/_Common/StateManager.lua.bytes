@@ -12,6 +12,8 @@ function StateManager:Ctor()
     self.RegisterStateClassMap = {}
     ResetVar(self)
     self:RegisterStateClasses()
+
+    xpcall(self.OnInit, _G.ErrorHandler, self)
 end
 
 function StateManager:RegisterStateClasses()
@@ -90,11 +92,18 @@ end
 
 -- 清理
 function StateManager:Dispose()
+    xpcall(self.OnUnInit, _G.ErrorHandler, self)
     ResetVar(self)
 end
 
 ------------------------------------------------- 虚方法
 function StateManager:OnRegisterStateClass()
+end
+
+function StateManager:OnInit()
+end
+
+function StateManager:OnUnInit()
 end
 
 return StateManager
