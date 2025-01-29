@@ -71,4 +71,7 @@ _G.ErrorHandler = function (err)
 	_MOE.Logger.LogError(debug.traceback())
 end
 
+-------- 全局事件 ------------
+_MOE.EventManager = require("_Common.EventManager").New()
+
 return _MOE

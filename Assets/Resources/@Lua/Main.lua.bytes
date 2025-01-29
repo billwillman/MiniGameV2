@@ -9,7 +9,6 @@ end
 print(string.format("[Main.lua] IsDS: %s IsEditor: %s", _MOE.IsDS, _MOE.IsEditor))
 
 local function InitGlobalVars()
-    _MOE.EventManager = require("_Common.EventManager").New()
     if not _MOE.IsDS then
        _MOE.PlayerPrefs = CS.UnityEngine.PlayerPrefs -- 设备相关数据存储
     end
