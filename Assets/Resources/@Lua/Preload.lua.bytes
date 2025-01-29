@@ -58,6 +58,7 @@ _MOE.StringToBytes = CS.System.Text.Encoding.UTF8.GetBytes
 _MOE.class = require("_Common.BaseClass") -- class框架
 _G.BaseClass = _MOE.class
 _MOE.Json = require("_Common.json")
+_MOE.BaseModel = require("_Common.BaseModel")
 _MOE.BaseScene = require("_Common.BaseScene")
 _MOE.TableUtils = require("_Common.TableUtils")
 _MOE.StateBase = require("_Common.IState")
