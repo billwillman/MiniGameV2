@@ -20,7 +20,7 @@ namespace SOC.GamePlay
         [BlackList]
         public string m_ActionAssetRootPath = null;
         [BlackList]
-        public bool m_CallLuaLoadedEvt = true;
+        public bool m_CallLuaActionLoadedEvt = true;
 
         [BlackList]
         public MonoBehaviour CustomLoaderBehaviour {
@@ -50,7 +50,7 @@ namespace SOC.GamePlay
                         m_SkillAssetMap[resName] = translition;
                         Debug.Log("[SkillManager] SkillLoaded: " + resName);
                         // 调用Lua加载回调
-                        if (m_CallLuaLoadedEvt)
+                        if (m_CallLuaActionLoadedEvt)
                             CallCustomLuaFunc("OnScriptObjectLoaded", this.LuaSelf, translition);
                         //----------
                     } else
