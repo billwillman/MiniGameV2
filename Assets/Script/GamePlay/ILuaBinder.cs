@@ -40,7 +40,7 @@ namespace SOC.GamePlay
         [BlackList]
         public void SignalReceiver_OnNotify_Lua(string evtName, Playable origin, INotification notification, object context)
         {
-            CallCustomLuaFunc(evtName, m_LuaSelf, context, origin, notification);
+            CallCustomLuaFunc(evtName, m_LuaSelf, context, origin);
         }
 
         // 需要获取的Lua的方法
