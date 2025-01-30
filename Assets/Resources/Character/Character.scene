@@ -257,6 +257,11 @@ PrefabInstance:
       propertyPath: m_CallLuaActionLoadedEvt
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4855190055725953662, guid: 06d499d9cf77f3e4ab5f45d83dd68291,
+        type: 3}
+      propertyPath: m_Events.m_Events.Array.size
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6294176820038654315, guid: 06d499d9cf77f3e4ab5f45d83dd68291,
         type: 3}
       propertyPath: m_Name
