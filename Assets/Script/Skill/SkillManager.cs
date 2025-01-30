@@ -52,6 +52,8 @@ namespace SOC.GamePlay
                         // 调用Lua加载回调
                         if (m_CallLuaActionLoadedEvt)
                             CallCustomLuaFunc("OnScriptObjectLoaded", this.LuaSelf, resName, translition);
+                        else
+                            this.Animancer.Play(translition); // 默认行为
                         //----------
                     } else
                         return false; // 暂时不支持其他类型
