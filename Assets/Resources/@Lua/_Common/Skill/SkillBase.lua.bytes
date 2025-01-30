@@ -23,4 +23,7 @@ end
 function SkillBase:OnScriptObjectLoaded(...)
 end
 
+function SkillBase:OnTriggerLuaEvent(...)
+end
+
 return SkillBase

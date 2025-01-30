@@ -161,6 +161,13 @@ function SkillManagerBase:OnScriptObjectLoaded(actionName, ...)
     end
 end
 
+function SkillManagerBase:OnTriggerLuaEvent(...)
+    local curState = self:GetCurrentState()
+    if curState then
+        curState:OnTriggerLuaEvent(...)
+    end
+end
+
 ---------------------------------------- 继承方法 ------------------------
 
 function SkillManagerBase:OnStart()
