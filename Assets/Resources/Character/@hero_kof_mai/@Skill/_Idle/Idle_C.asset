@@ -13,11 +13,11 @@ MonoBehaviour:
   m_Name: Idle_C
   m_EditorClassIdentifier: 
   _Transition:
-    rid: 3760640500496072706
+    rid: 3760640500496072736
   references:
     version: 2
     RefIds:
-    - rid: 3760640500496072706
+    - rid: 3760640500496072736
       type: {class: ClipTransition, ns: Animancer, asm: Animancer}
       data:
         _FadeDuration: 0.25
