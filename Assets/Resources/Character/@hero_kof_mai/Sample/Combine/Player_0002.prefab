@@ -145,7 +145,6 @@ GameObject:
   - component: {fileID: 5199530350788670829}
   - component: {fileID: 2793286635245911982}
   - component: {fileID: 4180495854232384868}
-  - component: {fileID: 3674949967950942855}
   m_Layer: 0
   m_HasEditorInfo: 1
   m_Name: hero_kof_mai_body_0002
@@ -208,22 +207,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _Animator: {fileID: 2793286635245911982}
   _ActionOnDisable: 0
---- !u!114 &3674949967950942855
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 404413876433985022}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c75c0dcb6d50eb64abd727a90406ca2b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _Animator: {fileID: 2793286635245911982}
-  _ActionOnDisable: 0
-  _PlayAutomatically: 0
-  _Animations: []
 --- !u!1 &513920212099119506
 GameObject:
   m_ObjectHideFlags: 0
@@ -2550,7 +2533,7 @@ MonoBehaviour:
   m_RegisterActions:
   - Idle
   m_ActionAssetRootPath: Resources/Character/@hero_kof_mai/@Skill/
-  m_CallLuaActionLoadedEvt: 1
+  m_CallLuaActionLoadedEvt: 0
 --- !u!114 &3192900567394804339
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2578,9 +2561,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Events:
     m_Signals: []
-    m_Events:
-    - m_PersistentCalls:
-        m_Calls: []
+    m_Events: []
   m_LuaEvents:
     m_Signals: []
     m_LuaEventNames: []
