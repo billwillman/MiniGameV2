@@ -51,6 +51,15 @@ namespace SOC.GamePlay
             }
         }
 
+        public void TriggerLuaEvent(System.Object context)
+        {
+            var luaBinder = this.LuaBinder;
+            if (luaBinder != null)
+            {
+                luaBinder.CallCustomLuaFunc("OnTriggerLuaEvent", luaBinder.LuaSelf, context);
+            }
+        }
+
         public new void OnNotify(Playable origin, INotification notification, object context)
         {
             base.OnNotify(origin, notification, context);
