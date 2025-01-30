@@ -151,10 +151,13 @@ function SkillManagerBase:GetAnimancerComponent()
 end
 
 --- 动作片段加载回调
-function SkillManagerBase:OnScriptObjectLoaded(...)
+function SkillManagerBase:OnScriptObjectLoaded(actionName, ...)
     local curState = self:GetCurrentState()
     if curState and curState.OnScriptObjectLoaded then
-        curState:OnScriptObjectLoaded(...)
+        local actionNames = curState:GetActionNames()
+        if actionNames and next(actionNames) ~= nil and _MOE.TableUtils.Contains(actionNames, actionName) then
+            curState:OnScriptObjectLoaded(actionName, ...)
+        end
     end
 end
 
