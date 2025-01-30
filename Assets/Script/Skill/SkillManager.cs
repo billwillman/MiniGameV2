@@ -20,7 +20,7 @@ namespace SOC.GamePlay
         [BlackList]
         public string m_ActionAssetRootPath = null;
         [BlackList]
-        public bool m_CallLuaActionLoadedEvt = false;
+        public bool m_CallLuaActionLoadedEvt = true;
 
         [BlackList]
         public MonoBehaviour CustomLoaderBehaviour {
