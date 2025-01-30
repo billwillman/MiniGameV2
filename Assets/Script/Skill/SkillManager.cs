@@ -14,6 +14,8 @@ namespace SOC.GamePlay
     {
         private AnimancerComponent m_AnimancerComponent = null;
         private BaseResLoaderAsyncMono m_Loader = null;
+        private AudioSource m_AudioSource = null;
+        private TimelineEventLuaReceiver m_LuaEventReceiver;
 
         [BlackList]
         public string[] m_RegisterActions = null;
@@ -26,6 +28,26 @@ namespace SOC.GamePlay
         public MonoBehaviour CustomLoaderBehaviour {
             get {
                 return this;
+            }
+        }
+
+        public AudioSource Audio
+        {
+            get
+            {
+                if (m_AudioSource == null)
+                    m_AudioSource = GetComponent<AudioSource>();
+                return m_AudioSource;
+            }
+        }
+
+        public TimelineEventLuaReceiver LuaEventReceiver
+        {
+            get
+            {
+                if (m_LuaEventReceiver == null)
+                    m_LuaEventReceiver = GetComponent<TimelineEventLuaReceiver>();
+                return m_LuaEventReceiver;
             }
         }
 
