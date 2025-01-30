@@ -85,6 +85,58 @@ namespace SOC.GamePlay
             }
         }
 
+        public AnimancerState PlayAction(string actionName, int layerIndex = -1)
+        {
+            var playable = this.Animancer;
+            if (playable == null || m_SkillAssetMap == null)
+                return null;
+            AnimancerTransitionAssetBase action;
+            if (m_SkillAssetMap.TryGetValue(actionName, out action) && (action != null))
+            {
+                if (layerIndex < 0)
+                {
+                    var state = playable.Play(action);
+                    return state;
+                } else
+                {
+                    if (playable.Layers == null || layerIndex >= playable.Layers.Count)
+                        return null;
+                    var layer = playable.Layers[layerIndex];
+                    if (layer == null)
+                        return null;
+                    var state = layer.Play(action);
+                    return state;
+                }
+            }
+            return null;
+        }
+
+        public AnimancerState PlayAction(string actionName, float fadeDuration, FadeMode fadeMode = default, int layerIndex = -1)
+        {
+            var playable = this.Animancer;
+            if (playable == null || m_SkillAssetMap == null)
+                return null;
+            AnimancerTransitionAssetBase action;
+            if (m_SkillAssetMap.TryGetValue(actionName, out action) && (action != null))
+            {
+                if (layerIndex < 0)
+                {
+                    var state = playable.Play(action, fadeDuration, fadeMode);
+                    return state;
+                } else
+                {
+                    if (playable.Layers == null || layerIndex >= playable.Layers.Count)
+                        return null;
+                    var layer = playable.Layers[layerIndex];
+                    if (layer == null)
+                        return null;
+                    var state = layer.Play(action, fadeDuration, fadeMode);
+                    return state;
+                }
+            }
+            return null;
+        }
+
         public AnimancerComponent Animancer {
             get {
                 if (m_AnimancerComponent == null)
