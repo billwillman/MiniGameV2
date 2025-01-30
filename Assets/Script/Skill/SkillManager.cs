@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -85,7 +86,7 @@ namespace SOC.GamePlay
             }
         }
 
-        public AnimancerState PlayAction(string actionName, int layerIndex = -1)
+        public AnimancerState PlayAction(string actionName, Action onEnd = null, int layerIndex = -1)
         {
             var playable = this.Animancer;
             if (playable == null || m_SkillAssetMap == null)
@@ -96,6 +97,8 @@ namespace SOC.GamePlay
                 if (layerIndex < 0)
                 {
                     var state = playable.Play(action);
+                    if (onEnd != null)
+                        state.Events.OnEnd = onEnd;
                     return state;
                 } else
                 {
@@ -105,13 +108,15 @@ namespace SOC.GamePlay
                     if (layer == null)
                         return null;
                     var state = layer.Play(action);
+                    if (onEnd != null)
+                        state.Events.OnEnd = onEnd;
                     return state;
                 }
             }
             return null;
         }
 
-        public AnimancerState PlayAction(string actionName, float fadeDuration, FadeMode fadeMode = default, int layerIndex = -1)
+        public AnimancerState PlayAction(string actionName, float fadeDuration, Action onEnd = null, FadeMode fadeMode = default, int layerIndex = -1)
         {
             var playable = this.Animancer;
             if (playable == null || m_SkillAssetMap == null)
@@ -122,6 +127,8 @@ namespace SOC.GamePlay
                 if (layerIndex < 0)
                 {
                     var state = playable.Play(action, fadeDuration, fadeMode);
+                    if (onEnd != null)
+                        state.Events.OnEnd = onEnd;
                     return state;
                 } else
                 {
@@ -131,6 +138,8 @@ namespace SOC.GamePlay
                     if (layer == null)
                         return null;
                     var state = layer.Play(action, fadeDuration, fadeMode);
+                    if (onEnd != null)
+                        state.Events.OnEnd = onEnd;
                     return state;
                 }
             }
