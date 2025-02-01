@@ -3,7 +3,16 @@
 local DsScene = _MOE.class("DsScene", _MOE.BaseScene)
 DsScene[".superctor"] = true -- 会调用父类方法
 
-function DsScene:Ctor(sceneName, port)
+function DsScene:Ctor(sceneName, dsNetworkManager, port)
+    self.Port = port or 7777
+    self.DsNetworkManager = dsNetworkManager
+end
+
+function DsScene:OnEnter()
+    -- 开启
+end
+
+function DsScene:OnExit()
 end
 
 return DsScene
