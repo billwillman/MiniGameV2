@@ -1,6 +1,6 @@
 local _M = _MOE.class("BaseScene")
 
-function _M:Ctor(sceneName)
+function _M:Ctor(sceneName, ...)
     self.SceneName = sceneName
 end
 

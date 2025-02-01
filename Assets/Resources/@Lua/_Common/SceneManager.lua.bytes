@@ -27,7 +27,7 @@ end
 
 ---@param sceneName string 切换场景名
 ---@return boolean 返回是否切换成功
-function _M:SwitchScene(sceneName)
+function _M:SwitchScene(sceneName, ...)
     if not sceneName then
         return false
     end
@@ -55,7 +55,7 @@ function _M:SwitchScene(sceneName)
     self.IsSceneLoading = true
     self.CurrentScene = cfg
     if self.CurrentScene.LuaScene and string.len(self.CurrentScene.LuaScene) > 0 then
-        self.CurrentScene.LuaTarget = require(self.CurrentScene.LuaScene).New(sceneName)
+        self.CurrentScene.LuaTarget = require(self.CurrentScene.LuaScene).New(sceneName, ...)
         luaScene = self.CurrentScene.LuaTarget
     end
     local onLoadNewScene = nil
