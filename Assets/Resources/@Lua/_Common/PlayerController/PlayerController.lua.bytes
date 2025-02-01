@@ -1,0 +1,108 @@
+local CSharpEventContainer = require("_Common.CSharpEventContainer")
+
+local PlayerController = _MOE.class("PlayerController", CSharpEventContainer)
+
+local function GetClientId(self)
+    if self.PlayerController then
+        return self.PlayerController.OwnerClientId
+    end
+end
+
+local function AddPlayerController(self)
+    -- 非DS则只是加自己
+    if not _MOE.IsDS then
+        if not self.PlayerController or not self.PlayerController.IsLocalPlayer then
+            return
+        end
+    end
+    _MOE.PlayerControllers = _MOE.PlayerControllers or {}
+    _MOE.PlayerControllerList = _MOE.PlayerControllerList or {}
+    local data = {
+        target = self,
+    }
+    _MOE.PlayerControllers[self:GetClientId()] = data
+    table.insert(_MOE.PlayerControllerList, data)
+end
+
+local function RemovePlayerController(self)
+     -- 非DS则只是删自己
+    if not _MOE.IsDS then
+        if not self.PlayerController or not self.PlayerController.IsLocalPlayer then
+            return
+        end
+    end
+    local clientId = self:GetClientId()
+    if not clientId then
+        return
+    end
+    local data = _MOE.PlayerControllers[clientId]
+    if data then
+        for i, d in ipairs(_MOE.PlayerControllerList) do
+            if d == data then
+                table.remove(_MOE.PlayerControllerList, i)
+                break
+            end
+        end
+    end
+    _MOE.PlayerControllers[clientId] = nil
+
+    self.ClientId = nil
+
+    --- 这里删除下 SessionPlayer
+    --[[
+    local GameMode = _MOE.GameApp.GameMode
+    if GameMode and GameMode.RemoveSessionPlayer then
+        GameMode:RemoveSessionPlayer(clientId)
+    end
+    ]]
+    ----
+end
+
+function PlayerController:Ctor(playerController, binder)
+    self.PlayerController = playerController
+    self.Binder = binder
+
+    local EventType = _MOE.LuaEvent_MonoEventType
+    self.Binder:RegisterLuaEvent(EventType.Destroyed:GetHashCode(), self.OnDestroy)
+
+    self:RegsterCSharpEvent(self.PlayerController, "onNetworkSpawn", self.OnNetworkSpawn)
+    self:RegsterCSharpEvent(self.PlayerController, "onNetworkDespawn", self.OnNetworkDespawn)
+end
+
+function PlayerController:OnNetworkSpawn()
+    -- 优先设置上
+    -- 只有在OnNetworkSpawn才有ClientId
+    self.ClientId = GetClientId(self)
+    --
+
+    _MOE.Logger.LogFormat("[PlayerController] OnNetworkSpawn(ClientId:{0:D})", self:GetClientId())
+    AddPlayerController(self)
+
+    if _MOE.IsDS then
+        -- 通知GS连接成功
+    end
+end
+
+function PlayerController:GetClientId()
+    return self.ClientId
+end
+
+function PlayerController:OnNetworkDespawn()
+    if _MOE.IsDS then
+        -- 通知GS连接失败
+    end
+
+    _MOE.Logger.LogFormat("[PlayerController] OnNetworkDespawn(ClientId:{0:D})", self:GetClientId())
+    RemovePlayerController(self)
+end
+
+function PlayerController:OnDestroy()
+    RemovePlayerController(self)
+
+    self:UnRegsterAllCsharpEvents()
+
+    self.PlayerController = nil
+    self.Binder = nil
+end
+
+return PlayerController
