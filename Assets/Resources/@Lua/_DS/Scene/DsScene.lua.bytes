@@ -6,6 +6,7 @@ DsScene[".superctor"] = true -- 会调用父类方法
 function DsScene:Ctor(sceneName, dsNetworkManager, port)
     self.Port = port or 7777
     self.DsNetworkManager = dsNetworkManager
+    self.Transport = dsNetworkManager.gameObject:GetComponent(typeof(CS.Unity.Netcode.Transports.UTP.UnityTransport))
 end
 
 function DsScene:OnEnter()
@@ -13,6 +14,8 @@ function DsScene:OnEnter()
 end
 
 function DsScene:OnExit()
+    self.DsNetworkManager = nil
+    self.Transport = nil
 end
 
 return DsScene
