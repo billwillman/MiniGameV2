@@ -41,8 +41,26 @@ local function CreateMyPlayerInput(self, onFinish)
     return ret
 end
 
+local function CreateDsNetWorkObject(self, onFinish)
+    local ret = _MOE.ResourceManager:CreateGameObjectAsync("Resources/@NetCode/DsNetworkManager.prefab",
+    function(process, isDone, obj)
+        if isDone then
+            if obj then
+                obj.name = "DsNetworkManager"
+               -- obj.transform:SetParent(_MOE.GameStartTransform, false)
+                self.DsNetworkManager = obj
+                if onFinish then
+                    onFinish(self)
+                end
+            end
+        end
+    end
+    )
+    return ret
+end
+
 function _M:OnPreloadFinish()
-    if self.UIRoot and self.PlayerInput then
+    if self.UIRoot and self.PlayerInput and self.DsNetworkManager then
         _MOE.Logger.Log("[ClientApp] OnPreloadFinish")
         _MOE.SceneManager:SwitchScene(_MOE.SceneEnum.LoginScene)
     end
@@ -50,7 +68,8 @@ end
 
 ------------------------------ 继承方法 -------------------------------
 function _M:OnInit()
-    if CreateUIRoot(self, self.OnPreloadFinish) and CreateMyPlayerInput(self, self.OnPreloadFinish) then
+    if CreateUIRoot(self, self.OnPreloadFinish) and CreateMyPlayerInput(self, self.OnPreloadFinish) and
+        CreateDsNetWorkObject(self, self.OnPreloadFinish) then
         _MOE.BaseViewClass = require("_Client.BaseView")
         _MOE.UIManager = require("_Client.UIManager").New()
     end
