@@ -1,1 +1,9 @@
 ---- DS的场景
+
+local DsScene = _MOE.class("DsScene", _MOE.BaseScene)
+DsScene[".superctor"] = true -- 会调用父类方法
+
+function DsScene:Ctor(sceneName, port)
+end
+
+return DsScene
