@@ -104,7 +104,7 @@ namespace SOC.GamePlay
                     PawnId.Value = obj.NetworkObjectId;
                 }
                 PawnId.SetDirty(true);
-                Pawn = obj;
+                Pawn = obj.NetworkObject;
                 return true;
             }
             Debug.LogError("[PlayerController] AttachPawn not support client");
