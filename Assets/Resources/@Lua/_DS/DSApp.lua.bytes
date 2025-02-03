@@ -71,6 +71,8 @@ local function ParseStartupCommands(self)
     end
     _MOE.TB = tb
     _MOE.IsLocalDS = self.isLocalDS
+
+    _MOE.Logger.Log("[DSApp] IsLocalDS: " .. tostring(self.isLocalDS))
 end
 
 function _M:QuitGame(...)
