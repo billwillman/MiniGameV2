@@ -8,7 +8,7 @@ namespace SOC.GamePlay
     public class BaseNetworkMono : NetworkBehaviour
     {
         // Client和Server都会执行
-        [XLua.DoNotGen]
+        [XLua.BlackList]
         public override void OnNetworkSpawn() {
             base.OnNetworkSpawn();
             if (onNetworkSpawn != null)
@@ -16,7 +16,7 @@ namespace SOC.GamePlay
         }
 
         // Client和Server都会执行
-        [XLua.DoNotGen]
+        [XLua.BlackList]
         public override void OnNetworkDespawn() {
             if (onNetworkDespawn != null)
                 onNetworkDespawn();

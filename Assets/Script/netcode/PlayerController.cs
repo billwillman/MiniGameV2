@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using Unity.Collections;
 using Unity.Netcode;
+using Unity.VisualScripting;
 
 namespace SOC.GamePlay
 {
@@ -13,6 +14,8 @@ namespace SOC.GamePlay
             var networkObject = GetComponent<NetworkObject>();
             networkObject.CheckObjectVisibility = OnIsOwnerClient;
             PawnId.OnValueChanged = PawnId_OnRepNotify;
+            PawnNetworkObject.OnStaticNetworkObjectSpawn += OnPawnNetworkSpawn;
+            PawnNetworkObject.OnStaticNetworkObjectDespawn += OnPawnNetworkDespawn;
         }
 
         private bool OnIsOwnerClient(ulong clientId) {
@@ -22,13 +25,35 @@ namespace SOC.GamePlay
         private void Awake()
         {
             PawnId.OnValueChanged = PawnId_OnRepNotify;
+            PawnNetworkObject.OnStaticNetworkObjectSpawn = OnPawnNetworkSpawn;
+            PawnNetworkObject.OnStaticNetworkObjectDespawn = OnPawnNetworkDespawn;
         }
 #endif
+
+        [XLua.BlackList]
+        void OnPawnNetworkSpawn(NetworkObject obj)
+        {
+            if (PawnId.Value == obj.NetworkObjectId)
+            {
+                Pawn = obj;
+            }
+        }
+
+        [XLua.BlackList]
+        void OnPawnNetworkDespawn(NetworkObject obj)
+        {
+            if (PawnId.Value == obj.NetworkObjectId)
+            {
+                Pawn = null;
+            }
+        }
 
         [XLua.BlackList]
         public override void OnDestroy()
         {
             PawnId.OnValueChanged = null;
+            PawnNetworkObject.OnStaticNetworkObjectSpawn -= OnPawnNetworkSpawn;
+            PawnNetworkObject.OnStaticNetworkObjectDespawn -= OnPawnNetworkDespawn;
             base.OnDestroy();
         }
 
@@ -81,7 +106,7 @@ namespace SOC.GamePlay
         public NetworkObject Pawn
         {
             get;
-            set;
+            protected set;
         }
         
         // ------------------- µ÷ÓÃServer ---------------------------------------
