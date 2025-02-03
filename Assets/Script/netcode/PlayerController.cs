@@ -36,6 +36,13 @@ namespace SOC.GamePlay
             onServerInt2Event = null;
             onServerInt3Event = null;
         }
+
+        // 运行时的角色
+        public GameObject Character
+        {
+            get;
+            set;
+        }
         
         // ------------------- 调用Server ---------------------------------------
         // 可靠传输
