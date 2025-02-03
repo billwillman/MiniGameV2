@@ -1,0 +1,38 @@
+--- DS服务器的APP
+local BaseAppClass = require("_Common.BaseApp")
+
+local _M = _MOE.class("DSApp", BaseAppClass)
+
+local function CreateDsNetWorkObject(self, onFinish)
+    local ret = _MOE.ResourceManager:CreateGameObjectAsync("Resources/@NetCode/DsNetworkManager.prefab",
+    function(process, isDone, obj)
+        if isDone then
+            if obj then
+                obj.name = "DsNetworkManager"
+               -- obj.transform:SetParent(_MOE.GameStartTransform, false)
+                self.DsNetworkManager = obj
+                if onFinish then
+                    onFinish(self)
+                end
+            end
+        end
+    end
+    )
+    return ret
+end
+
+function _M:OnPreloadFinish()
+    if self.DsNetworkManager then
+        _MOE.Logger.Log("[DSApp] OnPreloadFinish")
+        -- _MOE.SceneManager:SwitchScene(_MOE.SceneEnum.LoginScene)
+    end
+end
+
+------------------------------ 继承方法 -------------------------------
+function _M:OnInit()
+    if CreateDsNetWorkObject(self, self.OnPreloadFinish) then
+        -- 切换场景
+    end
+end
+
+return _M
