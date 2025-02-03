@@ -3,14 +3,14 @@
 local DsScene = _MOE.class("DsScene", _MOE.BaseScene)
 DsScene[".superctor"] = true -- 会调用父类方法
 
-function DsScene:Ctor(sceneName, dsNetworkManager, port)
-    self.Port = port or 7777
+function DsScene:Ctor(sceneName, dsNetworkManager)
     self.DsNetworkManager = dsNetworkManager
     self.Transport = dsNetworkManager.gameObject:GetComponent(typeof(CS.Unity.Netcode.Transports.UTP.UnityTransport))
 end
 
 function DsScene:OnEnter()
     -- 开启
+    _MOE.Logger.Log("[DS] MultiScene Enter")
 end
 
 function DsScene:OnExit()

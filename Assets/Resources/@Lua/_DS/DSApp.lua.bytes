@@ -26,7 +26,7 @@ end
 function _M:OnPreloadFinish()
     if self.DsNetworkManager then
         _MOE.Logger.Log("[DSApp] OnPreloadFinish")
-        _MOE.SceneManager:SwitchScene(_MOE.SceneEnum.MultiScene) -- 切换到多人场景
+        _MOE.SceneManager:SwitchScene(_MOE.SceneEnum.MultiScene, self.DsNetworkManager) -- 切换到多人场景
     end
 end
 
