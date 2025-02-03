@@ -27,7 +27,7 @@ function _M:OnPreloadFinish()
     if self.DsNetworkManager then
         local dsData = _MOE.TB['dsData']
         _MOE.Logger.Log("[DSApp] OnPreloadFinish: scene => " .. dsData.scene)
-        _MOE.SceneManager:SwitchScene(dsData.scene, self.DsNetworkManager) -- 切换到多人场景
+        _MOE.SceneManager:SwitchScene(_MOE.SceneEnum.MultiScene, self.DsNetworkManager) -- 切换到多人场景
     end
 end
 
