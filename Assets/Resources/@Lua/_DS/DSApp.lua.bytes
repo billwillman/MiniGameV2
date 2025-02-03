@@ -26,32 +26,49 @@ end
 function _M:OnPreloadFinish()
     if self.DsNetworkManager then
         _MOE.Logger.Log("[DSApp] OnPreloadFinish")
-        -- _MOE.SceneManager:SwitchScene(_MOE.SceneEnum.LoginScene)
+        _MOE.SceneManager:SwitchScene(_MOE.SceneEnum.MultiScene) -- 切换到多人场景
     end
+end
+
+local function GetTestParams()
+    -- ds的服务器数据和GS的服务器数据
+    local json = "{'dsData':{'ip':'127.0.0.1','port':7777},'GsData':{'ip':'127.0.0.1','port':1990}}"
+    json = string.gsub(json, "'", "\"")
+    return _MOE.Json.decode(json)
 end
 
 ----- 解析命令行参数
 local function ParseStartupCommands(self)
-    local commandLineArgs = CS.System.Environment.GetCommandLineArgs()
-    if commandLineArgs then
-        local commandArgsType = type(commandLineArgs)
-        if commandArgsType == "userdata" then
-            if commandLineArgs.Length >= 2 then
-                local json = commandLineArgs[1]
-                xpcall(
-                    function ()
-                        tb = _MOE.Json.decode(json)
-                    end, function (err)
-                        tb = nil
-                        _G.ErrorHandler(err)
-                    end
-                )
-                _MOE.TB = tb
+    local tb
+    if _MOE.IsEditor then
+        tb = GetTestParams()
+        self.isLocalDS = true
+    end
+    if not _MOE.IsEditor then
+        local commandLineArgs = CS.System.Environment.GetCommandLineArgs()
+        if commandLineArgs then
+            local commandArgsType = type(commandLineArgs)
+            if commandArgsType == "userdata" then
+                if commandLineArgs.Length >= 2 then
+                    local json = commandLineArgs[1]
+                    xpcall(
+                        function ()
+                            tb = _MOE.Json.decode(json)
+                        end, function (err)
+                            tb = nil
+                            _G.ErrorHandler(err)
+                        end
+                    )
+                else
+                    tb = GetTestParams()
+                    self.isLocalDS = true
+                end
+            else
+                _MOE.Logger.LogError("[DS] commandLineArgs type error: " .. commandArgsType)
             end
-        else
-            _MOE.Logger.LogError("[DS] commandLineArgs type error: " .. commandArgsType)
         end
     end
+    _MOE.TB = tb
 end
 
 function _M:QuitGame(...)
@@ -65,9 +82,9 @@ function _M:OnInit()
         self:QuitGame()
         return
     end
-    if CreateDsNetWorkObject(self, self.OnPreloadFinish) then
-        -- 切换场景
-        _MOE.SceneManager:SwitchScene(_MOE.SceneEnum.MultiScene) -- 切换到多人场景
+    if not CreateDsNetWorkObject(self, self.OnPreloadFinish) then
+        self:QuitGame()
+        return
     end
 end
 
