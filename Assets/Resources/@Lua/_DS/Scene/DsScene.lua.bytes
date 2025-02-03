@@ -28,4 +28,8 @@ function DsScene:OnExit()
     self.Transport = nil
 end
 
+function DsScene:OnSceneLoadFail()
+    _MOE.GameApp:QuitGame()
+end
+
 return DsScene
