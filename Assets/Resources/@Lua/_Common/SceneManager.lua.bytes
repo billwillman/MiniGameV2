@@ -46,7 +46,6 @@ function _M:SwitchScene(sceneName, ...)
         end
     end
     local lastHasResScene = self:HasResScene()
-    local resSceneName = cfg.resSceneName
     local luaScene = self:GetCurrentLuaScene()
     if luaScene then
         luaScene:Exit()
@@ -58,6 +57,7 @@ function _M:SwitchScene(sceneName, ...)
         self.CurrentScene.LuaTarget = require(self.CurrentScene.LuaScene).New(sceneName, ...)
         luaScene = self.CurrentScene.LuaTarget
     end
+    local resSceneName = self:GetCurrentSceneName()
     local onLoadNewScene = nil
     if luaScene and resSceneName and string.len(resSceneName) > 0 then
         luaScene:SceneStartLoad()

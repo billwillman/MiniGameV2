@@ -10,7 +10,10 @@ local DSSceneConfig = {
         canLoadSame = true,
         LuaScene = "_DS.Scene.DsScene",
         Pawn = "Resources/Character/DemoCharacter/Character.prefab",
-        resSceneName = "MultiScene",
+        GetResSceneName = function ()
+            local dsData = _MOE.TB["dsData"]
+            return dsData.scene
+        end,
     }
 }
 
