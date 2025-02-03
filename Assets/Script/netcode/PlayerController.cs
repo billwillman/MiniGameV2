@@ -60,6 +60,11 @@ namespace SOC.GamePlay
         [XLua.BlackList]
         void PawnId_OnRepNotify(ulong previousValue, ulong newValue)
         {
+            if (newValue == default(ulong))
+            {
+                Pawn = null;
+                return;
+            }
             var networkMgr = this.NetworkManager;
             if (networkMgr != null)
             {
@@ -85,6 +90,27 @@ namespace SOC.GamePlay
             base.OnNetworkSpawn();
         }
 
+        public bool AttachPawn(PawnNetworkObject obj)
+        {
+            if (IsOwner)
+            {
+                if (Pawn == obj)
+                    return true;
+                if (obj == null)
+                {
+                    PawnId.Value = default(ulong);
+                } else
+                {
+                    PawnId.Value = obj.NetworkObjectId;
+                }
+                PawnId.SetDirty(true);
+                Pawn = obj;
+                return true;
+            }
+            Debug.LogError("[PlayerController] AttachPawn not support client");
+            return false;
+        }
+
         public void ClearAllEvents() {
             onClientStrEvent = null;
             onClientIntEvent = null;
@@ -100,7 +126,7 @@ namespace SOC.GamePlay
         // 服务器属性同步
         [NonSerialized]
         [XLua.BlackList]
-        public NetworkVariable<ulong> PawnId = new NetworkVariable<ulong>(default, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+        public NetworkVariable<ulong> PawnId = new NetworkVariable<ulong>(default, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
 
         // 运行时的角色
         public NetworkObject Pawn
