@@ -68,7 +68,7 @@ function _M:SwitchScene(sceneName, ...)
                     luaScene:SceneProcessLoad(startProcess)
                 end
             end
-            local loadRet = _MOE.ResourceManager:LoadSceneAsync(resSceneName, function(opt2, isDone2)
+            local loadRet = _MOE.ResourceManager:LoadSceneAsync(resSceneName, false, function(opt2, isDone2)
                 if isDone2 then
                     self.IsSceneLoading = false
                     if luaScene then

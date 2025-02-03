@@ -29,6 +29,7 @@ function DsScene:OnExit()
 end
 
 function DsScene:OnSceneLoadFail()
+    _MOE.Logger.LogError("[DsScene] OnSceneLoadFail")
     _MOE.GameApp:QuitGame()
 end
 

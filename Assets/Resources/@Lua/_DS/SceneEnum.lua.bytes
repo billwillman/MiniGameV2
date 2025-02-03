@@ -9,6 +9,8 @@ local DSSceneConfig = {
     ["MultiScene"] = {
         canLoadSame = true,
         LuaScene = "_DS.Scene.DsScene",
+        Pawn = "Resources/Character/DemoCharacter/Character.prefab",
+        resSceneName = "MultiScene",
     }
 }
 

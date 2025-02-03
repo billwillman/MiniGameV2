@@ -25,14 +25,15 @@ end
 
 function _M:OnPreloadFinish()
     if self.DsNetworkManager then
-        _MOE.Logger.Log("[DSApp] OnPreloadFinish")
-        _MOE.SceneManager:SwitchScene(_MOE.SceneEnum.MultiScene, self.DsNetworkManager) -- 切换到多人场景
+        local dsData = _MOE.TB['dsData']
+        _MOE.Logger.Log("[DSApp] OnPreloadFinish: scene => " .. dsData.scene)
+        _MOE.SceneManager:SwitchScene(dsData.scene, self.DsNetworkManager) -- 切换到多人场景
     end
 end
 
 local function GetTestParams()
     -- ds的服务器数据和GS的服务器数据
-    local json = "{'dsData':{'ip':'127.0.0.1','port':7777},'GsData':{'ip':'127.0.0.1','port':1990}}"
+    local json = "{'dsData':{'ip':'127.0.0.1','port':7777, 'scene': 'MultiScene'},'GsData':{'ip':'127.0.0.1','port':1990}}"
     json = string.gsub(json, "'", "\"")
     return _MOE.Json.decode(json)
 end
