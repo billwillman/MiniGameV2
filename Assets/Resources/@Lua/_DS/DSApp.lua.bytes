@@ -69,6 +69,7 @@ local function ParseStartupCommands(self)
         end
     end
     _MOE.TB = tb
+    _MOE.IsLocalDS = self.isLocalDS
 end
 
 function _M:QuitGame(...)
