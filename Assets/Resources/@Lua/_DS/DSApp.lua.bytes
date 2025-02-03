@@ -12,7 +12,7 @@ local function CreateDsNetWorkObject(self, onFinish)
             if obj then
                 obj.name = "DsNetworkManager"
                -- obj.transform:SetParent(_MOE.GameStartTransform, false)
-                self.DsNetworkManager = obj
+                self.DsNetworkManager = obj:GetComponent(typeof(CS.Unity.Netcode.NetworkManager))
                 if onFinish then
                     onFinish(self)
                 end
