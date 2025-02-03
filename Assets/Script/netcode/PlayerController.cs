@@ -81,14 +81,38 @@ namespace SOC.GamePlay
         [XLua.BlackList]
         public override void OnNetworkDespawn() {
             ClearAllEvents();
+            if (IsOwner && AutoPawnInstance && PawnClassPrefab != null)
+            {
+                if (Pawn != null)
+                {
+                    ResourceMgr.Instance.DestroyInstGameObj(Pawn.gameObject);
+                    Pawn = null;
+                    PawnId.Value = default(ulong);
+                    PawnId.SetDirty(true);
+                }
+            }
             base.OnNetworkDespawn();
         }
 
         [XLua.BlackList]
         public override void OnNetworkSpawn()
         {
+            if (IsOwner && AutoPawnInstance && PawnClassPrefab != null)
+            {
+                Pawn = this.NetworkManager.SpawnManager.InstantiateAndSpawn(PawnClassPrefab.NetworkObject);
+                if (Pawn != null)
+                {
+                    PawnId.Value = Pawn.NetworkObjectId;
+                    PawnId.SetDirty(true);
+                }
+            }
             base.OnNetworkSpawn();
         }
+
+        [XLua.BlackList]
+        public PawnNetworkObject PawnClassPrefab; // 实例化的模板Prefab
+        [XLua.BlackList]
+        public bool AutoPawnInstance = true; // 自动实例化
 
         public bool AttachPawn(PawnNetworkObject obj)
         {
