@@ -30,8 +30,41 @@ function _M:OnPreloadFinish()
     end
 end
 
+----- 解析命令行参数
+local function ParseStartupCommands(self)
+    local commandLineArgs = CS.System.Environment.GetCommandLineArgs()
+    if commandLineArgs then
+        local commandArgsType = type(commandLineArgs)
+        if commandArgsType == "userdata" then
+            if commandLineArgs.Length >= 2 then
+                local json = commandLineArgs[1]
+                xpcall(
+                    function ()
+                        tb = _MOE.Json.decode(json)
+                    end, function (err)
+                        tb = nil
+                        _G.ErrorHandler(err)
+                    end
+                )
+                _MOE.TB = tb
+            end
+        else
+            _MOE.Logger.LogError("[DS] commandLineArgs type error: " .. commandArgsType)
+        end
+    end
+end
+
+function _M:QuitGame(...)
+    return _MOE.Application.Quit(...)
+end
+
 ------------------------------ 继承方法 -------------------------------
 function _M:OnInit()
+    ParseStartupCommands(self)
+    if not _MOE.TB then
+        self:QuitGame()
+        return
+    end
     if CreateDsNetWorkObject(self, self.OnPreloadFinish) then
         -- 切换场景
     end
