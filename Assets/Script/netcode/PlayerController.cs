@@ -12,17 +12,52 @@ namespace SOC.GamePlay
         private void Awake() {
             var networkObject = GetComponent<NetworkObject>();
             networkObject.CheckObjectVisibility = OnIsOwnerClient;
+            PawnId.OnValueChanged = PawnId_OnRepNotify;
         }
 
         private bool OnIsOwnerClient(ulong clientId) {
             return this.OwnerClientId == clientId;
         }
+#else
+        private void Awake()
+        {
+            PawnId.OnValueChanged = PawnId_OnRepNotify;
+        }
 #endif
 
-        [XLua.DoNotGen]
+        [XLua.BlackList]
+        public override void OnDestroy()
+        {
+            PawnId.OnValueChanged = null;
+            base.OnDestroy();
+        }
+
+        [XLua.BlackList]
+        void PawnId_OnRepNotify(ulong previousValue, ulong newValue)
+        {
+            var networkMgr = this.NetworkManager;
+            if (networkMgr != null)
+            {
+                var spawnMgr = networkMgr.SpawnManager;
+                if (spawnMgr != null)
+                {
+                    NetworkObject networkObj;
+                    if (spawnMgr.SpawnedObjects.TryGetValue(newValue, out networkObj))
+                        Pawn = networkObj;
+                }
+            }
+        }
+
+        [XLua.BlackList]
         public override void OnNetworkDespawn() {
             ClearAllEvents();
             base.OnNetworkDespawn();
+        }
+
+        [XLua.BlackList]
+        public override void OnNetworkSpawn()
+        {
+            base.OnNetworkSpawn();
         }
 
         public void ClearAllEvents() {
@@ -36,6 +71,11 @@ namespace SOC.GamePlay
             onServerInt2Event = null;
             onServerInt3Event = null;
         }
+
+        // 服务器属性同步
+        [NonSerialized]
+        [XLua.BlackList]
+        public NetworkVariable<ulong> PawnId = new NetworkVariable<ulong>(default, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
         // 运行时的角色
         public NetworkObject Pawn
