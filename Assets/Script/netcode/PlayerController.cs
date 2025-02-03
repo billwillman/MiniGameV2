@@ -38,7 +38,7 @@ namespace SOC.GamePlay
         }
 
         // 运行时的角色
-        public GameObject Character
+        public GameObject Pawn
         {
             get;
             set;
