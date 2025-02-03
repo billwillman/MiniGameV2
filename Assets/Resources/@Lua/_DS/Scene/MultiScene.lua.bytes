@@ -1,0 +1,10 @@
+local _M = _MOE.class("MultiScene", _MOE.BaseScene)
+
+function _M:OnEnter()
+    _MOE.Logger.Log("[DS] MultiScene Enter")
+end
+
+function _M:OnExit()
+end
+
+return _M

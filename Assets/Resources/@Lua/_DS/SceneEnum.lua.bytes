@@ -1,3 +1,15 @@
 --- DS上场景枚举
 _MOE.SceneEnum = {
+    MultiScene = "MultiScene", -- 多人
 }
+
+local SceneConfig = require("_Scene.SceneConfig")
+
+local DSSceneConfig = {
+    ["MultiScene"] = {
+        canLoadSame = true,
+        LuaScene = "_DS.Scene.MultiScene",
+    }
+}
+
+_MOE.TableUtils.CombineTable(SceneConfig, DSSceneConfig)

@@ -120,7 +120,13 @@ end
 
 ---@return string 获得当前场景名
 function _M:GetCurrentSceneName()
-    return self.CurrentScene and self.CurrentScene.resSceneName or ""
+    local ret = self.CurrentScene and self.CurrentScene.resSceneName or nil
+    if ret == nil then
+        if self.CurrentScene and self.CurrentScene.GetResSceneName then
+            return self.CurrentScene:GetResSceneName() or ""
+        end
+    end
+    return ""
 end
 
 --- 获得LuaScene
@@ -131,6 +137,9 @@ end
 function _M:HasResScene()
     if self.CurrentScene and self.CurrentScene.resSceneName then
         return string.len(self.CurrentScene.resSceneName) > 0
+    elseif self.CurrentScene and self.CurrentScene.GetResSceneName then
+        local sceneName = self.CurrentScene:GetResSceneName()
+        return sceneName ~= nil and string.len(sceneName) > 0
     end
     return false
 end

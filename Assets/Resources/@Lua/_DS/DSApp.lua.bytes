@@ -67,6 +67,7 @@ function _M:OnInit()
     end
     if CreateDsNetWorkObject(self, self.OnPreloadFinish) then
         -- 切换场景
+        _MOE.SceneManager:SwitchScene(_MOE.SceneEnum.MultiScene) -- 切换到多人场景
     end
 end
 
