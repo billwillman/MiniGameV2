@@ -20,12 +20,17 @@
         {
             "type": "lua",
             "request": "launch",
+            "name": "LuaPanda-Attach"
+        },
+        {
+            "type": "lua",
+            "request": "launch",
             "tag": "independent_file",
             "name": "LuaPanda-IndependentFile",
             "description": "独立文件调试模式,使用前请参考文档",
-            "luaPath": ".lua.bytes",
+            "luaPath": "",
             "packagePath": [],
-            "luaFileExtension": "",
+            "luaFileExtension": ".lua.bytes",
             "connectionPort": 31001,
             "stopOnEntry": true,
             "useCHook": true
