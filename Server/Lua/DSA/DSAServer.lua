@@ -1,5 +1,6 @@
 require("ServerCommon.GlobalServerConfig")
 require("InitGlobalVars")
+local json = require("json")
 
 local ServerData = GetServerConfig("DSA")
 require("LuaPanda").start("127.0.0.1", ServerData.Debug)
@@ -35,12 +36,13 @@ moon.exports.OnMessage = function(fd, msg)
 end
 
 moon.exports.OnClose = function(fd, msg)
-    print("close ", fd, moon.decode(msg, "Z"))
+    local str = moon.decode(msg, "Z")
+    print("close ", fd, str)
 
     if _MOE.DSMap then
-        local ip, port = GetIpAndPort(socket, fd)
-        local token = GenerateToken2(ip, port)
+        local data = json.decode(str)
+        local token = moon.md5(data.addr)
+        print(string.format("[DSA] Close DS => token: %s", token))
         _MOE.DSMap[token] = nil
-        print(string.format("[DSA] Close DS => token: %s ip: %s port: %d", token, ip, port))
     end
 end
