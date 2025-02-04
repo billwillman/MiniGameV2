@@ -24,10 +24,9 @@ moon.exports.OnAccept = function(fd, msg)
         fd = fd,
         dsData = {
             ip = ip,
-            port = msg.port
         }
     }
-    print(string.format("[DSA] Accept DS => token: %s ip: %s port: %d dsPort: %d", token, ip, port, msg.port))
+    print(string.format("[DSA] Accept DS => token: %s ip: %s port: %d", token, ip, port))
     -----------------------------------------------------
 end
 

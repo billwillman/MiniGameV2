@@ -18,7 +18,9 @@ local ClientToServerMsgProcess = {
         local ds = _MOE.DSMap[token]
         if ds and ds.dsData then
             ds.dsData.isLocalDS = msg.isLocalDS -- 是否是Local DS
-            print(string.format("[DSA] token: %s isLocalDS: %s", token, tostring(msg.isLocalDS)))
+            ds.dsData.port = msg.port
+            ds.dsData.isReady = true -- 准备好了
+            print(string.format("[DSA] token: %s isLocalDS: %s ip: %s dsPort: %d", token, tostring(msg.isLocalDS), ip, msg.port))
             if msg.isLocalDS then
                 _MOE.LocalDS = ds -- 设置Local DS的数据
             end
