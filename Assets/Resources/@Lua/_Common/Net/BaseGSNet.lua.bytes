@@ -32,6 +32,17 @@ function _M:Init()
     xpcall(self.NetModel_OnInit, _G.ErrorHandler, self)
 end
 
+function _M:UnInit()
+    self:UnRegsterAllCsharpEvents()
+    xpcall(self.NetModel_OnUnInit, _G.ErrorHandler, self)
+    self.NetClient:Disconnect()
+    self.NetClient.OnConnectResult = nil
+    self.NetClient.OnSocketAbort = nil
+    self.NetClient.OnMoonPacketRead = nil
+    StopHeartTimer(self)
+    self.ReceiveMsgProcess = {}
+end
+
 function _M:_OnGSConnectResult(isOk)
     if not isOk then
         _MOE.Logger.LogErrorFormat("[GS] Connect Result: {0}", isOk)
@@ -65,17 +76,6 @@ function _M:IsGsConnecting()
     local state = self.NetClient.ClietnState
     local ret = state == _MOE.NetState.eClient_STATE_CONNECTING
     return ret
-end
-
-function _M:UnInit()
-    self:UnRegsterAllCsharpEvents()
-    xpcall(self.NetModel_OnUnInit, _G.ErrorHandler, self)
-    self.NetClient:Disconnect()
-    self.NetClient.OnConnectResult = nil
-    self.NetClient.OnSocketAbort = nil
-    self.NetClient.OnMoonPacketRead = nil
-    StopHeartTimer(self)
-    self.ReceiveMsgProcess = {}
 end
 
 function _M:_OnHeartTimer()
