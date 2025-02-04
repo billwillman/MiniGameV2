@@ -9,6 +9,13 @@ function _M:OnInit()
     self.GsNetwork:Init()
 end
 
+function _M:ConnectServer()
+    if not _MOE.GsData then
+        return false
+    end
+    return self.GsNetwork:ConnectServer(_MOE.GsData.ip, _MOE.GsData.port)
+end
+
 function _M:OnUnInit()
     if self.GsNetwork ~= nil then
         self.GsNetwork:UnInit()

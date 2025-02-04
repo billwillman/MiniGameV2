@@ -148,7 +148,8 @@ end
 
 function _M:ConnectServer(ip, port)
     self:_PrepareStartConnect()
-    self.NetClient:ConnectServer(ip, port, true)
+    local ret = self.NetClient:ConnectServer(ip, port, true)
+    return ret
 end
 
 ----------------------------------------------------------------- 虚方法 ---------------------------------------------------------
