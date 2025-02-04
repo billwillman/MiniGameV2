@@ -4497,13 +4497,17 @@ public static class AssetBundleBuild
 			string outPath = "outPath/Proj";
 			string allNewProjPath = System.IO.Path.GetFullPath(outPath);
 			if (!System.IO.Directory.Exists(allNewProjPath)) {
-				// Create Unity Project
+            // Create Unity Project
 #if UNITY_EDITOR_WIN
-				RunCmd("Unity.exe -quit -batchmode -nographics -createProject " + allNewProjPath);
+#if TUANJIE_1_0_OR_NEWER
+            RunCmd("Tuanjie.exe -quit -batchmode -nographics -createProject " + allNewProjPath);
+#else
+			RunCmd("Unity.exe -quit -batchmode -nographics -createProject " + allNewProjPath);
+#endif
 #elif UNITY_EDITOR_OSX
 				RunCmd("/Application/Unity/Unity.app/Contents/MacOS/Unity -quit -batchmode -nographics -createProject " + allNewProjPath);
 #endif
-			}
+        }
 
 			// 读取配置文件
 			string pkgFileName = "BuildPkg.txt";
@@ -5113,11 +5117,15 @@ public static class AssetBundleBuild
 		string searchProjPath = System.IO.Path.GetFullPath(outPath);
 		if (!System.IO.Directory.Exists(searchProjPath))
 		{
-			// Create Unity Project
+            // Create Unity Project
 #if UNITY_EDITOR_WIN
+#if TUANJIE_1_0_OR_NEWER
+            RunCmd("Tuanjie.exe -quit -batchmode -nographics -createProject " + searchProjPath);
+#else
 			RunCmd("Unity.exe -quit -batchmode -nographics -createProject " + searchProjPath);
 #endif
-		}
+#endif
+        }
 			
 		// 如果后面COPY慢，可以从SVN Download(不会每次都有更新)
 		List<string> resPaths = new List<string>();
@@ -5196,8 +5204,12 @@ public static class AssetBundleBuild
 
 		string logFileName = string.Empty;
 		string funcName = string.Empty;
+#if TUANJIE_1_0_OR_NEWER
+        string exeName = "Tuanjie.exe";
+#else
 		string exeName = "Unity.exe";
-		if (platform == eBuildPlatform.eBuildAndroid)
+#endif
+        if (platform == eBuildPlatform.eBuildAndroid)
 		{
 			// Copy 渠道包
 		
