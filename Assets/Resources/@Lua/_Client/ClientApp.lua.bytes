@@ -1,7 +1,7 @@
 ----- Client的App
 local BaseAppClass = require("_Common.BaseApp")
 
-require("_Client.SceneEnum")
+require("_Client.ClientSceneEnum")
 
 local _M = _MOE.class("ClientApp", BaseAppClass)
 

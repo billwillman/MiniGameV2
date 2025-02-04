@@ -1,6 +1,6 @@
 --- DS服务器的APP
 local BaseAppClass = require("_Common.BaseApp")
-require("_DS.SceneEnum")
+require("_DS.ServerSceneEnum")
 
 
 local _M = _MOE.class("DSApp", BaseAppClass)
