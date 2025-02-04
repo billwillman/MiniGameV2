@@ -28,6 +28,7 @@ local _OtherServerToMyServer = {
     [_MOE.ServerMsgIds.SM_DSReady] = function (msg)
         local fd = msg.client
         local dsData = msg.dsData
+        print("[SM_DSReady] client:", fd)
         MsgProcesser:SendTableToJson2(socket, fd, MsgIds.SM_DS_Info, dsData) -- 通知客户端
     end
 }
