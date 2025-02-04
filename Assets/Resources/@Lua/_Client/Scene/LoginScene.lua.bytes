@@ -2,6 +2,8 @@ local _M = _MOE.class("LoginScene", _MOE.BaseScene)
 
 function _M:OnEnter()
     _MOE.Logger.Log("LoginScene Enter")
+    local netmodel = _MOE.GameApp:GetModel("NetModel")
+    netmodel:ConnectServer()
 end
 
 function _M:OnExit()
