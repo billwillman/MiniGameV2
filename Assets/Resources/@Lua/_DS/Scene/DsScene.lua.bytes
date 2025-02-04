@@ -22,14 +22,14 @@ function DsScene:OnEnter()
     end
     _MOE.Logger.Log("[DS] DsScene:StartServer True")
     -- 注释网络事件
-    self:RegsterCSharpEvent(_MOE.NetworkManager, "OnConnectResult", self._OnGSConnectResult)
-    self:RegsterCSharpEvent(_MOE.NetworkManager, "OnSocketAbort", self._OnGSSocketAbort)
+    self:RegsterCSharpEvent(_MOE.NetManager, "OnConnectResult", self._OnGSConnectResult)
+    self:RegsterCSharpEvent(_MOE.NetManager, "OnSocketAbort", self._OnGSSocketAbort)
     local GsData = _MOE.TB["GsData"]
-    _MOE.NetworkManager:ConnectServer(GsData.ip, GsData.port)
+    _MOE.NetManager:ConnectServer(GsData.ip, GsData.port)
 end
 
 function DsScene:_OnGSConnectResult(isOk)
-    _MOE.Logger.LogFormat("[DsScene] OnGSConnectResult: {0}", tostring(isOk))
+    _MOE.Logger.LogErrorFormat("[DsScene] OnGSConnectResult: {0}", tostring(isOk))
     if not isOk then
         _MOE.GameApp:QuitGame()
         return
@@ -37,13 +37,13 @@ function DsScene:_OnGSConnectResult(isOk)
 end
 
 function DsScene:_OnGSSocketAbort()
-    _MOE.Logger.Log("[DsScene] OnGSSocketAbort")
+    _MOE.Logger.LogError("[DsScene] OnGSSocketAbort")
     _MOE.GameApp:QuitGame()
 end
 
 function DsScene:OnExit()
     -- 网络注销
-    _MOE.NetworkManager:Dispose()
+    _MOE.NetManager:Dispose()
     --
     self.DsNetworkManager = nil
     self.Transport = nil
