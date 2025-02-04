@@ -29,11 +29,26 @@ function DsScene:OnEnter()
     self.GsNetwork = GSNetClass.New(_MOE.NetManager, MsgIds.CM_Heart, MsgIds.SM_Heart, "OnGSSocketResult", "OnGSSocketAbort")
     self.GsNetwork:Init()
     self.GsNetwork:ConnectServer(GsData.ip, GsData.port)
+    _MOE.EventManager:RegisterEvent("OnGSSocketResult", self, self._OnGSSocketResult)
+    _MOE.EventManager:RegisterEvent("OnGSSocketAbort", self, self._OnGSSocketAbort)
     --
+end
+
+function DsScene:_OnGSSocketResult(isOk)
+    if not isOk then
+        _MOE.Logger.LogError("[DsScene] _OnGSSocketResult: false")
+        _MOE.GameApp:QuitGame()
+    end
+end
+
+function DsScene:_OnGSSocketAbort()
+    _MOE.Logger.LogError("[DsScene] _OnGSSocketAbort")
+    _MOE.GameApp:QuitGame()
 end
 
 function DsScene:OnExit()
     -- 网络注销
+    _MOE.EventManager:UnRegisterEvents(self)
     if self.GsNetwork then
         self.GsNetwork:UnInit()
         self.GsNetwork = nil
