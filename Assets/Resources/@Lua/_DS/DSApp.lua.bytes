@@ -70,6 +70,9 @@ local function ParseStartupCommands(self)
         end
     end
     _MOE.TB = tb
+    if self.isLocalDS == nil then
+        self.isLocalDS = false
+    end
     _MOE.IsLocalDS = self.isLocalDS
 
     _MOE.Logger.Log("[DSApp] IsLocalDS: " .. tostring(self.isLocalDS))
