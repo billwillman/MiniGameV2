@@ -51,6 +51,9 @@ function EventManager:UnRegisterEvents(target)
 end
 
 function EventManager:DispatchEvent(eventName, ...)
+    if not eventName then
+        return
+    end
     local event = self.Events[eventName]
     if event then
         for this, func in pairs(event) do

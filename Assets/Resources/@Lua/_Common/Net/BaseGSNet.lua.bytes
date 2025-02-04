@@ -1,0 +1,170 @@
+--- 针对GS连接的封装
+local CSharpEventContainer = require("_Common.CSharpEventContainer")
+local _M = _MOE.class("BaseGSNet", CSharpEventContainer)
+
+local function StopHeartTimer(self)
+    if self.m_HeartTimer then
+        _MOE.TimerManager:RemoveTimer(self.m_HeartTimer)
+        self.m_HeartTimer = nil
+    end
+    self.m_LastHeartTime = nil
+end
+
+local function StartHeartTimer(self)
+    StopHeartTimer(self)
+    self.m_HeartTimer = _MOE.TimerManager:AddLoopTimer(0.3, self, self._OnHeartTimer)
+end
+
+function _M:Ctor(netClient, CM_Heart, SM_Heart, connectEvent, abortEvent)
+    self.NetClient = netClient or _MOE.NetManager
+    self.ConnectEventName = connectEvent
+    self.AbortEventName = abortEvent
+    self.CM_Heart = CM_Heart
+    self.SM_Heart = SM_Heart
+    self.ReceiveMsgProcess = {}
+end
+
+function _M:Init()
+    self:RegsterCSharpEvent(self.NetClient, "OnConnectResult", self._OnGSConnectResult)
+    self:RegsterCSharpEvent(self.NetClient, "OnSocketAbort", self._OnGSSocketAbort)
+    self:RegsterCSharpEvent(self.NetClient, "OnMoonPacketRead", self._OnMoonPacketRead)
+    self:RegisterReceiveMsgProcess(self.SM_Heart, self._OnMsg_SM_Heart)
+    xpcall(self.NetModel_OnInit, _G.ErrorHandler, self)
+end
+
+function _M:_OnGSConnectResult(isOk)
+    if not isOk then
+        _MOE.Logger.LogErrorFormat("[GS] Connect Result: {0}", isOk)
+    else
+        _MOE.Logger.LogFormat("[GS] Connect Result: {0}", isOk)
+    end
+    _MOE.EventManager:DispatchEvent(self.ConnectEventName, isOk)
+    if isOk then
+        -- 心跳包
+        StartHeartTimer(self)
+    else
+        StopHeartTimer(self)
+    end
+    xpcall(self.NetModel_OnConnectResult, _G.ErrorHandler, self, isOk)
+end
+
+function _M:_OnGSSocketAbort()
+    _MOE.Logger.LogError("[GS] Connect Abort")
+    _MOE.EventManager:DispatchEvent(self.AbortEventName)
+    StopHeartTimer(self)
+    xpcall(self.NetModel_OnSocketAbort, _G.ErrorHandler, self)
+end
+
+function _M:IsGsConnected()
+    local state = self.NetClient.ClietnState
+    local ret = state == _MOE.NetState.eClient_STATE_CONNECTED
+    return ret
+end
+
+function _M:IsGsConnecting()
+    local state = self.NetClient.ClietnState
+    local ret = state == _MOE.NetState.eClient_STATE_CONNECTING
+    return ret
+end
+
+function _M:UnInit()
+    self:UnRegsterAllCsharpEvents()
+    xpcall(self.NetModel_OnUnInit, _G.ErrorHandler, self)
+    self.NetClient:Disconnect()
+    self.NetClient.OnConnectResult = nil
+    self.NetClient.OnSocketAbort = nil
+    self.NetClient.OnMoonPacketRead = nil
+    StopHeartTimer(self)
+    self.ReceiveMsgProcess = {}
+end
+
+function _M:_OnHeartTimer()
+    -- 心跳包
+    if self:IsGsConnected() then
+        -- 检测心跳包本地
+        if not self.m_LastHeartTime then
+            self.m_LastHeartTime = os.time()
+        else
+            local delta = os.time() - self.m_LastHeartTime
+            if delta > 10 then
+                -- 心跳包超时
+                _MOE.Logger.LogWarning("[BaseNetModel] heart timeout: Disconnect~!")
+                self.NetClient:Disconnect()
+                self:_OnGSSocketAbort()
+                return
+            end
+        end
+        --
+        self:SendMsg(self.CM_Heart)
+    end
+end
+
+function _M:_PrepareStartConnect()
+    StopHeartTimer(self)
+end
+
+function _M:SendMsg(msgId, data)
+    -- _MOE.Logger.LogWarningFormat("[GS] NetMsgId: {0:D}", msgId)
+    data = data or {}
+    data.msgId = msgId
+    local msg = _MOE.Json.encode(data)
+    self.NetClient:SendMoonStr(msg)
+end
+
+function _M:_OnMsg_SM_Heart(msg)
+end
+
+function _M:RegisterReceiveMsgProcess(msgId, func)
+    if not msgId or not func then
+        return
+    end
+    self.ReceiveMsgProcess[msgId] = func
+end
+
+function _M:UnRegisterReceiveMsgProcess(msgId)
+    if not msgId then
+        return
+    end
+    self.ReceiveMsgProcess[msgId] = nil
+end
+
+function _M:_OnMoonPacketRead(packet)
+    if packet:hasData() then
+        local json = packet:dataToString()
+        local msg = _MOE.Json.decode(json)
+        if msg and msg.msgId then
+            self.m_LastHeartTime = os.time() -- 只要有包过来就认为协议是通的
+            local OnProcess = self.ReceiveMsgProcess[msg.msgId]
+            if OnProcess then
+                OnProcess(self, msg)
+            end
+        else
+            _MOE.Logger.LogError("[GS] OnMoonPacketRead not vaild data")
+        end
+    else
+        _MOE.Logger.LogError("[GS] OnMoonPacketRead not data")
+    end
+end
+
+function _M:ConnectServer(ip, port)
+    self:_PrepareStartConnect()
+    self.NetClient:ConnectServer(ip, port, true)
+end
+
+----------------------------------------------------------------- 虚方法 ---------------------------------------------------------
+
+function _M:NetModel_OnInit()
+end
+
+function _M:NetModel_OnUnInit()
+end
+
+function _M:NetModel_OnConnectResult(isOk)
+end
+
+function _M:NetModel_OnSocketAbort()
+end
+
+------------------------------------------------------------------------------------------------------------------------------------
+
+return _M
