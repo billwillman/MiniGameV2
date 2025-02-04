@@ -72,6 +72,9 @@ function _M:OnInit()
         CreateDsNetWorkObject(self, self.OnPreloadFinish) then
         _MOE.BaseViewClass = require("_Client.BaseView")
         _MOE.UIManager = require("_Client.UIManager").New()
+
+        --- 注册网络Model
+        self:RegisterModel("NetModel", "_Client.Models.ClientNetworkModel", false)
     end
 end
 
