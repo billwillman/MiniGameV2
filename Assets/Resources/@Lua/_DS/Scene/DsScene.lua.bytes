@@ -21,6 +21,7 @@ function DsScene:OnEnter()
         return
     end
     _MOE.Logger.Log("[DS] DsScene:StartServer True")
+    -- 连接GS
 end
 
 function DsScene:OnExit()

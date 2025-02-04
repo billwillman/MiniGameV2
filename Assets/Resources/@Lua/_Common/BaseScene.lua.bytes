@@ -1,4 +1,4 @@
-local _M = _MOE.class("BaseScene")
+local _M = _MOE.class("BaseScene", _MOE.CSharpEventContainer)
 
 function _M:Ctor(sceneName, ...)
     self.SceneName = sceneName
@@ -42,6 +42,8 @@ function _M:Exit()
     xpcall(function ()
         self:OnExit()
     end, _G.ErrorHandler)
+    -- 事件注销
+    self:UnRegsterAllCsharpEvents()
 end
 
 --------------------------- 需要继承 -----------------------------
