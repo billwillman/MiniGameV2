@@ -5,7 +5,7 @@ function BaseApp:Init()
     self:RegisterModel("TimerManager", "_Common.TimerManager", false)
     self.TimerManager = self:GetModel("TimerManager")
     _MOE.TimerManager = self.TimerManager
-    
+
     self:RegisterModel("SceneManager", "_Common.SceneManager", false)
     _MOE.SceneManager = self:GetModel("SceneManager")
 
