@@ -1,4 +1,5 @@
-local _M = _MOE.class("BaseScene", _MOE.CSharpEventContainer)
+local CSharpEventContainer = require("_Common.CSharpEventContainer")
+local _M = _MOE.class("BaseScene", CSharpEventContainer)
 
 function _M:Ctor(sceneName, ...)
     self.SceneName = sceneName
