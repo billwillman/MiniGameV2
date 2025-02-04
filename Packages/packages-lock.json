@@ -1,12 +1,5 @@
 {
   "dependencies": {
-    "cn.tuanjie.minigame.host": {
-      "version": "1.0.5",
-      "depth": 0,
-      "source": "registry",
-      "dependencies": {},
-      "url": "https://packages.tuanjie.cn"
-    },
     "com.autodesk.fbx": {
       "version": "4.2.1",
       "depth": 2,
