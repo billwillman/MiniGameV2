@@ -75,12 +75,14 @@ local Services = {
         file = "./DsBattleServer/DsBattleServer.lua",
         unique = true
     },
+    --]]
     -- DSA服务器：用来拉取和分配DS的服务器
     {
         name = "DSA",
-        file = "./DSAServer/DSAServer.lua",
+        file = "./DSA/DSAServer.lua",
         unique = true
     },
+    --[[
     -- GM服务器
     {
         name = "GM",
