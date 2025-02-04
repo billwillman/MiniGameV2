@@ -1,9 +1,19 @@
 local _M = _MOE.class("ClientNetworkModel", _MOE.BaseModel)
 
+local GsNetClass = require("_Common.Net.BaseGSNet")
+require("_NetMsg.MsgId")
+
 function _M:OnInit()
+    self.GsNetwork = GsNetClass.New(_MOE.NetworkManager, _MOE.MsgIds.CM_Heart, _MOE.MsgIds.SM_Heart,
+        "OnGSSocketResult", "OnGSSocketAbort")
+    self.GsNetwork:Init()
 end
 
 function _M:OnUnInit()
+    if self.GsNetwork ~= nil then
+        self.GsNetwork:UnInit()
+        self.GsNetwork = nil
+    end
 end
 
 return _M
