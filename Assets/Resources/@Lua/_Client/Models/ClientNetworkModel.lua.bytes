@@ -1,0 +1,3 @@
+local _M = _MOE.class("ClientNetworkModel", _MOE.BaseModel)
+
+return _M
