@@ -15,7 +15,8 @@
             "connectionPort": 31001,
             "stopOnEntry": true,
             "useCHook": true,
-            "autoPathMode": true
+            "autoPathMode": true,
+            "logLevel": 1
         },
         {
             "type": "lua",
