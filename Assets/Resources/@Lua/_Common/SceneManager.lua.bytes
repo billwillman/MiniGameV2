@@ -9,6 +9,13 @@ function _M:OnInit()
     self.IsSceneLoading = false;
 end
 
+function _M:OnUnInit()
+    local luaScene = self:GetCurrentLuaScene()
+    if luaScene then
+        luaScene:Exit()
+    end
+end
+
 ----------------------- 私有方法 ----------------------
 
 local function CloseCurrentSceneAsync(self, onFinish)

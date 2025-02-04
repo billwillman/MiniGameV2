@@ -43,7 +43,7 @@ end
 
 function DsScene:OnExit()
     -- 网络注销
-    _MOE.NetManager:Dispose()
+    _MOE.NetManager:Disconnect()
     --
     self.DsNetworkManager = nil
     self.Transport = nil
