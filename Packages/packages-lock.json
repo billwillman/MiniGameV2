@@ -141,7 +141,7 @@
       "url": "https://packages.tuanjie.cn"
     },
     "com.unity.netcode.gameobjects": {
-      "version": "file:../backup/com.unity.netcode.gameobjects",
+      "version": "file:D:/MiniGameV2/backup/com.unity.netcode.gameobjects",
       "depth": 0,
       "source": "local",
       "dependencies": {
