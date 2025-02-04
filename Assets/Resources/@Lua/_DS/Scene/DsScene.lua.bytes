@@ -3,6 +3,9 @@
 local DsScene = _MOE.class("DsScene", _MOE.BaseScene)
 DsScene[".superctor"] = true -- 会调用父类方法
 
+local GSNetClass = require("_Common.Net.BaseGSNet")
+local MsgIds = require("_NetMsg.MsgId")
+
 function DsScene:Ctor(sceneName, dsNetworkManager)
     self.DsNetworkManager = dsNetworkManager
     self.Transport = dsNetworkManager.gameObject:GetComponent(typeof(CS.Unity.Netcode.Transports.UTP.UnityTransport))
@@ -22,17 +25,16 @@ function DsScene:OnEnter()
     end
     _MOE.Logger.Log("[DS] DsScene:StartServer True")
     -- 注释网络事件
+    self.GsNetwork = GSNetClass.New(_MOE.NetManager, MsgIds.CM_Heart, MsgIds.SM_Heart, "OnGSSocketResult", "OnGSSocketAbort")
     --
-end
-
-function DsScene:_OnGSSocketAbort()
-    _MOE.Logger.LogError("[DsScene] OnGSSocketAbort")
-    StopHeartTimer(self)
-    _MOE.GameApp:QuitGame()
 end
 
 function DsScene:OnExit()
     -- 网络注销
+    if self.GsNetwork then
+        self.GsNetwork:UnInit()
+        self.GsNetwork = nil
+    end
     --
     self.DsNetworkManager = nil
     self.Transport = nil
