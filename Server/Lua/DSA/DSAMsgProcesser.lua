@@ -19,6 +19,9 @@ local ClientToServerMsgProcess = {
         if ds and ds.dsData then
             ds.dsData.isLocalDS = msg.isLocalDS -- 是否是Local DS
             print(string.format("[DSA] token: %s isLocalDS: %s", token, tostring(msg.isLocalDS)))
+            if msg.isLocalDS then
+                _MOE.LocalDS = ds -- 设置Local DS的数据
+            end
             return true
         end
         return false
