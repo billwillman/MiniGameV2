@@ -37,6 +37,14 @@ RegisterClientMsgProcess(ClientToServerMsgProcess)
 
 -- 其他服务器发送本服务器处理
 local _OtherServerToMyServer = {
+    -- 请求空闲的DS
+    [_MOE.ServerMsgIds.CM_ReqDS] = function (msg)
+        if _MOE.LocalDS ~= nil then
+            -- 说明包含DS
+            local dsData = _MOE.LocalDS.dsData
+            MsgProcesser:SendServerMsgAsync(msg.serverName, _MOE.ServerMsgIds.SM_DSReady, {dsData = dsData, client = msg.client})
+        end
+    end
 }
 ----------------------------
 

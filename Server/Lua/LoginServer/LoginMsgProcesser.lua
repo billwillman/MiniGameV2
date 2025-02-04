@@ -12,6 +12,10 @@ require("ServerCommon.GlobalFuncs")
 
 --- 客户端发送给服务器请求协议处理
 local ClientToServerMsgProcess = {
+    [MsgIds.CM_ReqDS] = function (self, msg, socket, fd)
+        -- 请求DS地图
+        self:SendServerMsgAsync("DSA", _MOE.ServerMsgIds.CM_ReqDS, {serverName = "LoginSrv", client = fd})
+    end
 }
 -----------------------------
 
@@ -21,6 +25,11 @@ RegisterClientMsgProcess(ClientToServerMsgProcess)
 
 -- 其他服务器发送本服务器处理
 local _OtherServerToMyServer = {
+    [_MOE.ServerMsgIds.SM_DSReady] = function (msg)
+        local fd = msg.client
+        local dsData = msg.dsData
+        MsgProcesser:SendTableToJson2(socket, fd, MsgIds.SM_DS_Info, dsData) -- 通知客户端
+    end
 }
 ----------------------------
 
