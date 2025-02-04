@@ -1,3 +1,9 @@
 local _M = _MOE.class("ClientNetworkModel", _MOE.BaseModel)
 
+function _M:OnInit()
+end
+
+function _M:OnUnInit()
+end
+
 return _M
