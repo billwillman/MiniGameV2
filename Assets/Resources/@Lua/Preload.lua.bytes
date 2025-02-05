@@ -56,6 +56,7 @@ _MOE.ILuaBinder = CS.SOC.GamePlay.ILuaBinder
 _MOE.LuaEvent_MonoEventType = CS.SOC.GamePlay.LuaEvent_MonoEventType
 _MOE.BaseResLoaderAsyncType = typeof(CS.BaseResLoaderAsyncMono)
 _MOE.StringToBytes = CS.System.Text.Encoding.UTF8.GetBytes
+_MOE.DsNetworkHelper = CS.SOC.GamePlay.DsNetworkHelper
 _MOE.class = require("_Common.BaseClass") -- class框架
 _G.BaseClass = _MOE.class
 _MOE.Json = require("_Common.json")
