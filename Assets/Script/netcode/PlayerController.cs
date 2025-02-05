@@ -97,9 +97,9 @@ namespace SOC.GamePlay
         [XLua.BlackList]
         public override void OnNetworkSpawn()
         {
-            if (IsOwner && AutoPawnInstance && PawnClassPrefab != null)
+            if (IsServer && AutoPawnInstance && PawnClassPrefab != null)
             {
-                Pawn = this.NetworkManager.SpawnManager.InstantiateAndSpawn(PawnClassPrefab.NetworkObject);
+                Pawn = this.NetworkManager.SpawnManager.InstantiateAndSpawn(PawnClassPrefab.NetworkObject, OwnerClientId);
                 if (Pawn != null)
                 {
                     PawnId.Value = Pawn.NetworkObjectId;
@@ -116,7 +116,7 @@ namespace SOC.GamePlay
 
         public bool AttachPawn(PawnNetworkObject obj)
         {
-            if (IsOwner)
+            if (IsServer)
             {
                 if (Pawn == obj)
                     return true;
