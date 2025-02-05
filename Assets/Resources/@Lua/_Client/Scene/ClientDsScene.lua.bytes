@@ -1,0 +1,10 @@
+local _M = _MOE.class("ClientDsScene", _MOE.BaseScene)
+
+function _M:OnEnter()
+    _MOE.Logger.Log("ClientDsScene Enter")
+end
+
+function _M:OnExit()
+end
+
+return _M
