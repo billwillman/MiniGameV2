@@ -8,14 +8,67 @@ local MsgIds = require("_NetMsg.MsgId")
 
 function DsScene:Ctor(sceneName, dsNetworkManager)
     self.DsNetworkManager = dsNetworkManager
+    self.DsSceneManager = dsNetworkManager.SceneManager
     self.Transport = dsNetworkManager.gameObject:GetComponent(typeof(CS.Unity.Netcode.Transports.UTP.UnityTransport))
 end
 
-function DsScene:_InitDSNet()
+local function GenerateScenesInBuild(self)
     local dsData = _MOE.TB["dsData"]
-    _MOE.NetCodeHelper.InitHelper(self.DsNetworkManager)
+    _MOE.NetCodeHelper.InitHelper(self.DsSceneManager)
     local scenes = {dsData.scene}
-    _MOE.NetCodeHelper.GenerateScenesInBuild2(self.DsNetworkManager, scenes)
+    _MOE.NetCodeHelper.GenerateScenesInBuild2(self.DsSceneManager, scenes)
+end
+
+function DsScene:_InitDSNet()
+    GenerateScenesInBuild(self)
+
+    --- 注册事件
+    self:RegsterCSharpEvent(self.DsNetworkManager, "ConnectionApprovalCallback", self.OnDS_ConnectionApprovalCallback)
+    self:RegsterCSharpEvent(self.DsNetworkManager, "OnSceneManagerCreate", self._OnDS_OnSceneManagerCreate)
+    self:RegsterCSharpEvent(self.DsNetworkManager, "OnSceneManagerClear", self._OnDS_OnSceneManagerClear)
+    local ConnectionManager = self.DsNetworkManager.ConnectionManager
+    self:RegsterCSharpEvent(ConnectionManager, "OnClientDisconnectCallback", self._OnDS_ClientDisconnectCallback)
+end
+
+function DsScene:OnDS_ConnectionApprovalCallback(request, response)
+    _MOE.Logger.LogFormat("[DsScene] ConnectionApprovalCallback Payload: {0}", request.Payload)
+    response.Approved = true -- 暂时直接认证成功
+    if response.Approved then
+        response.CreatePlayerObject = true
+        response.Position = _MOE.Vector3.zero
+        response.Rotation = _MOE.Quaternion.identity
+    end
+end
+
+function DsScene:OnDS_ClientsLoadSceneComplete(sceneName, loadSceneMode, clientsComplete, clientsTimeout)
+    _MOE.Logger.Log("[DsScene] OnServer_ClientsUnLoadSceneComplete")
+end
+
+function DsScene:OnDS_ClientsUnLoadSceneComplete(sceneName, loadSceneMode, clientsComplete, clientsTimeout)
+    _MOE.Logger.Log("[DsScene] OnServer_ClientsLoadSceneComplete")
+end
+
+function DsScene:_OnDS_OnSceneManagerCreate()
+    GenerateScenesInBuild(self)
+    _MOE.DsNetworkHelper.NetworkManager_SetOnLoadEventCompleted(
+            function (sceneName, loadSceneMode, clientsComplete, clientsTimeout)
+                self:OnDS_ClientsLoadSceneComplete(sceneName, loadSceneMode, clientsComplete, clientsTimeout)
+            end
+        )
+        _MOE.DsNetworkHelper.NetworkManager_SetOnUnloadEventCompleted(
+            function (sceneName, loadSceneMode, clientsComplete, clientsTimeout)
+                self:OnDS_ClientsUnLoadSceneComplete(sceneName, loadSceneMode, clientsComplete, clientsTimeout)
+            end
+        )
+end
+
+function DsScene:_OnDS_OnSceneManagerClear()
+    _MOE.DsNetworkHelper.NetworkManager_ClearOnUnloadEventCompleted()
+    _MOE.DsNetworkHelper.NetworkManager_ClearOnLoadEventCompleted()
+end
+
+function DsScene:_OnDS_ClientDisconnectCallback(clientId)
+    _MOE.Logger.LogFormat("[DsScene] Client DisConnect: {0:D}", clientId)
 end
 
 function DsScene:_UnInitDSNet()
@@ -78,6 +131,7 @@ function DsScene:OnExit()
     --
     self.DsNetworkManager = nil
     self.Transport = nil
+    self.DsSceneManager = nil
 end
 
 function DsScene:OnSceneLoadFail()
