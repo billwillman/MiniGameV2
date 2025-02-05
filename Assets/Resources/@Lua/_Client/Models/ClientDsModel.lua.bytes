@@ -1,0 +1,3 @@
+local _M = _MOE.class("ClientDsModel", _MOE.BaseModel)
+
+return _M
