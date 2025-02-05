@@ -81,7 +81,7 @@ namespace SOC.GamePlay
         [XLua.BlackList]
         public override void OnNetworkDespawn() {
             ClearAllEvents();
-            if (IsOwner && AutoPawnInstance && PawnClassPrefab != null)
+            if (IsServer && AutoPawnInstance && PawnClassPrefab != null)
             {
                 if (Pawn != null)
                 {
