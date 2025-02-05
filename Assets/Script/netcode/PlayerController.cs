@@ -99,7 +99,8 @@ namespace SOC.GamePlay
         {
             if (IsServer && AutoPawnInstance && PawnClassPrefab != null)
             {
-                Pawn = this.NetworkManager.SpawnManager.InstantiateAndSpawn(PawnClassPrefab.NetworkObject/*, OwnerClientId*/);
+                var pawnNetworkObject = PawnClassPrefab.GetComponent<NetworkObject>();
+                Pawn = this.NetworkManager.SpawnManager.InstantiateAndSpawn(pawnNetworkObject, /*OwnerClientId*/0, false, false, true);
                 if (Pawn != null)
                 {
                     PawnId.Value = Pawn.NetworkObjectId;
@@ -150,7 +151,7 @@ namespace SOC.GamePlay
         // 服务器属性同步
         [NonSerialized]
         [XLua.BlackList]
-        public NetworkVariable<ulong> PawnId = new NetworkVariable<ulong>(default, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
+        public NetworkVariable<ulong> PawnId = new NetworkVariable<ulong>(default, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
         // 运行时的角色
         public NetworkObject Pawn
