@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "cn.tuanjie.minigame.host": "1.0.6",
     "com.qq.weixin.minigame": "https://gitee.com/wechat-minigame/minigame-tuanjie-transform-sdk.git#TuanJie",
     "com.unity.ai.navigation": "1.1.5",
     "com.unity.collab-proxy": "2.6.0",
