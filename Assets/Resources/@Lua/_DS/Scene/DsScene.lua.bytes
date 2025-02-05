@@ -78,6 +78,28 @@ function DsScene:_UnInitDSNet()
     _MOE.NetCodeHelper.UnInitHelper()
 end
 
+function DsScene:_InitGSNet()
+    local GsData = _MOE.TB["GsData"]
+    self.GsNetwork = GSNetClass.New(_MOE.NetManager, MsgIds.CM_Heart, MsgIds.SM_Heart, "OnGSSocketResult", "OnGSSocketAbort")
+    self.GsNetwork:Init()
+    self.GsNetwork:ConnectServer(GsData.ip, GsData.port)
+    _MOE.EventManager:RegisterEvent("OnGSSocketResult", self, self._OnGSSocketResult)
+    _MOE.EventManager:RegisterEvent("OnGSSocketAbort", self, self._OnGSSocketAbort)
+    local connectData = self.Transport.ConnectionData
+    self.GsNetwork:SendMsg(MsgIds.CM_DS_Ready, {
+        ip = connectData.Address,
+        port = connectData.Port,
+        isLocalDS = _MOE.IsLocalDS, -- 是否是LocalDS
+    })
+end
+
+function DsScene:_UnInitGSNet()
+    if self.GsNetwork then
+        self.GsNetwork:UnInit()
+        self.GsNetwork = nil
+    end
+end
+
 function DsScene:OnEnter()
     -- 开启
     _MOE.Logger.Log("[DS] MultiScene Enter")
@@ -93,18 +115,7 @@ function DsScene:OnEnter()
     self:_InitDSNet()
     _MOE.Logger.Log("[DS] DsScene:StartServer True")
     -- 注释网络事件
-    local GsData = _MOE.TB["GsData"]
-    self.GsNetwork = GSNetClass.New(_MOE.NetManager, MsgIds.CM_Heart, MsgIds.SM_Heart, "OnGSSocketResult", "OnGSSocketAbort")
-    self.GsNetwork:Init()
-    self.GsNetwork:ConnectServer(GsData.ip, GsData.port)
-    _MOE.EventManager:RegisterEvent("OnGSSocketResult", self, self._OnGSSocketResult)
-    _MOE.EventManager:RegisterEvent("OnGSSocketAbort", self, self._OnGSSocketAbort)
-    local connectData = self.Transport.ConnectionData
-    self.GsNetwork:SendMsg(MsgIds.CM_DS_Ready, {
-        ip = connectData.Address,
-        port = connectData.Port,
-        isLocalDS = _MOE.IsLocalDS, -- 是否是LocalDS
-    })
+    self:_InitGSNet()
     --
 end
 
@@ -124,10 +135,7 @@ function DsScene:OnExit()
     -- 网络注销
     _MOE.EventManager:UnRegisterEvents(self)
     self:_UnInitDSNet()
-    if self.GsNetwork then
-        self.GsNetwork:UnInit()
-        self.GsNetwork = nil
-    end
+    self:_UnInitGSNet()
     --
     self.DsNetworkManager = nil
     self.Transport = nil
