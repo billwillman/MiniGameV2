@@ -8,15 +8,17 @@ local MsgIds = require("_NetMsg.MsgId")
 
 function DsScene:Ctor(sceneName, dsNetworkManager)
     self.DsNetworkManager = dsNetworkManager
-    self.DsSceneManager = dsNetworkManager.SceneManager
     self.Transport = dsNetworkManager.gameObject:GetComponent(typeof(CS.Unity.Netcode.Transports.UTP.UnityTransport))
 end
 
 local function GenerateScenesInBuild(self)
-    local dsData = _MOE.TB["dsData"]
-    _MOE.NetCodeHelper.InitHelper(self.DsSceneManager)
-    local scenes = {dsData.scene}
-    _MOE.NetCodeHelper.GenerateScenesInBuild2(self.DsSceneManager, scenes)
+    local sceneManager = self.DsNetworkManager.SceneManager
+    if sceneManager then
+        local dsData = _MOE.TB["dsData"]
+        _MOE.NetCodeHelper.InitHelper(sceneManager)
+        local scenes = {dsData.scene}
+        _MOE.NetCodeHelper.GenerateScenesInBuild2(sceneManager, scenes)
+    end
 end
 
 function DsScene:_InitDSNet()
@@ -142,7 +144,6 @@ function DsScene:OnExit()
     --
     self.DsNetworkManager = nil
     self.Transport = nil
-    self.DsSceneManager = nil
 end
 
 function DsScene:OnSceneLoadFail()
