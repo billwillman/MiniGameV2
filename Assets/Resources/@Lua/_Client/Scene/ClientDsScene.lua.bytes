@@ -5,6 +5,7 @@ _M[".superctor"] = true -- 会调用父类方法
 function _M:Ctor(sceneName, dsNetworkManager)
     self.DsNetworkManager = dsNetworkManager
     self.Transport = dsNetworkManager.gameObject:GetComponent(typeof(CS.Unity.Netcode.Transports.UTP.UnityTransport))
+    self.SceneLoader = dsNetworkManager.gameObject:GetComponent(typeof(_MOE.BaseResLoaderAsyncType))
 end
 
 function _M:OnEnter()
@@ -12,6 +13,9 @@ function _M:OnEnter()
 end
 
 function _M:OnExit()
+    self.DsNetworkManager = nil
+    self.Transport = nil
+    self.SceneLoader = nil
 end
 
 return _M
