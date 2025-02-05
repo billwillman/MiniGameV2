@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 5106573896504949211}
   - component: {fileID: 3934526033181271297}
   - component: {fileID: 8083298353217757625}
+  - component: {fileID: 3912720752496253734}
   m_Layer: 0
   m_HasEditorInfo: 1
   m_Name: DsNetworkManager
@@ -101,3 +102,16 @@ MonoBehaviour:
     PacketDelayMS: 0
     PacketJitterMS: 0
     PacketDropRate: 0
+--- !u!114 &3912720752496253734
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7164277755889661227}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ab06854a3d03819439d5a3fbb160c308, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  bClearAllResourcesOnDestroy: 1
