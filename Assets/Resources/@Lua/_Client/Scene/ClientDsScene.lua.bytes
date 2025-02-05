@@ -1,21 +1,21 @@
-local _M = _MOE.class("ClientDsScene", _MOE.BaseScene)
+local DsScene = _MOE.class("ClientDsScene", _MOE.BaseScene)
 
-_M[".superctor"] = true -- 会调用父类方法
+DsScene[".superctor"] = true -- 会调用父类方法
 
-function _M:Ctor(sceneName, dsNetworkManager)
+function DsScene:Ctor(sceneName, dsNetworkManager)
     self.DsNetworkManager = dsNetworkManager
     self.Transport = dsNetworkManager.gameObject:GetComponent(typeof(CS.Unity.Netcode.Transports.UTP.UnityTransport))
     self.SceneLoader = dsNetworkManager.gameObject:GetComponent(typeof(_MOE.BaseResLoaderAsyncType))
 end
 
-function _M:OnEnter()
+function DsScene:OnEnter()
     _MOE.Logger.Log("ClientDsScene Enter")
 end
 
-function _M:OnExit()
+function DsScene:OnExit()
     self.DsNetworkManager = nil
     self.Transport = nil
     self.SceneLoader = nil
 end
 
-return _M
+return DsScene
