@@ -20,6 +20,17 @@ local function GenerateScenesInBuild(self)
 end
 
 function DsScene:_InitDSNet()
+    -- 启动DS Server监听
+    local dsData = _MOE.TB["dsData"]
+    local ip = dsData.ip or "127.0.0.1"
+    local port = dsData.port or 7777
+    self.Transport:SetConnectionData(ip, port)
+    if not self.DsNetworkManager:StartServer() then
+        _MOE.Logger.LogError("[DS] DsScene:StartServer False")
+        _MOE.GameApp:QuitGame()
+        return
+    end
+    -- 场景注册允许进入
     GenerateScenesInBuild(self)
 
     --- 注册事件
@@ -28,6 +39,8 @@ function DsScene:_InitDSNet()
     self:RegsterCSharpEvent(self.DsNetworkManager, "OnSceneManagerClear", self._OnDS_OnSceneManagerClear)
     local ConnectionManager = self.DsNetworkManager.ConnectionManager
     self:RegsterCSharpEvent(ConnectionManager, "OnClientDisconnectCallback", self._OnDS_ClientDisconnectCallback)
+
+    _MOE.Logger.Log("[DS] DsScene:StartServer True")
 end
 
 function DsScene:OnDS_ConnectionApprovalCallback(request, response)
@@ -103,17 +116,7 @@ end
 function DsScene:OnEnter()
     -- 开启
     _MOE.Logger.Log("[DS] MultiScene Enter")
-    local dsData = _MOE.TB["dsData"]
-    local ip = dsData.ip or "127.0.0.1"
-    local port = dsData.port or 7777
-    self.Transport:SetConnectionData(ip, port)
-    if not self.DsNetworkManager:StartServer() then
-        _MOE.Logger.LogError("[DS] DsScene:StartServer False")
-        _MOE.GameApp:QuitGame()
-        return
-    end
     self:_InitDSNet()
-    _MOE.Logger.Log("[DS] DsScene:StartServer True")
     -- 注释网络事件
     self:_InitGSNet()
     --
