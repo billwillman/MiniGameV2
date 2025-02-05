@@ -11,6 +11,20 @@ function DsScene:Ctor(sceneName, dsNetworkManager)
     self.Transport = dsNetworkManager.gameObject:GetComponent(typeof(CS.Unity.Netcode.Transports.UTP.UnityTransport))
 end
 
+function DsScene:_InitDSNet()
+    local dsData = _MOE.TB["dsData"]
+    _MOE.NetCodeHelper.InitHelper(self.DsNetworkManager)
+    local scenes = {dsData.scene}
+    _MOE.NetCodeHelper.GenerateScenesInBuild2(self.DsNetworkManager, scenes)
+end
+
+function DsScene:_UnInitDSNet()
+    _MOE.DsNetworkHelper.NetworkManager_ClearOnUnloadEventCompleted()
+    _MOE.DsNetworkHelper.NetworkManager_ClearOnLoadEventCompleted()
+
+    _MOE.NetCodeHelper.UnInitHelper()
+end
+
 function DsScene:OnEnter()
     -- 开启
     _MOE.Logger.Log("[DS] MultiScene Enter")
@@ -23,6 +37,7 @@ function DsScene:OnEnter()
         _MOE.GameApp:QuitGame()
         return
     end
+    self:_InitDSNet()
     _MOE.Logger.Log("[DS] DsScene:StartServer True")
     -- 注释网络事件
     local GsData = _MOE.TB["GsData"]
@@ -55,6 +70,7 @@ end
 function DsScene:OnExit()
     -- 网络注销
     _MOE.EventManager:UnRegisterEvents(self)
+    self:_UnInitDSNet()
     if self.GsNetwork then
         self.GsNetwork:UnInit()
         self.GsNetwork = nil
