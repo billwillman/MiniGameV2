@@ -2,11 +2,23 @@ local _M = _MOE.class("LoginScene", _MOE.BaseScene)
 
 function _M:OnEnter()
     _MOE.Logger.Log("LoginScene Enter")
+
+    _MOE.EventManager:RegisterEvent("OnGSSocketResult", self, self._OnGSSocketResult)
+
     local netmodel = _MOE.GameApp:GetModel("NetModel")
     netmodel:ConnectServer()
 end
 
+function _M:_OnGSSocketResult(isOk)
+    if isOk then
+        _MOE.TB = _MOE.TB or {}
+        _MOE.TB["dsData"] = {ip = "127.0.0.1", port = 7777, scene = "MultiScene"}
+        _MOE.SceneManager:SwitchScene(_MOE.SceneEnum.MultiScene, _MOE.GameApp.DsNetworkManager)
+    end
+end
+
 function _M:OnExit()
+    _MOE.EventManager:UnRegisterEvents(self)
 end
 
 return _M

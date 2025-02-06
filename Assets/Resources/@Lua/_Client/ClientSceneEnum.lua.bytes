@@ -1,3 +1,16 @@
 _MOE.SceneEnum = {
     LoginScene = "LoginScene",
+    MultiScene = "MultiScene", -- 多人
 }
+
+local SceneConfig = require("_Scene.SceneConfig")
+
+local DSSceneConfig = {
+    ["MultiScene"] = {
+        canLoadSame = true,
+        LuaScene = "_Client.Scene.ClientDsScene",
+        --Pawn = "Resources/Character/DemoCharacter/Character.prefab",
+    }
+}
+
+_MOE.TableUtils.CombineTable(SceneConfig, DSSceneConfig)
