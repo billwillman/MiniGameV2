@@ -104,6 +104,7 @@ namespace SOC.GamePlay
                 var pawnNetworkObject = PawnClassPrefab.GetComponent<NetworkObject>();
                 Pawn = this.NetworkManager.SpawnManager.InstantiateAndSpawn(pawnNetworkObject, OwnerClientId, false, false, true);  //OwnerClientId
                 */
+               // NetworkManager.PrefabHandler.AddHandler
                 var gameObj = GameObject.Instantiate(PawnClassPrefab.gameObject);
                 Pawn = gameObj.GetComponent<NetworkObject>();
                 if (Pawn != null)
