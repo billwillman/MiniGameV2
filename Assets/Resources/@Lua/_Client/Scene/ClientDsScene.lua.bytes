@@ -8,8 +8,23 @@ function DsScene:Ctor(sceneName, dsNetworkManager)
     self.SceneLoader = dsNetworkManager.gameObject:GetComponent(typeof(_MOE.BaseResLoaderAsyncType))
 end
 
+local function GenerateScenesInBuild(self)
+    local SceneManager = self.DsNetworkManager.SceneManager
+    if SceneManager then
+        local dsData = _MOE.TB["dsData"]
+        local scenes = {dsData.scene}
+        _MOE.NetCodeHelper.InitHelper(SceneManager)
+        _MOE.NetCodeHelper.GenerateScenesInBuild2(SceneManager, scenes)
+    end
+end
+
 function DsScene:OnEnter()
     _MOE.Logger.Log("ClientDsScene Enter")
+    local dsData = _MOE.TB["dsData"]
+    self.Transport:SetConnectionData(dsData.ip, dsData.port)
+    if self.DsNetworkManager:StartClient() then
+        GenerateScenesInBuild(self)
+    end
 end
 
 function DsScene:OnExit()
