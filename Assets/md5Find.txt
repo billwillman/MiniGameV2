@@ -3,7 +3,6 @@ a31bbbeecf07e65c6f94281f03b7d54a=assets$resources$@input.assets
 388626f00b80387167b59d08ca2703c3=assets$resources$character$@hero_kof_mai.assets
 b7b265a1a89d96e8158a0476ecae6621=assets$resources$character$democharacter$character.prefab.assets
 8a7d19a7f775a9706669fc8fc4687336=assets$resources$character$democharacter$multiscene.scene.assets
-81c78277794b7e93ff87c056c2913d5f=assets$resources$character$democharacter$new terrain.asset.assets
 f11bd065fd3af0c84cac195994b9f3c5=assets$resources$character$@hero_kof_mai$@anim.assets
 f8e16f98e7418b2338053b6c8278c086=assets$resources$character$@hero_kof_mai$@skill.assets
 5ff3c96682f3959b6923553502dce756=assets$resources$character$@hero_kof_mai$sample$player_0002.prefab.assets
