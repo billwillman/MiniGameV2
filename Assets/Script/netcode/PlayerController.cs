@@ -85,7 +85,8 @@ namespace SOC.GamePlay
             {
                 if (Pawn != null)
                 {
-                    ResourceMgr.Instance.DestroyInstGameObj(Pawn.gameObject);
+                    Pawn.Despawn(true);
+                    //ResourceMgr.Instance.DestroyInstGameObj(Pawn.gameObject);
                     Pawn = null;
                     PawnId.Value = default(ulong);
                     PawnId.SetDirty(true);
