@@ -81,7 +81,7 @@ namespace SOC.GamePlay
         [XLua.BlackList]
         public override void OnNetworkDespawn() {
             ClearAllEvents();
-            if (IsServer && AutoPawnInstance && PawnClassPrefab != null)
+            if ((IsServer || IsHost) && AutoPawnInstance && PawnClassPrefab != null)
             {
                 if (Pawn != null && Pawn.IsSpawned)
                 {
@@ -98,7 +98,7 @@ namespace SOC.GamePlay
         [XLua.BlackList]
         public override void OnNetworkSpawn()
         {
-            if (IsServer && AutoPawnInstance && PawnClassPrefab != null)
+            if ((IsServer || IsHost) && AutoPawnInstance && PawnClassPrefab != null)
             {
                 /*
                 var pawnNetworkObject = PawnClassPrefab.GetComponent<NetworkObject>();
@@ -125,7 +125,7 @@ namespace SOC.GamePlay
 
         public bool AttachPawn(PawnNetworkObject obj)
         {
-            if (IsServer)
+            if (IsServer || IsHost)
             {
                 if (Pawn == obj)
                     return true;
@@ -171,50 +171,50 @@ namespace SOC.GamePlay
         // ------------------- 调用Server ---------------------------------------
         // 可靠传输
         public void DispatchServer_Reliable(string eventName, string paramStr) {
-            if (!IsClient)
+            if (!IsClient && !IsHost)
                 return;
             DispatchEvent_Reliable_ServerRpc(eventName, paramStr);
         }
 
         public void DispatchServer_Reliable(string eventName, int intParam) {
-            if (!IsClient)
+            if (!IsClient && !IsHost)
                 return;
             DispatchEvent_Reliable_ServerRpc(eventName, intParam);
         }
 
         public void DispatchServer_Reliable(string eventName, int intParam1, int intParam2) {
-            if (!IsClient)
+            if (!IsClient && !IsHost)
                 return;
             DispatchEvent_Reliable_ServerRpc(eventName, intParam1, intParam2);
         }
 
         public void DispatchServer_Reliable(string eventName, int intParam1, int intParam2, int intParam3) {
-            if (!IsClient)
+            if (!IsClient && !IsHost)
                 return;
             DispatchEvent_Reliable_ServerRpc(eventName, intParam1, intParam2, intParam3);
         }
 
         // 非可靠传输
         public void DispatchServer_UnReliable(string eventName, string paramStr) {
-            if (!IsClient)
+            if (!IsClient && !IsHost)
                 return;
             DispatchEvent_Unreliable_ServerRpc(eventName, paramStr);
         }
 
         public void DispatchServer_UnReliable(string eventName, int intParam) {
-            if (!IsClient)
+            if (!IsClient && !IsHost)
                 return;
             DispatchEvent_Unreliable_ServerRpc(eventName, intParam);
         }
 
         public void DispatchServer_UnReliable(string eventName, int intParam1, int intParam2) {
-            if (!IsClient)
+            if (!IsClient && !IsHost)
                 return;
             DispatchEvent_Unreliable_ServerRpc(eventName, intParam1, intParam2);
         }
 
         public void DispatchServer_UnReliable(string eventName, int intParam1, int intParam2, int intParam3) {
-            if (!IsClient)
+            if (!IsClient && !IsHost)
                 return;
             DispatchEvent_Unreliable_ServerRpc(eventName, intParam1, intParam2, intParam3);
         }
@@ -222,57 +222,57 @@ namespace SOC.GamePlay
         // ------------------- 广播所有Client -----------------------------------
         // 可靠传输
         public void DispatchAllClientEvent_Reliable(string eventName, string paramStr) {
-            if (!IsServer)
+            if (!IsServer && !IsHost)
                 return;
             DispatchEvent_Reliable_ClientRpc(eventName, paramStr);
         }
 
         public void DispatchAllClientEvent_Reliable(string eventName, int intParam) {
-            if (!IsServer)
+            if (!IsServer && !IsHost)
                 return;
             DispatchEvent_Reliable_ClientRpc(eventName, intParam);
         }
 
         public void DispatchAllClientEvent_Reliable(string eventName, int intParam1, int intParam2) {
-            if (!IsServer)
+            if (!IsServer && !IsHost)
                 return;
             DispatchEvent_Reliable_ClientRpc(eventName, intParam1, intParam2);
         }
 
         public void DispatchAllClientEvent_Reliable(string eventName, int intParam1, int intParam2, int intParam3) {
-            if (!IsServer)
+            if (!IsServer && !IsHost)
                 return;
             DispatchEvent_Reliable_ClientRpc(eventName, intParam1, intParam2, intParam3);
         }
 
         // 不可靠传输
         public void DispatchAllClientEvent_UnReliable(string eventName, string paramStr) {
-            if (!IsServer)
+            if (!IsServer && !IsHost)
                 return;
             DispatchEvent_Unreliable_ClientRpc(eventName, paramStr);
         }
 
         public void DispatchAllClientEvent_UnReliable(string eventName, int intParam) {
-            if (!IsServer)
+            if (!IsServer && !IsHost)
                 return;
             DispatchEvent_Unreliable_ClientRpc(eventName, intParam);
         }
 
         public void DispatchAllClientEvent_UnReliable(string eventName, int intParam1, int intParam2) {
-            if (!IsServer)
+            if (!IsServer && !IsHost)
                 return;
             DispatchEvent_Unreliable_ClientRpc(eventName, intParam1, intParam2);
         }
 
         public void DispatchAllClientEvent_UnReliable(string eventName, int intParam1, int intParam2, int intParam3) {
-            if (!IsServer)
+            if (!IsServer && !IsHost)
                 return;
             DispatchEvent_Unreliable_ClientRpc(eventName, intParam1, intParam2, intParam3);
         }
         // ------------------- 调用到对应的Client上 ----------------------------------
         // 可靠传输
         public void DispatchClientEvent_Reliable(string eventName, string paramStr) {
-            if (!IsServer)
+            if (!IsServer && !IsHost)
                 return;
             NativeArray<ulong> send = new NativeArray<ulong>(1, Allocator.Temp, NativeArrayOptions.UninitializedMemory);
             try {
@@ -289,7 +289,7 @@ namespace SOC.GamePlay
         }
 
         public void DisptachClientEvent_Reliable(string eventName, int intParam) {
-            if (!IsServer)
+            if (!IsServer && !IsHost)
                 return;
             NativeArray<ulong> send = new NativeArray<ulong>(1, Allocator.Temp, NativeArrayOptions.UninitializedMemory);
             try {
@@ -306,7 +306,7 @@ namespace SOC.GamePlay
         }
 
         public void DisptachClientEvent_Reliable(string eventName, int intParam1, int intParam2) {
-            if (!IsServer)
+            if (!IsServer && !IsHost)
                 return;
             NativeArray<ulong> send = new NativeArray<ulong>(1, Allocator.Temp, NativeArrayOptions.UninitializedMemory);
             try {
@@ -323,7 +323,7 @@ namespace SOC.GamePlay
         }
 
         public void DisptachClientEvent_Reliable(string eventName, int intParam1, int intParam2, int intParam3) {
-            if (!IsServer)
+            if (!IsServer && !IsHost)
                 return;
             NativeArray<ulong> send = new NativeArray<ulong>(1, Allocator.Temp, NativeArrayOptions.UninitializedMemory);
             try {
@@ -341,7 +341,7 @@ namespace SOC.GamePlay
 
         // 非可靠传输
         public void DispatchClientEvent_UnReliable(string eventName, string paramStr) {
-            if (!IsServer)
+            if (!IsServer && !IsHost)
                 return;
             NativeArray<ulong> send = new NativeArray<ulong>(1, Allocator.Temp, NativeArrayOptions.UninitializedMemory);
             try {
@@ -358,7 +358,7 @@ namespace SOC.GamePlay
         }
 
         public void DispatchClientEvent_UnReliable(string eventName, int intParam) {
-            if (!IsServer)
+            if (!IsServer && !IsHost)
                 return;
             NativeArray<ulong> send = new NativeArray<ulong>(1, Allocator.Temp, NativeArrayOptions.UninitializedMemory);
             try {
@@ -375,7 +375,7 @@ namespace SOC.GamePlay
         }
 
         public void DispatchClientEvent_UnReliable(string eventName, int intParam1, int intParam2) {
-            if (!IsServer)
+            if (!IsServer && !IsHost)
                 return;
             NativeArray<ulong> send = new NativeArray<ulong>(1, Allocator.Temp, NativeArrayOptions.UninitializedMemory);
             try {
@@ -392,7 +392,7 @@ namespace SOC.GamePlay
         }
 
         public void DispatchClientEvent_UnReliable(string eventName, int intParam1, int intParam2, int intParam3) {
-            if (!IsServer)
+            if (!IsServer && !IsHost)
                 return;
             NativeArray<ulong> send = new NativeArray<ulong>(1, Allocator.Temp, NativeArrayOptions.UninitializedMemory);
             try {
