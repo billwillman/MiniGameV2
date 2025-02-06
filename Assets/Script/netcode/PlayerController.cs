@@ -83,7 +83,7 @@ namespace SOC.GamePlay
             ClearAllEvents();
             if (IsServer && AutoPawnInstance && PawnClassPrefab != null)
             {
-                if (Pawn != null)
+                if (Pawn != null && Pawn.IsSpawned)
                 {
                     Pawn.Despawn(true);
                     //ResourceMgr.Instance.DestroyInstGameObj(Pawn.gameObject);
