@@ -104,6 +104,7 @@ namespace SOC.GamePlay
                 Pawn = this.NetworkManager.SpawnManager.InstantiateAndSpawn(pawnNetworkObject, OwnerClientId, false, false, true);  /*OwnerClientId*/
                 if (Pawn != null)
                 {
+                    Pawn.DontDestroyWithOwner = true;
                     PawnId.Value = Pawn.NetworkObjectId;
                     PawnId.SetDirty(true);
                 }
