@@ -109,7 +109,7 @@ namespace SOC.GamePlay
                 Pawn = gameObj.GetComponent<NetworkObject>();
                 if (Pawn != null)
                 {
-                    gameObj.SetActive(true);
+                    //gameObj.SetActive(true);
                     Pawn.Spawn();
                     Pawn.ChangeOwnership(OwnerClientId);
                     //Pawn.DontDestroyWithOwner = true;
