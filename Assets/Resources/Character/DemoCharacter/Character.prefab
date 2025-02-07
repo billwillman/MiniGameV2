@@ -126,7 +126,7 @@ MonoBehaviour:
   GlobalObjectIdHash: 493305276
   InScenePlacedSourceGlobalObjectIdHash: 493305276
   AlwaysReplicateAsRoot: 1
-  SynchronizeTransform: 1
+  SynchronizeTransform: 0
   ActiveSceneSynchronization: 1
   SceneMigrationSynchronization: 1
   SpawnWithObservers: 1
