@@ -8,6 +8,12 @@ namespace SOC.GamePlay
 
     public class ClientNetworkTransform : NetworkTransform
     {
+        protected override void Awake()
+        {
+            base.Awake();
+          //  this.CanCommitToTransform = true;
+        }
+
         protected override bool OnIsServerAuthoritative()
         {
             return false;
