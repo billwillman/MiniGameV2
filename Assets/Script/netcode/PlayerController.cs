@@ -111,7 +111,7 @@ namespace SOC.GamePlay
                 {
                     //gameObj.SetActive(true);
                     Pawn.Spawn();
-                    Pawn.ChangeOwnership(OwnerClientId);
+                   // Pawn.ChangeOwnership(OwnerClientId);
                     //Pawn.DontDestroyWithOwner = true;
                     PawnId.Value = Pawn.NetworkObjectId;
                     PawnId.SetDirty(true);
