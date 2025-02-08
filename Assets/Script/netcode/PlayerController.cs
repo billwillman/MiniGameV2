@@ -101,14 +101,14 @@ namespace SOC.GamePlay
             if ((IsServer || IsHost) && AutoPawnInstance && PawnClassPrefab != null)
             {
                 var pawnNetworkObject = PawnClassPrefab.GetComponent<NetworkObject>();
-                Pawn = this.NetworkManager.SpawnManager.InstantiateAndSpawn(pawnNetworkObject, OwnerClientId, false, true, true);  //OwnerClientId
-                //var gameObj = GameObject.Instantiate(PawnClassPrefab.gameObject);
-               // Pawn = gameObj.GetComponent<NetworkObject>();
+                //Pawn = this.NetworkManager.SpawnManager.InstantiateAndSpawn(pawnNetworkObject, OwnerClientId, false, true, true);  //OwnerClientId
+                var gameObj = GameObject.Instantiate(PawnClassPrefab.gameObject);
+                Pawn = gameObj.GetComponent<NetworkObject>();
                 if (Pawn != null)
                 {
                     //Pawn.SpawnWithOwnership(OwnerClientId);
+                    Pawn.SpawnAsPlayerObject(OwnerClientId);
 					// Pawn.Spawn();
-                   // Pawn.ChangeOwnership(OwnerClientId);
                     //Pawn.DontDestroyWithOwner = true;
                     PawnId.Value = Pawn.NetworkObjectId;
                     PawnId.SetDirty(true);
