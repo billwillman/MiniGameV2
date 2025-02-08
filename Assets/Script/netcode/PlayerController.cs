@@ -106,8 +106,8 @@ namespace SOC.GamePlay
                 Pawn = gameObj.GetComponent<NetworkObject>();
                 if (Pawn != null)
                 {
-                    //Pawn.SpawnWithOwnership(OwnerClientId);
-                    Pawn.SpawnAsPlayerObject(OwnerClientId);
+                    Pawn.SpawnWithOwnership(OwnerClientId);
+                    //Pawn.SpawnAsPlayerObject(OwnerClientId);
 					// Pawn.Spawn();
                     //Pawn.DontDestroyWithOwner = true;
                     PawnId.Value = Pawn.NetworkObjectId;
