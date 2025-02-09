@@ -150,6 +150,7 @@ namespace SOC.GamePlay
                 ClearDelaySpawnPawnTimer();
                 m_DelayCreatePawnTimer = TimerMgr.Instance.CreateTimer(0, false, false);
                 m_DelayCreatePawnTimer.AddListener(OnDelaySpawnPawnTimerEvent);
+                m_DelayCreatePawnTimer.Start();
             }
 
         }
