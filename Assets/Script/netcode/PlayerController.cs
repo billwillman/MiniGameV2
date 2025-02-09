@@ -3,6 +3,7 @@ using UnityEngine;
 using Unity.Collections;
 using Unity.Netcode;
 using Unity.VisualScripting;
+using Utils;
 
 namespace SOC.GamePlay
 {
@@ -83,8 +84,9 @@ namespace SOC.GamePlay
         [XLua.BlackList]
         public override void OnNetworkDespawn() {
             ClearAllEvents();
-            if ((IsServer || IsHost) && AutoPawnInstance && PawnClassPrefab != null)
+            if (IsCanSpawnPawn)
             {
+                ClearDelaySpawnPawnTimer();
                 if (Pawn != null && Pawn.IsSpawned)
                 {
                     Pawn.Despawn();
@@ -97,10 +99,9 @@ namespace SOC.GamePlay
             base.OnNetworkDespawn();
         }
 
-        [XLua.BlackList]
-        public override void OnNetworkSpawn()
+        void CreatePawn()
         {
-            if ((IsServer || IsHost) && AutoPawnInstance && PawnClassPrefab != null)
+            if (IsCanSpawnPawn)
             {
                 var pawnNetworkObject = PawnClassPrefab.GetComponent<NetworkObject>();
                 //Pawn = this.NetworkManager.SpawnManager.InstantiateAndSpawn(pawnNetworkObject, OwnerClientId, false, true, true);  //OwnerClientId
@@ -110,12 +111,55 @@ namespace SOC.GamePlay
                 {
                     Pawn.SpawnWithOwnership(OwnerClientId);
                     //Pawn.SpawnAsPlayerObject(OwnerClientId);
-					// Pawn.Spawn();
+                    // Pawn.Spawn();
                     //Pawn.DontDestroyWithOwner = true;
                     PawnId.Value = Pawn.NetworkObjectId;
                     PawnId.SetDirty(true);
                 }
             }
+        }
+
+        protected bool IsCanSpawnPawn
+        {
+            get
+            {
+                bool ret = (IsServer || IsHost) && AutoPawnInstance && PawnClassPrefab != null;
+                return ret;
+            }
+        }
+
+        protected void OnDelaySpawnPawnTimerEvent(Timer obj, float timer)
+        {
+            ClearDelaySpawnPawnTimer();
+            CreatePawn();
+        }
+
+        void ClearDelaySpawnPawnTimer()
+        {
+            if (m_DelayCreatePawnTimer != null)
+            {
+                m_DelayCreatePawnTimer.Dispose();
+                m_DelayCreatePawnTimer = null;
+            }
+        }
+
+        void DelayCreatePawn()
+        {
+            if (IsCanSpawnPawn)
+            {
+                ClearDelaySpawnPawnTimer();
+                m_DelayCreatePawnTimer = TimerMgr.Instance.CreateTimer(0, false, false);
+                m_DelayCreatePawnTimer.AddListener(OnDelaySpawnPawnTimerEvent);
+            }
+
+        }
+        private ITimer m_DelayCreatePawnTimer = null;
+
+        [XLua.BlackList]
+        public override void OnNetworkSpawn()
+        {
+            // 需要延迟Pawn，否则Client端的NetworkManager.LocalClientId为0，导致IsOwner判断不对
+            DelayCreatePawn();
             base.OnNetworkSpawn();
         }
 
