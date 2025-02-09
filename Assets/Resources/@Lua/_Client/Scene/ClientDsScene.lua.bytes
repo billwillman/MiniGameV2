@@ -130,6 +130,7 @@ function DsScene:_InitDSHostNet()
         if mapName and string.len(mapName) > 0 then
             if self.SceneLoader then
                 if mapName ~= self:GetCurrentActiveResSceneName() then
+                    ---- 要注意这里如果初始化的时候场景并不是DsScene需要打开的场景会导致PlayerController的Auto Pawn对象第一次创建的时候被Destroy调（因为Pawn创建的时候在Host切换场景之后，并且这个Pawn是DestroyWithScene）
                     _MOE.Logger.Log("[DsScene] _InitDSHostNet changeScene: " .. mapName)
                     self:RegsterCSharpEvent(self.SceneLoader, "onSceneLoaded", self._OnClient_SinglePlay_OnMainSceneABLoad)
                     if not LoadMainSceneABAsync(self, mapName) then
