@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using Unity.Netcode;
+using Unity.Netcode.Editor;
 
 namespace SOC.GamePlay
 {
 
     [CustomEditor(typeof(ClientNetworkTransform))]
-    public class ClientNetworkTransformEditor : Editor
+    public class ClientNetworkTransformEditor : NetworkTransformEditor
     {
         public override void OnInspectorGUI()
         {
