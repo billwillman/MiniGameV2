@@ -17,6 +17,7 @@ namespace SOC.GamePlay
                 PlayerController obj = target as PlayerController;
                 if (obj != null)
                 {
+                    EditorGUILayout.LongField("[OwnerClientId]", (long)obj.OwnerClientId);
                     if (obj.PawnId.CanClientRead(obj.OwnerClientId))
                     {
                         EditorGUILayout.LongField("[PawnId]", (long)obj.PawnId.Value);
