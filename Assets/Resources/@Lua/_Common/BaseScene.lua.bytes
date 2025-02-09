@@ -47,6 +47,13 @@ function _M:Exit()
     self:UnRegsterAllCsharpEvents()
 end
 
+--- 当前激活场景名字
+function _M:GetCurrentActiveResSceneName()
+    local scene = _MOE.CSSceneManager:GetActiveScene()
+    local ret = scene.name
+    return ret
+end
+
 --------------------------- 需要继承 -----------------------------
 
 -- 是否需要回调SceneProcess

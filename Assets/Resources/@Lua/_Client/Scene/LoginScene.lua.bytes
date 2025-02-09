@@ -13,7 +13,7 @@ function _M:_OnGSSocketResult(isOk)
     if isOk then
         _MOE.TB = _MOE.TB or {}
         _MOE.TB["dsData"] = {ip = "127.0.0.1", port = 7777, scene = "MultiScene"}
-        _MOE.SceneManager:SwitchScene(_MOE.SceneEnum.MultiScene, _MOE.GameApp.DsNetworkManager, false)
+        _MOE.SceneManager:SwitchScene(_MOE.SceneEnum.MultiScene, _MOE.GameApp.DsNetworkManager, true)
     end
 end
 

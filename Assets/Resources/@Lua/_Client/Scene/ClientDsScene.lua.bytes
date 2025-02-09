@@ -129,11 +129,14 @@ function DsScene:_InitDSHostNet()
         local mapName = dsData.scene
         if mapName and string.len(mapName) > 0 then
             if self.SceneLoader then
-                self:RegsterCSharpEvent(self.SceneLoader, "onSceneLoaded", self._OnClient_SinglePlay_OnMainSceneABLoad)
-                if not LoadMainSceneABAsync(self, mapName) then
-                    _MOE.Logger.LogErrorFormat(
-                        "[DsScene] _InitDSHostNet Error: not vaild sceneName({0})", mapName)
-                    return
+                if mapName ~= self:GetCurrentActiveResSceneName() then
+                    _MOE.Logger.Log("[DsScene] _InitDSHostNet changeScene:", mapName)
+                    self:RegsterCSharpEvent(self.SceneLoader, "onSceneLoaded", self._OnClient_SinglePlay_OnMainSceneABLoad)
+                    if not LoadMainSceneABAsync(self, mapName) then
+                        _MOE.Logger.LogErrorFormat(
+                            "[DsScene] _InitDSHostNet Error: not vaild sceneName({0})", mapName)
+                        return
+                    end
                 end
             end
         end

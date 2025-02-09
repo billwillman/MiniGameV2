@@ -48,6 +48,7 @@ _MOE.GameStartTransform = _MOE.GameStart.transform
 _MOE.RectTransformClass = typeof(CS.UnityEngine.RectTransform)
 _MOE.ObjetDestroy = CS.UnityEngine.Object.Destroy
 _MOE.LoadSceneMode = CS.UnityEngine.SceneManagement.LoadSceneMode
+_MOE.CSSceneManager = CS.UnityEngine.SceneManagement.SceneManager
 _MOE.SceneEventProgressStatus = CS.Unity.Netcode.SceneEventProgressStatus
 _MOE.RectClass = CS.UnityEngine.Rect
 _MOE.Vector2 = CS.UnityEngine.Vector2
