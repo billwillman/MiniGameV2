@@ -19,6 +19,8 @@ namespace SOC.GamePlay
                 ClientNetworkTransform obj = target as ClientNetworkTransform;
                 if (obj != null)
                 {
+                    EditorGUILayout.Space();
+                    EditorGUILayout.Space();
                     EditorGUILayout.ToggleLeft("[HasAuthority]", obj.CanCommitToTransform);
                 }
             }
