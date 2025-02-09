@@ -199,10 +199,22 @@ namespace Unity.Netcode
             OnValueChanged?.Invoke(previousValue, m_InternalValue);
         }
 
+        // 是否从网络收到更改后出发OnValueChange消息
+        public bool bRepNotify = false;
+
         /// <inheritdoc />
         public override void ReadField(FastBufferReader reader)
         {
+            // bestzeng add
+            T prevValue = m_InternalValue;
+            //----
             NetworkVariableSerialization<T>.Read(reader, ref m_InternalValue);
+            // bestzeng add
+            if (bRepNotify && OnValueChanged != null)
+            {
+                OnValueChanged(prevValue, m_InternalValue);
+            }
+            //---------------
         }
 
         /// <inheritdoc />
