@@ -13,6 +13,7 @@ namespace SOC.GamePlay
         private void Awake() {
             var networkObject = GetComponent<NetworkObject>();
             networkObject.CheckObjectVisibility = OnIsOwnerClient;
+            PawnId.bRepNotify = true;
             PawnId.OnValueChanged = PawnId_OnRepNotify;
             PawnNetworkObject.OnStaticNetworkObjectSpawn += OnPawnNetworkSpawn;
             PawnNetworkObject.OnStaticNetworkObjectDespawn += OnPawnNetworkDespawn;
@@ -24,6 +25,7 @@ namespace SOC.GamePlay
 #else
         private void Awake()
         {
+            PawnId.bRepNotify = true;
             PawnId.OnValueChanged = PawnId_OnRepNotify;
             PawnNetworkObject.OnStaticNetworkObjectSpawn = OnPawnNetworkSpawn;
             PawnNetworkObject.OnStaticNetworkObjectDespawn = OnPawnNetworkDespawn;
