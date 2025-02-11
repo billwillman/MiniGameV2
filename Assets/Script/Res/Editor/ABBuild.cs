@@ -4931,8 +4931,8 @@ public static class AssetBundleBuild
             DeleteDirectorAndFiles(dsOutPath);
         }
         Directory.CreateDirectory(dsOutPath);
-        dsOutPath += "/Server.exe";
-        Debug.Log("Build DS: " + dsOutPath);
+        dsOutPath += "/Server";
+        Debug.Log("Build DS Linux: " + dsOutPath);
         mMgr.BuildPackage(eBuildPlatform.eBuildDS_LINUX, dsOutPath, true);
     }
 
