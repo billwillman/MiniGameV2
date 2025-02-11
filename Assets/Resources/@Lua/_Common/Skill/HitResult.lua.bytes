@@ -4,6 +4,8 @@ local HitResult = _MOE.class("HitResult")
 1.各种增益效果Buf效果 BufferEffect
 2.单个目标
 3.一个技能击中可以产生多个HitResult给不同的人
+4.每个人的HitResult参数会不同因为每个人可能防御值等属性是不一样
+产生的数值差异也会不一样
 ------------------]]
 
 return HitResult
