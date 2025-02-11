@@ -38,7 +38,8 @@ public enum eBuildPlatform
 	eBuildIOS,
 	eBuildAndroid,
 	eBuildDS, // DS平台
-	eBuildWX, // 微信
+    eBuildDS_LINUX, // DS LINUX
+    eBuildWX, // 微信
 }
 
 // AssetBundle 文件打包类型
@@ -1832,7 +1833,12 @@ class AssetBundleMgr
 					target = BuildTarget.StandaloneWindows64;
 					break;
                 }
-			case eBuildPlatform.eBuildWX: {
+			case eBuildPlatform.eBuildDS_LINUX:
+				{
+					target = BuildTarget.StandaloneLinux64;
+					break;
+				}
+            case eBuildPlatform.eBuildWX: {
 #if TUANJIE_1_0_OR_NEWER
 					target = BuildTarget.WeixinMiniGame;
 					break;
@@ -1922,8 +1928,21 @@ class AssetBundleMgr
 					}
 					break;
 				}
+			case eBuildPlatform.eBuildDS_LINUX:
+				{
+                    outPath += "/Linux";
+                    if (!Directory.Exists(outPath))
+                    {
+                        if (isExternal)
+                            Directory.CreateDirectory(outPath);
+                        else
+                            AssetDatabase.CreateFolder("Assets/StreamingAssets", "Linux");
+                    }
+                    break;
+                }
 
-			case eBuildPlatform.eBuildDS:
+
+            case eBuildPlatform.eBuildDS:
 		case eBuildPlatform.eBuildWindow:
 		{
 			outPath += "/Windows";
@@ -2094,7 +2113,8 @@ class AssetBundleMgr
         {
 			case eBuildPlatform.eBuildAndroid:
 				return UnityEditor.Build.NamedBuildTarget.Android;
-			case eBuildPlatform.eBuildDS:
+			case eBuildPlatform.eBuildDS_LINUX:
+            case eBuildPlatform.eBuildDS:
 				return UnityEditor.Build.NamedBuildTarget.Server;
 #if TUANJIE_1_0_OR_NEWER
 			case eBuildPlatform.eBuildWX:
@@ -2120,7 +2140,7 @@ class AssetBundleMgr
 		if (!GetBuildTarget(platform, ref target))
 			return;
 		
-		bool isServer = platform == eBuildPlatform.eBuildDS;
+		bool isServer = platform == eBuildPlatform.eBuildDS || platform == eBuildPlatform.eBuildDS_LINUX;
 		bool isSubTargetChanged = false;
 #if UNITY_2022_1_OR_NEWER
 		isSubTargetChanged = EditorUserBuildSettings.standaloneBuildSubtarget != (isServer ? StandaloneBuildSubtarget.Server : StandaloneBuildSubtarget.Player);
@@ -3412,7 +3432,7 @@ class AssetBundleMgr
 					//	xmlImport.assetBundleName = "AssetBundles.xml";
 					//	xmlImport.SaveAndReimport();
 #if UNITY_5_3 || UNITY_5_4 || UNITY_5_5 || UNITY_5_6 || UNITY_2018 || UNITY_2019 || UNITY_2017 || UNITY_2017_1_OR_NEWER
-					CallBuild_5_x_API(exportDir, compressType, target, false, true, platform == eBuildPlatform.eBuildDS);
+					CallBuild_5_x_API(exportDir, compressType, target, false, true, platform == eBuildPlatform.eBuildDS || platform == eBuildPlatform.eBuildDS_LINUX);
 #else
 					CallBuild_5_x_API(exportDir, 0, target,  false, true);
 #endif
@@ -3786,13 +3806,13 @@ class AssetBundleMgr
 			m_TempIsDevep = isDevelop;
 			m_TempOutput = outputFileName;
 			m_TempTarget = platform;
-			m_TempIsServer = buildPlatform == eBuildPlatform.eBuildDS;
+			m_TempIsServer = buildPlatform == eBuildPlatform.eBuildDS || buildPlatform == eBuildPlatform.eBuildDS_LINUX;
 			EditorUserBuildSettings.activeBuildTargetChanged += OnBuildPackagePlatformChanged;
 			EditorUserBuildSettings.SwitchActiveBuildTarget (platform);
 			return true;
 		}
 
-		ProcessPackage(platform, outputFileName, isNew, canProfilter, isDebug, isDevelop, buildPlatform == eBuildPlatform.eBuildDS);
+		ProcessPackage(platform, outputFileName, isNew, canProfilter, isDebug, isDevelop, buildPlatform == eBuildPlatform.eBuildDS || buildPlatform == eBuildPlatform.eBuildDS_LINUX);
 		return true;
 	}
 
@@ -4769,19 +4789,25 @@ public static class AssetBundleBuild
     {
 		BuildPlatform(eBuildPlatform.eBuildDS, 2, true);
 	}
+
+    [MenuItem("Assets/平台打包/DS_Linux MD5(Lz4)")]
+    static public void OnBuildPlatformDSLinuxLz4Md5()
+    {
+        BuildPlatform(eBuildPlatform.eBuildDS_LINUX, 2, true);
+    }
 #endif
 
 #endif
 
-	/* 真正打包步骤 */
-	/*
+    /* 真正打包步骤 */
+    /*
      * 1.判断目录是否为空，否则生成新工程
      * 2.拷贝非资源的文件
      * 3.打包原工程的资源到AB
      * 4.新工程生成APK
      */
 
-	static void _CopyAllDirs(string dir, string outPath, List<string> resPaths)
+    static void _CopyAllDirs(string dir, string outPath, List<string> resPaths)
     {
 		if (resPaths != null)
 		{
@@ -4895,6 +4921,20 @@ public static class AssetBundleBuild
 		Debug.Log("Build DS: " + dsOutPath);
 		mMgr.BuildPackage(eBuildPlatform.eBuildDS, dsOutPath, true);
 	}
+
+	static public void Cmd_DS_Linux()
+	{
+        string dsOutPath = "../DS_Linux";
+        dsOutPath = System.IO.Path.GetFullPath(dsOutPath);
+        if (Directory.Exists(dsOutPath))
+        {
+            DeleteDirectorAndFiles(dsOutPath);
+        }
+        Directory.CreateDirectory(dsOutPath);
+        dsOutPath += "/Server.exe";
+        Debug.Log("Build DS: " + dsOutPath);
+        mMgr.BuildPackage(eBuildPlatform.eBuildDS_LINUX, dsOutPath, true);
+    }
 
 	// 打包WX
 	static public void Cmd_WX() {
@@ -5180,7 +5220,13 @@ public static class AssetBundleBuild
 			copyManifest += "/Windows";
 			break;
 
-			case eBuildPlatform.eBuildWX:
+			case eBuildPlatform.eBuildDS_LINUX:
+                rootManifest += "/Linux";
+                copyManifest += "/Linux";
+                break;
+
+
+            case eBuildPlatform.eBuildWX:
 				rootManifest += "/MiniGame";
 				copyManifest += "/MiniGame";
 				break;
@@ -5232,7 +5278,11 @@ public static class AssetBundleBuild
 			logFileName = System.IO.Path.GetDirectoryName(searchProjPath) + '/' + "wxLog.txt";
 			funcName = "AssetBundleBuild.Cmd_WX"; // 暂时不支持直接导出
 			exeName = "Tuanjie.exe";
-		}
+		} else if (platform == eBuildPlatform.eBuildDS_LINUX)
+		{
+            logFileName = System.IO.Path.GetDirectoryName(searchProjPath) + '/' + "dsLog_Linux.txt";
+            funcName = "AssetBundleBuild.Cmd_DS_Linux";
+        }
 
 		if (!string.IsNullOrEmpty(funcName))
 		{
@@ -5281,6 +5331,12 @@ public static class AssetBundleBuild
 	static public void Cmd_BuildDS_Lz4()
     {
 		Cmd_Build(2, true, eBuildPlatform.eBuildDS);
+	}
+
+	[MenuItem("Assets/发布/DS_LINUX_资源整包(Lz4)")]
+	static public void Cmd_BuildDS_LINUX_Lz4()
+	{
+		Cmd_Build(2, true, eBuildPlatform.eBuildDS_LINUX);
 	}
 #endif
 
