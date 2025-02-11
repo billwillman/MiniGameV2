@@ -1,0 +1,9 @@
+local HitResult = _MOE.class("HitResult")
+
+--[[ HitResult包含
+1.各种增益效果Buf效果 BufferEffect
+2.单个目标
+3.一个技能击中可以产生多个HitResult给不同的人
+------------------]]
+
+return HitResult
