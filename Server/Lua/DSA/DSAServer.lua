@@ -25,7 +25,8 @@ moon.exports.OnAccept = function(fd, msg)
         fd = fd,
         dsData = {
             ip = ip,
-        }
+        },
+        token = token
     }
     print(string.format("[DSA] Accept DS => token: %s ip: %s port: %d", token, ip, port))
     -----------------------------------------------------
@@ -43,6 +44,10 @@ moon.exports.OnClose = function(fd, msg)
         local data = json.decode(str)
         local token = moon.md5(data.addr)
         print(string.format("[DSA] Close DS => token: %s", token))
+        local ds = _MOE.DSMap[token]
         _MOE.DSMap[token] = nil
+        if _MOE.LocalDS == ds then
+            _MOE.LocalDS = nil
+        end
     end
 end
