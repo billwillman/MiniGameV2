@@ -5,6 +5,7 @@ local MsgIds = {
     CM_ReqDS = 3, -- 请求DS
 ------------------------------ 服务器返回协议 ----------------------
     SM_Heart = 1,
+    SM_DS_Info = 2,
 }
 
 _MOE.MsgIds = MsgIds
