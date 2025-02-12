@@ -46,6 +46,10 @@ function BaseApp:GetPlayerControllerByClientId(clientId)
     end
 end
 
+function BaseApp:QuitGame(...)
+    return _MOE.Application.Quit(...)
+end
+
 ------------------------------------------------------ 虚方法 ---------------------------------------------------
 function BaseApp:OnInit()
 end

@@ -78,10 +78,6 @@ local function ParseStartupCommands(self)
     _MOE.Logger.Log("[DSApp] IsLocalDS: " .. tostring(self.isLocalDS))
 end
 
-function _M:QuitGame(...)
-    return _MOE.Application.Quit(...)
-end
-
 ------------------------------ 继承方法 -------------------------------
 function _M:OnInit()
     ParseStartupCommands(self)
