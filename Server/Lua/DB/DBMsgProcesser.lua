@@ -9,6 +9,7 @@ local PlayerManager = require("DB.DBPlayerManager")
 
 -- 其他服务器发送本服务器处理
 local _OtherServerToMyServer = {
+    --[[
     [_MOE.ServicesCall.InitDB] = function ()
         -- 初始化连接DB
         local DB = ServerData.DB
@@ -20,6 +21,7 @@ local _OtherServerToMyServer = {
         moon.exports.db = db -- db数据库
         return true
     end,
+    ]]
     [_MOE.ServicesCall.Listen] = function ()
         return true
     end,

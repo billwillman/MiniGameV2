@@ -14,6 +14,17 @@ moon.exports.MsgProcesser = MsgProcesser
 moon.exports.ServerData = ServerData
 
 --[[
+local mysql = require("moon.db.mysql")
+moon.async(function()
+    local db = mysql.connect(ServerData.DB)
+    if db.code then
+        print_r(db.code)
+        return false
+    end
+end)
+]]
+
+--[[
 moon.exports.OnAccept = function(fd, msg)
     print("accept ", fd, moon.decode(msg, "Z"))
     socket.settimeout(fd, 10)
