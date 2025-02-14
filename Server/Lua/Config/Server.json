@@ -39,8 +39,13 @@
         "Debug": 20005,
         "isSaveQuit": true,
         "DB": {
-            "ip": "127.0.0.1",
-            "port": 8888
+            "host": "127.0.0.1",
+            "port": 8888,
+            "database": "MinGame",
+            "user": "root",
+            "password": "123456",
+            "timeout": 10000,
+            "max_packet_size": 10485760
         }
     }
 }
