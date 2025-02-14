@@ -40,10 +40,10 @@
         "isSaveQuit": true,
         "DB": {
             "host": "127.0.0.1",
-            "port": 8888,
-            "database": "MinGame",
-            "user": "root",
-            "password": "123456",
+            "port": 3306,
+            "database": "minigame",
+            "user": "zengyi",
+            "password": "GameBryo1122",
             "timeout": 10000,
             "max_packet_size": 10485760
         }
