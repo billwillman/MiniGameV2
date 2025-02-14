@@ -18,4 +18,6 @@ M.CreateUserTableSQL = function (startIndex)
     return sql
 end
 
+-- pgsql port 5432
+
 return M
