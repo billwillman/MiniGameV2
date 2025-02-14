@@ -14,7 +14,7 @@ local _OtherServerToMyServer = {
         local DB = ServerData.DB
         local db = mysql.connect(DB)
         if db.code then
-            print(db)
+            print_r(db.code)
             return false
         end
         moon.exports.db = db -- db数据库
