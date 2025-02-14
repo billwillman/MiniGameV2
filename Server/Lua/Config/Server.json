@@ -32,5 +32,15 @@
     "Cluster": {
         "url": "http://127.0.0.1:8003/conf.cluster?node=%s",
         "isSaveQuit": false
+    },
+    "DBSrv": {
+        "ip": "127.0.0.1",
+        "port": 1993,
+        "Debug": 20005,
+        "isSaveQuit": true,
+        "DB": {
+            "ip": "127.0.0.1",
+            "port": 8888
+        }
     }
 }

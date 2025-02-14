@@ -97,8 +97,13 @@ local Services = {
         file = "../service/cluster.lua",
         unique = true,
         url = clusterUrl
-    }
+    },
     ]]
+    {
+        name = "DBSrv",
+        file = "./DB/DBServer.lua",
+        unique = true
+    }
 }
 
 local RuntimeServerIds = {}

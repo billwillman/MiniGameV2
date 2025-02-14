@@ -1,0 +1,3 @@
+local Manager = {}
+
+return Manager
