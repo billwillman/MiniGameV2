@@ -44,7 +44,7 @@ local _OtherServerToMyServer = {
             local dsData = _MOE.LocalDS.dsData
             MsgProcesser:SendServerMsgAsync(msg.serverName, _MOE.ServerMsgIds.SM_DSReady, {dsData = dsData, client = msg.client})
         end
-    end
+    end,
 }
 ----------------------------
 

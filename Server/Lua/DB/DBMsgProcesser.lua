@@ -48,6 +48,8 @@ local _OtherServerToMyServer = {
         return true
     end,
     --------------------------------------------------------------------------------------
+    [_MOE.ServerMsgIds.CM_Login] = function (msg)
+    end
 }
 
 ---- 服务器间同步消息定义
