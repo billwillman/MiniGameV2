@@ -153,6 +153,11 @@ function _M:ConnectServer(ip, port)
     return ret
 end
 
+function _M:PrintMsg(msg)
+    local str = _MOE.TableUtils.Serialize(msg)
+    _MOE.Logger.Log(str)
+end
+
 ----------------------------------------------------------------- 虚方法 ---------------------------------------------------------
 
 function _M:NetModel_OnInit()
