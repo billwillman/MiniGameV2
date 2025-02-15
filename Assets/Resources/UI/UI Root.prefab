@@ -788,12 +788,14 @@ MonoBehaviour:
   m_XRTrackingOrigin: {fileID: 0}
   m_ActionsAsset: {fileID: -944628639613478452, guid: 38fe465717e5d6b44ac5d021ee025f08,
     type: 3}
-  m_PointAction: {fileID: 0}
+  m_PointAction: {fileID: 6777461853555018204, guid: 38fe465717e5d6b44ac5d021ee025f08,
+    type: 3}
   m_MoveAction: {fileID: 362603467870481119, guid: 38fe465717e5d6b44ac5d021ee025f08,
     type: 3}
   m_SubmitAction: {fileID: 0}
   m_CancelAction: {fileID: 0}
-  m_LeftClickAction: {fileID: 0}
+  m_LeftClickAction: {fileID: -4102740590795195206, guid: 38fe465717e5d6b44ac5d021ee025f08,
+    type: 3}
   m_MiddleClickAction: {fileID: 0}
   m_RightClickAction: {fileID: 0}
   m_ScrollWheelAction: {fileID: 0}

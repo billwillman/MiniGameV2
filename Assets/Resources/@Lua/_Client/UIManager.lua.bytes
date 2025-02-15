@@ -118,6 +118,14 @@ function UIManager:_CreateUIPrefab(wndName, loaderType, fairyDepPackages)
     return ret, loader
 end
 
+function UIManager:AttachInputManager()
+    if _MOE.PlayerInput then
+        if _MOE.PlayerInput.uiInputModule then
+            _MOE.PlayerInput.uiInputModule = _MOE.UIEventSystem
+        end
+    end
+end
+
 function UIManager:GetWindowView(wndName)
     if not wndName then
         return

@@ -35,6 +35,24 @@ public partial class @PlayerControlMapping: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": true
+                },
+                {
+                    ""name"": ""LeftClick"",
+                    ""type"": ""Button"",
+                    ""id"": ""2b5a2491-b0f2-4a53-b0d1-252e2a42ed1d"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""TouchPoint"",
+                    ""type"": ""Value"",
+                    ""id"": ""128bf45a-455a-4e3e-bb34-4fb0079e8c31"",
+                    ""expectedControlType"": ""Vector2"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true
                 }
             ],
             ""bindings"": [
@@ -92,6 +110,50 @@ public partial class @PlayerControlMapping: IInputActionCollection2, IDisposable
                     ""action"": ""Move"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""f6d68d21-1f3b-46d4-a916-925e64276490"",
+                    ""path"": ""<Mouse>/leftButton"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""LeftClick"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""82c13e2b-a12a-4551-a655-d1b5d0a8fceb"",
+                    ""path"": ""<Touchscreen>/Press"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""LeftClick"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""70e7f248-3eb4-4017-9241-9b6812bbb185"",
+                    ""path"": ""<Mouse>/position"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""TouchPoint"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""0e99b8aa-d683-416d-b501-cf4b951e9569"",
+                    ""path"": ""<Touchscreen>/primaryTouch/position"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""TouchPoint"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -101,6 +163,8 @@ public partial class @PlayerControlMapping: IInputActionCollection2, IDisposable
         // Player
         m_Player = asset.FindActionMap("Player", throwIfNotFound: true);
         m_Player_Move = m_Player.FindAction("Move", throwIfNotFound: true);
+        m_Player_LeftClick = m_Player.FindAction("LeftClick", throwIfNotFound: true);
+        m_Player_TouchPoint = m_Player.FindAction("TouchPoint", throwIfNotFound: true);
     }
 
     ~@PlayerControlMapping()
@@ -168,11 +232,15 @@ public partial class @PlayerControlMapping: IInputActionCollection2, IDisposable
     private readonly InputActionMap m_Player;
     private List<IPlayerActions> m_PlayerActionsCallbackInterfaces = new List<IPlayerActions>();
     private readonly InputAction m_Player_Move;
+    private readonly InputAction m_Player_LeftClick;
+    private readonly InputAction m_Player_TouchPoint;
     public struct PlayerActions
     {
         private @PlayerControlMapping m_Wrapper;
         public PlayerActions(@PlayerControlMapping wrapper) { m_Wrapper = wrapper; }
         public InputAction @Move => m_Wrapper.m_Player_Move;
+        public InputAction @LeftClick => m_Wrapper.m_Player_LeftClick;
+        public InputAction @TouchPoint => m_Wrapper.m_Player_TouchPoint;
         public InputActionMap Get() { return m_Wrapper.m_Player; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -185,6 +253,12 @@ public partial class @PlayerControlMapping: IInputActionCollection2, IDisposable
             @Move.started += instance.OnMove;
             @Move.performed += instance.OnMove;
             @Move.canceled += instance.OnMove;
+            @LeftClick.started += instance.OnLeftClick;
+            @LeftClick.performed += instance.OnLeftClick;
+            @LeftClick.canceled += instance.OnLeftClick;
+            @TouchPoint.started += instance.OnTouchPoint;
+            @TouchPoint.performed += instance.OnTouchPoint;
+            @TouchPoint.canceled += instance.OnTouchPoint;
         }
 
         private void UnregisterCallbacks(IPlayerActions instance)
@@ -192,6 +266,12 @@ public partial class @PlayerControlMapping: IInputActionCollection2, IDisposable
             @Move.started -= instance.OnMove;
             @Move.performed -= instance.OnMove;
             @Move.canceled -= instance.OnMove;
+            @LeftClick.started -= instance.OnLeftClick;
+            @LeftClick.performed -= instance.OnLeftClick;
+            @LeftClick.canceled -= instance.OnLeftClick;
+            @TouchPoint.started -= instance.OnTouchPoint;
+            @TouchPoint.performed -= instance.OnTouchPoint;
+            @TouchPoint.canceled -= instance.OnTouchPoint;
         }
 
         public void RemoveCallbacks(IPlayerActions instance)
@@ -212,5 +292,7 @@ public partial class @PlayerControlMapping: IInputActionCollection2, IDisposable
     public interface IPlayerActions
     {
         void OnMove(InputAction.CallbackContext context);
+        void OnLeftClick(InputAction.CallbackContext context);
+        void OnTouchPoint(InputAction.CallbackContext context);
     }
 }

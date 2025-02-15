@@ -13,7 +13,10 @@ local function CreateUIRoot(self, onFinish)
             if root then
                 root.name = "UI Root"
                 root.transform:SetParent(_MOE.GameStartTransform, false)
-                self.UIRoot = root
+                self.UIRoot = root.transform
+                _MOE.UIRoot = self.UIRoot
+                local eventSystemTrans = self.UIRoot:Find("EventSystem")
+                _MOE.UIEventSystem = eventSystemTrans:GetComponent(typeof(CS.UnityEngine.InputSystem.UI.InputSystemUIInputModule))
                 if onFinish then
                     onFinish(self)
                 end
@@ -31,7 +34,8 @@ local function CreateMyPlayerInput(self, onFinish)
             if playerInput then
                 playerInput.name = "PlayerInput"
                 playerInput.transform:SetParent(_MOE.GameStartTransform, false)
-                self.PlayerInput = playerInput
+                self.PlayerInput = playerInput.transform:GetComponent(typeof(CS.UnityEngine.InputSystem.PlayerInput))
+                _MOE.PlayerInput = self.PlayerInput
                 if onFinish then
                     onFinish(self)
                 end
@@ -64,6 +68,7 @@ function _M:OnPreloadFinish()
     if self.UIRoot and self.PlayerInput and self.DsNetworkManager then
         _MOE.Logger.Log("[ClientApp] OnPreloadFinish")
         _MOE.UIManager = require("_Client.UIManager").New()
+        _MOE.UIManager:AttachInputManager()
         _MOE.SceneManager:SwitchScene(_MOE.SceneEnum.LoginScene)
     end
 end
