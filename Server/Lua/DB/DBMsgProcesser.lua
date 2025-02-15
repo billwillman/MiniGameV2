@@ -1,6 +1,8 @@
 local baseClass = require("ServerCommon.CommonMsgProcesser")
 local _M = _MOE.class("DBServerMsgProcesser", baseClass)
 
+local moon = require("moon")
+
 -- local mysql = require("moon.db.mysql") -- mysql
 local pg = require("moon.db.pg") -- pgSql
 
@@ -20,7 +22,7 @@ local _OtherServerToMyServer = {
         ]]
         local db = pg.connect(DB)
         if db.code then
-            print_r(db.code)
+            print_r("[DB] db.code: ", db.code)
             return false
         end
         moon.exports.db = db -- db数据库
