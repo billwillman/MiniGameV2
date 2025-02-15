@@ -1,7 +1,7 @@
 local M = {}
 
 -- pgsql port 5432
--- uuid gen_random_uuid()
+-- uuid字段 自动生成uuid表达式： gen_random_uuid()
 
 -- SHOW password_encryption;
 -- SET password_encryption='md5';
