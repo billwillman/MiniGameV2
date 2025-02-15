@@ -82,6 +82,20 @@ function _M:OnInit()
         _MOE.GsData = {ip = "127.0.0.1", port = 5000}
         --- 注册网络Model
         self:RegisterModel("NetModel", "_Client.Models.ClientNetworkModel", false)
+
+        ------------------------ 注册消息处理函数 --------------------------
+        local NetModel = self:GetModel("NetModel")
+        _MOE = _MOE or {}
+        _MOE.GS_RegisterReceiveMsgProcess = function (msgId, target, callBack)
+            if msgId and target and callBack then
+                NetModel.GsNetwork:RegisterReceiveMsgProcess(msgId, function(GsNetwork, msg)
+                    if not target then
+                        return
+                    end
+                    callBack(target, msg, GsNetwork)
+                end)
+            end
+        end
     end
 end
 
