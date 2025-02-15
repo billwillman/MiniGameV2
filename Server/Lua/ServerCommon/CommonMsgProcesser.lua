@@ -151,6 +151,12 @@ function _M:_OnMsg(msg, socket, fd)
     return false
 end
 
+local TableUtils = require("_Common.TableUtils")
+function _M:PrintMsg(msg)
+    local str = TableUtils.Serialize(msg)
+    print(str)
+end
+
 function _M:OnMsg(msg, socket, fd)
     local data = moon.decode(msg, "Z")
     if not data then

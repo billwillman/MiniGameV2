@@ -31,6 +31,8 @@ local ClientToServerMsgProcess = {
             return
         end
 
+        self:PrintMsg(msg)
+
         self:SendServerMsgAsync("DBSrv", _MOE.ServerMsgIds.CM_Login, {userName = msg.userName,
             password = msg.password, client = fd, serverName = "LoginSrv",})
     end
