@@ -318,6 +318,16 @@ PrefabInstance:
       propertyPath: m_Name
       value: UI Root
       objectReference: {fileID: 0}
+    - target: {fileID: 8089214120196861299, guid: 52e18b5ba87f90d42818ad8e7c5c455b,
+        type: 3}
+      propertyPath: orthographic
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8089214120196861299, guid: 52e18b5ba87f90d42818ad8e7c5c455b,
+        type: 3}
+      propertyPath: orthographic size
+      value: 5
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
