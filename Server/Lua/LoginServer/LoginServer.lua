@@ -1,5 +1,6 @@
 require("ServerCommon.GlobalServerConfig")
 require("InitGlobalVars")
+local json = require("json")
 
 local ServerData = GetServerConfig("LoginSrv")
 
@@ -8,6 +9,7 @@ local socket = require "moon.socket"
 
 moon.exports.ServerData = ServerData
 
+local SessionManager = require("LoginServer.SessionManager")
 local MsgProcesser = require("LoginServer/LoginMsgProcesser").New()
 
 moon.exports.MsgProcesser = MsgProcesser
@@ -23,5 +25,10 @@ moon.exports.OnMessage = function(fd, msg)
 end
 
 moon.exports.OnClose = function(fd, msg)
-    print("close ", fd, moon.decode(msg, "Z"))
+    local str = moon.decode(msg, "Z")
+    print("close ", fd, str)
+
+    local data = json.decode(str)
+    local token = moon.md5(data.addr)
+    SessionManager:RemoveSession(token)
 end

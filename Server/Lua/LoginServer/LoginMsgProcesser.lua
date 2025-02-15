@@ -7,6 +7,10 @@ local moon = require("moon")
 local socket = require "moon.socket"
 require("ServerCommon.ServerMsgIds")
 require("ServerCommon.GlobalFuncs")
+require("Config.ErrorCode")
+
+local SessionManager = require("LoginServer.SessionManager")
+local SessionClass = require("LoginServer.Session")
 
 
 require("LuaPanda").start("127.0.0.1", ServerData.Debug)
@@ -28,7 +32,7 @@ local ClientToServerMsgProcess = {
         end
 
         self:SendServerMsgAsync("DBSrv", _MOE.ServerMsgIds.CM_Login, {userName = msg.userName,
-            password = msg.password, client = fd})
+            password = msg.password, client = fd, serverName = "LoginSrv",})
     end
 }
 -----------------------------
@@ -47,6 +51,22 @@ local _OtherServerToMyServer = {
     end,
     [_MOE.ServerMsgIds.SM_Login_Ret] = function (msg) -- DB 返回登录数据
         local fd = msg.client
+        local result = msg.result
+        if result == _MOE.ErrorCode.NOERROR then
+            local clientIp, clientPort = GetIpAndPort(fd)
+            local Session = SessionClass.New(clientIp, clientPort, msg.user.uuid)
+            SessionManager:AddSession(Session) -- 增加Session
+            MsgProcesser:SendTableToJson2(socket, fd, MsgIds.SM_LOGIN_RET, {
+                result = msg.result,
+                user = msg.user,
+            })
+        else
+            -- 通知客户端失败
+            MsgProcesser:SendTableToJson2(socket, fd, MsgIds.SM_LOGIN_RET, {
+                result = msg.result
+            })
+            ----------------
+        end
     end
 }
 ----------------------------

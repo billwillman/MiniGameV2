@@ -66,10 +66,10 @@ local _OtherServerToMyServer = {
         local sql = SQL.QueryUserLogin(userName, password)
         local result = db:query(sql)
 
-        local OnError = function ()
+        local OnError = function (isLock)
             MsgProcesser:SendServerMsgAsync("LoginSrv", _MOE.ServerMsgIds.SM_Login_Ret,
             {
-                result = _MOE.ErrorCode.LOGIN_INVAILD_PARAM,
+                result = isLock and _MOE.ErrorCode.LOGIN_USER_LOCKED or _MOE.ErrorCode.LOGIN_INVAILD_PARAM,
                 client = client
             }
             )
@@ -87,10 +87,18 @@ local _OtherServerToMyServer = {
             OnError()
             return
         end
-        MsgProcesser:SendServerMsgAsync("LoginSrv", _MOE.ServerMsgIds.SM_Login_Ret,
+        local userData = result.data[1]
+        if userData.isLock then
+            OnError(true)
+            return
+        end
+        MsgProcesser:SendServerMsgAsync(msg.serverName, _MOE.ServerMsgIds.SM_Login_Ret,
         {
             result = _MOE.ErrorCode.NOERROR,
-            client = client
+            client = client,
+            user = {
+                uuid = userData.id,
+            }
         })
     end
 }
