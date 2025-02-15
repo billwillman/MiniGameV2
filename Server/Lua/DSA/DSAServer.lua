@@ -3,7 +3,6 @@ require("InitGlobalVars")
 local json = require("json")
 
 local ServerData = GetServerConfig("DSA")
-require("LuaPanda").start("127.0.0.1", ServerData.Debug)
 
 local moon = require("moon")
 local socket = require "moon.socket"

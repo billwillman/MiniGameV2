@@ -2,7 +2,6 @@ require("ServerCommon.GlobalServerConfig")
 require("InitGlobalVars")
 
 local ServerData = GetServerConfig("LoginSrv")
-require("LuaPanda").start("127.0.0.1", ServerData.Debug)
 
 local moon = require("moon")
 local socket = require "moon.socket"

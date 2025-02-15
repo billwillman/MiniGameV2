@@ -6,6 +6,8 @@ local moon = require("moon")
 -- local mysql = require("moon.db.mysql") -- mysql
 local pg = require("moon.db.pg") -- pgSql
 
+require("LuaPanda").start("127.0.0.1", ServerData.Debug)
+
 local PlayerManager = require("DB.DBPlayerManager")
 
 ----------------------------------------------- 服务器间通信 -------------------------------

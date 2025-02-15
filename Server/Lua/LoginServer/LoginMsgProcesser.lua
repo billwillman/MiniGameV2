@@ -8,6 +8,9 @@ local socket = require "moon.socket"
 require("ServerCommon.ServerMsgIds")
 require("ServerCommon.GlobalFuncs")
 
+
+require("LuaPanda").start("127.0.0.1", ServerData.Debug)
+
 --------------------------------------------- 客户端发送服务器协议处理 --------------------
 
 --- 客户端发送给服务器请求协议处理
