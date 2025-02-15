@@ -25,6 +25,7 @@ local _OtherServerToMyServer = {
             print_r("[DB] db.code: ", db.code)
             return false
         end
+        print("[DB] connect DB Success~!")
         moon.exports.db = db -- db数据库
         return true
     end,
