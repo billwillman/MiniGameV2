@@ -101,4 +101,10 @@ function _M:OnInit()
     end
 end
 
+function _M:OnQuit()
+    if _MOE.UIManager then
+        _MOE.UIManager:CloseAllWindow()
+    end
+end
+
 return _M
