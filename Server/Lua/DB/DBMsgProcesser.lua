@@ -1,7 +1,8 @@
 local baseClass = require("ServerCommon.CommonMsgProcesser")
 local _M = _MOE.class("DBServerMsgProcesser", baseClass)
 
-local mysql = require("moon.db.mysql") -- mysql
+-- local mysql = require("moon.db.mysql") -- mysql
+local pg = require("moon.db.pg") -- pgSql
 
 local PlayerManager = require("DB.DBPlayerManager")
 
@@ -9,11 +10,15 @@ local PlayerManager = require("DB.DBPlayerManager")
 
 -- 其他服务器发送本服务器处理
 local _OtherServerToMyServer = {
-    --[[
     [_MOE.ServicesCall.InitDB] = function ()
         -- 初始化连接DB
         local DB = ServerData.DB
+        local connectStr = _MOE.TableUtils.Serialize(DB)
+        print("[DB] Connect => ", connectStr)
+        --[[
         local db = mysql.connect(DB)
+        ]]
+        local db = pg.connect(DB)
         if db.code then
             print_r(db.code)
             return false
@@ -21,7 +26,6 @@ local _OtherServerToMyServer = {
         moon.exports.db = db -- db数据库
         return true
     end,
-    ]]
     [_MOE.ServicesCall.Listen] = function ()
         return true
     end,

@@ -40,12 +40,11 @@
         "isSaveQuit": true,
         "DB": {
             "host": "127.0.0.1",
-            "port": 3306,
+            "port": 5432,
             "database": "minigame",
-            "user": "zengyi",
+            "user": "postgres",
             "password": "GameBryo1122",
-            "timeout": 10000,
-            "max_packet_size": 1048576
+            "connect_timeout": 10000
         }
     }
 }
