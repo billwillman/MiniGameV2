@@ -16,6 +16,21 @@ local PlayerManager = require("DB.DBPlayerManager")
 local SQL = require("DB.DBSQL")
 require("Config.ErrorCode")
 
+local function CheckAndConnectDB()
+    if not db then
+        return
+    end
+    if not db["sock"] then
+        local DB = ServerData.DB
+        local db = pg.connect(DB)
+        if db.code then
+            print_r("[DB] db.code: ", db.code)
+            return false
+        end
+        moon.exports.db = db
+    end
+end
+
 ----------------------------------------------- 服务器间通信 -------------------------------
 
 -- 其他服务器发送本服务器处理
@@ -60,6 +75,9 @@ local _OtherServerToMyServer = {
         if not msg.userName then
             return
         end
+
+        CheckAndConnectDB()
+
         local userName = msg.userName
         local password = msg.password
         local client = msg.client
