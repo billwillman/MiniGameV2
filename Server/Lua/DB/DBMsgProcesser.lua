@@ -76,7 +76,7 @@ local _OtherServerToMyServer = {
             return
         end
 
-        MsgProcesser:PrintMsg(db)
+        -- MsgProcesser:PrintMsg(db)
         CheckAndConnectDB()
 
         local userName = msg.userName
@@ -84,6 +84,11 @@ local _OtherServerToMyServer = {
         local client = msg.client
         local sql = SQL.QueryUserLogin(userName, password)
         local result = db:query(sql)
+
+        if result and result.code == "SOCKET" then
+            CheckAndConnectDB()
+            result = db:query(sql)
+        end
 
         local OnError = function (isLock)
             MsgProcesser:SendServerMsgAsync("LoginSrv", _MOE.ServerMsgIds.SM_Login_Ret,
