@@ -86,6 +86,7 @@ function _M:OnInit()
         ------------------------ 注册消息处理函数 --------------------------
         local NetModel = self:GetModel("NetModel")
         _MOE = _MOE or {}
+        _MOE.GSClientModel = NetModel -- 连接GS的Model
         _MOE.GS_RegisterReceiveMsgProcess = function (msgId, target, callBack)
             if msgId and target and callBack then
                 NetModel.GsNetwork:RegisterReceiveMsgProcess(msgId, function(GsNetwork, msg)
@@ -96,6 +97,7 @@ function _M:OnInit()
                 end)
             end
         end
+        --------------------------------------------------------------------
     end
 end
 
