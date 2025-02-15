@@ -15,6 +15,11 @@ local ClientToServerMsgProcess = {
     [MsgIds.CM_ReqDS] = function (self, msg, socket, fd)
         -- 请求DS地图
         self:SendServerMsgAsync("DSA", _MOE.ServerMsgIds.CM_ReqDS, {serverName = "LoginSrv", client = fd})
+    end,
+    [MsgIds.CM_Login] = function (self, msg, socket, fd)
+        -- 登录账号
+        self:SendServerMsgAsync("DBSrv", _MOE.ServerMsgIds.CM_Login, {userName = msg.userName,
+            password = msg.password, client = fd})
     end
 }
 -----------------------------
