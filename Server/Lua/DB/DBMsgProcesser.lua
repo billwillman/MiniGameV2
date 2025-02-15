@@ -33,6 +33,16 @@ end
 
 ----------------------------------------------- 服务器间通信 -------------------------------
 
+local function QueryDB(sql)
+    CheckAndConnectDB()
+    local result = db:query(sql)
+    if result and result.code == "SOCKET" then
+        CheckAndConnectDB()
+        result = db:query(sql)
+    end
+    return result
+end
+
 -- 其他服务器发送本服务器处理
 local _OtherServerToMyServer = {
     --------------------------------------- 内部系统调用 -----------------------------
@@ -75,20 +85,11 @@ local _OtherServerToMyServer = {
         if not msg.userName then
             return
         end
-
-        -- MsgProcesser:PrintMsg(db)
-        CheckAndConnectDB()
-
         local userName = msg.userName
         local password = msg.password
         local client = msg.client
         local sql = SQL.QueryUserLogin(userName, password)
-        local result = db:query(sql)
-
-        if result and result.code == "SOCKET" then
-            CheckAndConnectDB()
-            result = db:query(sql)
-        end
+        local result = QueryDB(sql)
 
         local OnError = function (isLock)
             MsgProcesser:SendServerMsgAsync("LoginSrv", _MOE.ServerMsgIds.SM_Login_Ret,
