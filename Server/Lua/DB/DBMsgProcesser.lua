@@ -93,6 +93,8 @@ local _OtherServerToMyServer = {
             )
         end
 
+        MsgProcesser:PrintMsg(result)
+
 
         if not result or not result.data or next(result.data) == nil then
             -- 失败
@@ -106,7 +108,7 @@ local _OtherServerToMyServer = {
             return
         end
         local userData = result.data[1]
-        if userData.isLock == 1 then
+        if userData.isLock ~= "0" then
             OnError(true)
             return
         end
