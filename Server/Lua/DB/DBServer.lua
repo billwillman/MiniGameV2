@@ -7,10 +7,11 @@ local ServerData = GetServerConfig("DBSrv")
 local moon = require("moon")
 local socket = require "moon.socket"
 
+moon.exports.ServerData = ServerData
+
 local MsgProcesser = require("DB/DBMsgProcesser").New()
 
 moon.exports.MsgProcesser = MsgProcesser
-moon.exports.ServerData = ServerData
 
 --[[
 local mysql = require("moon.db.mysql")

@@ -7,10 +7,11 @@ local ServerData = GetServerConfig("DSA")
 local moon = require("moon")
 local socket = require "moon.socket"
 
+moon.exports.ServerData = ServerData
+
 local MsgProcesser = require("DSA/DSAMsgProcesser").New()
 
 moon.exports.MsgProcesser = MsgProcesser
-moon.exports.ServerData = ServerData
 
 moon.exports.OnAccept = function(fd, msg)
     print("accept ", fd, moon.decode(msg, "Z"))

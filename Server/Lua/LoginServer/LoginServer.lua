@@ -6,10 +6,11 @@ local ServerData = GetServerConfig("LoginSrv")
 local moon = require("moon")
 local socket = require "moon.socket"
 
+moon.exports.ServerData = ServerData
+
 local MsgProcesser = require("LoginServer/LoginMsgProcesser").New()
 
 moon.exports.MsgProcesser = MsgProcesser
-moon.exports.ServerData = ServerData
 --moon.exports.PlayerManager = require("LoginServer.PlayerManager").New()
 
 moon.exports.OnAccept = function(fd, msg)
