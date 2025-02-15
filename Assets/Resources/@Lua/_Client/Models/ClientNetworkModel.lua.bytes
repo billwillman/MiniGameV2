@@ -33,6 +33,10 @@ function _M:ConnectServer()
     return self.GsNetwork:ConnectServer(_MOE.GsData.ip, _MOE.GsData.port)
 end
 
+function _M:SendMsg(msgId, data)
+    self.GsNetwork:SendMsg(msgId, data)
+end
+
 function _M:OnUnInit()
     if self.GsNetwork ~= nil then
         self.GsNetwork:UnInit()
