@@ -10,6 +10,19 @@ function _M:OnInit()
     self.GsNetwork:RegisterReceiveMsgProcess(_MOE.MsgIds.SM_DS_Info, _M.On_SM_DS_Info)
 end
 
+function _M:RegisterEvents()
+    _MOE.EventManager:RegisterEvent("OnGSSocketResult", self, self._OnGSSocketResult)
+    _MOE.EventManager:RegisterEvent("OnGSSocketAbort", self, self._OnGSSocketAbort)
+end
+
+function _M:_OnGSSocketAbort()
+    _MOE.EventManager:DispatchEvent(_MOE.ClientEvents.ON_GS_CONNECT_ABORT)
+end
+
+function _M:_OnGSSocketResult(isOk)
+    _MOE.EventManager:DispatchEvent(_MOE.ClientEvents.ON_GS_CONNECT_RESULT, isOk)
+end
+
 function _M.On_SM_DS_Info(GsNetwork, msg)
 end
 

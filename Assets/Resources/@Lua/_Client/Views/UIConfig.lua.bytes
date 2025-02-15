@@ -5,9 +5,9 @@ _MOE.WindowName = {
 
 _MOE.WindowConfig = {
     Login = {
-        resPath = "@Login/Login",
+        resPath = "@UI_Login/UI_Login",
         LayerId = 1,
-        class = "Login.LoginView",
+        class = "Login.UI_Login",
     },
     GM_DS = {
         resPath = "@GM/GM_DS",

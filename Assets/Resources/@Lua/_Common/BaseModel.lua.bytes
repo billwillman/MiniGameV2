@@ -9,6 +9,7 @@ end
 function BaseModel:UnInit()
     xpcall(self.UnRegisterEvents, _G.ErrorHandler, self)
     self:UnRegsterAllCsharpEvents()
+    _MOE.EventManager:UnRegisterEvents(self)
     xpcall(self.OnUnInit, _G.ErrorHandler, self)
 end
 

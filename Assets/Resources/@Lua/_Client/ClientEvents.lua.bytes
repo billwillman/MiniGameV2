@@ -1,0 +1,8 @@
+_MOE = _MOE or {}
+
+_MOE.ClientEvents = {
+    ON_GS_CONNECT_RESULT = "ON_GS_CONNECT_RESULT",
+    ON_GS_CONNECT_ABORT = "ON_GS_CONNECT_ABORT",
+}
+
+return _MOE.ClientEvents

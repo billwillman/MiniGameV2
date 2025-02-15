@@ -1,0 +1,3 @@
+local _M = _MOE.class("UI_Login", _MOE.BaseViewClass)
+
+return _M

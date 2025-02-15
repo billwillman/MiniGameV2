@@ -2,6 +2,7 @@
 local BaseAppClass = require("_Common.BaseApp")
 
 require("_Client.ClientSceneEnum")
+require("_Client.ClientEvents")
 
 local _M = _MOE.class("ClientApp", BaseAppClass)
 
