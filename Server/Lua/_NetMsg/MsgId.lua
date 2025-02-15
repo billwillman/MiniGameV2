@@ -6,6 +6,7 @@ local MsgIds = {
 ---------------------------------------------------------
     SM_Heart = 1,
     SM_DS_Info = 2,
+    SM_LOGIN_RET = 3,
 }
 
 _MOE.MsgIds = MsgIds

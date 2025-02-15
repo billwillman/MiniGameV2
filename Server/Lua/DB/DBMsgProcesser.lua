@@ -3,12 +3,18 @@ local _M = _MOE.class("DBServerMsgProcesser", baseClass)
 
 local moon = require("moon")
 
+require("ServerCommon.ServerMsgIds")
+require("ServerCommon.GlobalFuncs")
+
 -- local mysql = require("moon.db.mysql") -- mysql
 local pg = require("moon.db.pg") -- pgSql
 
 require("LuaPanda").start("127.0.0.1", ServerData.Debug)
 
 local PlayerManager = require("DB.DBPlayerManager")
+
+local SQL = require("DB.DBSQL")
+require("Config.ErrorCode")
 
 ----------------------------------------------- 服务器间通信 -------------------------------
 
@@ -51,6 +57,41 @@ local _OtherServerToMyServer = {
     end,
     --------------------------------------------------------------------------------------
     [_MOE.ServerMsgIds.CM_Login] = function (msg)
+        if not msg.userName then
+            return
+        end
+        local userName = msg.userName
+        local password = msg.password
+        local client = msg.client
+        local sql = SQL.QueryUserLogin(userName, password)
+        local result = db:query(sql)
+
+        local OnError = function ()
+            MsgProcesser:SendServerMsgAsync("LoginSrv", _MOE.ServerMsgIds.SM_Login_Ret,
+            {
+                result = _MOE.ErrorCode.LOGIN_INVAILD_PARAM,
+                client = client
+            }
+            )
+        end
+
+
+        if not result or not result.data or next(result.data) == nil then
+            -- 失败
+            OnError()
+            return
+        end
+        if #result.data > 1 then
+            -- 冗余数据
+            print("[DB ERROR] CM_Login data num > 1 sql:", sql)
+            OnError()
+            return
+        end
+        MsgProcesser:SendServerMsgAsync("LoginSrv", _MOE.ServerMsgIds.SM_Login_Ret,
+        {
+            result = _MOE.ErrorCode.NOERROR,
+            client = client
+        })
     end
 }
 

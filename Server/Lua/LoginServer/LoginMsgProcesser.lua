@@ -21,6 +21,12 @@ local ClientToServerMsgProcess = {
     end,
     [MsgIds.CM_Login] = function (self, msg, socket, fd)
         -- 登录账号
+
+        if not msg.userName or string.len(msg.userName) <= 0 then
+            self:SendTableToJson2(socket, fd, MsgIds.SM_LOGIN_RET, {result = _MOE.ErrorCode.LOGIN_INVAILD_PARAM})
+            return
+        end
+
         self:SendServerMsgAsync("DBSrv", _MOE.ServerMsgIds.CM_Login, {userName = msg.userName,
             password = msg.password, client = fd})
     end
