@@ -76,6 +76,7 @@ local _OtherServerToMyServer = {
             return
         end
 
+        MsgProcesser:PrintMsg(db)
         CheckAndConnectDB()
 
         local userName = msg.userName
