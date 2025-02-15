@@ -1,3 +1,11 @@
 local _M = _MOE.class("UI_Login", _MOE.BaseViewClass)
 
+function _M:OnInit()
+    --- 注册消息
+    self:BindGSMsgNtf(_MOE.MsgIds.SM_LOGIN_RET, self._On_GS_SM_LOGIN_RET)
+end
+
+function _M:_On_GS_SM_LOGIN_RET(msg, net)
+end
+
 return _M
