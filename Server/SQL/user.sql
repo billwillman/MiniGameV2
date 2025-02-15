@@ -1,8 +1,8 @@
--- Table: public.user
+-- Table: public.userlogin
 
--- DROP TABLE IF EXISTS public."user";
+-- DROP TABLE IF EXISTS public.userlogin;
 
-CREATE TABLE IF NOT EXISTS public."user"
+CREATE TABLE IF NOT EXISTS public.userlogin
 (
     id uuid NOT NULL DEFAULT gen_random_uuid(),
     username character varying COLLATE pg_catalog."default" NOT NULL,
@@ -14,5 +14,5 @@ CREATE TABLE IF NOT EXISTS public."user"
 
 TABLESPACE pg_default;
 
-ALTER TABLE IF EXISTS public."user"
+ALTER TABLE IF EXISTS public.userlogin
     OWNER to postgres;

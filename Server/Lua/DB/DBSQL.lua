@@ -8,4 +8,15 @@ local M = {}
 -- SET password_encryption='md5';
 -- ALTER USER postgres with password 'GameBryo1122';
 
+local QueryUserLoginFormat = "Select * from userlogin where username='%s' and password='%s'"
+
+M.QueryUserLogin = function (userName, password)
+    if not userName then
+        return false
+    end
+    password = password or ""
+    local sql = string.format(QueryUserLoginFormat, userName, password)
+    return sql
+end
+
 return M
