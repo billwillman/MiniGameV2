@@ -12,6 +12,7 @@ local PlayerManager = require("DB.DBPlayerManager")
 
 -- 其他服务器发送本服务器处理
 local _OtherServerToMyServer = {
+    --------------------------------------- 内部系统调用 -----------------------------
     [_MOE.ServicesCall.InitDB] = function ()
         -- 初始化连接DB
         local DB = ServerData.DB
@@ -46,6 +47,7 @@ local _OtherServerToMyServer = {
         end
         return true
     end,
+    --------------------------------------------------------------------------------------
 }
 
 ---- 服务器间同步消息定义
