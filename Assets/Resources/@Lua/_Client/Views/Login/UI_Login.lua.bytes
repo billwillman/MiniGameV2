@@ -11,6 +11,7 @@ end
 
 function _M:_OnBtnLogin()
     _MOE.GSClientModel:ConnectServer()
+    _MOE.GSClientModel:SendMsg(_MOE.MsgIds.CM_Login, {userName = self.bp.EdtUserName.text})
 end
 
 return _M

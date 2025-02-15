@@ -147,6 +147,7 @@ function _M:_OnMoonPacketRead(packet)
 end
 
 function _M:ConnectServer(ip, port)
+    self.NetClient:Disconnect()
     self:_PrepareStartConnect()
     local ret = self.NetClient:ConnectServer(ip, port, true)
     return ret
