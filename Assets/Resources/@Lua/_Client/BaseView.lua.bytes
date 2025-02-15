@@ -235,6 +235,16 @@ function BaseView:DoCloseSelf()
     end
 end
 
+function BaseView:BindGSMsgNtf(msgId, selfCallBack)
+    if not msgId or not selfCallBack then
+        return
+    end
+    if not _MOE.GS_RegisterReceiveMsgProcess then
+        return
+    end
+    _MOE.GS_RegisterReceiveMsgProcess(msgId, self, selfCallBack) -- 注册网络消息
+end
+
 --------------------------------------- 虚方法
 function BaseView:OnDestroy()
 end
