@@ -106,7 +106,7 @@ local _OtherServerToMyServer = {
             return
         end
         local userData = result.data[1]
-        if userData.isLock then
+        if userData.isLock == 1 then
             OnError(true)
             return
         end
