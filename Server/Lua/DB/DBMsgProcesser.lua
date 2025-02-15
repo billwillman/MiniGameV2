@@ -28,6 +28,9 @@ local _OtherServerToMyServer = {
         moon.exports.db = db -- db数据库
         return true
     end,
+    [_MOE.ServicesCall.Start] = function ()
+        return true
+    end,
     [_MOE.ServicesCall.Listen] = function ()
         return true
     end,
