@@ -58,10 +58,14 @@ local _OtherServerToMyServer = {
             local clientIp, clientPort = GetIpAndPort(fd)
             local Session = SessionClass.New(clientIp, clientPort, msg.user.uuid)
             SessionManager:AddSession(Session) -- 增加Session
-            MsgProcesser:SendTableToJson2(socket, fd, MsgIds.SM_LOGIN_RET, {
+            local retMsg = {
                 result = msg.result,
                 user = msg.user,
-            })
+            }
+
+            retMsg.user.token = Session:GetLoginToken()
+
+            MsgProcesser:SendTableToJson2(socket, fd, MsgIds.SM_LOGIN_RET, retMsg)
         else
             -- 通知客户端失败
             MsgProcesser:SendTableToJson2(socket, fd, MsgIds.SM_LOGIN_RET, {

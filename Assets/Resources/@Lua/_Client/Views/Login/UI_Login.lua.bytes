@@ -12,6 +12,7 @@ function _M:_On_GS_SM_LOGIN_RET(msg)
     end
     _MOE.TableUtils.PrintTable2(msg)
     if msg.result == 0 then
+        self.user = msg.user -- 服务器user信息
         _MOE.SceneManager:SwitchScene(_MOE.SceneEnum.LobbyScene)
     end
 end
