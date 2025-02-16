@@ -96,7 +96,7 @@ function BaseView:RegisterCustomEvent(eventName, func)
 end
 
 function BaseView:_ClearAllUIControls()
-    self.bp = {}
+    self.bp = nil
     self.Loader = nil
     self.RootGameObject = nil
     self.RootTransform = nil
