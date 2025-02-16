@@ -97,6 +97,22 @@ function DsScene:_InitGSNet()
     local GsData = _MOE.TB["GsData"]
     self.GsNetwork = GSNetClass.New(_MOE.NetManager, MsgIds.CM_Heart, MsgIds.SM_Heart, "OnGSSocketResult", "OnGSSocketAbort")
     self.GsNetwork:Init()
+
+    -------- 注册通用方法 ---------------
+    -- 这里是DS端的注册
+    _MOE = _MOE or {}
+    _MOE.BindGSMsgNtf =  function (msgId, target, callBack)
+        if msgId and target and callBack then
+            self.GsNetwork:RegisterReceiveMsgProcess(msgId, function(GsNetwork, msg)
+                if not target then
+                    return
+                end
+                callBack(target, msg, GsNetwork)
+            end)
+        end
+    end
+    ------------------------------------
+
     self.GsNetwork:ConnectServer(GsData.ip, GsData.port)
     _MOE.EventManager:RegisterEvent("OnGSSocketResult", self, self._OnGSSocketResult)
     _MOE.EventManager:RegisterEvent("OnGSSocketAbort", self, self._OnGSSocketAbort)
