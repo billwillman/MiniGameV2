@@ -1,0 +1,3 @@
+local RootAttr = _MOE.class("RootAttrModel", _MOE.BaseModel)
+
+return RootAttr

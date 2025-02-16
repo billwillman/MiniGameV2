@@ -1,7 +1,26 @@
 local ModelContainerClass = require("_Common.ModelContainer")
 local BaseApp = _MOE.class("BaseApp", ModelContainerClass)
 
+local function Init_MOE_Models(app)
+    if not app then
+        return
+    end
+    _MOE = _MOE or {}
+    _MOE.Models = {}
+    setmetatable(_MOE.Models, {
+        __index = function (self, key)
+            if app then
+                local model = app:GetModel(key)
+                return model
+            end
+        end
+    })
+end
+
 function BaseApp:Init()
+
+    Init_MOE_Models(self)
+
     self:RegisterModel("TimerManager", "_Common.TimerManager", false)
     self.TimerManager = self:GetModel("TimerManager")
     _MOE.TimerManager = self.TimerManager

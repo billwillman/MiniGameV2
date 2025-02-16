@@ -73,6 +73,29 @@ function _M:OnPreloadFinish()
     end
 end
 
+local function InitGSNetRegisterFunc(self)
+     ------------------------ 注册消息处理函数 --------------------------
+     local NetModel = self:GetModel("NetModel")
+     _MOE = _MOE or {}
+     _MOE.GSClientModel = NetModel -- 连接GS的Model
+     _MOE.GS_RegisterReceiveMsgProcess = function (msgId, target, callBack)
+         if msgId and target and callBack then
+             NetModel.GsNetwork:RegisterReceiveMsgProcess(msgId, function(GsNetwork, msg)
+                 if not target then
+                     return
+                 end
+                 callBack(target, msg, GsNetwork)
+             end)
+         end
+     end
+     --------------------------------------------------------------------
+end
+
+---------------------------------- 逻辑Models注册 ------------------------------------
+local function RegisterCustomModels(self)
+    self:RegisterModel("RootAttr", "_Client.Models.RootAttr")
+end
+
 ------------------------------ 继承方法 -------------------------------
 function _M:OnInit()
     if CreateUIRoot(self, self.OnPreloadFinish) and CreateMyPlayerInput(self, self.OnPreloadFinish) and
@@ -82,22 +105,9 @@ function _M:OnInit()
         _MOE.GsData = {ip = "127.0.0.1", port = 5000}
         --- 注册网络Model
         self:RegisterModel("NetModel", "_Client.Models.ClientNetworkModel", false)
+        InitGSNetRegisterFunc(self)
 
-        ------------------------ 注册消息处理函数 --------------------------
-        local NetModel = self:GetModel("NetModel")
-        _MOE = _MOE or {}
-        _MOE.GSClientModel = NetModel -- 连接GS的Model
-        _MOE.GS_RegisterReceiveMsgProcess = function (msgId, target, callBack)
-            if msgId and target and callBack then
-                NetModel.GsNetwork:RegisterReceiveMsgProcess(msgId, function(GsNetwork, msg)
-                    if not target then
-                        return
-                    end
-                    callBack(target, msg, GsNetwork)
-                end)
-            end
-        end
-        --------------------------------------------------------------------
+        RegisterCustomModels(self)
     end
 end
 
