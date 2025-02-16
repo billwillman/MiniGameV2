@@ -78,7 +78,7 @@ local function InitGSNetRegisterFunc(self)
      local NetModel = self:GetModel("NetModel")
      _MOE = _MOE or {}
      _MOE.GSClientModel = NetModel -- 连接GS的Model
-     _MOE.GS_RegisterReceiveMsgProcess = function (msgId, target, callBack)
+     _MOE.BindGSMsgNtf =  function (msgId, target, callBack)
          if msgId and target and callBack then
              NetModel.GsNetwork:RegisterReceiveMsgProcess(msgId, function(GsNetwork, msg)
                  if not target then

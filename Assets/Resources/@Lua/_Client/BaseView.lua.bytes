@@ -87,6 +87,13 @@ function BaseView:_UnRegisterUIEvent(name, eventName)
     return false
 end
 
+function BaseView:RegisterEvent(eventName, callback)
+    if not eventName or not callback then
+        return
+    end
+    _MOE.EventManager:RegisterEvent(eventName, self, callback)
+end
+
 function BaseView:UnRegisterCustomEvents()
     _MOE.EventManager:UnRegisterEvents(self)
 end
@@ -239,10 +246,10 @@ function BaseView:BindGSMsgNtf(msgId, selfCallBack)
     if not msgId or not selfCallBack then
         return
     end
-    if not _MOE.GS_RegisterReceiveMsgProcess then
+    if not _MOE.BindGSMsgNtf then
         return
     end
-    _MOE.GS_RegisterReceiveMsgProcess(msgId, self, selfCallBack) -- 注册网络消息
+    _MOE.BindGSMsgNtf(msgId, self, selfCallBack) -- 注册网络消息
 end
 
 --------------------------------------- 虚方法

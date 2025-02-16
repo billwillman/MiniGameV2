@@ -13,6 +13,13 @@ function BaseModel:UnInit()
     xpcall(self.OnUnInit, _G.ErrorHandler, self)
 end
 
+function BaseModel:RegisterEvent(eventName, callback)
+    if not eventName or not callback then
+        return
+    end
+    _MOE.EventManager:RegisterEvent(eventName, self, callback)
+end
+
 -- 登出
 function BaseModel:Loginout()
     self:OnLoginout()
