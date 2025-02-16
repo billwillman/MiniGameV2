@@ -1,0 +1,3 @@
+local LobbyScene = _MOE.class("ClientLobbyScene", _MOE.BaseScene)
+
+return LobbyScene

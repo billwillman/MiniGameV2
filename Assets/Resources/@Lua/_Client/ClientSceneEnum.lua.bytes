@@ -1,6 +1,7 @@
 _MOE.SceneEnum = {
     LoginScene = "LoginScene",
     MultiScene = "MultiScene", -- 多人
+    LobbyScene = "LobbyScene",
 }
 
 local SceneConfig = require("_Scene.SceneConfig")
@@ -22,6 +23,10 @@ local DSSceneConfig = {
                 return ret
             end
         end
+    },
+    ["LobbyScene"] = {
+        canLoadSame = false,
+        LuaScene = "_Client.Scene.ClientLobbyScene",
     }
 }
 
