@@ -31,8 +31,6 @@ local function CheckAndConnectDB()
     end
 end
 
------------------------------------------------ 服务器间通信 -------------------------------
-
 local function QueryDB(sql)
     CheckAndConnectDB()
     local result = db:query(sql)
@@ -42,6 +40,8 @@ local function QueryDB(sql)
     end
     return result
 end
+
+----------------------------------------------- 服务器间通信 -------------------------------
 
 -- 其他服务器发送本服务器处理
 local _OtherServerToMyServer = {
