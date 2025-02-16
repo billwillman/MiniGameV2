@@ -10,13 +10,13 @@ function _M:_On_GS_SM_LOGIN_RET(msg)
     if not self.bp then
         return
     end
-    _MOE.TableUtils.PrintTable(msg)
+    _MOE.TableUtils.PrintTable2(msg)
     _MOE.SceneManager:SwitchScene(_MOE.SceneEnum.LobbyScene)
 end
 
 function _M:_OnBtnLogin()
     _MOE.Models.NetModel:ConnectServer()
-    _MOE.Models.RottAttr:SendLoginMsg(self.bp.EdtUserName.text)
+    _MOE.Models.RootAttr:SendLoginMsg(self.bp.EdtUserName.text)
 end
 
 return _M
