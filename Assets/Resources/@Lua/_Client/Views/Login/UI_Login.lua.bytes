@@ -7,6 +7,9 @@ function _M:OnInit()
 end
 
 function _M:_On_GS_SM_LOGIN_RET(msg, net)
+    if not self.bp then
+        return
+    end
     net:PrintMsg(msg)
     _MOE.SceneManager:SwitchScene(_MOE.SceneEnum.LobbyScene)
 end
