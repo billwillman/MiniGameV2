@@ -55,7 +55,8 @@ local _OtherServerToMyServer = {
         local fd = msg.client
         local result = msg.result
         if result == _MOE.ErrorCode.NOERROR then
-            local clientIp, clientPort = GetIpAndPort(fd)
+            local clientIp, clientPort = GetIpAndPort(socket, fd)
+            print("clientIp", clientIp, "clientPort", clientPort)
             local Session = SessionClass.New(clientIp, clientPort, msg.user.uuid)
             SessionManager:AddSession(Session) -- 增加Session
             local retMsg = {
@@ -64,6 +65,8 @@ local _OtherServerToMyServer = {
             }
 
             retMsg.user.token = Session:GetLoginToken()
+
+            -- _MOE.TableUtils.PrintTable2(retMsg)
 
             MsgProcesser:SendTableToJson2(socket, fd, MsgIds.SM_LOGIN_RET, retMsg)
         else

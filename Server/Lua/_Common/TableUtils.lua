@@ -76,6 +76,11 @@ function TableUtils.PrintTable(data, pfunc, depth)
     _InnerTablePrint(data, cstring, pfunc, depth, maxDepth)
 end
 
+function TableUtils.PrintTable2(tab)
+    local str = TableUtils.Serialize(tab)
+    print(str)
+end
+
 function TableUtils.Serialize(obj, serializeMeta)
     if serializeMeta == nil then
         serializeMeta = false

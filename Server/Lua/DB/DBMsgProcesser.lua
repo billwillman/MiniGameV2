@@ -100,7 +100,7 @@ local _OtherServerToMyServer = {
             )
         end
 
-        MsgProcesser:PrintMsg(result)
+        -- MsgProcesser:PrintMsg(result)
 
 
         if not result or not result.data or next(result.data) == nil then
