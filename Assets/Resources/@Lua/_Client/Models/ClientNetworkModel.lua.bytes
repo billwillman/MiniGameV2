@@ -7,7 +7,6 @@ function _M:OnInit()
     self.GsNetwork = GsNetClass.New(_MOE.NetworkManager, _MOE.MsgIds.CM_Heart, _MOE.MsgIds.SM_Heart,
         "OnGSSocketResult", "OnGSSocketAbort")
     self.GsNetwork:Init()
-    self.GsNetwork:RegisterReceiveMsgProcess(_MOE.MsgIds.SM_DS_Info, _M.On_SM_DS_Info)
 end
 
 function _M:RegisterEvents()
@@ -21,9 +20,6 @@ end
 
 function _M:_OnGSSocketResult(isOk)
     _MOE.EventManager:DispatchEvent(_MOE.ClientEvents.ON_GS_CONNECT_RESULT, isOk)
-end
-
-function _M.On_SM_DS_Info(GsNetwork, msg)
 end
 
 function _M:ConnectServer()
