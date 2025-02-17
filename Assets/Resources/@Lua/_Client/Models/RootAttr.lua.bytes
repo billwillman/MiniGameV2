@@ -2,6 +2,7 @@ local RootAttr = _MOE.class("RootAttrModel", _MOE.BaseModel)
 
 function RootAttr:OnInit()
     _MOE.BindGSMsgNtf(_MOE.MsgIds.SM_LOGIN_RET, self, self._OnLoginRet)
+    _MOE.BindGSMsgNtf(_moe.MsgIds.SM_DS_Info, self, self._OnDsInfo)
 end
 
 function RootAttr:SendLoginMsg(userName, password)
@@ -10,6 +11,9 @@ end
 
 function RootAttr:_OnLoginRet(msg, net)
     _MOE.EventManager:DispatchEvent(_MOE.ClientEvents.ON_LOGIN_RET, msg)
+end
+
+function RootAttr:_OnDsInfo(msg, net)
 end
 
 return RootAttr
