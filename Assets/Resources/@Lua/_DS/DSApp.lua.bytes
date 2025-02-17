@@ -55,6 +55,7 @@ local function ParseStartupCommands(self)
                     xpcall(
                         function ()
                             tb = _MOE.Json.decode(json)
+                            self.isLocalDS = tb["isLocalDS"]
                         end, function (err)
                             tb = nil
                             _G.ErrorHandler(err)
