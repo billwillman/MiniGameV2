@@ -47,6 +47,7 @@ moon.exports.OnClose = function(fd, msg)
         local ds = _MOE.DSMap[token]
         _MOE.DSMap[token] = nil
         if _MOE.LocalDS == ds then
+            print("[DSA] LocalDS Removed~!")
             _MOE.LocalDS = nil
         end
     end
