@@ -74,6 +74,7 @@ function _M:OnPreloadFinish()
 end
 
 local function InitGSNetRegisterFunc(self)
+    self:RegisterModel("NetModel", "_Client.Models.ClientNetworkModel", false)
      ------------------------ 注册消息处理函数 --------------------------
      local NetModel = self:GetModel("NetModel")
      _MOE = _MOE or {}
@@ -104,7 +105,6 @@ function _M:OnInit()
         --- 这里给个默认值
         _MOE.GsData = {ip = "127.0.0.1", port = 5000}
         --- 注册网络Model
-        self:RegisterModel("NetModel", "_Client.Models.ClientNetworkModel", false)
         InitGSNetRegisterFunc(self)
 
         RegisterCustomModels(self)
