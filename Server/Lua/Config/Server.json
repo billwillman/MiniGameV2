@@ -3,7 +3,10 @@
         "ip": "127.0.0.1",
         "port": 5000,
         "Debug": 20000,
-        "isSaveQuit": false
+        "isSaveQuit": false,
+        "redis": {
+            
+        }
     },
     "ServerListSrv": {
         "ip": "127.0.0.1",
