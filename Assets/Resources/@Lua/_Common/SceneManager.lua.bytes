@@ -6,10 +6,12 @@ local SceneCfg = require("_Scene.SceneConfig")
 
 function _M:OnInit()
     self.CurrentScene = nil
+    self.WaitSceneData = nil
     self.IsSceneLoading = false;
 end
 
 function _M:OnUnInit()
+    self.WaitSceneData = nil
     local luaScene = self:GetCurrentLuaScene()
     if luaScene then
         luaScene:Exit()
@@ -30,6 +32,14 @@ local function CloseCurrentSceneAsync(self, onFinish)
     end
 end
 
+local function CheckAndSwitchWaitScene(self)
+    if not self.WaitSceneData then
+        return false
+    end
+    local ret = self:SwitchScene(self.WaitSceneData.sceneName, table.unpack(self.WaitSceneData.data))
+    return ret
+end
+
 -------------------------------------------------------------------------
 
 ---@param sceneName string 切换场景名
@@ -44,6 +54,8 @@ function _M:SwitchScene(sceneName, ...)
     end
     if self.IsSceneLoading then
         _MOE.Logger.LogError("[SceneManager] isSceneLoading not support SwitchScene")
+        self.WaitSceneData = self.WaitSceneData or {}
+        self.WaitSceneData = {sceneName = sceneName, data = {...}}
         return false
     end
     local currentSceneName = self:GetCurrentSceneName()
@@ -82,6 +94,7 @@ function _M:SwitchScene(sceneName, ...)
                         luaScene:SceneFinishLoad()
                         luaScene:Enter() -- 进入
                     end
+                    CheckAndSwitchWaitScene(self)
                 elseif luaScene and luaScene:CanProcessCallBack() and opt2 then
                     startProcess = startProcess or 0
                     luaScene:SceneProcessLoad(startProcess + 0.7 * opt2.progress)
@@ -92,6 +105,7 @@ function _M:SwitchScene(sceneName, ...)
                 if luaScene then
                     luaScene:SceneLoadFail()
                 end
+                CheckAndSwitchWaitScene(self)
             end
             return loadRet
         end
@@ -108,6 +122,7 @@ function _M:SwitchScene(sceneName, ...)
                             if luaScene then
                                 luaScene:Enter()
                             end
+                            CheckAndSwitchWaitScene(self)
                         end
                     elseif luaScene and luaScene:CanProcessCallBack() and opt1 then
                         luaScene:SceneProcessLoad(0.3 * opt1.progress)
@@ -121,6 +136,7 @@ function _M:SwitchScene(sceneName, ...)
         if luaScene then
             luaScene:Enter()
         end
+        CheckAndSwitchWaitScene(self)
     end
     return true
 end
