@@ -182,9 +182,81 @@ function BaseView:Close()
     xpcall(self.OnClose, _G.ErrorHandler, self)
 end
 
+---@protected
+---绑定一个计时器
+---@param interval   间隔
+---@param func  回调
+---@param inst	self
+---@param isLoop  是否循环
+---@return handle Timer 计时器
+function BaseView:BindTimer(interval, func, inst, isLoop, ...)
+    isLoop = isLoop or false
+    if isLoop then
+        local handle = _MOE.TimerManager:AddLoopTimer(interval, inst, func, ...)
+        self.m_timerMap = self.m_timerMap or {}
+        self.m_timerMap[handle] = true
+        return handle
+    else
+        local handle = _MOE.TimerManager:AddTimer(interval, inst, func, ...)
+        self.m_timerMap = self.m_timerMap or {}
+        self.m_timerMap[handle] = true
+        return handle
+    end
+end
+
+function BaseView:BindFrame(interval, func, inst, isLoop, ...)
+    isLoop = isLoop or false
+    if isLoop then
+        local handle = _MOE.TimerManager:AddLoopFrame(interval, inst, func, ...)
+        self.m_timerMap = self.m_timerMap or {}
+        self.m_timerMap[handle] = true
+        return handle
+    else
+        local handle = _MOE.TimerManager:AddFrame(interval, inst, func, ...)
+        self.m_timerMap = self.m_timerMap or {}
+        self.m_timerMap[handle] = true
+        return handle
+    end
+end
+
+---@protected
+---解绑一个计时器
+---@param handle Timer 计时器
+function BaseView:UnBindTimer(handle)
+    if not handle then
+        return
+    end
+    _MOE.TimerManager:RemoveTimer(handle)
+    if self.m_timerMap then
+        self.m_timerMap[handle] = nil
+    end
+end
+
+function BaseView:UnBindFrame(handle)
+    if not handle then
+        return
+    end
+    _MOE.TimerManager:RemoveTimer(handle)
+    if self.m_timerMap then
+        self.m_timerMap[handle] = nil
+    end
+end
+
+function BaseView:ClearTimers()
+    -- _MOE.Logger.Log("BaseViewClass:ClearTimers", self.className)
+    if not self.m_timerMap then
+        return
+    end
+    for handle, _ in pairs(self.m_timerMap) do
+        _MOE.TimerManager:RemoveTimer(handle)
+    end
+    self.m_timerMap = nil
+end
+
 --- UI释放
 function BaseView:Destroy()
     xpcall(self.OnDestroy, _G.ErrorHandler, self)
+    self:ClearTimers()
     self:ClearUIEvents()
     self:UnRegisterCustomEvents()
     self:UnRegsterAllCsharpEvents()
