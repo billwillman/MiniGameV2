@@ -28,7 +28,9 @@ moon.exports.OnClose = function(fd, msg)
     local str = moon.decode(msg, "Z")
     print("close ", fd, str)
 
-    local data = json.decode(str)
-    local token = moon.md5(data.addr)
-    SessionManager:RemoveSession(token)
+    xpcall(function ()
+        local data = json.decode(str)
+        local token = moon.md5(data.addr)
+        SessionManager:RemoveSession(token)
+    end, function () end)
 end
