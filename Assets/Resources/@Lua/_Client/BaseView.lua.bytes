@@ -94,7 +94,30 @@ function BaseView:RegisterEvent(eventName, callback)
     _MOE.EventManager:RegisterEvent(eventName, self, callback)
 end
 
+function BaseView:AddEventListener(eventName, func)
+    if not eventName or not func then
+        return
+    end
+    if not self.m_listenerMap then
+        self.m_listenerMap = {}
+    elseif self.m_listenerMap[eventName] then
+        _MOE.Logger.LogError("AddEventListener Error, Repeatedly Listen For Event")
+        return
+    end
+    self.m_listenerMap[eventName] = true
+    _MOE.EventManager:RegisterEvent(eventName, self, func)
+end
+
+function BaseView:RemoveEventListener(eventName)
+    if not eventName or not not self.m_listenerMap then
+        return
+    end
+    self.m_listenerMap[eventName] = nil
+    _MOE.EventManager:UnRegisterEvent(eventName, self)
+end
+
 function BaseView:UnRegisterCustomEvents()
+    self.m_listenerMap = nil
     _MOE.EventManager:UnRegisterEvents(self)
 end
 
