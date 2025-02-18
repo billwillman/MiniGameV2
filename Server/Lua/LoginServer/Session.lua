@@ -41,7 +41,7 @@ function Session:CloseSocket(quitReason)
         })
     end
     if self.fd then
-        socket:close(self.fd)
+        socket.close(self.fd)
         self.fd = nil
     end
 end

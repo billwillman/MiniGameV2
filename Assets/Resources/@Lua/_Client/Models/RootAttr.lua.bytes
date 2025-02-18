@@ -2,7 +2,8 @@ local RootAttr = _MOE.class("RootAttrModel", _MOE.BaseModel)
 
 function RootAttr:OnInit()
     _MOE.BindGSMsgNtf(_MOE.MsgIds.SM_LOGIN_RET, self, self._OnLoginRet)
-    _MOE.BindGSMsgNtf(_moe.MsgIds.SM_DS_Info, self, self._OnDsInfo)
+    _MOE.BindGSMsgNtf(_MOE.MsgIds.SM_DS_Info, self, self._OnDsInfo)
+    _MOE.BindGSMsgNtf(_MOE.MsgIds.SM_LOGIN_KICKOFF, self, self._OnLoginKickOff)
 end
 
 function RootAttr:SendLoginMsg(userName, password)
@@ -14,6 +15,13 @@ function RootAttr:_OnLoginRet(msg, net)
 end
 
 function RootAttr:_OnDsInfo(msg, net)
+end
+
+function RootAttr:_OnLoginKickOff(msg, net)
+    -- 被踢
+    _MOE.EventManager:DispatchEvent(_MOE.ClientEvents.ON_LOGIN_KICKOFF, msg)
+
+    _MOE.TableUtils.PrintTable2(msg) -- 打印日志
 end
 
 return RootAttr

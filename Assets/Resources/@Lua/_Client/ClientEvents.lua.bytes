@@ -5,6 +5,7 @@ _MOE.ClientEvents = {
     ON_GS_CONNECT_ABORT = "ON_GS_CONNECT_ABORT",
 
     ON_LOGIN_RET = "ON_LOGIN_RET",
+    ON_LOGIN_KICKOFF = "ON_LOGIN_KICKOFF",
 }
 
 return _MOE.ClientEvents
