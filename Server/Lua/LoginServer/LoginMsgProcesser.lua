@@ -55,6 +55,12 @@ RegisterClientMsgProcess(ClientToServerMsgProcess)
 
 -- 其他服务器发送本服务器处理
 local _OtherServerToMyServer = {
+    [_MOE.ServicesCall.InitDB] = function ()
+        ----------- 连接Redis，用Redis来做客户端发包频率记录限制 ----------------------------------
+        return true
+    end,
+
+
     [_MOE.ServerMsgIds.SM_DSReady] = function (msg)
         local fd = msg.client
         local dsData = msg.dsData
