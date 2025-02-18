@@ -51,7 +51,7 @@ function SessionManager:CloseSocketAndRemove(uuid, quitReason)
     end
     xpcall( function()
         session:CloseSocket(quitReason)
-    end, _G.ErrorHandler )
+    end, _MOE.ErrorHandler )
     return true
 end
 

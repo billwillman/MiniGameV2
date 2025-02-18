@@ -8,5 +8,3 @@ _MOE.ErrorHandler = function (err)
     print(err)
 	print(debug.traceback())
 end
-
-_G.ErrorHandler = _MOE.ErrorHandler
