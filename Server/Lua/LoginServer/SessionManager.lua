@@ -35,4 +35,24 @@ function SessionManager:RemoveSession(loginToken)
     end
 end
 
+-- 主动关闭Socket并删除
+function SessionManager:CloseSocketAndRemove(uuid, quitReason)
+    if not uuid then
+        return false
+    end
+    local session = self.uuidToSessionMap[uuid]
+    if not session then
+        return false
+    end
+    self.uuidToSessionMap[uuid] = nil
+    local loginToken = session:GetLoginToken()
+    if loginToken then
+        self.loginTokenToSessinMap[loginToken] = nil
+    end
+    xpcall( function()
+        session:CloseSocket(quitReason)
+    end, _G.ErrorHandler )
+    return true
+end
+
 return SessionManager

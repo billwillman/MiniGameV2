@@ -57,7 +57,12 @@ local _OtherServerToMyServer = {
         if result == _MOE.ErrorCode.NOERROR then
             local clientIp, clientPort = GetIpAndPort(socket, fd)
             -- print("clientIp", clientIp, "clientPort", clientPort)
-            local Session = SessionClass.New(clientIp, clientPort, msg.user.uuid)
+
+            --- 关闭之前已经连接的Session并删除
+            SessionManager:CloseSocketAndRemove(msg.user.uuid, _MOE.ErrorCode.LOGIN_KICKOFF_OTHER_LOGIN)
+            -----------------------------------
+
+            local Session = SessionClass.New(clientIp, clientPort, msg.user.uuid, fd)
             SessionManager:AddSession(Session) -- 增加Session
             local retMsg = {
                 result = msg.result,
