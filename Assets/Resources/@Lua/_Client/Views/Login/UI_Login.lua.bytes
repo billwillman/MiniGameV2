@@ -1,7 +1,7 @@
 local _M = _MOE.class("UI_Login", _MOE.BaseViewClass)
 
 function _M:OnInit()
-    self:RegisterEvent(_MOE.ClientEvents.ON_LOGIN_RET, self._On_GS_SM_LOGIN_RET)
+    self:AddEventListener(_MOE.ClientEvents.ON_LOGIN_RET, self._On_GS_SM_LOGIN_RET)
 
     self:AddButtonClick(self.bp.BtnLogin, self._OnBtnLogin)
 end

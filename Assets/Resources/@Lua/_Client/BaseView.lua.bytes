@@ -87,12 +87,14 @@ function BaseView:_UnRegisterUIEvent(name, eventName)
     return false
 end
 
+--[[
 function BaseView:RegisterEvent(eventName, callback)
     if not eventName or not callback then
         return
     end
     _MOE.EventManager:RegisterEvent(eventName, self, callback)
 end
+]]
 
 function BaseView:AddEventListener(eventName, func)
     if not eventName or not func then
