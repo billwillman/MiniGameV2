@@ -26,6 +26,16 @@ local ClientToServerMsgProcess = {
     [MsgIds.CM_Login] = function (self, msg, socket, fd)
         -- 登录账号
 
+        local loginToken = GenerateToken(socket, fd)
+        if not loginToken then
+            return
+        end
+        if SessionManager:ExistsByLoginToken(loginToken) then
+            self:SendTableToJson2(socket, fd, MsgIds.SM_LOGIN_RET, {result = _MOE.ErrorCode.LOGIN_EXIST_LOGINED})
+            return
+        end
+
+
         if not msg.userName or string.len(msg.userName) <= 0 then
             self:SendTableToJson2(socket, fd, MsgIds.SM_LOGIN_RET, {result = _MOE.ErrorCode.LOGIN_INVAILD_PARAM})
             return

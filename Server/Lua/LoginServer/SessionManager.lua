@@ -35,6 +35,14 @@ function SessionManager:RemoveSession(loginToken)
     end
 end
 
+function SessionManager:ExistsByLoginToken(loginToken)
+    if not loginToken then
+        return false
+    end
+    local ret = self.loginTokenToSessinMap[loginToken] ~= nil
+    return ret
+end
+
 -- 主动关闭Socket并删除
 function SessionManager:CloseSocketAndRemove(uuid, quitReason)
     if not uuid then
