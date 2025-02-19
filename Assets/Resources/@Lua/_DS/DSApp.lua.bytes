@@ -53,9 +53,7 @@ local function ParseStartupCommands(self)
                 if commandLineArgs.Length >= 2 then
                     local json = commandLineArgs[1]
                     if string.len(json) >= 2 then
-                        if json[1] == "'" and json[#json] == "'" then
-                            json = string.sub(json, 1, -1)
-                        end
+                        json = string.sub(json, 2, #json - 1)
                     end
                     print("")
                     print(json)
