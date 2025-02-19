@@ -52,6 +52,9 @@ local function ParseStartupCommands(self)
             if commandArgsType == "userdata" then
                 if commandLineArgs.Length >= 2 then
                     local json = commandLineArgs[1]
+                    print("")
+                    print(json)
+                    print("")
                     xpcall(
                         function ()
                             tb = _MOE.Json.decode(json)
