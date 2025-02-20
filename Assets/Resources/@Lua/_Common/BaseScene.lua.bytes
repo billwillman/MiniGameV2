@@ -1,5 +1,8 @@
 local CSharpEventContainer = require("_Common.CSharpEventContainer")
-local _M = _MOE.class("BaseScene", CSharpEventContainer)
+local ModelContainerClass = require("_Common.ModelContainer")
+local _M = _MOE.class("BaseScene", CSharpEventContainer, ModelContainerClass)
+
+_M[".superctor"] = true -- 会调用父类方法
 
 function _M:Ctor(sceneName, ...)
     self.SceneName = sceneName
