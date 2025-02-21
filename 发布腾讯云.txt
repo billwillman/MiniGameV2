@@ -1,0 +1,3 @@
+1.DS权限运行不够
+chmod +x Server
+执行运行 ./Server

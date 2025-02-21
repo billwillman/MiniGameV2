@@ -16,3 +16,4 @@ Assets/WebGLTemplates/
 Assets/WebGLTemplates.meta
 Common/Lua/_NetMsg/*.lua
 Server/DB/
+Server/Setup/
