@@ -5,7 +5,7 @@
 #include "common/lua_utility.hpp"
 #include "server.h"
 #include "services/lua_service.h"
-#include "luasocket.h"
+#include "../third/luasocket/src/luasocket.h"
 
 static std::weak_ptr<moon::server>  wk_server;
 
