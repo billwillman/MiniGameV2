@@ -46,6 +46,7 @@ function _M:Exit()
     xpcall(function ()
         self:OnExit()
     end, _G.ErrorHandler)
+    self:UnRegisterModels()
     -- 事件注销
     self:UnRegsterAllCsharpEvents()
     _MOE.EventManager:UnRegisterEvents(self)
