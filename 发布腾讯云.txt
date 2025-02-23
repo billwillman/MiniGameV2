@@ -11,3 +11,14 @@ sudo service postgresql restart
 
 3.配置表
 /etc/postgresql/15/main
+
+4.防火墙设置
+
+5.psql数据是否监听端口了
+命令：su
+然后输入密码
+命令：ss -antl|grep 5432
+
+6.启动服务
+sudo systemctl start postgresql
+sudo systemctl enable postgresql
