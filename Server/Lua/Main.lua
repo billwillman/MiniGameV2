@@ -143,10 +143,12 @@ local function Start()
     -- print (TableUtils.Serialize(RuntimeServerIds))
 
     -- 初始化DB
+    print("All InitDB")
     CallServerIds_Func(_MOE.ServicesCall.InitDB)
     -- 开始监听
+    print("All Listen")
     CallServerIds_Func(_MOE.ServicesCall.Listen)
-
+    print("All Start")
     CallServerIds_Func(_MOE.ServicesCall.Start)
 
     -- moon.call("lua", GetLoginSrvId(), _MOE.ServerMsgIds.SM_LS_Exist_PLAYERINFO, {token = "111"})
