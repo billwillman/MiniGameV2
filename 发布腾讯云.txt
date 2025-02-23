@@ -7,3 +7,6 @@ https://blog.51cto.com/u_15460722/4865257
 
 3.重启PGSQL
 sudo systemctl restart postgresql
+
+3.配置表
+/etc/postgresql/15/main
