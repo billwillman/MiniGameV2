@@ -4,3 +4,6 @@ chmod +x Server
 
 2.数据库配置：
 https://blog.51cto.com/u_15460722/4865257
+
+3.重启PGSQL
+sudo systemctl restart postgresql
