@@ -1,3 +1,6 @@
 1.DS权限运行不够
 chmod +x Server
 执行运行 ./Server
+
+2.数据库配置：
+https://blog.51cto.com/u_15460722/4865257
