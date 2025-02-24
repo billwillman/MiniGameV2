@@ -22,3 +22,13 @@ sudo service postgresql restart
 6.启动服务
 sudo systemctl start postgresql
 sudo systemctl enable postgresql
+
+https://blog.csdn.net/weixin_44471703/article/details/123988432
+
+https://blog.csdn.net/u010775335/article/details/129125895
+
+最终解决问题：https://blog.csdn.net/weixin_43895362/article/details/140694623
+https://blog.csdn.net/u010775335/article/details/129125895
+
+sudo -i -u postgres
+psql
