@@ -1,0 +1,6 @@
+local _M = _MOE.class("UI_GM_DS", _MOE.BaseViewClass)
+
+function _M:OnInit()
+end
+
+return _M

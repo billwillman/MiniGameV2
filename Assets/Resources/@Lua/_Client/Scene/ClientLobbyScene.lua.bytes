@@ -1,3 +1,11 @@
 local LobbyScene = _MOE.class("ClientLobbyScene", _MOE.BaseScene)
 
+function LobbyScene:OnEnter()
+    _MOE.UIManager:OpenWindow(_MOE.WindowName.GM_DS)
+end
+
+function LobbyScene:OnExit()
+    _MOE.UIManager:CloseWindow(_MOE.WindowName.GM_DS)
+end
+
 return LobbyScene
