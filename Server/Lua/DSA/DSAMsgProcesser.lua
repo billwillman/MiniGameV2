@@ -44,7 +44,18 @@ local _OtherServerToMyServer = {
         if _MOE.LocalDS ~= nil then
             -- 说明包含DS
             local dsData = _MOE.LocalDS.dsData
-            MsgProcesser:SendServerMsgAsync(msg.serverName, _MOE.ServerMsgIds.SM_DSReady, {dsData = dsData, client = msg.client})
+            MsgProcesser:SendServerMsgAsync(msg.serverName, _MOE.ServerMsgIds.SM_DSReady, {result = _MOE.ErrorCode.NOERROR, dsData = dsData, client = msg.client})
+        else
+            -- 申请服务器
+            print("Request DS ...")
+            local freeIp, freePort = GetFreeAdress()
+            if not freeIp or not freePort then
+                print("Request DS: NO FreeIP or FreePort")
+                MsgProcesser:SendServerMsgAsync(msg.serverName, _MOE.ServerMsgIds.SM_DSReady, {result = _MOE.ErrorCode.DSA_REQ_DS_ERROR, client = msg.client})
+            else
+                local dsData = {ip = freeIp, port = freePort, isLocalDS = false}
+                MsgProcesser:SendServerMsgAsync(msg.serverName, _MOE.ServerMsgIds.SM_DSReady, {result = _MOE.ErrorCode.NOERROR, dsData = dsData, client = msg.client})
+            end
         end
     end,
 }
