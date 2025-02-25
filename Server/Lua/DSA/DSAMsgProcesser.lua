@@ -7,6 +7,7 @@ local moon = require("moon")
 local socket = require "moon.socket"
 require("ServerCommon.ServerMsgIds")
 require("ServerCommon.GlobalFuncs")
+require("Config.ErrorCode")
 
 require("LuaPanda").start("127.0.0.1", ServerData.Debug)
 
