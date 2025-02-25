@@ -1,6 +1,16 @@
 local _M = _MOE.class("UI_GM_DS", _MOE.BaseViewClass)
 
 function _M:OnInit()
+    self:AddButtonClick(self.bp.BtnReq, self.OnBtnClickReq)
+    self:BindGSMsgNtf(_MOE.MsgIds.SM_DS_Info, self.OnMsgSMDSInfoNtf)
+end
+
+function _M:OnBtnClickReq()
+    -- 请求申请DS
+    _MOE.Models.NetModel:SendMsg(_MOE.MsgIds.CM_ReqDS)
+end
+
+function _M:OnMsgSMDSInfoNtf(msg)
 end
 
 return _M
