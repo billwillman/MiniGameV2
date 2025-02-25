@@ -61,7 +61,7 @@ moon.exports.GenerateToken = function (socket, fd)
 end
 
 moon.exports.GetFreeAdress = function ()
-    local so = require("socket")
+    local so = require("luaSocket")
     local tcpServer = so.tcp4()
     tcpServer:bind("*", 0)
     local _, port = tcpServer:getsockname()
