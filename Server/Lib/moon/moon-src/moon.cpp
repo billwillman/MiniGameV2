@@ -5,11 +5,11 @@
 #include "common/lua_utility.hpp"
 #include "server.h"
 #include "services/lua_service.h"
-/*
+#if TARGET_PLATFORM == PLATFORM_WINDOWS
 extern "C" {
 #include "../third/luasocket/src/luasocket.h"
 }
-*/
+#endif
 
 static std::weak_ptr<moon::server>  wk_server;
 
@@ -302,7 +302,9 @@ void open_custom_libs(lua_State* L)
     REGISTER_CUSTOM_LIBRARY("navmesh", luaopen_navmesh);
     REGISTER_CUSTOM_LIBRARY("uuid", luaopen_uuid);
     REGISTER_CUSTOM_LIBRARY("schema", luaopen_schema);
-  //  REGISTER_CUSTOM_LIBRARY("luaSocket", luaopen_socket_core_luaSocket);
+#if TARGET_PLATFORM == PLATFORM_WINDOWS
+    REGISTER_CUSTOM_LIBRARY("socket", luaopen_socket_core_luaSocket);
+#endif
 }
 }
 
