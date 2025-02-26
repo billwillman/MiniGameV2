@@ -5,9 +5,11 @@
 #include "common/lua_utility.hpp"
 #include "server.h"
 #include "services/lua_service.h"
+/*
 extern "C" {
 #include "../third/luasocket/src/luasocket.h"
 }
+*/
 
 static std::weak_ptr<moon::server>  wk_server;
 
@@ -300,7 +302,7 @@ void open_custom_libs(lua_State* L)
     REGISTER_CUSTOM_LIBRARY("navmesh", luaopen_navmesh);
     REGISTER_CUSTOM_LIBRARY("uuid", luaopen_uuid);
     REGISTER_CUSTOM_LIBRARY("schema", luaopen_schema);
-    REGISTER_CUSTOM_LIBRARY("luaSocket", luaopen_socket_core_luaSocket);
+  //  REGISTER_CUSTOM_LIBRARY("luaSocket", luaopen_socket_core_luaSocket);
 }
 }
 
