@@ -32,3 +32,11 @@ https://blog.csdn.net/u010775335/article/details/129125895
 
 sudo -i -u postgres
 psql
+
+-------------------- LINUX安装luaSocket
+1 git clone  https://github.com/diegonehab/luasocket
+1 cd luasocket
+2 make
+3 make install-both-unix
+1 socket = require ("socket")
+2 print(socket._VERSION)
