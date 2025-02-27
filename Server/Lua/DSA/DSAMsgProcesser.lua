@@ -49,6 +49,7 @@ local _OtherServerToMyServer = {
         else
             -- 申请服务器
             print("Request DS ...")
+            --[[
             local freeIp, freePort = GetFreeAdress()
             if not freeIp or not freePort then
                 print("Request DS: NO FreeIP or FreePort")
@@ -57,6 +58,8 @@ local _OtherServerToMyServer = {
                 local dsData = {ip = freeIp, port = freePort, isLocalDS = false}
                 MsgProcesser:SendServerMsgAsync(msg.serverName, _MOE.ServerMsgIds.SM_DSReady, {result = _MOE.ErrorCode.NOERROR, dsData = dsData, client = msg.client})
             end
+            ]]
+            --- 启动DS，DS内部有获取Free的地址
         end
     end,
 }
