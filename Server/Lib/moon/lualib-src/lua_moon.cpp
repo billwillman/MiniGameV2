@@ -8,6 +8,7 @@
 #include "server.h"
 #include "worker.h"
 #include "services/lua_service.h"
+#include <cstdlib>
 
 using namespace moon;
 
@@ -475,6 +476,7 @@ extern "C" {
         { "decode", message_decode},
         { "redirect", message_redirect},
         { "collect", lmi_collect},
+        { "RumCmd", lmoon_RunCmd},
         /* placeholders */
         { "id", NULL},
         { "name", NULL}, 
@@ -662,6 +664,14 @@ static int lasio_setnodelay(lua_State* L)
     bool ok = sock.setnodelay(fd);
     lua_pushboolean(L, ok ? 1 : 0);
     return 1;
+}
+
+static int lmoon_RunCmd(lua_State* L)
+{
+    size_t size = 0;
+    const char* str = luaL_checklstring(L, 1, &size);
+    system(str);
+    return 0;
 }
 
 static int lasio_set_enable_chunked(lua_State* L)
