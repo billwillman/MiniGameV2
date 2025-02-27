@@ -64,7 +64,7 @@ local _OtherServerToMyServer = {
             local exePath = nil
             if platform == 1 then
                 -- windows
-                exePath = "../../../outPath/DS/Server.exe"
+                exePath = "Start \"../../../outPath/DS/Server.exe\""
             elseif platform == 2 then
                 -- linux
                 exePath = "../../../outPath/DS_Linux/Server"
