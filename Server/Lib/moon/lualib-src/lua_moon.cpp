@@ -498,7 +498,7 @@ extern "C" {
         { "decode", message_decode},
         { "redirect", message_redirect},
         { "collect", lmi_collect},
-        { "RumCmd", lmoon_RunCmd},
+        { "RunCmd", lmoon_RunCmd},
         { "GetPlatForm", lmoon_GetPlatform},
         /* placeholders */
         { "id", NULL},
