@@ -316,6 +316,14 @@ static int lmoon_env(lua_State* L)
     }
 }
 
+static int lmoon_RunCmd(lua_State* L)
+{
+    size_t size = 0;
+    const char* str = luaL_checklstring(L, 1, &size);
+    system(str);
+    return 0;
+}
+
 static int lmoon_server_stats(lua_State* L)
 {
     lua_service* S = lua_service::get(L);
@@ -664,14 +672,6 @@ static int lasio_setnodelay(lua_State* L)
     bool ok = sock.setnodelay(fd);
     lua_pushboolean(L, ok ? 1 : 0);
     return 1;
-}
-
-static int lmoon_RunCmd(lua_State* L)
-{
-    size_t size = 0;
-    const char* str = luaL_checklstring(L, 1, &size);
-    system(str);
-    return 0;
 }
 
 static int lasio_set_enable_chunked(lua_State* L)
