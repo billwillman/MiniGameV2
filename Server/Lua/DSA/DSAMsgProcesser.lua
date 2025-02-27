@@ -62,7 +62,16 @@ local _OtherServerToMyServer = {
             end
             ]]
             --- 启动DS，DS内部有获取Free的地址
-            core.RunCmd()
+            local platform = core.GetPlatForm()
+            local exePath = nil
+            if platform == 1 then
+                -- windows
+                exePath = "../../../outPath/DS/Server.exe"
+            elseif platform == 2 then
+                -- linux
+                exePath = "../../../outPath/DS_Linux/Server"
+            end
+            core.RunCmd(exePath)
         end
     end,
 }
