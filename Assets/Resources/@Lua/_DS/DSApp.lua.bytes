@@ -67,6 +67,19 @@ local function ParseStartupCommands(self)
                             _G.ErrorHandler(err)
                         end
                     )
+                    if tb and tb.dsData then
+                        if not tb.dsData.ip then
+                            tb.dsData.ip = "127.0.0.1"
+                        end
+                        if not tb.dsData.port then
+                            tb.dsData.port = _MOE.TcpUtils.GetFreePort_TcpV4()
+                            if tb.dsData.port == 0 then
+                                tb = nil -- 端口无效
+                                self.isLocalDS = nil
+                                _MOE.Logger.LogError("[DS] ParseStartupCommands: GetFreePort Error~!")
+                            end
+                        end
+                    end
                 else
                     tb = GetTestParams()
                     self.isLocalDS = true
