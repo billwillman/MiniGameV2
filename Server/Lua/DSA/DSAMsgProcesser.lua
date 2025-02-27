@@ -38,8 +38,6 @@ RegisterClientMsgProcess(ClientToServerMsgProcess)
 
 ----------------------------------------------- 服务器间通信 -------------------------------
 
-local core = require("moon.core")
-
 -- 其他服务器发送本服务器处理
 local _OtherServerToMyServer = {
     -- 请求空闲的DS
@@ -62,7 +60,7 @@ local _OtherServerToMyServer = {
             end
             ]]
             --- 启动DS，DS内部有获取Free的地址
-            local platform = core.GetPlatForm()
+            local platform = moon.GetPlatForm()
             local exePath = nil
             if platform == 1 then
                 -- windows
@@ -75,7 +73,7 @@ local _OtherServerToMyServer = {
             exePath = string.format("%s '{\"dsData\":{\"ip\":\"%s\",\"scene\":\"MultiScene\"},\"GsData\":{\"ip\":\"%s\",\"port\":%d}}'",
                 exePath, ServerData.ip, ServerData.ip, ServerData.port)
             print("[DSA] RunCmd: " .. exePath)
-            core.RunCmd(exePath)
+            moon.RunCmd(exePath)
         end
     end,
 }
