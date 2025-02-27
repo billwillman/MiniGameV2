@@ -5,23 +5,27 @@ using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Net;
 
-public static class NetUtils
+namespace NsTcpClient
 {
 
-    // 返回 0 表示无效的地址
-    public static int GetFreePort_TcpV4()
+    public static class NetUtils
     {
-        try
+
+        // 返回 0 表示无效的地址
+        public static int GetFreePort_TcpV4()
         {
-            IPAddress ipAddress = IPAddress.Parse("127.0.0.1");
-            TcpListener listener = new TcpListener(ipAddress, 0);
-            listener.Start();
-            int port = ((IPEndPoint)listener.LocalEndpoint).Port;
-            listener.Stop();
-            return port;
-        } catch
-        {
-            return 0;
+            try
+            {
+                IPAddress ipAddress = IPAddress.Parse("127.0.0.1");
+                TcpListener listener = new TcpListener(ipAddress, 0);
+                listener.Start();
+                int port = ((IPEndPoint)listener.LocalEndpoint).Port;
+                listener.Stop();
+                return port;
+            } catch
+            {
+                return 0;
+            }
         }
     }
 }
