@@ -38,6 +38,8 @@ RegisterClientMsgProcess(ClientToServerMsgProcess)
 
 ----------------------------------------------- 服务器间通信 -------------------------------
 
+local core = require("moon.core")
+
 -- 其他服务器发送本服务器处理
 local _OtherServerToMyServer = {
     -- 请求空闲的DS
@@ -60,6 +62,7 @@ local _OtherServerToMyServer = {
             end
             ]]
             --- 启动DS，DS内部有获取Free的地址
+            core.RunCmd()
         end
     end,
 }

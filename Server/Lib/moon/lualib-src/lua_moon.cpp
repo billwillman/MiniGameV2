@@ -324,6 +324,20 @@ static int lmoon_RunCmd(lua_State* L)
     return 0;
 }
 
+static int lmoon_GetPlatform(lua_State* L)
+{
+    int ret = PLATFORM_UNKNOWN;
+#if TARGET_PLATFORM == PLATFORM_WINDOWS
+    ret = PLATFORM_WINDOWS;
+#elif TARGET_PLATFORM == PLATFORM_LINUX
+    ret = PLATFORM_LINUX;
+#elif TARGET_PLATFORM == PLATFORM_MAC
+    ret = PLATFORM_MAC;
+#endif
+    lua_pushinteger(L, ret);
+    return 1;
+}
+
 static int lmoon_server_stats(lua_State* L)
 {
     lua_service* S = lua_service::get(L);
@@ -485,6 +499,7 @@ extern "C" {
         { "redirect", message_redirect},
         { "collect", lmi_collect},
         { "RumCmd", lmoon_RunCmd},
+        { "GetPlatForm", lmoon_GetPlatform},
         /* placeholders */
         { "id", NULL},
         { "name", NULL}, 
