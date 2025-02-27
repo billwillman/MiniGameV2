@@ -71,6 +71,10 @@ local _OtherServerToMyServer = {
                 -- linux
                 exePath = "../../../outPath/DS_Linux/Server"
             end
+            -- "{'dsData':{'ip':'127.0.0.1','port':7777, 'scene': 'MultiScene'},'GsData':{'ip':'127.0.0.1','port':1991}}"
+            exePath = string.format("%s '{\"dsData\":{\"ip\":\"%s\",\"scene\":\"MultiScene\"},\"GsData\":{\"ip\":\"%s\",\"port\":%d}}'",
+                exePath, ServerData.ip, ServerData.ip, ServerData.port)
+            print("[DSA] RunCmd: " .. exePath)
             core.RunCmd(exePath)
         end
     end,
