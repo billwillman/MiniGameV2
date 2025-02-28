@@ -22,11 +22,15 @@ local ClientToServerMsgProcess = {
         if ds and ds.dsData then
             ds.dsData.isLocalDS = msg.isLocalDS -- 是否是Local DS
             ds.dsData.port = msg.port
+            -- ds.dsData.ip = msg.ip
+            ds.dsData.ip = ip
             ds.dsData.isReady = true -- 准备好了
             print(string.format("[DSA] token: %s isLocalDS: %s ip: %s dsPort: %d", token, tostring(msg.isLocalDS), ip, msg.port))
             if msg.isLocalDS then
                 _MOE.LocalDS = ds -- 设置Local DS的数据
             end
+            ---- 发送异步给LoginSrv
+            self:SendServerMsgAsync("LoginSrv", _MOE.ServerMsgIds.SM_DSReady, ds)
             return true
         end
         return false
