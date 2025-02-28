@@ -15,6 +15,12 @@ function RootAttr:_OnLoginRet(msg, net)
 end
 
 function RootAttr:_OnDsInfo(msg, net)
+    if msg.result == 0 then
+        -- 没有错误
+        local dsData = msg.dsData
+        if dsData then
+        end
+    end
 end
 
 function RootAttr:_OnLoginKickOff(msg, net)
