@@ -74,8 +74,8 @@ local _OtherServerToMyServer = {
                 exePath = "../../outPath/DS_Linux/Server"
             end
             -- "{'dsData':{'ip':'127.0.0.1','port':7777, 'scene': 'MultiScene'},'GsData':{'ip':'127.0.0.1','port':1991}}"
-            exePath = string.format("%s '{\\\"dsData\\\":{\\\"ip\\\":\\\"%s\\\",\\\"scene\\\":\\\"MultiScene\\\"},\\\"GsData\\\":{\\\"ip\\\":\\\"%s\\\",\\\"port\\\":%d}}'",
-                exePath, ServerData.ip, ServerData.ip, ServerData.port)
+            exePath = string.format("%s '{\\\"clients\\\":[%d],\\\"dsData\\\":{\\\"ip\\\":\\\"%s\\\",\\\"scene\\\":\\\"MultiScene\\\"},\\\"GsData\\\":{\\\"ip\\\":\\\"%s\\\",\\\"port\\\":%d}}'",
+                exePath, msg.client, ServerData.ip, ServerData.ip, ServerData.port)
             print("[DSA] RunCmd: " .. exePath)
             moon.RunCmd(exePath)
         end
