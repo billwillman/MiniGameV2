@@ -8,7 +8,8 @@ local moon = require("moon")
 local socket = require "moon.socket"
 local ListClass = require("_Common.LinkedList")
 
-_MOE.DSList = ListClass:new()
+_MOE.DSFreeList = ListClass:new() -- 空闲DS
+_MOE.DSBusyList = ListClass:new() -- 有玩家的DS
 
 moon.exports.ServerData = ServerData
 
@@ -29,9 +30,10 @@ moon.exports.OnAccept = function(fd, msg)
         dsData = {
             ip = ip,
         },
-        token = token
+        token = token,
+        IsBusy = false, --- 是否有真玩家
     }
-    _MOE.DSList:insert_last(dsData)
+    _MOE.DSFreeList:insert_last(dsData)
     _MOE.DSMap[token] = dsData
     print(string.format("[DSA] Accept DS => token: %s ip: %s port: %d", token, ip, port))
     -----------------------------------------------------
@@ -51,7 +53,11 @@ moon.exports.OnClose = function(fd, msg)
         print(string.format("[DSA] Close DS => token: %s", token))
         local ds = _MOE.DSMap[token]
         if ds then
-            _MOE.DSList:remove(ds)
+            if not ds.IsBusy then
+                _MOE.DSFreeList:remove(ds)
+            else
+                _MOE.DSBusyList:remove(ds)
+            end
         end
         _MOE.DSMap[token] = nil
         if _MOE.LocalDS == ds then
