@@ -64,10 +64,10 @@ local _OtherServerToMyServer = {
             local exePath = nil
             if platform == 1 then
                 -- windows
-                exePath = "Start ../../../outPath/DS/Server.exe"
+                exePath = "Start ../../outPath/DS/Server.exe"
             elseif platform == 2 then
                 -- linux
-                exePath = "../../../outPath/DS_Linux/Server"
+                exePath = "../../outPath/DS_Linux/Server"
             end
             -- "{'dsData':{'ip':'127.0.0.1','port':7777, 'scene': 'MultiScene'},'GsData':{'ip':'127.0.0.1','port':1991}}"
             exePath = string.format("%s '{\"dsData\":{\"ip\":\"%s\",\"scene\":\"MultiScene\"},\"GsData\":{\"ip\":\"%s\",\"port\":%d}}'",
