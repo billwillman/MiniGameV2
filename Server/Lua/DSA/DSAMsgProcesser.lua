@@ -30,7 +30,7 @@ local ClientToServerMsgProcess = {
                 _MOE.LocalDS = ds -- 设置Local DS的数据
             end
             ---- 发送异步给LoginSrv
-            self:SendServerMsgAsync("LoginSrv", _MOE.ServerMsgIds.SM_DSReady, ds)
+            -- self:SendServerMsgAsync("LoginSrv", _MOE.ServerMsgIds.SM_DSReady, ds)
             return true
         end
         return false
