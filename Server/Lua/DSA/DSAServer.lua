@@ -6,6 +6,9 @@ local ServerData = GetServerConfig("DSA")
 
 local moon = require("moon")
 local socket = require "moon.socket"
+local ListClass = require("_Common.LinkedList")
+
+_MOE.DSList = ListClass:new()
 
 moon.exports.ServerData = ServerData
 
@@ -21,13 +24,15 @@ moon.exports.OnAccept = function(fd, msg)
     _MOE.DSMap = _MOE.DSMap or {}
     local ip, port = GetIpAndPort(socket, fd)
     local token = GenerateToken2(ip, port)
-    _MOE.DSMap[token] = {
+    local dsData = {
         fd = fd,
         dsData = {
             ip = ip,
         },
         token = token
     }
+    _MOE.DSList:insert_last(dsData)
+    _MOE.DSMap[token] = dsData
     print(string.format("[DSA] Accept DS => token: %s ip: %s port: %d", token, ip, port))
     -----------------------------------------------------
 end
@@ -45,6 +50,9 @@ moon.exports.OnClose = function(fd, msg)
         local token = moon.md5(data.addr)
         print(string.format("[DSA] Close DS => token: %s", token))
         local ds = _MOE.DSMap[token]
+        if ds then
+            _MOE.DSList:remove(ds)
+        end
         _MOE.DSMap[token] = nil
         if _MOE.LocalDS == ds then
             print("[DSA] LocalDS Removed~!")
