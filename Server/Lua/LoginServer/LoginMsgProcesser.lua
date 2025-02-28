@@ -62,14 +62,17 @@ local _OtherServerToMyServer = {
 
 
     [_MOE.ServerMsgIds.SM_DSReady] = function (msg)
-        local fd = msg.client
-        local dsData = msg.dsData
-        local msg = {
-            result = msg.result,
-            dsData = msg.dsData,
-        }
-        print("[SM_DSReady] client:", fd)
-        MsgProcesser:SendTableToJson2(socket, fd, MsgIds.SM_DS_Info, msg) -- 通知客户端
+        local clients = msg.clients
+        if clients then
+            local clientMsg = {
+                result = msg.result,
+                dsData = msg.dsData,
+            }
+            for _, fd in ipairs(clients) do
+                print("[SM_DSReady] client:", fd)
+                MsgProcesser:SendTableToJson2(socket, fd, MsgIds.SM_DS_Info, clientMsg) -- 通知客户端
+            end
+        end
     end,
     [_MOE.ServerMsgIds.SM_Login_Ret] = function (msg) -- DB 返回登录数据
         local fd = msg.client

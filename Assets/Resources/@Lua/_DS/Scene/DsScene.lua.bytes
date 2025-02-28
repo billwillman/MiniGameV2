@@ -121,6 +121,7 @@ function DsScene:_InitGSNet()
         ip = connectData.Address,
         port = connectData.Port,
         isLocalDS = _MOE.IsLocalDS, -- 是否是LocalDS
+        clients = _MOE.TB["clients"], -- 发过来的玩家序列
     })
 end
 

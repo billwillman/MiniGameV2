@@ -29,8 +29,13 @@ local ClientToServerMsgProcess = {
             if msg.isLocalDS then
                 _MOE.LocalDS = ds -- 设置Local DS的数据
             end
+            local loginSrvMsg = {
+                result = _MOE.ErrorCode.NOERROR,
+                dsData = ds.dsData,
+                clients = msg.clients,
+            }
             ---- 发送异步给LoginSrv
-            -- self:SendServerMsgAsync("LoginSrv", _MOE.ServerMsgIds.SM_DSReady, ds)
+            self:SendServerMsgAsync("LoginSrv", _MOE.ServerMsgIds.SM_DSReady, loginSrvMsg)
             return true
         end
         return false
@@ -49,7 +54,9 @@ local _OtherServerToMyServer = {
         if _MOE.LocalDS ~= nil then
             -- 说明包含DS
             local dsData = _MOE.LocalDS.dsData
-            MsgProcesser:SendServerMsgAsync(msg.serverName, _MOE.ServerMsgIds.SM_DSReady, {result = _MOE.ErrorCode.NOERROR, dsData = dsData, client = msg.client})
+            MsgProcesser:SendServerMsgAsync(msg.serverName, _MOE.ServerMsgIds.SM_DSReady, {result = _MOE.ErrorCode.NOERROR, dsData = dsData,
+                clients = {msg.client}
+            })
         else
             -- 申请服务器
             print("Request DS ...")
