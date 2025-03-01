@@ -82,6 +82,7 @@ local _OtherServerToMyServer = {
             local clientMsg = {
                 result = msg.result,
                 dsData = msg.dsData,
+                dsToken = msg.dsToken,
             }
             for _, fd in ipairs(clients) do
                 local Session = SessionManager:GetSession(socket, fd)

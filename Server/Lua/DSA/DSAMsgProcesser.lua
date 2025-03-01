@@ -35,6 +35,7 @@ local ClientToServerMsgProcess = {
                 result = _MOE.ErrorCode.NOERROR,
                 dsData = ds.dsData,
                 clients = msg.clients,
+                dsToken = ds.token,
             }
             ---- 发送异步给LoginSrv
             self:SendServerMsgAsync("LoginSrv", _MOE.ServerMsgIds.SM_DSReady, loginSrvMsg)
