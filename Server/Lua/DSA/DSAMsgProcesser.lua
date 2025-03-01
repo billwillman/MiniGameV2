@@ -23,6 +23,7 @@ local ClientToServerMsgProcess = {
         if ds and ds.dsData then
             ds.dsData.isLocalDS = msg.isLocalDS -- 是否是Local DS
             ds.dsData.port = msg.port
+            ds.dsData.scene = msg.scene
             -- ds.dsData.ip = msg.ip
             ds.dsData.ip = ip
             ds.dsData.state = _MOE.DsStatus.WaitingPlayersConnect -- 等待玩家连接
@@ -84,8 +85,8 @@ local _OtherServerToMyServer = {
                 exePath = "../../outPath/DS_Linux/Server"
             end
             -- "{'dsData':{'ip':'127.0.0.1','port':7777, 'scene': 'MultiScene'},'GsData':{'ip':'127.0.0.1','port':1991}}"
-            exePath = string.format("%s '{\\\"clients\\\":[%d],\\\"dsData\\\":{\\\"ip\\\":\\\"%s\\\",\\\"scene\\\":\\\"MultiScene\\\"},\\\"GsData\\\":{\\\"ip\\\":\\\"%s\\\",\\\"port\\\":%d}}'",
-                exePath, msg.client, ServerData.ip, ServerData.ip, ServerData.port)
+            exePath = string.format("%s '{\\\"clients\\\":[%d],\\\"dsData\\\":{\\\"ip\\\":\\\"%s\\\",\\\"scene\\\":\\\"%s\\\"},\\\"GsData\\\":{\\\"ip\\\":\\\"%s\\\",\\\"port\\\":%d}}'",
+                exePath, msg.client, ServerData.ip, msg.sceneName, ServerData.ip, ServerData.port)
             print("[DSA] RunCmd: " .. exePath)
             moon.RunCmd(exePath)
         end
