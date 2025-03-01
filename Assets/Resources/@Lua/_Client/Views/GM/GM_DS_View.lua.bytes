@@ -7,11 +7,15 @@ end
 
 function _M:OnBtnClickReq()
     -- 请求申请DS
-    _MOE.Models.NetModel:SendMsg(_MOE.MsgIds.CM_ReqDS)
+    _MOE.Models.NetModel:SendMsg(_MOE.MsgIds.CM_ReqDS, {sceneName = "MultiScene"})
 end
 
 function _M:OnMsgSMDSInfoNtf(msg)
     _MOE.Logger.Log("[SMDSInfoNtf] " .. _MOE.TableUtils.Serialize(msg))
+    if msg.result == 0 then
+        -- 没有报错，切换多人场景
+        
+    end
 end
 
 return _M
