@@ -103,6 +103,7 @@ function _M:SendServerMsgAsync(serverName, msgId, ...)
         return false
     end
     moon.send("lua", serverId, msgId, ...)
+    return true
 end
 
 ---同步跨服务器请求数据

@@ -108,6 +108,10 @@ function list:next(last)
 	end
 end
 
+function list:GetFirst()
+	return self.first
+end
+
 function list:items()
 	return self.next, self
 end

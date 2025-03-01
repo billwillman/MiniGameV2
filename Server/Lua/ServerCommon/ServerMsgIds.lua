@@ -10,17 +10,6 @@ _MOE.ServerMsgIds = {
     SM_Login_Ret = "SM_Login_Ret",
 }
 
-_MOE.DsStatus = {
-    StartError = -1, -- 启动失败
-    WaitRunning = 0, -- 等待启动
-    Running = 1, -- 已经启动
-    Close = 2, -- DS关闭
-    AddPlayers = 3, -- 增加玩家
-    LoadingMap = 4, -- 加载地图
-    KickOffPlayers = 5, -- DS主动踢出玩家
-    PlayerExit = 6, -- 玩家主动退出
-}
-
 _MOE.ServicesCall = {
 ----------------------------- 默认事件 --------------------
     InitDB = "InitDB",

@@ -4,6 +4,8 @@ local SessionManager = {
 }
 _MOE.SessionManager = SessionManager
 
+require("ServerCommon.GlobalFuncs")
+
 function SessionManager:AddSession(session)
     if not session then
         return
@@ -18,6 +20,19 @@ function SessionManager:AddSession(session)
     end
     self.uuidToSessionMap[uuid] = session
     self.loginTokenToSessinMap[loginToken] = session
+end
+
+function SessionManager:GetSession(socket, fd)
+    local loginToken = GenerateToken(socket, fd)
+    if not loginToken then
+        return
+    end
+    return self:GetSessionByToken(loginToken)
+end
+
+function SessionManager:GetSessionByToken(token)
+    local ret = self.loginTokenToSessinMap[token]
+    return ret
 end
 
 function SessionManager:RemoveSession(loginToken)

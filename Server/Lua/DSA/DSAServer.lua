@@ -1,5 +1,6 @@
 require("ServerCommon.GlobalServerConfig")
 require("InitGlobalVars")
+require("DSA.DSState")
 local json = require("json")
 
 local ServerData = GetServerConfig("DSA")
@@ -10,6 +11,9 @@ local ListClass = require("_Common.LinkedList")
 
 _MOE.DSFreeList = ListClass:new() -- 空闲DS
 _MOE.DSBusyList = ListClass:new() -- 有玩家的DS
+
+local FreeDSTask = require("DSA.FreeDSTask").New()
+FreeDSTask:Start()
 
 moon.exports.ServerData = ServerData
 
@@ -31,7 +35,8 @@ moon.exports.OnAccept = function(fd, msg)
             ip = ip,
         },
         token = token,
-        IsBusy = false, --- 是否有真玩家
+        state = _MOE.DsStatus.None,
+        freeTime = os.time() -- 空闲时间
     }
     _MOE.DSFreeList:insert_last(dsData)
     _MOE.DSMap[token] = dsData

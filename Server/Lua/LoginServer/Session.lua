@@ -1,6 +1,7 @@
 local Session = _MOE.class("Session")
 
 require("ServerCommon.GlobalFuncs")
+require("LoginServer.SessionState")
 
 local socket = require "moon.socket"
 
@@ -9,6 +10,23 @@ function Session:Ctor(clientIp, clientPort, client_uuid, fd)
     self.uuid = client_uuid
     self.fd = fd
     self.lastLoginTime = os.time()
+    self.state = _MOE.SessionState.Free
+end
+
+function Session:GetState()
+    return self.state
+end
+
+function Session:SetState(state)
+    if state == nil then
+        return
+    end
+    self.state = state
+end
+
+function Session:CanReqDS()
+    local ret = self.state == _MOE.SessionState.Free
+    return ret
 end
 
 function Session:GetLoginToken()

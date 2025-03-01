@@ -8,6 +8,7 @@ local socket = require "moon.socket"
 require("ServerCommon.ServerMsgIds")
 require("ServerCommon.GlobalFuncs")
 require("Config.ErrorCode")
+require("LoginServer.SessionState")
 
 local SessionManager = require("LoginServer.SessionManager")
 local SessionClass = require("LoginServer.Session")
@@ -21,7 +22,21 @@ require("LuaPanda").start("127.0.0.1", ServerData.Debug)
 local ClientToServerMsgProcess = {
     [MsgIds.CM_ReqDS] = function (self, msg, socket, fd)
         -- 请求DS地图
-        self:SendServerMsgAsync("DSA", _MOE.ServerMsgIds.CM_ReqDS, {serverName = "LoginSrv", client = fd})
+        local Session = SessionManager:GetSession(socket, fd)
+        if not Session then
+            return
+        end
+        if not Session:CanReqDS() then
+            -- 通知客户端报错
+            self:SendTableToJson2(socket, fd, MsgIds.SM_DS_Info, {result = _MOE.ErrorCode.LOGIN_REQ_DS_EXIST})
+            return
+        end
+        -- 获取Token
+        if not self:SendServerMsgAsync("DSA", _MOE.ServerMsgIds.CM_ReqDS, {serverName = "LoginSrv", client = fd}) then
+            self:SendTableToJson2(socket, fd, MsgIds.SM_DS_Info, {result = _MOE.ErrorCode.DSA_REQ_DS_ERROR})
+        else
+            Session:SetState(_MOE.SessionState.ReqDS) -- 请求DS
+        end
     end,
     [MsgIds.CM_Login] = function (self, msg, socket, fd)
         -- 登录账号
@@ -69,8 +84,12 @@ local _OtherServerToMyServer = {
                 dsData = msg.dsData,
             }
             for _, fd in ipairs(clients) do
-                print("[SM_DSReady] client:", fd)
-                MsgProcesser:SendTableToJson2(socket, fd, MsgIds.SM_DS_Info, clientMsg) -- 通知客户端
+                local Session = SessionManager:GetSession(socket, fd)
+                if Session then
+                    Session:SetState(_MOE.SessionState.LoginDS)
+                    print("[SM_DSReady] client:", fd)
+                    MsgProcesser:SendTableToJson2(socket, fd, MsgIds.SM_DS_Info, clientMsg) -- 通知客户端
+                end
             end
         end
     end,

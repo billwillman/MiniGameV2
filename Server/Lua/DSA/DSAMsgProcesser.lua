@@ -8,6 +8,7 @@ local socket = require "moon.socket"
 require("ServerCommon.ServerMsgIds")
 require("ServerCommon.GlobalFuncs")
 require("Config.ErrorCode")
+require("DSA.DSState")
 
 require("LuaPanda").start("127.0.0.1", ServerData.Debug)
 
@@ -24,7 +25,8 @@ local ClientToServerMsgProcess = {
             ds.dsData.port = msg.port
             -- ds.dsData.ip = msg.ip
             ds.dsData.ip = ip
-            ds.dsData.isReady = true -- 准备好了
+            ds.dsData.state = _MOE.DsStatus.WaitingPlayersConnect -- 等待玩家连接
+            ds.freeTime = os.time() -- 更新下空闲时间
             print(string.format("[DSA] token: %s isLocalDS: %s ip: %s dsPort: %d", token, tostring(msg.isLocalDS), ip, msg.port))
             if msg.isLocalDS then
                 _MOE.LocalDS = ds -- 设置Local DS的数据
@@ -52,7 +54,7 @@ local _OtherServerToMyServer = {
     -- 请求空闲的DS
     [_MOE.ServerMsgIds.CM_ReqDS] = function (msg)
         if _MOE.LocalDS ~= nil then
-            -- 说明包含DS
+            -- 本地DS
             local dsData = _MOE.LocalDS.dsData
             MsgProcesser:SendServerMsgAsync(msg.serverName, _MOE.ServerMsgIds.SM_DSReady, {result = _MOE.ErrorCode.NOERROR, dsData = dsData,
                 clients = {msg.client}
