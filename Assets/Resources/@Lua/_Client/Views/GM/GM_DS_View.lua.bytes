@@ -14,7 +14,8 @@ function _M:OnMsgSMDSInfoNtf(msg)
     _MOE.Logger.Log("[SMDSInfoNtf] " .. _MOE.TableUtils.Serialize(msg))
     if msg.result == 0 then
         -- 没有报错，切换多人场景
-        
+        _MOE.TB = msg
+        _MOE.SceneManager:SwitchScene(_MOE.SceneEnum.MultiScene)
     end
 end
 
