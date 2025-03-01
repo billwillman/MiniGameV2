@@ -122,7 +122,7 @@ function DsScene:_InitGSNet()
         port = connectData.Port,
         isLocalDS = _MOE.IsLocalDS, -- 是否是LocalDS
         clients = _MOE.TB["clients"], -- 发过来的玩家序列
-        scene = _MOE.TB["scene"]
+        scene = _MOE.TB.dsData and _MOE.TB.dsData.scene or nil
     })
 end
 
