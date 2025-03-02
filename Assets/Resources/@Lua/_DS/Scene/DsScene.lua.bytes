@@ -41,6 +41,7 @@ function DsScene:_InitDSNet()
     self:RegsterCSharpEvent(self.DsNetworkManager, "OnSceneManagerClear", self._OnDS_OnSceneManagerClear)
     local ConnectionManager = self.DsNetworkManager.ConnectionManager
     self:RegsterCSharpEvent(ConnectionManager, "OnClientDisconnectCallback", self._OnDS_ClientDisconnectCallback)
+    self:RegsterCSharpEvent(ConnectionManager, "OnClientConnectedCallback", self._OnDS_ClientConnectCallback)
 
     _MOE.Logger.Log("[DS] DsScene:StartServer True")
 end
@@ -105,6 +106,10 @@ end
 
 function DsScene:_OnDS_ClientDisconnectCallback(clientId)
     _MOE.Logger.LogFormat("[DsScene] Client DisConnect: {0:D}", clientId)
+end
+
+function DsScene:_OnDS_ClientConnectCallback(clientId)
+    _MOE.Logger.LogFormat("[DsScene] Client Connect: {0:D}", clientId)
 end
 
 function DsScene:_UnInitDSNet()
