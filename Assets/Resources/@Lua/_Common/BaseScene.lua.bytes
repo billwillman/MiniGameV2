@@ -6,6 +6,16 @@ _M[".superctor"] = true -- 会调用父类方法
 
 function _M:Ctor(sceneName, ...)
     self.SceneName = sceneName
+
+    self.Models = {}
+    setmetatable(self.Models, {
+        __index = function (_, key)
+            if app then
+                local model = self:GetModel(key)
+                return model
+            end
+        end
+    })
 end
 
 function _M:GetSceneName()
