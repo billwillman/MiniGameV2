@@ -67,9 +67,9 @@ end
 function DsScene:SetConnectionApprovalData()
     local userInfo = _MOE.Models.RootAttr:GetUserInfo()
     if userInfo then
-        self.NetWorkMgr.NetworkConfig.ConnectionData = _MOE.Json.encode(userInfo)
+        self.DsNetworkManager.NetworkConfig.ConnectionData = _MOE.Json.encode(userInfo)
     else
-        self.NetWorkMgr.NetworkConfig.ConnectionData = ""
+        self.DsNetworkManager.NetworkConfig.ConnectionData = ""
     end
 end
 
