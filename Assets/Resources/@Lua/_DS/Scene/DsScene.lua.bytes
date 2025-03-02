@@ -47,7 +47,28 @@ end
 
 function DsScene:OnDS_ConnectionApprovalCallback(request, response)
     _MOE.Logger.LogFormat("[DsScene] ConnectionApprovalCallback Payload: {0}", request.Payload)
-    response.Approved = true -- 暂时直接认证成功
+    if not request.Payload or string.len(request.Payload) <= 0 then
+        response.Approved = false
+        return
+    end
+    local player = _MOE.Json.decode(request.Payload)
+    if not player or not player.token then
+        response.Approved = false
+        return
+    end
+    local clientLoginTokens = _MOE.TB["clientLoginTokens"]
+    if not clientLoginTokens then
+        return false
+    end
+    local isOk = false
+    for _, clientToken in ipairs(clientLoginTokens) do
+        if clientToken == player.token then
+            isOk = true
+            break
+        end
+    end
+
+    response.Approved = isOk -- 暂时直接认证成功
     if response.Approved then
         response.CreatePlayerObject = true
         response.Position = _MOE.Vector3.zero
