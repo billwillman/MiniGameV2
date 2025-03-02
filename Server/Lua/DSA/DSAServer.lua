@@ -52,11 +52,24 @@ local function DS_IsBusy(ds)
     return true
 end
 
-local function DS_IsInList(ds)
+local function DS_InFreeList(ds)
     if not ds then
         return false
     end
-    local ret = ds._list ~= nil
+    local ret = ds._list ~= nil and ds._list == _MOE.DSFreeList
+    return ret
+end
+
+local function DS_InBusyList(ds)
+    if not ds then
+        return false
+    end
+    local ret = ds._list ~= nil and ds._list == _MOE.DSBusyList
+    return ret
+end
+
+local function DS_IsInList(ds)
+    local ret = DS_InFreeList(ds) or DS_InBusyList(ds)
     return ret
 end
 
@@ -78,6 +91,8 @@ moon.exports.OnAccept = function(fd, msg)
         freeTime = os.time(), -- 空闲时间
         IsBusy = DS_IsBusy,
         IsInList = DS_IsInList,
+        IsInFreeList = DS_InFreeList,
+        IsInBusyList = DS_InBusyList,
     }
     _MOE.DSFreeList:insert_last(dsData)
     _MOE.DSMap[token] = dsData
