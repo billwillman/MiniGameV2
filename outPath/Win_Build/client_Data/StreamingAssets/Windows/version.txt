@@ -1,0 +1,2 @@
+res=1.000
+fileList=c9f49c5ac78bd596bdf2b5088427bc68
