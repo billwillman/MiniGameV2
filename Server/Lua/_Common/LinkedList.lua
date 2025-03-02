@@ -24,6 +24,7 @@ function list:insert_first(t)
 		self.last = t
 	end
 	self.length = self.length + 1
+	t._list = self
 end
 
 function list:insert_after(anchor, t)
@@ -40,6 +41,7 @@ function list:insert_after(anchor, t)
 		end
 		t._prev = anchor
 		anchor._next = t
+		t._list = self
 		self.length = self.length + 1
 	else
 		self:insert_first(t)
@@ -84,6 +86,7 @@ function list:remove(t)
 	end
 	t._next = nil
 	t._prev = nil
+	t._list = nil
 	self.length = self.length - 1
 	return t
 end
@@ -129,7 +132,7 @@ function list:reverse_items()
 end
 
 --utils
-
+--[[
 function list:copy()
 	local newList = self:new()
 	for item in self:items() do
@@ -137,5 +140,6 @@ function list:copy()
 	end
 	return newList
 end
+]]
 
 return list

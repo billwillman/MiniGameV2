@@ -20,10 +20,12 @@ moon.exports.RemoveDS = function (ds)
     if _MOE.DSMap then
         _MOE.DSMap[token] = nil
     end
-    if ds:IsBusy() then
-        _MOE.DSBusyList:remove(ds)
-    else
-        _MOE.DSFreeList:remove(ds)
+    if ds:IsInList() then
+        if ds:IsBusy() then
+            _MOE.DSBusyList:remove(ds)
+        else
+            _MOE.DSFreeList:remove(ds)
+        end
     end
     if _MOE.LocalDS == ds then
         _MOE.LocalDS = nil
@@ -50,6 +52,14 @@ local function DS_IsBusy(ds)
     return true
 end
 
+local function DS_IsInList(ds)
+    if not ds then
+        return false
+    end
+    local ret = ds._list ~= nil
+    return ret
+end
+
 moon.exports.OnAccept = function(fd, msg)
     print("accept ", fd, moon.decode(msg, "Z"))
     socket.settimeout(fd, 10)
@@ -67,6 +77,7 @@ moon.exports.OnAccept = function(fd, msg)
         state = _MOE.DsStatus.None,
         freeTime = os.time(), -- 空闲时间
         IsBusy = DS_IsBusy,
+        IsInList = DS_IsInList,
     }
     _MOE.DSFreeList:insert_last(dsData)
     _MOE.DSMap[token] = dsData
