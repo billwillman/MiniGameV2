@@ -12,6 +12,24 @@ local ListClass = require("_Common.LinkedList")
 _MOE.DSFreeList = ListClass:new() -- 空闲DS
 _MOE.DSBusyList = ListClass:new() -- 有玩家的DS
 
+moon.exports.RemoveDS = function (ds)
+    if not ds then
+        return
+    end
+    local token = ds.token
+    if _MOE.DSMap then
+        _MOE.DSMap[token] = nil
+    end
+    if ds:IsBusy() then
+        _MOE.DSBusyList:remove(ds)
+    else
+        _MOE.DSFreeList:remove(ds)
+    end
+    if _MOE.LocalDS == ds then
+        _MOE.LocalDS = nil
+    end
+end
+
 local FreeDSTask = require("DSA.FreeDSTask").New()
 FreeDSTask:Start()
 
@@ -20,6 +38,17 @@ moon.exports.ServerData = ServerData
 local MsgProcesser = require("DSA/DSAMsgProcesser").New()
 
 moon.exports.MsgProcesser = MsgProcesser
+
+local function DS_IsBusy(ds)
+    if not ds then
+        return false
+    end
+    local players = ds.players
+    if not players or #players <= 0 then
+        return false
+    end
+    return true
+end
 
 moon.exports.OnAccept = function(fd, msg)
     print("accept ", fd, moon.decode(msg, "Z"))
@@ -36,7 +65,8 @@ moon.exports.OnAccept = function(fd, msg)
         },
         token = token,
         state = _MOE.DsStatus.None,
-        freeTime = os.time() -- 空闲时间
+        freeTime = os.time(), -- 空闲时间
+        IsBusy = DS_IsBusy,
     }
     _MOE.DSFreeList:insert_last(dsData)
     _MOE.DSMap[token] = dsData
@@ -52,22 +82,14 @@ moon.exports.OnClose = function(fd, msg)
     local str = moon.decode(msg, "Z")
     print("close ", fd, str)
 
-    if _MOE.DSMap then
-        local data = json.decode(str)
-        local token = moon.md5(data.addr)
-        print(string.format("[DSA] Close DS => token: %s", token))
-        local ds = _MOE.DSMap[token]
-        if ds then
-            if not ds.IsBusy then
-                _MOE.DSFreeList:remove(ds)
-            else
-                _MOE.DSBusyList:remove(ds)
-            end
-        end
-        _MOE.DSMap[token] = nil
-        if _MOE.LocalDS == ds then
-            print("[DSA] LocalDS Removed~!")
-            _MOE.LocalDS = nil
+    local doRemoveDS = function ()
+        if _MOE.DSMap then
+            local data = json.decode(str)
+            local token = moon.md5(data.addr)
+            print(string.format("[DSA] Close DS => token: %s", token))
+            local ds = _MOE.DSMap[token]
+            RemoveDS(ds)
         end
     end
+    xpcall(doRemoveDS, function () end)
 end

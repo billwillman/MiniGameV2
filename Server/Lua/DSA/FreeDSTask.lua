@@ -19,6 +19,7 @@ local function CloseFreeDS(ds)
     print("[Close Free DS: Start]")
     ds.state = _MOE.DsStatus.DSACloseFreeDS -- DSA关闭空闲的DS
     _MOE.TableUtils.PrintTable2(ds)
+    RemoveDS(ds)
     MsgProcesser:SendTableToJson2(socket, fd, MsgIds.SM_DS_QUIT, {reason = _MOE.DsStatus.DSACloseFreeDS})
     CloseSocket(socket, fd)
     print("[Close Free DS: end]")
@@ -34,7 +35,7 @@ local function TaskTick()
                 local firstDs = _MOE.DSFreeList:GetFirst()
                 _MOE.DSFreeList:remove_first()
                 if firstDs then
-                    if not firstDs.players or #firstDs.players <= 0 then
+                    if not firstDs:IsBusy() then
                         -- 说明是空闲的
                         if currtime - firstDs.freeTime > 60 then -- 大于60秒杀进程
                             -- 杀进程(采用关闭端口)
