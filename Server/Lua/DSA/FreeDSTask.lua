@@ -39,10 +39,6 @@ local function TaskTick()
                         if currtime - firstDs.freeTime > 60 then -- 大于60秒杀进程
                             -- 杀进程(采用关闭端口)
                             CloseFreeDS(firstDs)
-                            ----------------------
-                            --- 暂时还是放最后
-                            -- _MOE.DSFreeList:insert_last(firstDs)
-                            ---
                         else
                             --- 添加到后面去
                             _MOE.DSFreeList:insert_last(firstDs)
