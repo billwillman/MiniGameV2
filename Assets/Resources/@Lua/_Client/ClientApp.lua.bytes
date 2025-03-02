@@ -106,10 +106,10 @@ function _M:GetLocalPlayerController()
         return nil
     end
     local data = _MOE.PlayerControllerList[1]
-    if not data then
+    if not data or not data.target then
         return nil
     end
-    return data.target
+    return data.target.PlayerController
 end
 
 ---------------------------------- 逻辑Models注册 ------------------------------------

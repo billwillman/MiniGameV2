@@ -59,8 +59,8 @@ function BaseApp:GetPlayerControllerByClientId(clientId)
     end
     if _MOE.PlayerControllers then
         local data = _MOE.PlayerControllers[clientId]
-        if data then
-            return data.target
+        if data and data.target then
+            return data.target.PlayerController
         end
     end
 end
