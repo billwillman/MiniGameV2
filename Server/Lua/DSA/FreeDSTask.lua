@@ -31,6 +31,8 @@ local function TaskTick()
             moon.sleep(0)
         else
             local currtime = os.time()
+            local currentCnt = _MOE.DSFreeList:GetLength()
+            local currentIdx = 1
             for i = 1, 50 do
                 local firstDs = _MOE.DSFreeList:GetFirst()
                 _MOE.DSFreeList:remove_first()
@@ -49,7 +51,10 @@ local function TaskTick()
                         firstDs.freeTime = currtime
                         _MOE.DSBusyList:insert_last(firstDs)
                     end
-
+                    currentIdx = currentIdx + 1
+                    if currentIdx >= currentCnt then
+                        break
+                    end
                 else
                     break
                 end

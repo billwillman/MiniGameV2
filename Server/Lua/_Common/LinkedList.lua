@@ -131,6 +131,10 @@ function list:reverse_items()
 	return self.prev, self
 end
 
+function list:GetLength()
+	return self.length
+end
+
 --utils
 --[[
 function list:copy()
