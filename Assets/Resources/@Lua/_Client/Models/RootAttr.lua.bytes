@@ -2,7 +2,6 @@ local RootAttr = _MOE.class("RootAttrModel", _MOE.BaseModel)
 
 function RootAttr:OnInit()
     _MOE.BindGSMsgNtf(_MOE.MsgIds.SM_LOGIN_RET, self, self._OnLoginRet)
-    _MOE.BindGSMsgNtf(_MOE.MsgIds.SM_DS_Info, self, self._OnDsInfo)
     _MOE.BindGSMsgNtf(_MOE.MsgIds.SM_LOGIN_KICKOFF, self, self._OnLoginKickOff)
 end
 
@@ -12,16 +11,6 @@ end
 
 function RootAttr:_OnLoginRet(msg, net)
     _MOE.EventManager:DispatchEvent(_MOE.ClientEvents.ON_LOGIN_RET, msg)
-end
-
-function RootAttr:_OnDsInfo(msg, net)
-    if msg.result == 0 then
-        -- 没有错误
-        local dsData = msg.dsData
-        if dsData then
-            
-        end
-    end
 end
 
 function RootAttr:_OnLoginKickOff(msg, net)

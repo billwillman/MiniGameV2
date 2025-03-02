@@ -92,6 +92,15 @@ local function InitGSNetRegisterFunc(self)
      --------------------------------------------------------------------
 end
 
+--- 连接DS切换
+function _M:SwitchMultiScene(ds)
+    if not ds then
+        return false
+    end
+    _MOE.TB = ds
+    _MOE.SceneManager:SwitchScene(_MOE.SceneEnum.MultiScene, self.DsNetworkManager, false)
+end
+
 ---------------------------------- 逻辑Models注册 ------------------------------------
 local function RegisterCustomModels(self)
     self:RegisterModel("RootAttr", "_Client.Models.RootAttr")
