@@ -101,6 +101,17 @@ function _M:SwitchMultiScene(ds)
     _MOE.SceneManager:SwitchScene(_MOE.SceneEnum.MultiScene, self.DsNetworkManager, false)
 end
 
+function _M:GetLocalPlayerController()
+    if not _MOE.PlayerControllerList then
+        return nil
+    end
+    local data = _MOE.PlayerControllerList[1]
+    if not data then
+        return nil
+    end
+    return data.target
+end
+
 ---------------------------------- 逻辑Models注册 ------------------------------------
 local function RegisterCustomModels(self)
     self:RegisterModel("RootAttr", "_Client.Models.RootAttr")
