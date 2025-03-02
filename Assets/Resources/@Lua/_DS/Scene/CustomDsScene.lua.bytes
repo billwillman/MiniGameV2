@@ -1,0 +1,15 @@
+local DsSceneClass = require("_DS.Scene.DsScene")
+local CustomDsScene = _MOE.class("CustomDsScene", DsSceneClass)
+CustomDsScene[".superctor"] = true -- 会调用父类方法
+
+function CustomDsScene:Generate_CM_DS_Ready_Msg(connectData)
+    local ret = {
+        ip = connectData.Address,
+        port = connectData.Port,
+        isLocalDS = _MOE.IsLocalDS, -- 是否是LocalDS
+        clients = _MOE.TB["clients"], -- 发过来的玩家序列
+        clientLoginTokens = _MOE.TB["clientLoginTokens"],
+        scene = _MOE.TB.dsData and _MOE.TB.dsData.scene or nil
+    }
+    return ret
+end

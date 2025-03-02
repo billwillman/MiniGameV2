@@ -117,14 +117,11 @@ function DsScene:_InitGSNet()
     _MOE.EventManager:RegisterEvent("OnGSSocketResult", self, self._OnGSSocketResult)
     _MOE.EventManager:RegisterEvent("OnGSSocketAbort", self, self._OnGSSocketAbort)
     local connectData = self.Transport.ConnectionData
-    self.GsNetwork:SendMsg(MsgIds.CM_DS_Ready, {
-        ip = connectData.Address,
-        port = connectData.Port,
-        isLocalDS = _MOE.IsLocalDS, -- 是否是LocalDS
-        clients = _MOE.TB["clients"], -- 发过来的玩家序列
-        clientLoginTokens = _MOE.TB["clientLoginTokens"],
-        scene = _MOE.TB.dsData and _MOE.TB.dsData.scene or nil
-    })
+    local msg = self:Generate_CM_DS_Ready_Msg(connectData)
+    self.GsNetwork:SendMsg(MsgIds.CM_DS_Ready, msg)
+end
+
+function DsScene:SendReadyMsg()
 end
 
 function DsScene:_UnInitGSNet()
@@ -168,6 +165,17 @@ end
 function DsScene:OnSceneLoadFail()
     _MOE.Logger.LogError("[DsScene] OnSceneLoadFail")
     _MOE.GameApp:QuitGame()
+end
+
+------------------------------- 可继承方法 -------------------
+function DsScene:Generate_CM_DS_Ready_Msg(connectData)
+    local ret = {
+        ip = connectData.Address,
+        port = connectData.Port,
+        isLocalDS = _MOE.IsLocalDS, -- 是否是LocalDS
+        scene = _MOE.TB.dsData and _MOE.TB.dsData.scene or nil
+    }
+    return ret
 end
 
 return DsScene
