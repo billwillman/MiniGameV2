@@ -8,6 +8,7 @@ local MsgIds = {
     SM_DS_Info = 2,
     SM_LOGIN_RET = 3,
     SM_LOGIN_KICKOFF = 4, -- LoginSrv踢人(带Reason)
+    SM_DS_QUIT = 5, -- 关闭DS(要带Reason)
 }
 
 _MOE.MsgIds = MsgIds

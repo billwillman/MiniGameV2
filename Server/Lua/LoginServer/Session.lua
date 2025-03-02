@@ -58,8 +58,7 @@ function Session:CloseSocket(quitReason)
             reason = quitReason,
         })
     end
-    if self.fd then
-        socket.close(self.fd)
+    if CloseSocket(socket, self.fd) then
         self.fd = nil
     end
 end

@@ -70,3 +70,11 @@ moon.exports.GetFreeAdress = function ()
     ip = so.dns.toip(ip)
     return ip, port
 end
+
+moon.exports.CloseSocket = function (socket, fd)
+    if not socket or not fd then
+        return false
+    end
+    socket.close(fd)
+    return true
+end

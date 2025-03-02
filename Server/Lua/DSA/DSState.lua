@@ -3,4 +3,5 @@ _MOE = _MOE or {}
 _MOE.DsStatus = {
     None = 0, -- 未知
     WaitingPlayersConnect = 1, -- 等待玩家连接
+    DSACloseFreeDS = 2, -- 关闭DS状态
 }

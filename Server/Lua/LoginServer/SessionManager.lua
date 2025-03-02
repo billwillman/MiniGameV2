@@ -73,7 +73,7 @@ function SessionManager:CloseSocketAndRemove(uuid, quitReason)
         self.loginTokenToSessinMap[loginToken] = nil
     end
     xpcall( function()
-        session:CloseSocket(quitReason)
+    session:CloseSocket(quitReason)
     end, _MOE.ErrorHandler )
     return true
 end

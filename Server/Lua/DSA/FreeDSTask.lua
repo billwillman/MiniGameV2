@@ -2,6 +2,28 @@ local Task = _MOE.class("FreeDSTask")
 
 local moon = require("moon")
 
+require("ServerCommon.GlobalFuncs")
+require("DSA.DSState")
+local MsgIds = require("_NetMsg.MsgId")
+local socket = require "moon.socket"
+
+-- 关闭长时间不用的DS
+local function CloseFreeDS(ds)
+    if not ds then
+        return
+    end
+    local fd = ds.fd
+    if not fd then
+        return
+    end
+    print("[Close Free DS: Start]")
+    ds.state = _MOE.DsStatus.DSACloseFreeDS -- DSA关闭空闲的DS
+    _MOE.TableUtils.PrintTable2(ds)
+    MsgProcesser:SendTableToJson2(socket, fd, MsgIds.SM_DS_QUIT, {reason = _MOE.DsStatus.DSACloseFreeDS})
+    CloseSocket(socket, fd)
+    print("[Close Free DS: end]")
+end
+
 local function TaskTick()
     while true do
         if _MOE.DSFreeList == nil then
@@ -15,9 +37,11 @@ local function TaskTick()
                     if not firstDs.players or #firstDs.players <= 0 then
                         -- 说明是空闲的
                         if currtime - firstDs.freeTime > 60 then -- 大于60秒杀进程
-                            -- 杀进程
+                            -- 杀进程(采用关闭端口)
+                            CloseFreeDS(firstDs)
+                            ----------------------
                             --- 暂时还是放最后
-                            _MOE.DSFreeList:insert_last(firstDs)
+                            -- _MOE.DSFreeList:insert_last(firstDs)
                             ---
                         else
                             --- 添加到后面去
