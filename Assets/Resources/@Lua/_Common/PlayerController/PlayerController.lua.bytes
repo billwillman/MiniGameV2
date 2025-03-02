@@ -80,6 +80,9 @@ function PlayerController:OnNetworkSpawn()
 
     if _MOE.IsDS then
         -- 通知GS连接成功
+    else
+        local ContainerClass = require("_Client.ClientPlayerControllerContainer")
+        self.ModelContainer = ContainerClass.New()
     end
 end
 
@@ -88,6 +91,11 @@ function PlayerController:GetClientId()
 end
 
 function PlayerController:OnNetworkDespawn()
+    if self.ModelContaine then
+        self.ModelContaine:UnRegisterModels()
+        self.ModelContaine = nil
+    end
+
     if _MOE.IsDS then
         -- 通知GS连接失败
     end
