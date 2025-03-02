@@ -65,7 +65,12 @@ end
 
 --- 设置DS验证信息（DS连接用）
 function DsScene:SetConnectionApprovalData()
-    -- self.NetWorkMgr.NetworkConfig.ConnectionData = str
+    local userInfo = _MOE.Models.RootAttr:GetUserInfo()
+    if userInfo then
+        self.NetWorkMgr.NetworkConfig.ConnectionData = _MOE.Json.encode(userInfo)
+    else
+        self.NetWorkMgr.NetworkConfig.ConnectionData = ""
+    end
 end
 
 -- DS连接
