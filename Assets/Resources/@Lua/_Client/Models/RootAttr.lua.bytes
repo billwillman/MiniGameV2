@@ -10,7 +10,14 @@ function RootAttr:SendLoginMsg(userName, password)
 end
 
 function RootAttr:_OnLoginRet(msg, net)
+    if msg.result == 0 then
+        self.user = msg.user
+    end
     _MOE.EventManager:DispatchEvent(_MOE.ClientEvents.ON_LOGIN_RET, msg)
+end
+
+function RootAttr:GetUserInfo()
+    return self.user
 end
 
 function RootAttr:_OnLoginKickOff(msg, net)

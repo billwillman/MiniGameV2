@@ -83,6 +83,7 @@ function PlayerController:OnNetworkSpawn()
     else
         local ContainerClass = require("_Client.ClientPlayerControllerContainer")
         self.ModelContainer = ContainerClass.New()
+        self.ModelContainer:OnLoginDS()
     end
 end
 
@@ -92,6 +93,7 @@ end
 
 function PlayerController:OnNetworkDespawn()
     if self.ModelContaine then
+        self.ModelContainer:OnLoginOutDS()
         self.ModelContaine:UnRegisterModels()
         self.ModelContaine = nil
     end
