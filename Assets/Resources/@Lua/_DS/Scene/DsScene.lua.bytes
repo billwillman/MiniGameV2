@@ -141,7 +141,7 @@ end
 
 function DsScene:_SendDsSceneRunOkMsgToGS()
     local msg = self:Generate_CM_DS_RunOk_Msg()
-    self.GsNetwork:SendMsg(MsgIds.)
+    self.GsNetwork:SendMsg(MsgIds.CM_DS_RunOk, msg)
 end
 
 function DsScene:_InitGSNet()
