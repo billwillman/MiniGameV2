@@ -164,6 +164,19 @@ function DsScene:_UnInitGSNet()
     end
 end
 
+function DsScene:HasResScene()
+    if not self.Config then
+        return false
+    end
+    if self.Config.resSceneName then
+        return string.len(self.Config.resSceneName ) > 0
+    elseif self.Config.GetResSceneName then
+        local sceneName = self.Config:GetResSceneName()
+        return sceneName ~= nil and string.len(sceneName) > 0
+    end
+    return false
+end
+
 function DsScene:OnEnter()
     -- 开启
     _MOE.Logger.Log("[DS] MultiScene Enter")

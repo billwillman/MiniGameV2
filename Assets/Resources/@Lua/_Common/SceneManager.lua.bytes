@@ -75,6 +75,7 @@ function _M:SwitchScene(sceneName, ...)
     if self.CurrentScene.LuaScene and string.len(self.CurrentScene.LuaScene) > 0 then
         self.CurrentScene.LuaTarget = require(self.CurrentScene.LuaScene).New(sceneName, ...)
         luaScene = self.CurrentScene.LuaTarget
+        luaScene.Config = cfg -- 这个是配置
     end
     local resSceneName = self:GetCurrentSceneName()
     local onLoadNewScene = nil
