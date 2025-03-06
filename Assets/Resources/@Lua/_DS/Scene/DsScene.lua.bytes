@@ -136,7 +136,7 @@ end
 function DsScene:_SendDsSceneReadyMsgToGS()
     local connectData = self.Transport.ConnectionData
     local msg = self:Generate_CM_DS_Ready_Msg(connectData)
-    self.GsNetwork:SendMsg(MsgIds.CM_DS_RunOk, msg)
+    self.GsNetwork:SendMsg(MsgIds.CM_DS_Ready, msg)
 end
 
 function DsScene:_SendDsSceneRunOkMsgToGS()
