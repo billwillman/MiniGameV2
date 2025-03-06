@@ -3,6 +3,7 @@ local MsgIds = {
     CM_DS_Ready = 2, -- DS准备好了
     CM_ReqDS = 3, -- 请求DS
     CM_Login = 4, -- 登录
+    CM_DS_RunOk = 5, -- DS运行启动OK
 ---------------------------------------------------------
     SM_Heart = 1,
     SM_DS_Info = 2,

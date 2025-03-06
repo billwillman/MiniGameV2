@@ -44,6 +44,9 @@ local ClientToServerMsgProcess = {
             return true
         end
         return false
+    end,
+    [MsgIds.CM_DS_RunOk] = function (self, msg, socket, fd)
+        return true
     end
 }
 -----------------------------
