@@ -25,6 +25,16 @@ local function GenerateScenesInBuild(self)
     end
 end
 
+function DsScene:GetDsIpAndPort()
+    local dsData = _MOE.TB["dsData"]
+    if not dsData then
+        return
+    end
+    local ip = dsData.ip or "127.0.0.1"
+    local port = dsData.port or 7777
+    return ip, port
+end
+
 function DsScene:_InitDSNet()
     -- 启动DS Server监听
     local dsData = _MOE.TB["dsData"]
