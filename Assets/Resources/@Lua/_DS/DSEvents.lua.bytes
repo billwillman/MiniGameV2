@@ -1,6 +1,8 @@
 _MOE = _MOE or {}
 
-_MOE.ServerEvents = {
+_MOE.DSEvents = {
+    PlayerConnected = 1, -- 加入
+    PlayerDisconnected = 2, -- 断开
 }
 
 return _MOE.ServerEvents
