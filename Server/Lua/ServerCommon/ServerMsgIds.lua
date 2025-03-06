@@ -4,6 +4,7 @@ _MOE.ServerMsgIds = {
     SM_DSReady = 2, -- DS 准备好了
     SM_DS_STATUS = 3, -- DS 状态更新
     CM_Login = 4,   -- 登录请求
+    SM_DS_RUNOK = 5, -- DS运行起来了
     SM_LS_Exist_PLAYERINFO = "SM_LS_Exist_PLAYERINFO", -- 根据LS的Token查询是否存在PlayerInfo
     SM_LS_DS_Enter = "SM_LS_DS_Enter",  -- 通过LoginSrv通知Client连接DS
     SM_DSA_Exist_DS = "SM_DSA_Exist_DS",
