@@ -136,7 +136,12 @@ end
 function DsScene:_SendDsSceneReadyMsgToGS()
     local connectData = self.Transport.ConnectionData
     local msg = self:Generate_CM_DS_Ready_Msg(connectData)
-    self.GsNetwork:SendMsg(MsgIds.CM_DS_Ready, msg)
+    self.GsNetwork:SendMsg(MsgIds.CM_DS_RunOk, msg)
+end
+
+function DsScene:_SendDsSceneRunOkMsgToGS()
+    local msg = self:Generate_CM_DS_RunOk_Msg()
+    self.GsNetwork:SendMsg(MsgIds.)
 end
 
 function DsScene:_InitGSNet()
@@ -162,6 +167,8 @@ function DsScene:_InitGSNet()
     self.GsNetwork:ConnectServer(GsData.ip, GsData.port)
     _MOE.EventManager:RegisterEvent("OnGSSocketResult", self, self._OnGSSocketResult)
     _MOE.EventManager:RegisterEvent("OnGSSocketAbort", self, self._OnGSSocketAbort)
+    -- 发送启动OK了
+    self:_SendDsSceneRunOkMsgToGS()
 end
 
 function DsScene:SendReadyMsg()
@@ -224,6 +231,22 @@ function DsScene:Generate_CM_DS_Ready_Msg(connectData)
     local ret = {
         ip = connectData.Address,
         port = connectData.Port,
+        isLocalDS = _MOE.IsLocalDS, -- 是否是LocalDS
+        clients = _MOE.TB["clients"], -- 发过来的玩家序列
+        clientLoginTokens = _MOE.TB["clientLoginTokens"],
+        scene = _MOE.TB.dsData and _MOE.TB.dsData.scene or nil
+    }
+    return ret
+end
+
+function DsScene:Generate_CM_DS_RunOk_Msg()
+    local ip, port = self:GetDsIpAndPort()
+    if not ip or not port then
+        return
+    end
+    local ret = {
+        ip = ip,
+        port = port,
         isLocalDS = _MOE.IsLocalDS, -- 是否是LocalDS
         clients = _MOE.TB["clients"], -- 发过来的玩家序列
         clientLoginTokens = _MOE.TB["clientLoginTokens"],
