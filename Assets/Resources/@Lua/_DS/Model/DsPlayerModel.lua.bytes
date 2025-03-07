@@ -4,19 +4,19 @@ local function onServerStrEvent(eventName, strParam)
     _MOE.Logger.LogFormat("[DSPlayerController] eventName: {0} param: {1}", eventName, strParam)
 end
 
-function _M:RegisterPlayerEvents(PlayerController)
-    if not PlayerController then
+function _M:RegisterPlayerEvents(LuaPlayerController)
+    if not LuaPlayerController then
         return false
     end
-    self:RegsterCSharpEvent(PlayerController, "onServerStrEvent", onServerStrEvent)
+    self:RegsterCSharpEvent(LuaPlayerController.PlayerController, "onServerStrEvent", onServerStrEvent)
     return true
 end
 
-function _M:UnRegisterPlayerEvents(PlayerController)
-    if not PlayerController then
+function _M:UnRegisterPlayerEvents(LuaPlayerController)
+    if not LuaPlayerController then
         return false
     end
-    self:UnRegsterCSharpEvent(PlayerController, "onServerStrEvent")
+    self:UnRegsterCSharpEvent(LuaPlayerController.PlayerController, "onServerStrEvent")
     return true
 end
 
