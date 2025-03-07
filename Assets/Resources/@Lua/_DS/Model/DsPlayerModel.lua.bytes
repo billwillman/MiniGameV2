@@ -1,9 +1,13 @@
 local _M = _MOE.class("DsPlayerModel", _MOE.BaseModel)
 
+local function onServerStrEvent(eventName, strParam)
+end
+
 function _M:RegisterPlayerEvents(PlayerController)
     if not PlayerController then
         return false
     end
+    self:RegsterCSharpEvent(PlayerController, "onServerStrEvent", onServerStrEvent)
     return true
 end
 
@@ -11,6 +15,7 @@ function _M:UnRegisterPlayerEvents(PlayerController)
     if not PlayerController then
         return false
     end
+    self:UnRegsterCSharpEvent(PlayerController, "onServerStrEvent")
     return true
 end
 
