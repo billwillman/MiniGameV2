@@ -1,7 +1,14 @@
-local _M = _MOE.class("DsPlayerModel", _MOE.BaseModel)
+local BaseModel = require("_DS.Model.DsSceneModel")
+local _M = _MOE.class("DsPlayerModel", BaseModel)
+
+require("_Common.Net.DSMsgDefine")
 
 function _M:onServerStrEvent(eventName, strParam)
     _MOE.Logger.LogFormat("[DSPlayerController] Client => DS eventName: {0} param: {1}", eventName, strParam)
+    local GSNetwork = self:GetGSNetwork()
+    if eventName == _MOE.DS.ClientMsgIds.ClientLoginDS then
+        -- 发送消息给DSA
+    end
 end
 
 function _M:RegisterPlayerEvents(LuaPlayerController)

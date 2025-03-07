@@ -12,6 +12,7 @@ function _M:Ctor(sceneName, ...)
         __index = function (_, key)
             if app then
                 local model = self:GetModel(key)
+                model.Scene = self
                 return model
             end
         end
