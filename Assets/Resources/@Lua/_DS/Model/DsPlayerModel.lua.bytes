@@ -1,6 +1,6 @@
 local _M = _MOE.class("DsPlayerModel", _MOE.BaseModel)
 
-local function onServerStrEvent(eventName, strParam)
+function _M:onServerStrEvent(eventName, strParam)
     _MOE.Logger.LogFormat("[DSPlayerController] eventName: {0} param: {1}", eventName, strParam)
 end
 
@@ -8,7 +8,7 @@ function _M:RegisterPlayerEvents(LuaPlayerController)
     if not LuaPlayerController then
         return false
     end
-    self:RegsterCSharpEvent(LuaPlayerController.PlayerController, "onServerStrEvent", onServerStrEvent)
+    self:RegsterCSharpEvent(LuaPlayerController.PlayerController, "onServerStrEvent", self.onServerStrEvent)
     return true
 end
 
