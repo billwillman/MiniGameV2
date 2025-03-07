@@ -1,7 +1,7 @@
 local _M = _MOE.class("DsPlayerModel", _MOE.BaseModel)
 
 function _M:onServerStrEvent(eventName, strParam)
-    _MOE.Logger.LogFormat("[DSPlayerController] eventName: {0} param: {1}", eventName, strParam)
+    _MOE.Logger.LogFormat("[DSPlayerController] Client => DS eventName: {0} param: {1}", eventName, strParam)
 end
 
 function _M:RegisterPlayerEvents(LuaPlayerController)
