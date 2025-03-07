@@ -15,6 +15,7 @@ function _M:OnUnInit()
     local luaScene = self:GetCurrentLuaScene()
     if luaScene then
         luaScene:Exit()
+        luaScene.Config = nil
     end
 end
 
@@ -68,7 +69,11 @@ function _M:SwitchScene(sceneName, ...)
     local luaScene = self:GetCurrentLuaScene()
     if luaScene then
         luaScene:Exit()
+        luaScene.Config = nil
         luaScene = nil
+    end
+    if self.CurrentScene then
+        self.CurrentScene.LuaTarget = nil -- 清理掉LuaTarget
     end
     self.IsSceneLoading = true
     self.CurrentScene = cfg

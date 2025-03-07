@@ -1,3 +1,17 @@
 local _M = _MOE.class("DsPlayerModel", _MOE.BaseModel)
 
+function _M:RegisterPlayerEvents(PlayerController)
+    if not PlayerController then
+        return false
+    end
+    return true
+end
+
+function _M:UnRegisterPlayerEvents(PlayerController)
+    if not PlayerController then
+        return false
+    end
+    return true
+end
+
 return _M

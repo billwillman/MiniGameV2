@@ -60,6 +60,34 @@ local function RemovePlayerController(self)
     ----
 end
 
+local function DsRegisterPlayerControllerEvents(playerController)
+    if not playerController then
+        return false
+    end
+    local Scene = _MOE.SceneManager:GetCurrentLuaScene()
+    if Scene then
+        local Model = Scene.Models.DsPlayerModel
+        if Model and Model.RegisterPlayerEvents then
+            return Model:RegisterPlayerEvents(playerController)
+        end
+    end
+    return false
+end
+
+local function DsUnRegisterPlayerControllerEvents(playerController)
+    if not playerController then
+        return false
+    end
+    local Scene = _MOE.SceneManager:GetCurrentLuaScene()
+    if Scene then
+        local Model = Scene.Models.DsPlayerModel
+        if Model and Model.UnRegisterPlayerEvents then
+            return Model:UnRegisterPlayerEvents(playerController)
+        end
+    end
+    return false
+end
+
 function PlayerController:Ctor(playerController, binder)
     self.PlayerController = playerController
     self.Binder = binder
@@ -82,7 +110,7 @@ function PlayerController:OnNetworkSpawn()
 
     if _MOE.IsDS then
         -- 通知GS连接成功
-        
+        DsRegisterPlayerControllerEvents(self)
     else
         local ContainerClass = require("_Client.ClientPlayerControllerContainer")
         self.ModelContainer = ContainerClass.New()
@@ -103,6 +131,7 @@ function PlayerController:OnNetworkDespawn()
 
     if _MOE.IsDS then
         -- 通知GS连接失败
+        DsUnRegisterPlayerControllerEvents(self)
     end
 
     _MOE.Logger.LogFormat("[PlayerController] OnNetworkDespawn(ClientId:{0:D})", self:GetClientId())
