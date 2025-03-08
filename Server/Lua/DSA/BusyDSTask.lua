@@ -43,3 +43,5 @@ end
 function Task:Start()
     moon.async(TaskTick, self.__cname)
 end
+
+return Task
