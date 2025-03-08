@@ -50,6 +50,9 @@ local function TaskTick()
                         end
                     else
                         ---- 移到BUSY列表
+                        print("[FreeDSTask] to DSBusyList: ")
+                        _MOE.TableUtils.PrintTable2(firstDs)
+                        print("-----------------------------")
                         firstDs.freeTime = currtime
                         _MOE.DSBusyList:insert_last(firstDs)
                     end
