@@ -19,7 +19,7 @@ function _M:Ctor(sceneName, ...)
 end
 
 function _M:GetModel(key)
-    local ret = CSharpEventContainer.CallSuper(self, "GetModel", key)
+    local ret = ModelContainerClass.CallSuper(self, "GetModel", key)
     if not ret.Scene then
         ret.Scene = self
     end
