@@ -39,7 +39,9 @@ local function TaskTick()
                 if firstDs then
                     if not firstDs:IsBusy() then
                         -- 说明是空闲的
-                        if currtime - firstDs.freeTime > 60 then -- 大于60秒杀进程
+						-- 判断是否是LocalDS
+						local isLocalDS = firstDs.dsData and firstDs.dsData.isLocalDS or false
+                        if not isLocalDS and currtime - firstDs.freeTime > 60 then -- 大于60秒杀进程
                             -- 杀进程(采用关闭端口)
                             CloseFreeDS(firstDs)
                         else
