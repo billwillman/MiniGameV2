@@ -1,5 +1,6 @@
-local BaseClass = require("_Common.ModelContainer")
-local _M = _MOE.class("ClientPlayerControllerContainer", BaseClass)
+local ModelContainerClass = require("_Common.ModelContainer")
+local CSharpEventContainer = require("_Common.CSharpEventContainer")
+local _M = _MOE.class("ClientPlayerControllerContainer", ModelContainerClass, CSharpEventContainer)
 
 _M[".superctor"] = true -- 会调用父类方法
 
@@ -15,8 +16,8 @@ end
 
 local function UnRegisterPlayerController(self, LocalPlayerController) -- LocalPlayerController 是C# PlayerController
     self:UnRegsterCSharpEvent(LocalPlayerController, "onClientStrEvent")
-    self:UnRegisterPlayerEvents(LocalPlayerController, "onClientIntEvent")
-    self:UnRegisterPlayerEvents(LocalPlayerController, "onClientInt2Event")
+    self:UnRegsterCSharpEvent(LocalPlayerController, "onClientIntEvent")
+    self:UnRegsterCSharpEvent(LocalPlayerController, "onClientInt2Event")
 end
 
 function _M:onClientStrEvent(eventName, strParam)
