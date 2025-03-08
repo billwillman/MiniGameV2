@@ -40,8 +40,8 @@ function _M:UnRegisterPlayerEvents(LuaPlayerController)
     end
     local CSharpPlayerController = LuaPlayerController.PlayerController
     self:UnRegsterCSharpEvent(CSharpPlayerController, "onServerStrEvent")
-    self:UnRegisterPlayerEvents(CSharpPlayerController, "onServerIntEvent")
-    self:UnRegisterPlayerEvents(CSharpPlayerController, "onServerInt2Event")
+    self:UnRegsterCSharpEvent(CSharpPlayerController, "onServerIntEvent")
+    self:UnRegsterCSharpEvent(CSharpPlayerController, "onServerInt2Event")
     LuaPlayerController.loginToken = nil -- 清空loginToken
     -- 发送消息给DSA
     local GSNetwork = self:GetGSNetwork()
