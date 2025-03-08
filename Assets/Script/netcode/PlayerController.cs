@@ -467,18 +467,18 @@ namespace SOC.GamePlay
         // Server To Client
         protected void DispatchEvent_Reliable_ClientRpc(string eventName, string paramStr, ClientRpcParams clientRpcParams = default) {
             if (onClientStrEvent != null)
-                onClientStrEvent(this.OwnerClientId, eventName, paramStr);
+                onClientStrEvent(eventName, paramStr);
         }
 
         [ClientRpc(Delivery = RpcDelivery.Reliable)]
         protected void DispatchEvent_Reliable_ClientRpc(string eventName, int intParam, ClientRpcParams clientRpcParams = default) {
             if (onClientIntEvent != null)
-                onClientIntEvent(this.OwnerClientId, eventName, intParam);
+                onClientIntEvent(eventName, intParam);
         }
         [ClientRpc(Delivery = RpcDelivery.Reliable)]
         protected void DispatchEvent_Reliable_ClientRpc(string eventName, int intParam1, int intParam2, ClientRpcParams clientRpcParams = default) {
             if (onClientInt2Event != null)
-                onClientInt2Event(this.OwnerClientId, eventName, intParam1, intParam2);
+                onClientInt2Event(eventName, intParam1, intParam2);
         }
         /*
         [ClientRpc(Delivery = RpcDelivery.Reliable)]
@@ -491,18 +491,18 @@ namespace SOC.GamePlay
         // Server To Client
         protected void DispatchEvent_Unreliable_ClientRpc(string eventName, string paramStr, ClientRpcParams clientRpcParams = default) {
             if (onClientStrEvent != null)
-                onClientStrEvent(this.OwnerClientId, eventName, paramStr);
+                onClientStrEvent(eventName, paramStr);
         }
 
         [ClientRpc(Delivery = RpcDelivery.Unreliable)]
         protected void DispatchEvent_Unreliable_ClientRpc(string eventName, int intParam, ClientRpcParams clientRpcParams = default) {
             if (onClientIntEvent != null)
-                onClientIntEvent(this.OwnerClientId, eventName, intParam);
+                onClientIntEvent(eventName, intParam);
         }
         [ClientRpc(Delivery = RpcDelivery.Unreliable)]
         protected void DispatchEvent_Unreliable_ClientRpc(string eventName, int intParam1, int intParam2, ClientRpcParams clientRpcParams = default) {
             if (onClientInt2Event != null)
-                onClientInt2Event(this.OwnerClientId, eventName, intParam1, intParam2);
+                onClientInt2Event(eventName, intParam1, intParam2);
         }
 
         /*
@@ -568,14 +568,14 @@ namespace SOC.GamePlay
         */
 
         // ------------------------------ Õ‚≤ø…Ë÷√ ------------------------
-        public Action<ulong, string, string> onClientStrEvent {
+        public Action<string, string> onClientStrEvent {
             get; set;
         }
 
-        public Action<ulong, string, int> onClientIntEvent {
+        public Action<string, int> onClientIntEvent {
             get; set;
         }
-        public Action<ulong, string, int, int> onClientInt2Event {
+        public Action<string, int, int> onClientInt2Event {
             get; set;
         }
 

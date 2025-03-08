@@ -11,6 +11,9 @@ local function RegisterPlayerController(self, LocalPlayerController) -- LocalPla
 end
 
 local function UnRegisterPlayerController(self, LocalPlayerController) -- LocalPlayerController 是C# PlayerController
+    self:UnRegsterCSharpEvent(LocalPlayerController, "onClientStrEvent")
+    self:UnRegisterPlayerEvents(LocalPlayerController, "onClientIntEvent")
+    self:UnRegisterPlayerEvents(LocalPlayerController, "onClientInt2Event")
 end
 
 function _M:OnLoginDS()
