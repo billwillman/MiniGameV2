@@ -34,6 +34,8 @@ end
 
 local FreeDSTask = require("DSA.FreeDSTask").New()
 FreeDSTask:Start()
+local BusyDSTask = require("DSA.BusyDSTask").New()
+BusyDSTask:Start()
 
 moon.exports.ServerData = ServerData
 

@@ -27,7 +27,7 @@ end
 
 local function TaskTick()
     while true do
-        if _MOE.DSFreeList == nil then
+        if _MOE.DSFreeList == nil or _MOE.DSFreeList:GetLength() <= 0 then
             moon.sleep(0)
         else
             local currtime = os.time()

@@ -49,9 +49,51 @@ local ClientToServerMsgProcess = {
         return true
     end,
     [MsgIds.CM_DS_PlayerLogin] = function (self, msg, socket, fd)
+        if not _MOE.DSMap or not msg.ownerClientId or not msg.loginToken then
+            return false
+        end
+        local token = GenerateToken(socket, fd)
+        local ds = _MOE.DSMap[token]
+        if not ds then
+            return false
+        end
+        ds.players = ds.players or {}
+        local dsPlayer = {
+            dsClientId = msg.ownerClientId,
+            loginToken = msg.loginToken,
+        }
+        local isFound = false
+        for idx, player in ipairs(ds.players) do
+            if player.dsClientId == msg.ownerClientId then
+                isFound = true
+                ds.players[idx] = dsPlayer
+                break
+            end
+        end
+        if not isFound then
+            table.insert(ds.players, dsPlayer)
+        end
         return true
     end,
     [MsgIds.CM_DS_PlayerLoginOut] = function (self, msg, socket, fd)
+        if not _MOE.DSMap then
+            return false
+        end
+        local token = GenerateToken(socket, fd)
+        local ds = _MOE.DSMap[token]
+        if not ds then
+            return false
+        end
+        local dsClientId = msg.ownerClientId
+        if ds.players then
+            for idx, player in ipairs(ds.players) do
+                if player.dsClientId == dsClientId then
+                    table.remove(ds.players, idx)
+                    break
+                end
+            end
+        end
+
         return true
     end
 }
