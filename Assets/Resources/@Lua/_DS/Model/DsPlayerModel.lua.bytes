@@ -30,6 +30,7 @@ function _M:RegisterPlayerEvents(LuaPlayerController)
     local CSharpPlayerController = LuaPlayerController.PlayerController
     self:RegsterCSharpEvent(CSharpPlayerController, "onServerStrEvent", self.onServerStrEvent)
     self:RegsterCSharpEvent(CSharpPlayerController, "onServerIntEvent", self.onServerIntEvent)
+    self:RegsterCSharpEvent(CSharpPlayerController, "onServerInt2Event", self.onServerIntEvent)
     return true
 end
 
@@ -40,6 +41,7 @@ function _M:UnRegisterPlayerEvents(LuaPlayerController)
     local CSharpPlayerController = LuaPlayerController.PlayerController
     self:UnRegsterCSharpEvent(CSharpPlayerController, "onServerStrEvent")
     self:UnRegisterPlayerEvents(CSharpPlayerController, "onServerIntEvent")
+    self:UnRegisterPlayerEvents(CSharpPlayerController, "onServerInt2Event")
     LuaPlayerController.loginToken = nil -- 清空loginToken
     -- 发送消息给DSA
     local GSNetwork = self:GetGSNetwork()

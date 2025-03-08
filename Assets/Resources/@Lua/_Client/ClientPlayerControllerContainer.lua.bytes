@@ -7,8 +7,16 @@ require("_Common.Net.DSMsgDefine")
 
 -------------------------------- 外部调用 -------------------------------
 
+local function RegisterPlayerController(self, LocalPlayerController) -- LocalPlayerController 是C# PlayerController
+end
+
+local function UnRegisterPlayerController(self, LocalPlayerController) -- LocalPlayerController 是C# PlayerController
+end
+
 function _M:OnLoginDS()
     local PlayerController = _MOE.GameApp:GetLocalPlayerController()
+    RegisterPlayerController(self, PlayerController)
+
     local userInfo = _MOE.Models.RootAttr:GetUserInfo()
     if userInfo and userInfo.token then
         PlayerController:DispatchServer_Reliable(_MOE.DS.ClientMsgIds.ClientLoginDS, userInfo.token) -- 发送Toekn给DS
@@ -16,6 +24,8 @@ function _M:OnLoginDS()
 end
 
 function _M:OnLoginOutDS()
+    local PlayerController = _MOE.GameApp:GetLocalPlayerController()
+    UnRegisterPlayerController(self, PlayerController)
 end
 
 -------------------------------------------------------------------------
