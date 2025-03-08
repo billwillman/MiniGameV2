@@ -1,6 +1,6 @@
 local CSharpEventContainer = require("_Common.CSharpEventContainer")
 local ModelContainerClass = require("_Common.ModelContainer")
-local _M = _MOE.class("BaseScene", CSharpEventContainer, ModelContainerClass)
+local _M = _MOE.class("BaseScene", ModelContainerClass, CSharpEventContainer)
 
 _M[".superctor"] = true -- 会调用父类方法
 
@@ -12,11 +12,18 @@ function _M:Ctor(sceneName, ...)
         __index = function (_, key)
             if app then
                 local model = self:GetModel(key)
-                model.Scene = self
                 return model
             end
         end
     })
+end
+
+function _M:GetModel(key)
+    local ret = CSharpEventContainer.CallSuper(self, "GetModel", key)
+    if not ret.Scene then
+        ret.Scene = self
+    end
+    return ret
 end
 
 function _M:HasResScene()
