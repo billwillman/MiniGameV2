@@ -194,12 +194,12 @@ namespace SOC.GamePlay
             onClientStrEvent = null;
             onClientIntEvent = null;
             onClientInt2Event = null;
-            onClientInt3Event = null;
+           // onClientInt3Event = null;
 
             onServerStrEvent = null;
             onServerIntEvent = null;
             onServerInt2Event = null;
-            onServerInt3Event = null;
+           // onServerInt3Event = null;
         }
 
         // 服务器属性同步
@@ -234,11 +234,13 @@ namespace SOC.GamePlay
             DispatchEvent_Reliable_ServerRpc(eventName, intParam1, intParam2);
         }
 
+        /*
         public void DispatchServer_Reliable(string eventName, int intParam1, int intParam2, int intParam3) {
             if (!IsClient && !IsHost)
                 return;
             DispatchEvent_Reliable_ServerRpc(eventName, intParam1, intParam2, intParam3);
         }
+        */
 
         // 非可靠传输
         public void DispatchServer_UnReliable(string eventName, string paramStr) {
@@ -259,11 +261,13 @@ namespace SOC.GamePlay
             DispatchEvent_Unreliable_ServerRpc(eventName, intParam1, intParam2);
         }
 
+        /*
         public void DispatchServer_UnReliable(string eventName, int intParam1, int intParam2, int intParam3) {
             if (!IsClient && !IsHost)
                 return;
             DispatchEvent_Unreliable_ServerRpc(eventName, intParam1, intParam2, intParam3);
         }
+        */
 
         // ------------------- 广播所有Client -----------------------------------
         // 可靠传输
@@ -284,13 +288,13 @@ namespace SOC.GamePlay
                 return;
             DispatchEvent_Reliable_ClientRpc(eventName, intParam1, intParam2);
         }
-
+        /*
         public void DispatchAllClientEvent_Reliable(string eventName, int intParam1, int intParam2, int intParam3) {
             if (!IsServer && !IsHost)
                 return;
             DispatchEvent_Reliable_ClientRpc(eventName, intParam1, intParam2, intParam3);
         }
-
+        */
         // 不可靠传输
         public void DispatchAllClientEvent_UnReliable(string eventName, string paramStr) {
             if (!IsServer && !IsHost)
@@ -309,12 +313,13 @@ namespace SOC.GamePlay
                 return;
             DispatchEvent_Unreliable_ClientRpc(eventName, intParam1, intParam2);
         }
-
+        /*
         public void DispatchAllClientEvent_UnReliable(string eventName, int intParam1, int intParam2, int intParam3) {
             if (!IsServer && !IsHost)
                 return;
             DispatchEvent_Unreliable_ClientRpc(eventName, intParam1, intParam2, intParam3);
         }
+        */
         // ------------------- 调用到对应的Client上 ----------------------------------
         // 可靠传输
         public void DispatchClientEvent_Reliable(string eventName, string paramStr) {
@@ -367,7 +372,7 @@ namespace SOC.GamePlay
                 send.Dispose();
             }
         }
-
+        /*
         public void DisptachClientEvent_Reliable(string eventName, int intParam1, int intParam2, int intParam3) {
             if (!IsServer && !IsHost)
                 return;
@@ -384,7 +389,7 @@ namespace SOC.GamePlay
                 send.Dispose();
             }
         }
-
+        */
         // 非可靠传输
         public void DispatchClientEvent_UnReliable(string eventName, string paramStr) {
             if (!IsServer && !IsHost)
@@ -437,6 +442,7 @@ namespace SOC.GamePlay
             }
         }
 
+        /*
         public void DispatchClientEvent_UnReliable(string eventName, int intParam1, int intParam2, int intParam3) {
             if (!IsServer && !IsHost)
                 return;
@@ -453,6 +459,7 @@ namespace SOC.GamePlay
                 send.Dispose();
             }
         }
+        */
 
         // ---------------------------------------------------------------------------------------
 
@@ -460,126 +467,139 @@ namespace SOC.GamePlay
         // Server To Client
         protected void DispatchEvent_Reliable_ClientRpc(string eventName, string paramStr, ClientRpcParams clientRpcParams = default) {
             if (onClientStrEvent != null)
-                onClientStrEvent(eventName, paramStr);
+                onClientStrEvent(this.OwnerClientId, eventName, paramStr);
         }
 
         [ClientRpc(Delivery = RpcDelivery.Reliable)]
         protected void DispatchEvent_Reliable_ClientRpc(string eventName, int intParam, ClientRpcParams clientRpcParams = default) {
             if (onClientIntEvent != null)
-                onClientIntEvent(eventName, intParam);
+                onClientIntEvent(this.OwnerClientId, eventName, intParam);
         }
         [ClientRpc(Delivery = RpcDelivery.Reliable)]
         protected void DispatchEvent_Reliable_ClientRpc(string eventName, int intParam1, int intParam2, ClientRpcParams clientRpcParams = default) {
             if (onClientInt2Event != null)
-                onClientInt2Event(eventName, intParam1, intParam2);
+                onClientInt2Event(this.OwnerClientId, eventName, intParam1, intParam2);
         }
+        /*
         [ClientRpc(Delivery = RpcDelivery.Reliable)]
         protected void DispatchEvent_Reliable_ClientRpc(string eventName, int intParam1, int intParam2, int intParam3, ClientRpcParams clientRpcParams = default) {
             if (onClientInt3Event != null)
-                onClientInt3Event(eventName, intParam1, intParam2, intParam3);
+                onClientInt3Event(this.OwnerClientId, eventName, intParam1, intParam2, intParam3);
         }
-
+        */
         [ClientRpc(Delivery = RpcDelivery.Unreliable)]
         // Server To Client
         protected void DispatchEvent_Unreliable_ClientRpc(string eventName, string paramStr, ClientRpcParams clientRpcParams = default) {
             if (onClientStrEvent != null)
-                onClientStrEvent(eventName, paramStr);
+                onClientStrEvent(this.OwnerClientId, eventName, paramStr);
         }
 
         [ClientRpc(Delivery = RpcDelivery.Unreliable)]
         protected void DispatchEvent_Unreliable_ClientRpc(string eventName, int intParam, ClientRpcParams clientRpcParams = default) {
             if (onClientIntEvent != null)
-                onClientIntEvent(eventName, intParam);
+                onClientIntEvent(this.OwnerClientId, eventName, intParam);
         }
         [ClientRpc(Delivery = RpcDelivery.Unreliable)]
         protected void DispatchEvent_Unreliable_ClientRpc(string eventName, int intParam1, int intParam2, ClientRpcParams clientRpcParams = default) {
             if (onClientInt2Event != null)
-                onClientInt2Event(eventName, intParam1, intParam2);
+                onClientInt2Event(this.OwnerClientId, eventName, intParam1, intParam2);
         }
+
+        /*
         [ClientRpc(Delivery = RpcDelivery.Unreliable)]
         protected void DispatchEvent_Unreliable_ClientRpc(string eventName, int intParam1, int intParam2, int intParam3, ClientRpcParams clientRpcParams = default) {
             if (onClientInt3Event != null)
                 onClientInt3Event(eventName, intParam1, intParam2, intParam3);
         }
+        */
 
         // -------------------------------------- 任意客户端都可以调用
         [ServerRpc(RequireOwnership = false, Delivery = RpcDelivery.Reliable)]
         protected void DispatchEvent_Reliable_ServerRpc(string eventName, string paramStr, ServerRpcParams serverRpcParams = default) {
             if (onServerStrEvent != null)
-                onServerStrEvent(eventName, paramStr);
+                onServerStrEvent(this.OwnerClientId, eventName, paramStr);
         }
 
         [ServerRpc(RequireOwnership = false, Delivery = RpcDelivery.Reliable)]
         protected void DispatchEvent_Reliable_ServerRpc(string eventName, int intParam, ServerRpcParams serverRpcParams = default) {
             if (onServerIntEvent != null)
-                onServerIntEvent(eventName, intParam);
+                onServerIntEvent(this.OwnerClientId, eventName, intParam);
         }
 
         [ServerRpc(RequireOwnership = false, Delivery = RpcDelivery.Reliable)]
         protected void DispatchEvent_Reliable_ServerRpc(string eventName, int intParam1, int intParam2, ServerRpcParams serverRpcParams = default) {
             if (onServerInt2Event != null)
-                onServerInt2Event(eventName, intParam1, intParam2);
+                onServerInt2Event(this.OwnerClientId, eventName, intParam1, intParam2);
         }
 
+        /*
         [ServerRpc(RequireOwnership = false, Delivery = RpcDelivery.Reliable)]
         protected void DispatchEvent_Reliable_ServerRpc(string eventName, int intParam1, int intParam2, int intParam3, ServerRpcParams serverRpcParams = default) {
             if (onServerInt3Event != null)
                 onServerInt3Event(eventName, intParam1, intParam2, intParam3);
         }
+        */
 
 
         [ServerRpc(RequireOwnership = false, Delivery = RpcDelivery.Unreliable)]
         protected void DispatchEvent_Unreliable_ServerRpc(string eventName, string paramStr, ServerRpcParams serverRpcParams = default) {
             if (onServerStrEvent != null)
-                onServerStrEvent(eventName, paramStr);
+                onServerStrEvent(this.OwnerClientId, eventName, paramStr);
         }
 
         [ServerRpc(RequireOwnership = false, Delivery = RpcDelivery.Unreliable)]
         protected void DispatchEvent_Unreliable_ServerRpc(string eventName, int intParam, ServerRpcParams serverRpcParams = default) {
             if (onServerIntEvent != null)
-                onServerIntEvent(eventName, intParam);
+                onServerIntEvent(this.OwnerClientId, eventName, intParam);
         }
 
         [ServerRpc(RequireOwnership = false, Delivery = RpcDelivery.Unreliable)]
         protected void DispatchEvent_Unreliable_ServerRpc(string eventName, int intParam1, int intParam2, ServerRpcParams serverRpcParams = default) {
             if (onServerInt2Event != null)
-                onServerInt2Event(eventName, intParam1, intParam2);
+                onServerInt2Event(this.OwnerClientId, eventName, intParam1, intParam2);
         }
 
+        /*
         [ServerRpc(RequireOwnership = false, Delivery = RpcDelivery.Unreliable)]
         protected void DispatchEvent_Unreliable_ServerRpc(string eventName, int intParam1, int intParam2, int intParam3, ServerRpcParams serverRpcParams = default) {
             if (onServerInt3Event != null)
                 onServerInt3Event(eventName, intParam1, intParam2, intParam3);
         }
+        */
 
         // ------------------------------ 外部设置 ------------------------
-        public Action<string, string> onClientStrEvent {
+        public Action<ulong, string, string> onClientStrEvent {
             get; set;
         }
 
-        public Action<string, int> onClientIntEvent {
+        public Action<ulong, string, int> onClientIntEvent {
             get; set;
         }
-        public Action<string, int, int> onClientInt2Event {
-            get; set;
-        }
-        public Action<string, int, int, int> onClientInt3Event {
+        public Action<ulong, string, int, int> onClientInt2Event {
             get; set;
         }
 
-        public Action<string, string> onServerStrEvent {
+        /*
+        public Action<ulong, string, int, int, int> onClientInt3Event {
+            get; set;
+        }
+        */
+
+        public Action<ulong, string, string> onServerStrEvent {
             get; set;
         }
 
-        public Action<string, int> onServerIntEvent {
+        public Action<ulong, string, int> onServerIntEvent {
             get; set;
         }
-        public Action<string, int, int> onServerInt2Event {
+        public Action<ulong, string, int, int> onServerInt2Event {
             get; set;
         }
-        public Action<string, int, int, int> onServerInt3Event {
+         /*
+        public Action<ulong, string, int, int, int> onServerInt3Event {
             get; set;
         }
+        */
         // ----------------------------------------------------------------
     }
 }
