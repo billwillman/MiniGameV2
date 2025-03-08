@@ -62,8 +62,11 @@ public static class ExampleGenConfig
                 typeof(NetworkSceneManager.OnEventCompletedDelegateHandler),
                 // RPC Event
                 typeof(Action<string, string>),
+                typeof(Action<ulong, string, string>),
                 typeof(Action<string, int>),
+                typeof(Action<ulong, string, int>),
                 typeof(Action<string, int, int>),
+                typeof(Action<ulong, string, int, int>),
                 typeof(Action<string, int, int, int>),
                 typeof(Action<float, bool, GameObject>),
                 typeof(Action<NetworkManager, ConnectionEventData>),
@@ -86,8 +89,11 @@ public static class ExampleGenConfig
                 typeof(NetworkSceneManager.OnEventCompletedDelegateHandler),
                 // RPC Event
                 typeof(Action<string, string>),
+                typeof(Action<ulong, string, string>),
                 typeof(Action<string, int>),
+                typeof(Action<ulong, string, int>),
                 typeof(Action<string, int, int>),
+                typeof(Action<ulong, string, int, int>),
                 typeof(Action<string, int, int, int>),
                 typeof(Action<NetworkManager, ConnectionEventData>),
                 //--
