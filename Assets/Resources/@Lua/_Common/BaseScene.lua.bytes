@@ -19,7 +19,13 @@ function _M:Ctor(sceneName, ...)
 end
 
 function _M:GetModel(key)
-    local ret = ModelContainerClass.CallSuper(self, "GetModel", key)
+    local ret
+    for _, super in ipairs(self.__supers) do
+        if super.GetModel then
+            ret = super.GetModel(self, key)
+            break
+        end
+    end
     if not ret.Scene then
         ret.Scene = self
     end
