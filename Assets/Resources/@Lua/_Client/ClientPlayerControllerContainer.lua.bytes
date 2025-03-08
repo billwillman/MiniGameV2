@@ -8,12 +8,24 @@ require("_Common.Net.DSMsgDefine")
 -------------------------------- 外部调用 -------------------------------
 
 local function RegisterPlayerController(self, LocalPlayerController) -- LocalPlayerController 是C# PlayerController
+    self:RegsterCSharpEvent(LocalPlayerController, "onClientStrEvent", self.onClientStrEvent)
+    self:RegsterCSharpEvent(LocalPlayerController, "onClientIntEvent", self.onClientIntEvent)
+    self:RegsterCSharpEvent(LocalPlayerController, "onClientInt2Event", self.onClientIntEvent)
 end
 
 local function UnRegisterPlayerController(self, LocalPlayerController) -- LocalPlayerController 是C# PlayerController
     self:UnRegsterCSharpEvent(LocalPlayerController, "onClientStrEvent")
     self:UnRegisterPlayerEvents(LocalPlayerController, "onClientIntEvent")
     self:UnRegisterPlayerEvents(LocalPlayerController, "onClientInt2Event")
+end
+
+function _M:onClientStrEvent(eventName, strParam)
+    _MOE.Logger.LogFormat("[DS Client PlayerController] eventName: {0} strParam: {1}", eventName, strParam)
+end
+
+function _M:onClientIntEvent(eventName, intParam1, intParam2)
+    _MOE.Logger.LogFormat("[DS Client PlayerController] eventName: {0} param1: {1:D} param2: {2:D}",
+        eventName, intParam1, intParam2)
 end
 
 function _M:OnLoginDS()
