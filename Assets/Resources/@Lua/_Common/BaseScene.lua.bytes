@@ -4,8 +4,17 @@ local _M = _MOE.class("BaseScene", ModelContainerClass, CSharpEventContainer)
 
 _M[".superctor"] = true -- 会调用父类方法
 
+local function _GetModel(self, key)
+    local ret = self:Old_GetModel(key)
+    ret.Scene = self
+    return ret
+end
+
 function _M:Ctor(sceneName, ...)
     self.SceneName = sceneName
+
+    self.Old_GetModel = self.GetModel
+    self.GetModel = _GetModel
 
     self.Models = {}
     setmetatable(self.Models, {
@@ -16,20 +25,6 @@ function _M:Ctor(sceneName, ...)
             end
         end
     })
-end
-
-function _M:GetModel(key)
-    local ret
-    for _, super in ipairs(self.__supers) do
-        if super.GetModel then
-            ret = super.GetModel(self, key)
-            break
-        end
-    end
-    if not ret.Scene then
-        ret.Scene = self
-    end
-    return ret
 end
 
 function _M:HasResScene()
