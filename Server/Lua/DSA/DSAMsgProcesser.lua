@@ -47,6 +47,12 @@ local ClientToServerMsgProcess = {
     end,
     [MsgIds.CM_DS_RunOk] = function (self, msg, socket, fd)
         return true
+    end,
+    [MsgIds.CM_DS_PlayerLogin] = function (self, msg, socket, fd)
+        return true
+    end,
+    [MsgIds.CM_DS_PlayerLoginOut] = function (self, msg, socket, fd)
+        return true
     end
 }
 -----------------------------

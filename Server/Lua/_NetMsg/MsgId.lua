@@ -4,6 +4,8 @@ local MsgIds = {
     CM_ReqDS = 3, -- 请求DS
     CM_Login = 4, -- 登录
     CM_DS_RunOk = 5, -- DS运行启动OK
+    CM_DS_PlayerLogin = 6, -- DS上玩家登录
+    CM_DS_PlayerLoginOut = 7,-- DS玩家登出
 ---------------------------------------------------------
     SM_Heart = 1,
     SM_DS_Info = 2,
