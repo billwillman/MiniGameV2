@@ -11,7 +11,7 @@ function DsScene:Ctor(sceneName, dsNetworkManager)
     self.Transport = dsNetworkManager.gameObject:GetComponent(typeof(CS.Unity.Netcode.Transports.UTP.UnityTransport))
 
     ---- 注册Model ------
-    self:RegisterModel("DsPlayerModel", "_DS.Model.DsPlayerModel", false)
+    self:RegisterModel("DsPlayerModel", "_DS.Model.DsPlayerModel")
     ---
 end
 
