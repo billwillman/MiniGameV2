@@ -127,23 +127,29 @@ local _OtherServerToMyServer = {
         end
     end,
     [_MOE.ServerMsgIds.CM_DS_PlayerLogin] = function (msg)
+        print("[CM_DS_PlayerLogin]")
         local loginToken = msg.loginToken
         if not loginToken then
+            print("[CM_DS_PlayerLogin] Error: not loginToken")
             return
         end
         local session = SessionManager:GetSessionByToken(loginToken)
         if not session then
+            print("[CM_DS_PlayerLogin] Error: session not found")
             return
         end
         session:LoginInDS(msg)
     end,
     [_MOE.ServerMsgIds.CM_DS_PlayerLoginOut] = function (msg)
+        print("[CM_DS_PlayerLoginOut]")
         local loginToken = msg.loginToken
         if not loginToken then
+            print("[CM_DS_PlayerLoginOut] Error: not loginToken")
             return
         end
         local session = SessionManager:GetSessionByToken(loginToken)
         if not session then
+            print("[CM_DS_PlayerLoginOut] Error: session not found")
             return
         end
         session:LoginoutDS(msg)
