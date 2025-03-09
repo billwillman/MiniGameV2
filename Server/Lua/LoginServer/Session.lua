@@ -48,8 +48,7 @@ function Session:LoginoutDS(dsPlayer)
     end
     if self.dsData then
         if self.dsData.dsToken == dsPlayer.dsToken and self.dsData.dsClientId == dsPlayer.dsClientId then
-            self.dsData = {}
-            self:SetState(_MOE.SessionState.Free) -- 空闲状态
+            self:SetState(_MOE.SessionState.QuitDS) -- 离开DS
             print("[Session] LoginOutInDS => dsToken: ", dsPlayer.dsToken, "dsClientId:", dsPlayer.dsClientId)
             return true
         end
