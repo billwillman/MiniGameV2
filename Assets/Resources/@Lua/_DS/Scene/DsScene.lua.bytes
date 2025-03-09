@@ -234,6 +234,7 @@ function DsScene:Generate_CM_DS_Ready_Msg(connectData)
         isLocalDS = _MOE.IsLocalDS, -- 是否是LocalDS
         clients = _MOE.TB["clients"], -- 发过来的玩家序列
         clientLoginTokens = _MOE.TB["clientLoginTokens"],
+        uids = _MOE.TB["uids"],
         scene = _MOE.TB.dsData and _MOE.TB.dsData.scene or nil
     }
     return ret
@@ -250,6 +251,7 @@ function DsScene:Generate_CM_DS_RunOk_Msg()
         isLocalDS = _MOE.IsLocalDS, -- 是否是LocalDS
         clients = _MOE.TB["clients"], -- 发过来的玩家序列
         clientLoginTokens = _MOE.TB["clientLoginTokens"],
+        uids = _MOE.TB["uids"],
         scene = _MOE.TB.dsData and _MOE.TB.dsData.scene or nil
     }
     return ret
