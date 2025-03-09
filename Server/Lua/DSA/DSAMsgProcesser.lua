@@ -48,7 +48,7 @@ local ClientToServerMsgProcess = {
     [MsgIds.CM_DS_RunOk] = function (self, msg, socket, fd)
         return true
     end,
-    [MsgIds.CM_DS_PlayerLogin] = function (self, msg, socket, fd)
+    [MsgIds.CM_DS_PlayerConnect] = function (self, msg, socket, fd)
         if not _MOE.DSMap or not msg.ownerClientId or not msg.loginToken then
             return false
         end
@@ -74,10 +74,10 @@ local ClientToServerMsgProcess = {
         if not isFound then
             table.insert(ds.players, dsPlayer)
         end
-        self:SendServerMsgAsync("LoginSrv", _MOE.ServerMsgIds.CM_DS_PlayerLogin, dsPlayer) -- 通知LoginSrv
+        self:SendServerMsgAsync("LoginSrv", _MOE.ServerMsgIds.CM_DS_PlayerConnect, dsPlayer) -- 通知LoginSrv
         return true
     end,
-    [MsgIds.CM_DS_PlayerLoginOut] = function (self, msg, socket, fd)
+    [MsgIds.CM_DS_PlayerDisConnect] = function (self, msg, socket, fd)
         if not _MOE.DSMap then
             return false
         end
@@ -99,7 +99,7 @@ local ClientToServerMsgProcess = {
         end
 
         if dsPlayer then
-            self:SendServerMsgAsync("LoginSrv", _MOE.ServerMsgIds.CM_DS_PlayerLoginOut, dsPlayer) -- 通知LoginSrv
+            self:SendServerMsgAsync("LoginSrv", _MOE.ServerMsgIds.CM_DS_PlayerDisConnect, dsPlayer) -- 通知LoginSrv
         end
 
         return true

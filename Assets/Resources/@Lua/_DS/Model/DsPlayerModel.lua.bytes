@@ -14,7 +14,7 @@ function _M:onServerStrEvent(ownerClientId, eventName, strParam)
         if luaPlayerController then
             luaPlayerController.loginToken = strParam -- 设置登录token
         end
-        GSNetwork:SendMsg(MsgIds.CM_DS_PlayerLogin, {ownerClientId = ownerClientId, loginToken = strParam}) -- 登录
+        GSNetwork:SendMsg(MsgIds.CM_DS_PlayerConnect, {ownerClientId = ownerClientId, loginToken = strParam}) -- 登录
     end
 end
 
@@ -45,7 +45,7 @@ function _M:UnRegisterPlayerEvents(LuaPlayerController)
     LuaPlayerController.loginToken = nil -- 清空loginToken
     -- 发送消息给DSA
     local GSNetwork = self:GetGSNetwork()
-    GSNetwork:SendMsg(MsgIds.CM_DS_PlayerLoginOut, {ownerClientId = LuaPlayerController:GetClientId()})
+    GSNetwork:SendMsg(MsgIds.CM_DS_PlayerDisConnect, {ownerClientId = LuaPlayerController:GetClientId()})
     ----
     return true
 end

@@ -9,8 +9,8 @@ _MOE.ServerMsgIds = {
     SM_LS_DS_Enter = "SM_LS_DS_Enter",  -- 通过LoginSrv通知Client连接DS
     SM_DSA_Exist_DS = "SM_DSA_Exist_DS",
     SM_Login_Ret = "SM_Login_Ret",
-    CM_DS_PlayerLogin = "CM_DS_PlayerLogin", -- 玩家DS进入了
-    CM_DS_PlayerLoginOut = "CM_DS_PlayerLoginOut", -- 玩家DS退出了
+    CM_DS_PlayerConnect = "CM_DS_PlayerConnect", -- 玩家DS链接
+    CM_DS_PlayerDisConnect = "CM_DS_PlayerDisConnect", -- 玩家DS断开链接
 }
 
 _MOE.ServicesCall = {
