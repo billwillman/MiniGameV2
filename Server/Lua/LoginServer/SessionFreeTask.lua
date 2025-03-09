@@ -8,8 +8,15 @@ local function TaskTick()
     end
 end
 
+function Task:Ctor()
+    self.SessionTempDataMap = {}
+end
+
 function Task:Start()
     moon.async(TaskTick, self.__cname)
+end
+
+function FreeSessionTask:AddFreeSession(session)
 end
 
 return Task
