@@ -33,7 +33,7 @@ local ClientToServerMsgProcess = {
         end
         -- 获取Token
         if not self:SendServerMsgAsync("DSA", _MOE.ServerMsgIds.CM_ReqDS,
-            {serverName = "LoginSrv", sceneName = msg.sceneName, client = fd, loginToken = Session:GetLoginToken()}) then
+            {serverName = "LoginSrv", sceneName = msg.sceneName, client = fd, uuid = Session:GetUUID(), loginToken = Session:GetLoginToken()}) then
             self:SendTableToJson2(socket, fd, MsgIds.SM_DS_Info, {result = _MOE.ErrorCode.DSA_REQ_DS_ERROR})
         else
             Session:SetState(_MOE.SessionState.ReqDS) -- 请求DS
@@ -60,7 +60,7 @@ local ClientToServerMsgProcess = {
         -- self:PrintMsg(msg)
 
         self:SendServerMsgAsync("DBSrv", _MOE.ServerMsgIds.CM_Login, {userName = msg.userName,
-            password = msg.password, client = fd, serverName = "LoginSrv",})
+            password = msg.password, client = fd, serverName = "LoginSrv"})
     end
 }
 -----------------------------

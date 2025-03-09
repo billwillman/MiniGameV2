@@ -122,6 +122,7 @@ local _OtherServerToMyServer = {
             MsgProcesser:SendServerMsgAsync(msg.serverName, _MOE.ServerMsgIds.SM_DSReady, {result = _MOE.ErrorCode.NOERROR, dsData = dsData,
                 clients = {msg.client},
                 clientLoginTokens = {msg.loginToken},
+                uids = {msg.uuid},
             })
         else
             -- 申请服务器
@@ -147,8 +148,9 @@ local _OtherServerToMyServer = {
                 exePath = "../../outPath/DS_Linux/Server"
             end
             -- "{'dsData':{'ip':'127.0.0.1','port':7777, 'scene': 'MultiScene'},'GsData':{'ip':'127.0.0.1','port':1991}}"
-            exePath = string.format("%s '{\\\"clients\\\":[%d],\\\"clientLoginTokens\\\":[\\\"%s\\\"],\\\"dsData\\\":{\\\"ip\\\":\\\"%s\\\",\\\"scene\\\":\\\"%s\\\"},\\\"GsData\\\":{\\\"ip\\\":\\\"%s\\\",\\\"port\\\":%d}}'",
-                exePath, msg.client, msg.loginToken, ServerData.ip, msg.sceneName, ServerData.ip, ServerData.port)
+            exePath = string.format("%s '{\\\"clients\\\":[%d],\\\"uids\\\":[%d],\\\"clientLoginTokens\\\":[\\\"%s\\\"],\\\"dsData\\\":{\\\"ip\\\":\\\"%s\\\",\\\"scene\\\":\\\"%s\\\"},\\\"GsData\\\":{\\\"ip\\\":\\\"%s\\\",\\\"port\\\":%d}}'",
+                exePath, msg.client, msg.uuid, msg.loginToken,
+                ServerData.ip, msg.sceneName, ServerData.ip, ServerData.port)
             print("[DSA] RunCmd: " .. exePath)
             moon.RunCmd(exePath)
         end
