@@ -33,7 +33,7 @@ function _M:OnPreloadFinish()
             end,
             function (err)
                 _G.ErrorHandler(err)
-                self:Quit() -- 关闭APP
+                self:QuitGame() -- 关闭APP
             end
         )
     end
