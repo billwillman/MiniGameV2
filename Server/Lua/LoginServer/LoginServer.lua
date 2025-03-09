@@ -9,6 +9,9 @@ local socket = require "moon.socket"
 
 moon.exports.ServerData = ServerData
 
+local FreeSessionTask = require("LoginServer.SessionFreeTask").New()
+moon.exports.FreeSessionTask = FreeSessionTask
+
 local SessionManager = require("LoginServer.SessionManager")
 local MsgProcesser = require("LoginServer/LoginMsgProcesser").New()
 
