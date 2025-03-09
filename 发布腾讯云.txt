@@ -34,6 +34,8 @@ sudo -i -u postgres
 psql
 SET password_encryption=md5;
 ALTER USER postgres WITH PASSWORD 'GameBryo1122';
+select * from rds_tools.role_password_encryption_type();
+退出: \q
 
 256转MD5:
 https://stelang.medium.com/how-to-change-encryption-type-from-scram-sha-256-to-md5-in-postgres-for-password-authentication-263312aa1f5a
