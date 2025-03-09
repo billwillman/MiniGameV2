@@ -13,6 +13,7 @@ local ListClass = require("_Common.LinkedList")
 _MOE.FreeSessionList = ListClass:new() -- 空闲DS
 
 local FreeSessionTask = require("LoginServer.SessionFreeTask").New()
+FreeSessionTask:Start()
 _MOE.FreeSessionTask = FreeSessionTask
 
 local SessionManager = require("LoginServer.SessionManager")
