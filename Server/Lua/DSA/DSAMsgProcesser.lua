@@ -62,6 +62,7 @@ local ClientToServerMsgProcess = {
             dsClientId = msg.ownerClientId,
             dsToken = token,
             loginToken = msg.loginToken,
+            uid = msg.uid,
         }
         local isFound = false
         for idx, player in ipairs(ds.players) do
