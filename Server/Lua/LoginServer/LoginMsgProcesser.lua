@@ -125,7 +125,29 @@ local _OtherServerToMyServer = {
             })
             ----------------
         end
-    end
+    end,
+    [_MOE.ServerMsgIds.CM_DS_PlayerLogin] = function (msg)
+        local loginToken = msg.loginToken
+        if not loginToken then
+            return
+        end
+        local session = SessionManager:GetSessionByToken(loginToken)
+        if not session then
+            return
+        end
+        session:LoginInDS(msg)
+    end,
+    [_MOE.ServerMsgIds.CM_DS_PlayerLoginOut] = function (msg)
+        local loginToken = msg.loginToken
+        if not loginToken then
+            return
+        end
+        local session = SessionManager:GetSessionByToken(loginToken)
+        if not session then
+            return
+        end
+        session:LoginoutDS(msg)
+    end,
 }
 ----------------------------
 

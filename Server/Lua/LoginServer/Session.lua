@@ -29,6 +29,32 @@ function Session:CanReqDS()
     return ret
 end
 
+function Session:LoginInDS(dsPlayer)
+    if not dsPlayer or not dsPlayer.dsToken or not dsPlayer.ownerClientId then
+        return false
+    end
+    self.dsData = {
+        dsToken = dsPlayer.dsToken,
+        dsClientId = dsPlayer.ownerClientId,
+    }
+    self:SetState(_MOE.SessionState.InDS)
+    return true
+end
+
+function Session:LoginoutDS(dsPlayer)
+    if not dsPlayer or not dsPlayer.dsToken or not dsPlayer.ownerClientId then
+        return false
+    end
+    if self.dsData then
+        if self.dsData.dsToken == dsPlayer.dsToken and self.dsData.dsClientId == dsPlayer.ownerClientId then
+            self.dsData = {}
+            self:SetState(_MOE.SessionState.Free) -- 空闲状态
+            return true
+        end
+    end
+    return false
+end
+
 function Session:GetLoginToken()
     return self.loginToken
 end

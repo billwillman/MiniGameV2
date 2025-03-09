@@ -60,6 +60,7 @@ local ClientToServerMsgProcess = {
         ds.players = ds.players or {}
         local dsPlayer = {
             dsClientId = msg.ownerClientId,
+            dsToken = token,
             loginToken = msg.loginToken,
         }
         local isFound = false
