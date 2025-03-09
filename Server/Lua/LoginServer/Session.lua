@@ -30,12 +30,12 @@ function Session:CanReqDS()
 end
 
 function Session:LoginInDS(dsPlayer)
-    if not dsPlayer or not dsPlayer.dsToken or not dsPlayer.ownerClientId then
+    if not dsPlayer or not dsPlayer.dsToken or not dsPlayer.dsClientId then
         return false
     end
     self.dsData = {
         dsToken = dsPlayer.dsToken,
-        dsClientId = dsPlayer.ownerClientId,
+        dsClientId = dsPlayer.dsClientId,
     }
     self:SetState(_MOE.SessionState.InDS)
     print("[Session] LoginInDS => dsToken: ", dsPlayer.dsToken, "dsClientId:", dsPlayer.dsClientId)
@@ -43,11 +43,11 @@ function Session:LoginInDS(dsPlayer)
 end
 
 function Session:LoginoutDS(dsPlayer)
-    if not dsPlayer or not dsPlayer.dsToken or not dsPlayer.ownerClientId then
+    if not dsPlayer or not dsPlayer.dsToken or not dsPlayer.dsClientId then
         return false
     end
     if self.dsData then
-        if self.dsData.dsToken == dsPlayer.dsToken and self.dsData.dsClientId == dsPlayer.ownerClientId then
+        if self.dsData.dsToken == dsPlayer.dsToken and self.dsData.dsClientId == dsPlayer.dsClientId then
             self.dsData = {}
             self:SetState(_MOE.SessionState.Free) -- 空闲状态
             print("[Session] LoginOutInDS => dsToken: ", dsPlayer.dsToken, "dsClientId:", dsPlayer.dsClientId)
