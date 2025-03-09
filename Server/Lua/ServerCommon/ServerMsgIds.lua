@@ -11,6 +11,7 @@ _MOE.ServerMsgIds = {
     SM_Login_Ret = "SM_Login_Ret",
     CM_DS_PlayerConnect = "CM_DS_PlayerConnect", -- 玩家DS链接
     CM_DS_PlayerDisConnect = "CM_DS_PlayerDisConnect", -- 玩家DS断开链接
+    SM_GS_DS_PlayerKickOff = "SM_GS_DS_PlayerKickOff",  -- LoginSrv到DSA，DS踢掉某个玩家
 }
 
 _MOE.ServicesCall = {

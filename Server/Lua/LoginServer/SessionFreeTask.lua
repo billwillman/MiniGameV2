@@ -1,4 +1,5 @@
 local moon = require("moon")
+require("ServerCommon.ServerMsgIds")
 
 local Task = _MOE.class("FreeSessionTask")
 
@@ -35,10 +36,33 @@ function Task:AddFreeSession(session)
     Player = {
         uid = uuid,
         dsData = session.dsData,
-        freeTime = os.time()
+        freeTime = os.time(),
+        serverName = "LoginSrv",
     }
     self.SessionTempDataMap[uuid] = Player
     _MOE.FreeSessionList:insert_last(Player)
+    return true
+end
+
+function Task:RemoveFreeSession(session, isSendDSA)
+    if not session then
+        return false
+    end
+    local uid = session:GetUUID()
+    if not uid then
+        return false
+    end
+    local Player = self.SessionTempDataMap[uid]
+    if not Player then
+        return false
+    end
+    self.SessionTempDataMap[uid] = nil
+    _MOE.FreeSessionList:remove(Player)
+    if isSendDSA then
+        -- 发送给DSA
+        MsgProcesser:SendServerMsgAsync("DBSrv", _MOE.ServerMsgIds.SM_GS_DS_PlayerKickOff, Player)
+    end
+    return true
 end
 
 return Task

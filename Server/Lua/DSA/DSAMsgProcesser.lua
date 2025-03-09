@@ -156,6 +156,13 @@ local _OtherServerToMyServer = {
             moon.RunCmd(exePath)
         end
     end,
+    [_MOE.ServerMsgIds.SM_GS_DS_PlayerKickOff] = function (Player)
+        if not Player or not Player.dsData then
+            return
+        end
+        ---- 处理真正删除Players的对应Player
+        -----------------------------------
+    end,
 }
 ----------------------------
 
