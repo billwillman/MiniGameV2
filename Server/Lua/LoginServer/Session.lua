@@ -38,6 +38,7 @@ function Session:LoginInDS(dsPlayer)
         dsClientId = dsPlayer.ownerClientId,
     }
     self:SetState(_MOE.SessionState.InDS)
+    print("[Session] LoginInDS => dsToken: ", dsPlayer.dsToken, "dsClientId:", dsPlayer.dsClientId)
     return true
 end
 
@@ -49,6 +50,7 @@ function Session:LoginoutDS(dsPlayer)
         if self.dsData.dsToken == dsPlayer.dsToken and self.dsData.dsClientId == dsPlayer.ownerClientId then
             self.dsData = {}
             self:SetState(_MOE.SessionState.Free) -- 空闲状态
+            print("[Session] LoginOutInDS => dsToken: ", dsPlayer.dsToken, "dsClientId:", dsPlayer.dsClientId)
             return true
         end
     end
