@@ -73,6 +73,7 @@ local ClientToServerMsgProcess = {
         if not isFound then
             table.insert(ds.players, dsPlayer)
         end
+        self:SendServerMsgAsync("LoginSrv", _MOE.ServerMsgIds.CM_DS_PlayerLogin, dsPlayer) -- 通知LoginSrv
         return true
     end,
     [MsgIds.CM_DS_PlayerLoginOut] = function (self, msg, socket, fd)
@@ -85,13 +86,19 @@ local ClientToServerMsgProcess = {
             return false
         end
         local dsClientId = msg.ownerClientId
+        local dsPlayer = nil
         if ds.players then
             for idx, player in ipairs(ds.players) do
                 if player.dsClientId == dsClientId then
+                    dsPlayer = player
                     table.remove(ds.players, idx)
                     break
                 end
             end
+        end
+
+        if dsPlayer then
+            self:SendServerMsgAsync("LoginSrv", _MOE.ServerMsgIds.CM_DS_PlayerLoginOut, dsPlayer) -- 通知LoginSrv
         end
 
         return true
