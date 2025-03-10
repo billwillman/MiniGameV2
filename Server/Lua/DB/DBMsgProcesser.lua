@@ -67,6 +67,10 @@ local _OtherServerToMyServer = {
         connectStr = _MOE.TableUtils.Serialize(MongoDB)
         print("[DB] Connect => ", connectStr)
         db =  mongo.client(MongoDB)
+        if not db or not db["minigame"] then
+            return false
+        end
+        db = db["minigame"]
         print("[DB] connect DB Success~!")
         moon.exports.mongodb = db
         return true
