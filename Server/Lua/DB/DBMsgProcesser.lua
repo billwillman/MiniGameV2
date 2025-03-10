@@ -62,6 +62,13 @@ local _OtherServerToMyServer = {
         end
         print("[DB] connect DB Success~!")
         moon.exports.db = db -- db数据库
+
+        local MongoDB = ServerData.MongoDB
+        connectStr = _MOE.TableUtils.Serialize(MongoDB)
+        print("[DB] Connect => ", connectStr)
+        db =  mongo.client(MongoDB)
+        print("[DB] connect DB Success~!")
+        moon.exports.mongodb = db
         return true
     end,
     [_MOE.ServicesCall.Start] = function ()
