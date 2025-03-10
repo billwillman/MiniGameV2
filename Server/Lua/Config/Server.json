@@ -48,6 +48,13 @@
             "user": "postgres",
             "password": "GameBryo1122",
             "connect_timeout": 10000
+        },
+        "MongoDB": {
+            "host": "127.0.0.1",
+            "port": 27017,
+            "database": "minigame",
+            "user": "mongodb",
+            "password": "GameBryo1122"
         }
     }
 }
