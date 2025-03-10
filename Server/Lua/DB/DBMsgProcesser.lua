@@ -42,6 +42,8 @@ local function QueryDB(sql)
     return result
 end
 
+local isUseMongoDB = false
+
 ----------------------------------------------- 服务器间通信 -------------------------------
 
 -- 其他服务器发送本服务器处理
@@ -49,31 +51,35 @@ local _OtherServerToMyServer = {
     --------------------------------------- 内部系统调用 -----------------------------
     [_MOE.ServicesCall.InitDB] = function ()
         -- 初始化连接DB
-        local DB = ServerData.DB
-        local connectStr = _MOE.TableUtils.Serialize(DB)
-        print("[DB] Connect => ", connectStr)
-        --[[
-        local db = mysql.connect(DB)
-        ]]
-        local db = pg.connect(DB)
-        if db.code then
-            print_r("[DB] db.code: ", db.code)
-            return false
+        if not isUseMongoDB then
+            local DB = ServerData.DB
+            local connectStr = _MOE.TableUtils.Serialize(DB)
+            print("[DB] Connect => ", connectStr)
+            --[[
+            local db = mysql.connect(DB)
+            ]]
+            local db = pg.connect(DB)
+            if db.code then
+                print_r("[DB] db.code: ", db.code)
+                return false
+            end
+            print("[DB] connect DB Success~!")
+            moon.exports.db = db -- db数据库
         end
-        print("[DB] connect DB Success~!")
-        moon.exports.db = db -- db数据库
 
-        local MongoDB = ServerData.MongoDB
-        connectStr = _MOE.TableUtils.Serialize(MongoDB)
-        print("[DB] Connect => ", connectStr)
-        db =  mongo.client(MongoDB)
-        if not db or not db["minigame"] then
-            return false
+        if isUseMongoDB then
+            local MongoDB = ServerData.MongoDB
+            connectStr = _MOE.TableUtils.Serialize(MongoDB)
+            print("[DB] Connect => ", connectStr)
+            db =  mongo.client(MongoDB)
+            if not db or not db["minigame"] then
+                return false
+            end
+            db = db["minigame"]
+            db:auth(MongoDB.user, MongoDB.password)
+            print("[DB] connect DB Success~!")
+            moon.exports.mongodb = db
         end
-        db = db["minigame"]
-        db:auth(MongoDB.user, MongoDB.password)
-        print("[DB] connect DB Success~!")
-        moon.exports.mongodb = db
         return true
     end,
     [_MOE.ServicesCall.Start] = function ()
@@ -90,6 +96,9 @@ local _OtherServerToMyServer = {
         if db then
             -- Player存储
             PlayerManager:SaveAllToDB(db)
+        end
+        if mongodb then
+            PlayerManager:SaveAllToDB(mongodb)
         end
         return true
     end,
