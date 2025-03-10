@@ -60,7 +60,7 @@ function Task:RemoveFreeSession(session, isSendDSA)
     _MOE.FreeSessionList:remove(Player)
     if isSendDSA then
         -- 发送给DSA
-        MsgProcesser:SendServerMsgAsync("DBSrv", _MOE.ServerMsgIds.SM_GS_DS_PlayerKickOff, Player)
+        MsgProcesser:SendServerMsgAsync("DSA", _MOE.ServerMsgIds.SM_GS_DS_PlayerKickOff, Player)
     end
     return true
 end
