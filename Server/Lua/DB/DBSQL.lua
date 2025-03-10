@@ -19,4 +19,9 @@ M.QueryUserLogin = function (userName, password)
     return sql
 end
 
+M.MongoDB_QueryUserLogin = function (db, userName, password)
+    local ret = db.userlogin:findOne({username = userName, password = password})
+    return ret
+end
+
 return M
