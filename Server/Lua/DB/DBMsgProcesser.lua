@@ -8,6 +8,7 @@ require("ServerCommon.GlobalFuncs")
 
 -- local mysql = require("moon.db.mysql") -- mysql
 local pg = require("moon.db.pg") -- pgSql
+local mongo = require "moon.db.mongo" -- mongo db数据库
 
 require("LuaPanda").start("127.0.0.1", ServerData.Debug)
 
