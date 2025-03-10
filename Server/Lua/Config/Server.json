@@ -53,7 +53,7 @@
             "host": "127.0.0.1",
             "port": 27017,
             "authdb": "minigame",
-            "user": "mongodb",
+            "user": "admin",
             "password": "GameBryo1122"
         }
     }

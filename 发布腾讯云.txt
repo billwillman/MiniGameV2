@@ -47,3 +47,17 @@ https://stelang.medium.com/how-to-change-encryption-type-from-scram-sha-256-to-m
 3 make install-both-unix
 1 socket = require ("socket")
 2 print(socket._VERSION)
+
+
+-----------------------------------------------
+mongodb
+
+use admin  
+db.createUser({
+  user: 'admin',  // 用户名
+  pwd: 'GameBryo1122',  // 密码
+  roles:[{
+    role: 'root',  // 角色
+    db: 'admin'  // 数据库
+  }]
+})
