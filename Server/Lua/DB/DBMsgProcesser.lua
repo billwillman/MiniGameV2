@@ -71,6 +71,7 @@ local _OtherServerToMyServer = {
             return false
         end
         db = db["minigame"]
+        db:auth(MongoDB.user, MongoDB.password)
         print("[DB] connect DB Success~!")
         moon.exports.mongodb = db
         return true
