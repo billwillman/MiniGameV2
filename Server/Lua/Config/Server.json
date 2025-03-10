@@ -52,7 +52,7 @@
         "MongoDB": {
             "host": "127.0.0.1",
             "port": 27017,
-            "database": "minigame",
+            "authdb": "minigame",
             "user": "mongodb",
             "password": "GameBryo1122"
         }
