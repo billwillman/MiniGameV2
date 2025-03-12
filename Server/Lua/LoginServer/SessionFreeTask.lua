@@ -77,7 +77,9 @@ function Task:RemoveFreeSessionByUUID(uid, isSendDSA)
     end
     self.SessionTempDataMap[uid] = nil
     _MOE.FreeSessionList:remove(Player)
-    if isSendDSA then
+
+    ----- 处理DS
+    if isSendDSA and Player.dsData and next(Player.dsData) ~= nil then
         -- 发送给DSA
         MsgProcesser:SendServerMsgAsync("DSA", _MOE.ServerMsgIds.SM_GS_DS_PlayerKickOff, Player)
     end
