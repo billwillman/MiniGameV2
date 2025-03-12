@@ -101,7 +101,7 @@ local _OtherServerToMyServer = {
             )
         end
 
-        MsgProcesser:PrintMsg(result)
+        --MsgProcesser:PrintMsg(result)
 
         if not result then
             -- 失败
