@@ -66,6 +66,9 @@ end
 
 function list:remove(t)
 	assert(t)
+	if t._list == nil then
+		return
+	end
 	if t._next then
 		if t._prev then
 			t._next._prev = t._prev
