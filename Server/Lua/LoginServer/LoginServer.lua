@@ -38,6 +38,10 @@ moon.exports.OnClose = function(fd, msg)
     xpcall(function ()
         local data = json.decode(str)
         local token = moon.md5(data.addr)
+        local Session = SessionManager:GetSessionByToken(token)
         SessionManager:RemoveSession(token)
+        if Session then
+            _MOE.FreeSessionTask:AddFreeSession(Session)
+        end
     end, function () end)
 end

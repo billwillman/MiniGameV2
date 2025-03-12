@@ -152,7 +152,9 @@ local _OtherServerToMyServer = {
             print("[CM_DS_PlayerDisConnect] Error: session not found")
             return
         end
-        session:LoginoutDS(msg)
+        if session:LoginoutDS(msg) then
+            _MOE.FreeSessionTask:AddSession(session)
+        end
     end,
 }
 ----------------------------
