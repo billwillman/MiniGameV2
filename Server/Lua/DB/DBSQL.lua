@@ -24,4 +24,44 @@ M.MongoDB_QueryUserLogin = function (db, userName, password)
     return ret
 end
 
+local function CheckAndConnectDB()
+    if not db then
+        return
+    end
+    if not db["sock"] then
+        local DB = ServerData.DB
+        local db = pg.connect(DB)
+        if db.code then
+            print_r("[DB] db.code: ", db.code)
+            return false
+        end
+        moon.exports.db = db
+    end
+end
+
+local function QueryDB(sql)
+    CheckAndConnectDB()
+    local result = db:query(sql)
+    if result and result.code == "SOCKET" then
+        CheckAndConnectDB()
+        result = db:query(sql)
+    end
+    return result
+end
+
+M.PostSQL_QueryUserLogin = function (db, userName, password)
+    local sql = M.QueryUserLogin(userName, password)
+    local result = QueryDB(sql)
+    if not result or not result.data or next(result.data) == nil then
+        return nil
+    end
+    if #result.data > 1 then
+        -- 冗余数据
+        print("[DB ERROR] CM_Login data num > 1 sql:", sql)
+        return nil
+    end
+    result = result.data[1]
+    return result
+end
+
 return M

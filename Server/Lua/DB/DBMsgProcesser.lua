@@ -17,32 +17,7 @@ local PlayerManager = require("DB.DBPlayerManager")
 local SQL = require("DB.DBSQL")
 require("Config.ErrorCode")
 
-local function CheckAndConnectDB()
-    if not db then
-        return
-    end
-    if not db["sock"] then
-        local DB = ServerData.DB
-        local db = pg.connect(DB)
-        if db.code then
-            print_r("[DB] db.code: ", db.code)
-            return false
-        end
-        moon.exports.db = db
-    end
-end
-
-local function QueryDB(sql)
-    CheckAndConnectDB()
-    local result = db:query(sql)
-    if result and result.code == "SOCKET" then
-        CheckAndConnectDB()
-        result = db:query(sql)
-    end
-    return result
-end
-
-local isUseMongoDB = false
+local isUseMongoDB = true
 
 ----------------------------------------------- 服务器间通信 -------------------------------
 
@@ -63,7 +38,7 @@ local _OtherServerToMyServer = {
                 print_r("[DB] db.code: ", db.code)
                 return false
             end
-            print("[DB] connect DB Success~!")
+            print("[DB] connect PostSQL DB Success~!")
             moon.exports.db = db -- db数据库
         end
 
@@ -71,13 +46,13 @@ local _OtherServerToMyServer = {
             local MongoDB = ServerData.MongoDB
             local connectStr = _MOE.TableUtils.Serialize(MongoDB)
             print("[DB] Connect => ", connectStr)
-            db =  mongo.client(MongoDB)
+            local db =  mongo.client(MongoDB)
             if not db or not db["minigame"] then
                 return false
             end
             db = db["minigame"]
             db:auth(MongoDB.user, MongoDB.password)
-            print("[DB] connect DB Success~!")
+            print("[DB] connect Mongo DB Success~!")
             moon.exports.mongodb = db
         end
         return true
@@ -110,8 +85,12 @@ local _OtherServerToMyServer = {
         local userName = msg.userName
         local password = msg.password
         local client = msg.client
-        local sql = SQL.QueryUserLogin(userName, password)
-        local result = QueryDB(sql)
+        local result
+        if isUseMongoDB then
+            result = SQL.MongoDB_QueryUserLogin(mongodb, userName, password)
+        else
+            result = SQL.PostSQL_QueryUserLogin(db, userName, password)
+        end
 
         local OnError = function (isLock)
             MsgProcesser:SendServerMsgAsync("LoginSrv", _MOE.ServerMsgIds.SM_Login_Ret,
@@ -122,22 +101,14 @@ local _OtherServerToMyServer = {
             )
         end
 
-        -- MsgProcesser:PrintMsg(result)
+        MsgProcesser:PrintMsg(result)
 
-
-        if not result or not result.data or next(result.data) == nil then
+        if not result then
             -- 失败
             OnError()
             return
         end
-        if #result.data > 1 then
-            -- 冗余数据
-            print("[DB ERROR] CM_Login data num > 1 sql:", sql)
-            OnError()
-            return
-        end
-        local userData = result.data[1]
-        if userData.isLock ~= "0" then
+        if result.isLock ~= "0" and  result.isLock ~= false then
             OnError(true)
             return
         end
@@ -146,7 +117,7 @@ local _OtherServerToMyServer = {
             result = _MOE.ErrorCode.NOERROR,
             client = client,
             user = {
-                uuid = userData.id,
+                uuid = result.id,
             }
         })
     end
