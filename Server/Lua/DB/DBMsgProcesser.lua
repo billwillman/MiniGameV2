@@ -69,7 +69,7 @@ local _OtherServerToMyServer = {
 
         if isUseMongoDB then
             local MongoDB = ServerData.MongoDB
-            connectStr = _MOE.TableUtils.Serialize(MongoDB)
+            local connectStr = _MOE.TableUtils.Serialize(MongoDB)
             print("[DB] Connect => ", connectStr)
             db =  mongo.client(MongoDB)
             if not db or not db["minigame"] then
