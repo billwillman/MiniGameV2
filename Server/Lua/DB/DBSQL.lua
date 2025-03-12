@@ -20,6 +20,9 @@ M.QueryUserLogin = function (userName, password)
 end
 
 M.MongoDB_QueryUserLogin = function (db, userName, password)
+    if not db.userlogin then
+        return
+    end
     local ret = db.userlogin:findOne({username = userName, password = password})
     return ret
 end
