@@ -27,6 +27,8 @@ M.MongoDB_QueryUserLogin = function (db, userName, password)
     return ret
 end
 
+local pg = require("moon.db.pg")
+
 local function CheckAndConnectDB()
     if not db then
         return
