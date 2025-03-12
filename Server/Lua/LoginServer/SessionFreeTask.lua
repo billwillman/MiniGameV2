@@ -5,6 +5,29 @@ local Task = _MOE.class("FreeSessionTask")
 
 local function TaskTick()
     while true do
+        if _MOE.FreeSessionList and next(_MOE.FreeSessionList) ~= nil then
+            local currtime = os.time()
+            local currentCnt = _MOE.FreeSessionList:GetLength()
+            local currentIdx = 1
+            for i = 1, 50 do
+                local FreeSession = _MOE.FreeSessionList:GetFirst()
+                _MOE.FreeSessionList:remove_first()
+                if FreeSession then
+                    if currtime - FreeSession.freeTime <= 60 then
+                        _MOE.FreeSessionList:insert_last(FreeSession)
+                    else
+                        ---- 移到Free列表
+                        _MOE.FreeSessionTask:RemoveFreeSessionByUUID(FreeSession.uid, true)
+                    end
+                    currentIdx = currentIdx + 1
+                    if currentIdx >= currentCnt then
+                        break
+                    end
+                else
+                    break
+                end
+            end
+        end
         moon.sleep(0)
     end
 end
@@ -44,11 +67,7 @@ function Task:AddFreeSession(session)
     return true
 end
 
-function Task:RemoveFreeSession(session, isSendDSA)
-    if not session then
-        return false
-    end
-    local uid = session:GetUUID()
+function Task:RemoveFreeSessionByUUID(uid, isSendDSA)
     if not uid then
         return false
     end
@@ -63,6 +82,14 @@ function Task:RemoveFreeSession(session, isSendDSA)
         MsgProcesser:SendServerMsgAsync("DSA", _MOE.ServerMsgIds.SM_GS_DS_PlayerKickOff, Player)
     end
     return true
+end
+
+function Task:RemoveFreeSession(session, isSendDSA)
+    if not session then
+        return false
+    end
+    local uid = session:GetUUID()
+    return self:RemoveFreeSessionByUUID(uid, isSendDSA)
 end
 
 return Task

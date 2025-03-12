@@ -8,18 +8,19 @@ require("ServerCommon.GlobalFuncs")
 
 function SessionManager:AddSession(session)
     if not session then
-        return
+        return false
     end
     local uuid = session:GetUUID()
     if not uuid then
-        return
+        return false
     end
     local loginToken = session:GetLoginToken()
     if not loginToken then
-        return
+        return false
     end
     self.uuidToSessionMap[uuid] = session
     self.loginTokenToSessinMap[loginToken] = session
+    return true
 end
 
 function SessionManager:GetSession(socket, fd)
@@ -37,17 +38,18 @@ end
 
 function SessionManager:RemoveSession(loginToken)
     if not loginToken then
-        return
+        return false
     end
     local session = self.loginTokenToSessinMap[loginToken]
     if not session then
-        return
+        return false
     end
     self.loginTokenToSessinMap[loginToken] = nil
     local uuid = session:GetUUID()
     if uuid then
         self.uuidToSessionMap[uuid] = nil
     end
+    return true
 end
 
 function SessionManager:ExistsByLoginToken(loginToken)

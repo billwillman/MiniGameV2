@@ -113,6 +113,8 @@ local _OtherServerToMyServer = {
                 user = msg.user,
             }
 
+            _MOE.FreeSessionTask:RemoveFreeSession(Session, true)
+
             retMsg.user.token = Session:GetLoginToken()
 
             -- _MOE.TableUtils.PrintTable2(retMsg)
