@@ -161,6 +161,7 @@ local _OtherServerToMyServer = {
             return
         end
         ---- 处理真正删除Players的对应Player
+        print("SM_GS_DS_PlayerKickOff")
         -----------------------------------
     end,
 }
