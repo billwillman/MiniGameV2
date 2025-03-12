@@ -19,13 +19,17 @@ M.QueryUserLogin = function (userName, password)
     return sql
 end
 
+local moon = require("moon")
+
 M.MongoDB_QueryUserLogin = function (db, userName, password)
     if not db.userlogin then
         return
     end
     local ret = db.userlogin:findOne({username = userName, password = password})
     if ret then
-        ret.id = ret._id
+        if not ret.id and ret._id then
+            ret.id = moon.md5(ret._id)  -- 转MD5码
+        end
     end
     return ret
 end
