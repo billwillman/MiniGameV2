@@ -24,6 +24,9 @@ M.MongoDB_QueryUserLogin = function (db, userName, password)
         return
     end
     local ret = db.userlogin:findOne({username = userName, password = password})
+    if ret then
+        ret.id = ret._id
+    end
     return ret
 end
 
