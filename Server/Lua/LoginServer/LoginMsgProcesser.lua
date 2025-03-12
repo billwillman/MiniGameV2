@@ -155,7 +155,7 @@ local _OtherServerToMyServer = {
             return
         end
         if session:LoginoutDS(msg) then
-            _MOE.FreeSessionTask:AddSession(session)
+            _MOE.FreeSessionTask:AddFreeSession(session)
         end
     end,
 }
