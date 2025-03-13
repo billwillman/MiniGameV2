@@ -122,8 +122,10 @@ local ClientToServerMsgProcess = {
             for idx, player in ipairs(ds.players) do
                 if player.dsClientId == dsClientId then
                     dsPlayer = player
-                    -- 不删除（需要LoginSrv来处理保活一段时间在DS）
-                    -- table.remove(ds.players, idx)
+                    -- 不删除（需要LoginSrv来处理保活一段时间在DS)
+                    if ds.isLocalDS then -- LocalDS就直接删除
+                        table.remove(ds.players, idx)
+                    end
                     break
                 end
             end
