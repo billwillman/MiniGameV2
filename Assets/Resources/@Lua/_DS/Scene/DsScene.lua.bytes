@@ -71,19 +71,23 @@ function DsScene:OnDS_ConnectionApprovalCallback(request, response)
         response.Approved = false
         return
     end
-    local clientLoginTokens = _MOE.TB["clientLoginTokens"]
-    if not clientLoginTokens then
-        return false
-    end
-    local isOk = false
-    for _, clientToken in ipairs(clientLoginTokens) do
-        if clientToken == player.token then
-            isOk = true
-            break
+    if not _MOE.TB["isLocalDS"] then
+        local clientLoginTokens = _MOE.TB["clientLoginTokens"]
+        if not clientLoginTokens then
+            return false
         end
-    end
+        local isOk = false
+        for _, clientToken in ipairs(clientLoginTokens) do
+            if clientToken == player.token then
+                isOk = true
+                break
+            end
+        end
 
-    response.Approved = isOk -- 暂时直接认证成功
+        response.Approved = isOk -- 暂时直接认证成功
+    else
+        response.Approved = true -- Local DS直接通过了
+    end
     if response.Approved then
         response.CreatePlayerObject = true
         response.Position = _MOE.Vector3.zero
