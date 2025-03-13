@@ -31,6 +31,7 @@ local function RemoveDsPlayer(Player)
             local P = ds.players[idx]
             if P.uid == PlayerUID and P.dsClientId == PlayerClientId then
                 table.remove(ds.players, idx)
+                print(string.format("[remove] idx: %d dsPlayerCount: %d", idx, #ds.players))
                 break
             end
         end
