@@ -37,6 +37,7 @@ function Session:LoginInDS(dsPlayer)
         dsToken = dsPlayer.dsToken,
         dsClientId = dsPlayer.dsClientId,
         uid = self:GetUUID(),
+        loginToken = self:GetLoginToken(),
     }
     self:SetState(_MOE.SessionState.InDS)
     print("[Session] LoginInDS => dsToken: ", dsPlayer.dsToken, "dsClientId:", dsPlayer.dsClientId)

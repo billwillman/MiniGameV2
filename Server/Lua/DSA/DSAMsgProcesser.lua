@@ -16,6 +16,7 @@ local function RemoveDsPlayer(Player)
     if not Player or not Player.dsData then
         return
     end
+
     local dsToken = Player.dsData.dsToken
     if not dsToken then
         return
@@ -27,8 +28,10 @@ local function RemoveDsPlayer(Player)
     end
     local ds = _MOE.DSMap[dsToken]
     if ds and ds.players and next(ds.players) ~= nil then
+        print(1)
         for idx = 1, #ds.players do
             local P = ds.players[idx]
+            _MOE.TableUtils.PrintTable2(P)
             if P.uid == PlayerUID and P.dsClientId == PlayerClientId then
                 table.remove(ds.players, idx)
                 print(string.format("[remove] idx: %d dsPlayerCount: %d", idx, #ds.players))
