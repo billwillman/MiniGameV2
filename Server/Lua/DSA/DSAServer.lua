@@ -47,6 +47,9 @@ local function DS_IsBusy(ds)
     if not ds then
         return false
     end
+    if ds.isLocalDS then -- LocalDS永远是BUSY的
+        return true
+    end
     local players = ds.players
     if not players or #players <= 0 then
         return false
