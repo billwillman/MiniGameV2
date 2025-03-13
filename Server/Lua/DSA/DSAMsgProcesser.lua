@@ -12,6 +12,31 @@ require("DSA.DSState")
 
 require("LuaPanda").start("127.0.0.1", ServerData.Debug)
 
+local function RemoveDsPlayer(Player)
+    if not Player or not Player.dsData then
+        return
+    end
+    local dsToken = Player.dsData.dsToken
+    if not dsToken then
+        return
+    end
+    local PlayerUID = Player.dsData.uid
+    local PlayerClientId = Player.dsData.dsClientId
+    if not PlayerUID or not PlayerClientId then
+        return
+    end
+    local ds = _MOE.DSMap[dsToken]
+    if ds and ds.players and next(ds.players) ~= nil then
+        for idx = 1, #ds.players do
+            local P = ds.players[idx]
+            if P.uid == PlayerUID and P.dsClientId == PlayerClientId then
+                table.remove(ds.players, idx)
+                break
+            end
+        end
+    end
+end
+
 --------------------------------------------- 客户端发送服务器协议处理 --------------------
 
 --- 客户端发送给服务器请求协议处理
@@ -162,7 +187,9 @@ local _OtherServerToMyServer = {
         end
         ---- 处理真正删除Players的对应Player
         print("SM_GS_DS_PlayerKickOff")
+        _MOE.TableUtils.PrintTable2(Player)
         -----------------------------------
+        RemoveDsPlayer(Player)
     end,
 }
 ----------------------------
