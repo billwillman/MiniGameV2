@@ -90,6 +90,7 @@ local function ParseStartupCommands(self)
                     end
                 else
                     tb = GetTestParams()
+                    tb["isLocalDS"] = true
                     self.isLocalDS = true
                 end
             else
