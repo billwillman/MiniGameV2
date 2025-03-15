@@ -33,7 +33,7 @@ end
 
 moon.exports.OnClose = function(fd, msg)
     local str = moon.decode(msg, "Z")
-    print("close ", fd, str)
+    -- print("close ", fd, str)
 
     xpcall(function ()
         local data = json.decode(str)
