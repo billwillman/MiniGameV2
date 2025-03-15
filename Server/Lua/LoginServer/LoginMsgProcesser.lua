@@ -113,7 +113,10 @@ local _OtherServerToMyServer = {
                 user = msg.user,
             }
 
-            _MOE.FreeSessionTask:RemoveFreeSession(Session, true)
+            -- 附上上次登录的缓存信息
+            _MOE.FreeSessionTask:AttachSession(Session)
+            -- 删除掉原来的
+            --_MOE.FreeSessionTask:RemoveFreeSession(Session, true)
 
             retMsg.user.token = Session:GetLoginToken()
 
