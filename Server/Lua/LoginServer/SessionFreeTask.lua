@@ -40,6 +40,22 @@ function Task:Start()
     moon.async(TaskTick, self.__cname)
 end
 
+function Task:AttachSession(session)
+    if not session then
+        return false
+    end
+    local uuid = session:GetUUID()
+    if not uuid then
+        return false
+    end
+    local Player = self.SessionTempDataMap[uuid]
+    if Player.dsData and next(Player.dsData) ~= nil then
+        session.dsData = Player.dsData
+        return true
+    end
+    return false
+end
+
 function Task:AddFreeSession(session)
     if not session then
         return false
