@@ -192,8 +192,8 @@ local _OtherServerToMyServer = {
             return
         end
         ---- 处理真正删除Players的对应Player
-        print(string.format("SM_GS_DS_PlayerKickOff => dsToken: %s uid: %s clientId: %d", Player.dsData.dsToken,
-            Player.dsData.uid, Player.dsData.dsClientId))
+        print(string.format("SM_GS_DS_PlayerKickOff => dsToken: %s uid: %s clientId: %d", Player.dsData.dsToken or nil,
+            Player.dsData.uid or 0, Player.dsData.dsClientId or 0))
         -- _MOE.TableUtils.PrintTable2(Player)
         -----------------------------------
         RemoveDsPlayer(Player)
