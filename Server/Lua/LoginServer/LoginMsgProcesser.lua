@@ -131,6 +131,7 @@ local _OtherServerToMyServer = {
                         retMsg.dsData = dsData
                         retMsg.dsData.ip = ds.ip
                         retMsg.dsData.port = ds.port
+                        retMsg.dsData.scene = ds.scene
                         Session:SetState(_MOE.SessionState.LoginDS) -- 设置是在LoginDS
                         -- _MOE.TableUtils.PrintTable2(retMsg)
                     end

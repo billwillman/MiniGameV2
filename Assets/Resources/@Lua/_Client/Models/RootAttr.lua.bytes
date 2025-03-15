@@ -12,6 +12,15 @@ end
 function RootAttr:_OnLoginRet(msg, net)
     if msg.result == 0 then
         self.user = msg.user
+        if msg.dsData and next(msg.dsData) ~= nil then
+            _MOE.TB["dsData"] = {
+                ip = msg.dsData.ip,
+                port = msg.dsData.port,
+                scene = msg.dsData.scene
+            }
+        else
+            _MOE.TB["dsData"] = nil
+        end
     end
     _MOE.EventManager:DispatchEvent(_MOE.ClientEvents.ON_LOGIN_RET, msg)
 end

@@ -210,6 +210,7 @@ local _OtherServerToMyServer = {
                     dsToken = ds.dsData.dsToken,
                     ip = ds.dsData.ip,
                     port = ds.dsData.port,
+                    scene = ds.dsData.scene,
                 }
                 return ret
             end
