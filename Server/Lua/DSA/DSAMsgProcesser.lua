@@ -104,6 +104,7 @@ local ClientToServerMsgProcess = {
         if not isFound then
             table.insert(ds.players, dsPlayer)
         end
+        print(string.format("[DS] dsTokne: %s playerNum: %d", token, #ds.players))
         self:SendServerMsgAsync("LoginSrv", _MOE.ServerMsgIds.CM_DS_PlayerConnect, dsPlayer) -- 通知LoginSrv
         return true
     end,
