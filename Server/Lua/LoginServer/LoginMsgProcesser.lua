@@ -120,7 +120,9 @@ local _OtherServerToMyServer = {
                 isHasLocalDs = Session:HasdsData()
                 if isHasLocalDs then
                     -- 检查DS是否是有效的
-                    if not MsgProcesser:SendServerMsgSync("DSA", _MOE.ServerMsgIds.SM_LS_DSA_CheckPlayerDS, Session) then
+                    local dsData = Session.dsData
+                    if not MsgProcesser:SendServerMsgSync("DSA", _MOE.ServerMsgIds.SM_LS_DSA_CheckPlayerDS,
+                        {dsToken = dsData.dsToken}) then
                         Session.dsData = nil
                         isHasLocalDs = false
                     end

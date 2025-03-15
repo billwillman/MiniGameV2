@@ -202,9 +202,8 @@ local _OtherServerToMyServer = {
         return true
     end,
     [_MOE.ServerMsgIds.SM_LS_DSA_CheckPlayerDS] = function (Session)
-        if Session:HasdsData() then
-            local dsData = Session.dsData
-            local dsToken = dsData.dsToken
+        if Session and Session.dsToken then
+            local dsToken = Session.dsToken
             local ds = _MOE.DSMap[dsToken]
             local ret = ds ~= nil
             return ret
