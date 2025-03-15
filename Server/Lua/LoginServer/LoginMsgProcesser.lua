@@ -125,6 +125,8 @@ local _OtherServerToMyServer = {
                         {dsToken = dsData.dsToken}) then
                         Session.dsData = nil
                         isHasLocalDs = false
+                    else
+                        retMsg.dsData = dsData
                     end
                 end
             end
