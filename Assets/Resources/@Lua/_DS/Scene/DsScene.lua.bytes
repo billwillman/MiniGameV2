@@ -78,7 +78,7 @@ function DsScene:OnDS_ConnectionApprovalCallback(request, response)
         end
         local isOk = false
         for _, uid in ipairs(uids) do
-            if uid == player.uid then
+            if uid == player.uuid then
                 isOk = true
                 break
             end
