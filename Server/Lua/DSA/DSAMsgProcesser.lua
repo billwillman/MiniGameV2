@@ -205,10 +205,16 @@ local _OtherServerToMyServer = {
         if Session and Session.dsToken then
             local dsToken = Session.dsToken
             local ds = _MOE.DSMap[dsToken]
-            local ret = ds ~= nil
-            return ret
+            if ds and ds.dsData then
+                local ret = {
+                    dsToken = ds.dsData.dsToken,
+                    ip = ds.dsData.ip,
+                    port = ds.dsData.port,
+                }
+                return ret
+            end
         end
-        return false
+        return nil
     end
 }
 ----------------------------
