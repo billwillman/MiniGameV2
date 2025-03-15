@@ -118,7 +118,7 @@ local _OtherServerToMyServer = {
             if _MOE.FreeSessionTask:AttachSession(Session) then
                 -- 判断DS是否存在，不存在直接删除
                 isHasDS = Session:HasdsData()
-                if isHasLocalDs then
+                if isHasDS then
                     -- 检查DS是否是有效的
                     local dsData = Session.dsData
                     local ds = MsgProcesser:SendServerMsgSync("DSA", _MOE.ServerMsgIds.SM_LS_DSA_CheckPlayerDS, {dsToken = dsData.dsToken})
