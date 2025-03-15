@@ -127,6 +127,7 @@ local _OtherServerToMyServer = {
                         isHasLocalDs = false
                     else
                         retMsg.dsData = dsData
+                        _MOE.TableUtils.PrintTable2(retMsg)
                     end
                 end
             end
