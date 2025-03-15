@@ -95,7 +95,7 @@ local ClientToServerMsgProcess = {
         }
         local isFound = false
         for idx, player in ipairs(ds.players) do
-            if player.dsClientId == msg.ownerClientId then
+            if player.uid == msg.uid then
                 isFound = true
                 ds.players[idx] = dsPlayer
                 break
