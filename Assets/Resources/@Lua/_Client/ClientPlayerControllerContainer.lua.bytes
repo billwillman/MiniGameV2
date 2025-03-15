@@ -35,7 +35,13 @@ function _M:OnLoginDS()
 
     local userInfo = _MOE.Models.RootAttr:GetUserInfo()
     if userInfo and userInfo.token then
-        PlayerController:DispatchServer_Reliable(_MOE.DS.ClientMsgIds.ClientLoginDS, userInfo.token) -- 发送Toekn给DS
+        local strParam = _MOE.Json.encode(
+            {
+                uid = userInfo.uuid,
+                loginToken = userInfo.token
+            }
+        )
+        PlayerController:DispatchServer_Reliable(_MOE.DS.ClientMsgIds.ClientLoginDS, strParam) -- 发送uuid给DS
     end
 end
 
