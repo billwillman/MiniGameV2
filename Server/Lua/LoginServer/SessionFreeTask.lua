@@ -49,7 +49,7 @@ function Task:AttachSession(session)
         return false
     end
     local Player = self.SessionTempDataMap[uuid]
-    if Player.dsData and next(Player.dsData) ~= nil then
+    if Player and Player.dsData and next(Player.dsData) ~= nil then
         session.dsData = Player.dsData
         return true
     end
