@@ -165,8 +165,9 @@ local _OtherServerToMyServer = {
             print("[CM_DS_PlayerConnect] Error: session not found")
             return
         end
-        session:LoginInDS(msg)
-        _MOE.FreeSessionTask:RemoveFreeSession(session, false)
+        if session:LoginInDS(msg) then
+            _MOE.FreeSessionTask:RemoveFreeSession(session, false)
+        end
     end,
     [_MOE.ServerMsgIds.CM_DS_PlayerDisConnect] = function (msg)
         print("[CM_DS_PlayerDisConnect]")
