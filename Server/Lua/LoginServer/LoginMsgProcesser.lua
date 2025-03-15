@@ -126,8 +126,10 @@ local _OtherServerToMyServer = {
                         Session.dsData = nil
                         isHasLocalDs = false
                     else
+                        -- 没有dsClientId
+                        dsData.dsClientId = nil
                         retMsg.dsData = dsData
-                        _MOE.TableUtils.PrintTable2(retMsg)
+                        -- _MOE.TableUtils.PrintTable2(retMsg)
                     end
                 end
             end
