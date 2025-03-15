@@ -114,9 +114,20 @@ local _OtherServerToMyServer = {
             }
 
             -- 附上上次登录的缓存信息
-            _MOE.FreeSessionTask:AttachSession(Session)
+            local isHasLocalDs = false
+            if _MOE.FreeSessionTask:AttachSession(Session) then
+                -- 判断DS是否存在，不存在直接删除
+                isHasLocalDs = Session:HasdsData()
+                if isHasLocalDs then
+                    -- 检查DS是否是有效的
+                    if not MsgProcesser:SendServerMsgSync("DSA", _MOE.ServerMsgIds.SM_LS_DSA_CheckPlayerDS, Session) then
+                        Session.dsData = nil
+                        isHasLocalDs = false
+                    end
+                end
+            end
             -- 删除掉原来的
-            --_MOE.FreeSessionTask:RemoveFreeSession(Session, true)
+            _MOE.FreeSessionTask:RemoveFreeSession(Session, not isHasLocalDs)
 
             retMsg.user.token = Session:GetLoginToken()
 
@@ -166,7 +177,7 @@ local _OtherServerToMyServer = {
 
 ---- 服务器间同步消息定义
 local _SERVER_SYNC_MSG = {
-    -- [_MOE.ServerMsgIds.SM_LS_Exist_PLAYERINFO] = true,
+    [_MOE.ServerMsgIds.SM_LS_DSA_CheckPlayerDS] = true,
 }
 -----------------------------------------
 

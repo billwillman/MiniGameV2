@@ -93,4 +93,9 @@ function Session:CloseSocket(quitReason)
     end
 end
 
+function Session:HasdsData()
+    local ret = self.dsData and next(self.dsData) ~= nil
+    return ret
+end
+
 return Session

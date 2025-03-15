@@ -198,12 +198,26 @@ local _OtherServerToMyServer = {
         -----------------------------------
         RemoveDsPlayer(Player)
     end,
+    [_MOE.ServerMsgIds.SM_LS_DSA_CheckPlayerDS] = function (Player)
+        return true
+    end,
+    [_MOE.ServerMsgIds.SM_LS_DSA_CheckPlayerDS] = function (Session)
+        if Session:HasdsData() then
+            local dsData = Session.dsData
+            local dsToken = dsData.dsToken
+            local ds = _MOE.DSMap[dsToken]
+            local ret = ds ~= nil
+            return ret
+        end
+        return false
+    end
 }
 ----------------------------
 
 ---- 服务器间同步消息定义
 local _SERVER_SYNC_MSG = {
-    -- [_MOE.ServerMsgIds.SM_LS_Exist_PLAYERINFO] = true,
+    [_MOE.ServerMsgIds.SM_LS_DSA_CheckPlayerDS] = true,
+    [_MOE.ServerMsgIds.SM_LS_DSA_CheckPlayerDS] = true,
 }
 -----------------------------------------
 
