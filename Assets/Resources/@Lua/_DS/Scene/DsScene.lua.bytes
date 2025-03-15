@@ -72,13 +72,13 @@ function DsScene:OnDS_ConnectionApprovalCallback(request, response)
         return
     end
     if not _MOE.TB["isLocalDS"] then
-        local clientLoginTokens = _MOE.TB["clientLoginTokens"]
-        if not clientLoginTokens then
+        local uids = _MOE.TB["uids"]
+        if not uids then
             return false
         end
         local isOk = false
-        for _, clientToken in ipairs(clientLoginTokens) do
-            if clientToken == player.token then
+        for _, uid in ipairs(uids) do
+            if uid == player.uid then
                 isOk = true
                 break
             end
