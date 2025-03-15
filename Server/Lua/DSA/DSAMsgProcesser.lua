@@ -32,7 +32,7 @@ local function RemoveDsPlayer(Player)
         for idx = 1, #ds.players do
             local P = ds.players[idx]
             _MOE.TableUtils.PrintTable2(P)
-            if P.uid == PlayerUID and P.dsClientId == PlayerClientId then
+            if P.uid == PlayerUID --[[and P.dsClientId == PlayerClientId--]] then
                 table.remove(ds.players, idx)
                 print(string.format("[remove] idx: %d dsPlayerCount: %d", idx, #ds.players))
                 break
