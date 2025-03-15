@@ -217,7 +217,6 @@ local _OtherServerToMyServer = {
 ---- 服务器间同步消息定义
 local _SERVER_SYNC_MSG = {
     [_MOE.ServerMsgIds.SM_LS_DSA_CheckPlayerDS] = true,
-    [_MOE.ServerMsgIds.SM_LS_DSA_CheckPlayerDS] = true,
 }
 -----------------------------------------
 
