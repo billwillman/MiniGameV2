@@ -66,7 +66,7 @@ end
 
 function list:remove(t)
 	assert(t)
-	if t._list == nil then
+	if t._list == nil or t._list ~= self then
 		return
 	end
 	if t._next then
