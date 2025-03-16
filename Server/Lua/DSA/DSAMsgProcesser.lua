@@ -120,20 +120,25 @@ local ClientToServerMsgProcess = {
         return true
     end,
     [MsgIds.CM_DS_PlayerDisConnect] = function (self, msg, socket, fd)
+        print(1)
         if not _MOE.DSMap then
             return false
         end
+        print(2)
         local token = GenerateToken(socket, fd)
         local ds = _MOE.DSMap[token]
         if not ds then
             return false
         end
+        print(3)
         local uid = msg.uid
         local dsPlayer = nil
+        print(uid)
         if ds.players then
             for idx, player in ipairs(ds.players) do
                 if player.uid == uid then
                     dsPlayer = player
+                    print(4)
                     -- 不删除（需要LoginSrv来处理保活一段时间在DS)
                     if ds.isLocalDS then -- LocalDS就直接删除
                         table.remove(ds.players, idx)

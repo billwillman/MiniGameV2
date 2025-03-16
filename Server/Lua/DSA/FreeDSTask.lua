@@ -18,7 +18,7 @@ local function CloseFreeDS(ds)
     end
     print("[Close Free DS: Start]")
     ds.state = _MOE.DsStatus.DSACloseFreeDS -- DSA关闭空闲的DS
-    _MOE.TableUtils.PrintTable2(ds)
+    --_MOE.TableUtils.PrintTable2(ds)
     RemoveDS(ds)
     MsgProcesser:SendTableToJson2(socket, fd, MsgIds.SM_DS_QUIT, {reason = _MOE.DsStatus.DSACloseFreeDS})
     CloseSocket(socket, fd)
@@ -50,9 +50,9 @@ local function TaskTick()
                         end
                     else
                         ---- 移到BUSY列表
-                        print("[FreeDSTask] to DSBusyList: ")
-                        _MOE.TableUtils.PrintTable2(firstDs)
-                        print("-----------------------------")
+                       -- print("[FreeDSTask] to DSBusyList: ")
+                       -- _MOE.TableUtils.PrintTable2(firstDs)
+                       -- print("-----------------------------")
                         firstDs.freeTime = currtime
                         _MOE.DSBusyList:insert_last(firstDs)
                     end

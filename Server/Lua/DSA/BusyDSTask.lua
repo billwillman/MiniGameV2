@@ -22,9 +22,9 @@ local function TaskTick()
                         _MOE.DSBusyList:insert_last(firstDs)
                     else
                         ---- 移到Free列表
-                        print("[BusyDSTask] to DSFreeList: ")
-                        _MOE.TableUtils.PrintTable2(firstDs)
-                        print("-----------------------------")
+                       --- print("[BusyDSTask] to DSFreeList: ")
+                      ---  _MOE.TableUtils.PrintTable2(firstDs)
+                      ---  print("-----------------------------")
                         firstDs.freeTime = currtime
                         _MOE.DSFreeList:insert_last(firstDs)
                     end
