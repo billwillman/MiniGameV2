@@ -72,6 +72,15 @@ _MOE.StateManagerBase = require("_Common.StateManager")
 _MOE.SkillBase = require("_Common.Skill.SkillBase")
 _MOE.SkillManagerBase = require("_Common.Skill.SkillManager")
 
+_MOE.FindMainCamera = function ()
+    local gameObj = _MOE.GameObject.FindGameObjectWithTag("MainCamera")
+    if not gameObj then
+        return nil
+    end
+    local ret = gameObj:GetComponent(typeof(CS.UnityEngine.Camera))
+    return ret
+end
+
 _G.ErrorHandler = function (err)
     _MOE.Logger.LogError(err)
 	_MOE.Logger.LogError(debug.traceback())
