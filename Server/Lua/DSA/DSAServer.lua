@@ -18,6 +18,7 @@ moon.exports.RemoveDS = function (ds)
     end
     local token = ds.token
     if _MOE.DSMap then
+        ds = _MOE.DSMap[token]
         _MOE.DSMap[token] = nil
     end
     if ds:IsInList() then

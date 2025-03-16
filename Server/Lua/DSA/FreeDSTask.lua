@@ -16,13 +16,13 @@ local function CloseFreeDS(ds)
     if not fd then
         return
     end
-    print("[Close Free DS: Start]")
+    --print("[Close Free DS: Start]")
     ds.state = _MOE.DsStatus.DSACloseFreeDS -- DSA关闭空闲的DS
     --_MOE.TableUtils.PrintTable2(ds)
     RemoveDS(ds)
     MsgProcesser:SendTableToJson2(socket, fd, MsgIds.SM_DS_QUIT, {reason = _MOE.DsStatus.DSACloseFreeDS})
     CloseSocket(socket, fd)
-    print("[Close Free DS: end]")
+    --print("[Close Free DS: end]")
 end
 
 local function TaskTick()
