@@ -21,6 +21,7 @@ moon.exports.RemoveDS = function (ds)
         ds = _MOE.DSMap[token]
         _MOE.DSMap[token] = nil
     end
+    --[[
     if ds:IsInList() then
         if ds:IsBusy() then
             _MOE.DSBusyList:remove(ds)
@@ -28,6 +29,9 @@ moon.exports.RemoveDS = function (ds)
             _MOE.DSFreeList:remove(ds)
         end
     end
+    ]]
+    _MOE.DSBusyList:remove(ds)
+    _MOE.DSFreeList:remove(ds)
     if _MOE.LocalDS == ds then
         _MOE.LocalDS = nil
     end
