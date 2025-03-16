@@ -34,6 +34,17 @@ local function RemoveDsPlayer(Player)
             _MOE.TableUtils.PrintTable2(P)
             if P.uid == PlayerUID --[[and P.dsClientId == PlayerClientId--]] then
                 table.remove(ds.players, idx)
+                ----- 用户数据为 0
+                if #ds.players <= 0 then
+                    ds.state = _MOE.DsStatus.DSACloseFreeDS
+                    -- 从列表中删除
+                    local fd = ds.fd
+                    RemoveDS(ds)
+                    -- 关闭socket
+                    if fd then
+                        CloseSocket(socket, fd)
+                    end
+                end
                 print(string.format("[remove] idx: %d dsPlayerCount: %d", idx, #ds.players))
                 break
             end
