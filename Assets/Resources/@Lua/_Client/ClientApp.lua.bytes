@@ -98,7 +98,14 @@ function _M:SwitchMultiScene(ds)
         return false
     end
     _MOE.TB = ds
-    _MOE.SceneManager:SwitchScene(_MOE.SceneEnum.MultiScene, self.DsNetworkManager, false)
+    return self:Switch_TB_MultiScene()
+end
+
+function _M:Switch_TB_MultiScene()
+    if not _MOE.TB or next(_MOE.TB) == nil or not _MOE.TB["dsData"] or next(_MOE.TB["dsData"]) == nil then
+        return false
+    end
+    return _MOE.SceneManager:SwitchScene(_MOE.SceneEnum.MultiScene, self.DsNetworkManager, false)
 end
 
 function _M:GetLocalPlayerController()

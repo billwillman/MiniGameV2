@@ -13,11 +13,8 @@ function _M:_On_GS_SM_LOGIN_RET(msg)
     _MOE.TableUtils.PrintTable2(msg)
     if msg.result == 0 then
         self.user = msg.user -- 服务器user信息
-        if _MOE.TB and _MOE.TB["dsData"] then
-            -- 切到DS上
-            -- _MOE.SceneManager:SwitchScene(_MOE.SceneEnum.MultiScene)
-            _MOE.GameApp:SwitchMultiScene(_MOE.TB)
-        else
+
+        if not _MOE.GameApp:Switch_TB_MultiScene() then
             _MOE.SceneManager:SwitchScene(_MOE.SceneEnum.LobbyScene)
         end
     end
