@@ -65,7 +65,7 @@ local ClientToServerMsgProcess = {
             ds.dsData.port = msg.port
             ds.dsData.scene = msg.scene
             -- ds.dsData.ip = msg.ip
-            ds.dsData.ip = ip
+            ds.dsData.ip = ServerData.extIp and ServerData.extIp or ip
             ds.dsData.state = _MOE.DsStatus.WaitingPlayersConnect -- 等待玩家连接
             ds.freeTime = os.time() -- 更新下空闲时间
             print(string.format("[DSA] token: %s isLocalDS: %s ip: %s dsPort: %d", token, tostring(msg.isLocalDS), ip, msg.port))
