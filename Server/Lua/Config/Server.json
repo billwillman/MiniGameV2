@@ -24,7 +24,8 @@
         "ip": "127.0.0.1",
         "port": 1991,
         "Debug": 20003,
-        "isSaveQuit": false
+        "isSaveQuit": false,
+        "extIp": "49.235.182.106"
     },
     "GM": {
         "ip": "127.0.0.1",

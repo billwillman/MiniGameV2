@@ -91,6 +91,9 @@ moon.exports.OnAccept = function(fd, msg)
     _MOE.DSMap = _MOE.DSMap or {}
     local ip, port = GetIpAndPort(socket, fd)
     local token = GenerateToken2(ip, port)
+    if ServerData.extIp then
+        ip = ServerData.extIp
+    end
     local dsData = {
         fd = fd,
         dsData = {
