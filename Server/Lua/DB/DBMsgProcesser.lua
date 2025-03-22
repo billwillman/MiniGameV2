@@ -91,7 +91,8 @@ local _OtherServerToMyServer = {
         local result
         if ServerData.FakeDB then
             result = {
-                id = moon.md5(userName)
+                id = moon.md5(userName),
+                isLock = false,
             }
         elseif isUseMongoDB then
             result = SQL.MongoDB_QueryUserLogin(mongodb, userName, password)
