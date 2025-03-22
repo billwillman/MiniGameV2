@@ -1,7 +1,7 @@
 {
     "LoginSrv": {
         "ip": "49.235.182.106",
-        "port": 9000,
+        "port": 5000,
         "Debug": 20000,
         "isSaveQuit": false,
         "redis": {
