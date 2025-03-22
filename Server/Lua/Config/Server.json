@@ -1,6 +1,6 @@
 {
     "LoginSrv": {
-        "ip": "49.235.182.106",
+        "ip": "127.0.0.1",
         "port": 5000,
         "Debug": 20000,
         "isSaveQuit": false,
