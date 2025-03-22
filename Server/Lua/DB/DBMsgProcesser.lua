@@ -25,6 +25,9 @@ local isUseMongoDB = true
 local _OtherServerToMyServer = {
     --------------------------------------- 内部系统调用 -----------------------------
     [_MOE.ServicesCall.InitDB] = function ()
+        if ServerData.FakeDB then -- 假DB，忽略DB
+            return true
+        end
         -- 初始化连接DB
         if not isUseMongoDB then
             local DB = ServerData.DB
@@ -86,7 +89,11 @@ local _OtherServerToMyServer = {
         local password = msg.password
         local client = msg.client
         local result
-        if isUseMongoDB then
+        if ServerData.FakeDB then
+            result = {
+                id = moon.md5(userName)
+            }
+        elseif isUseMongoDB then
             result = SQL.MongoDB_QueryUserLogin(mongodb, userName, password)
         else
             result = SQL.PostSQL_QueryUserLogin(db, userName, password)

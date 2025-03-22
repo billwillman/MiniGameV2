@@ -55,6 +55,7 @@
             "authdb": "minigame",
             "user": "admin",
             "password": "GameBryo1122"
-        }
+        },
+        "FakeDB": true
     }
 }
