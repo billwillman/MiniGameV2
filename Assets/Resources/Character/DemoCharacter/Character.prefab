@@ -127,7 +127,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GlobalObjectIdHash: 493305276
+  GlobalObjectIdHash: 512812389
   InScenePlacedSourceGlobalObjectIdHash: 493305276
   AlwaysReplicateAsRoot: 1
   SynchronizeTransform: 1
@@ -298,8 +298,8 @@ MonoBehaviour:
   ConstrainRotationX: 0
   RotationXMin: -90
   RotationXMax: 90
-  RotationYMin: -89.9
-  RotationYMax: 89.9
+  RotationYMin: -30
+  RotationYMax: 60
   RotationSmoothTime: 0.1
   ZoomSensitivity: 10
   MinDistance: 0
