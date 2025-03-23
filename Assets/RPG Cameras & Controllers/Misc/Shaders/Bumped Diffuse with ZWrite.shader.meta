@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 1d9aa4b723bd2f04dbbcaa014afb8988
+labels:
+- Camera
+- Controller
+- MMO
+- MMORPG
+- RPG
+- Script
+- WoW
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures:
+  - _MainTex: {instanceID: 0}
+  nonModifiableTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
