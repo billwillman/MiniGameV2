@@ -10,8 +10,8 @@ function DemoCharacter:Ctor(pawnObj, binder)
     local EventType = _MOE.LuaEvent_MonoEventType
     self.Binder:RegisterLuaEvent(EventType.Destroyed:GetHashCode(), self.OnDestroy)
 
-    self:RegsterCSharpEvent(self.PlayerController, "onNetworkSpawn", self.OnNetworkSpawn)
-    self:RegsterCSharpEvent(self.PlayerController, "onNetworkDespawn", self.OnNetworkDespawn)
+    self:RegsterCSharpEvent(self.PawnObj, "onNetworkSpawn", self.OnNetworkSpawn)
+    self:RegsterCSharpEvent(self.PawnObj, "onNetworkDespawn", self.OnNetworkDespawn)
 end
 
 function DemoCharacter:OnNetworkSpawn()
