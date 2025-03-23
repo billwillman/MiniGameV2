@@ -1,0 +1,6 @@
+
+local CSharpEventContainer = require("_Common.CSharpEventContainer")
+
+local DemoCharacter = _MOE.class("DemoCharacter", CSharpEventContainer)
+
+return DemoCharacter
