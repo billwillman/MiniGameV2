@@ -53,7 +53,7 @@ Shader "Standard with ZWrite"
 
     SubShader
     {
-        Tags { "RenderType"="Opaque" "PerformanceChecks"="False" }
+        Tags { "RenderType"="Opaque" "PerformanceChecks"="False" "LightMode" = "UniversalForward" }
         LOD 300
         // ZWrite pre-pass
         Pass
@@ -75,7 +75,7 @@ Shader "Standard with ZWrite"
         Pass
         {
             Name "FORWARD"
-            Tags { "LightMode" = "ForwardBase" }
+            Tags { "LightMode" = "UniversalForward" }
 
             Blend [_SrcBlend] [_DstBlend]
             ZWrite [_ZWrite]
@@ -112,7 +112,7 @@ Shader "Standard with ZWrite"
         Pass
         {
             Name "FORWARD_DELTA"
-            Tags { "LightMode" = "ForwardAdd" }
+            Tags { "LightMode" = "UniversalForward" }
             Blend [_SrcBlend] One
             Fog { Color (0,0,0,0) } // in additive pass fog should be black
             ZWrite On
@@ -246,7 +246,7 @@ Shader "Standard with ZWrite"
         Pass
         {
             Name "FORWARD"
-            Tags { "LightMode" = "ForwardBase" }
+            Tags { "LightMode" = "UniversalForward" }
 
             Blend [_SrcBlend] [_DstBlend]
             ZWrite [_ZWrite] ZTest LEqual
@@ -280,7 +280,7 @@ Shader "Standard with ZWrite"
         Pass
         {
             Name "FORWARD_DELTA"
-            Tags { "LightMode" = "ForwardAdd" }
+            Tags { "LightMode" = "UniversalForward" }
             Blend [_SrcBlend] One
             Fog { Color (0,0,0,0) } // in additive pass fog should be black
             ZWrite [_ZWrite]
