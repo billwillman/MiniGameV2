@@ -35,7 +35,8 @@ local function RemoveDsPlayer(Player)
             if P.uid == PlayerUID --[[and P.dsClientId == PlayerClientId--]] then
                 table.remove(ds.players, idx)
                 ----- 用户数据为 0
-                if #ds.players <= 0 and not ds.isLocalDS then
+                local isLocalDS = ds.dsData and ds.dsData.isLocalDS or false
+                if #ds.players <= 0 and not isLocalDS then
                     ds.state = _MOE.DsStatus.DSACloseFreeDS
                     -- 从列表中删除
                     local fd = ds.fd
@@ -135,7 +136,8 @@ local ClientToServerMsgProcess = {
                 if player.uid == uid then
                     dsPlayer = player
                     -- 不删除（需要LoginSrv来处理保活一段时间在DS)
-                    if ds.isLocalDS then -- LocalDS就直接删除
+                    local isLocalDS = ds.dsData and ds.dsData.isLocalDS or false
+                    if isLocalDS then -- LocalDS就直接删除
                         table.remove(ds.players, idx)
                     end
                     break
