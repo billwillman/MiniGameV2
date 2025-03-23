@@ -3,4 +3,18 @@ local CSharpEventContainer = require("_Common.CSharpEventContainer")
 
 local DemoCharacter = _MOE.class("DemoCharacter", CSharpEventContainer)
 
+function DemoCharacter:RegsterCSharpEvent(pawnObj, binder)
+    self.PawnObj = pawnObj
+    self.Binder = binder
+
+    local EventType = _MOE.LuaEvent_MonoEventType
+    self.Binder:RegisterLuaEvent(EventType.Destroyed:GetHashCode(), self.OnDestroy)
+
+end
+
+function DemoCharacter:OnDestroy()
+    self.PawnObj = nil
+    self.Binder = nil
+end
+
 return DemoCharacter
