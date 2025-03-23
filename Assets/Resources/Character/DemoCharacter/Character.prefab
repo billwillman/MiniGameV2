@@ -15,9 +15,9 @@ GameObject:
   - component: {fileID: 7048151790945982399}
   - component: {fileID: 6698146899850524634}
   - component: {fileID: -1855780408332834849}
-  - component: {fileID: 622262104274636855}
-  - component: {fileID: 6768262477921428658}
-  - component: {fileID: 4207428920364670620}
+  - component: {fileID: 2264327796880482293}
+  - component: {fileID: 4959841705274754429}
+  - component: {fileID: 5915266932952725359}
   m_Layer: 0
   m_HasEditorInfo: 1
   m_Name: Character
@@ -126,7 +126,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GlobalObjectIdHash: 512812389
+  GlobalObjectIdHash: 493305276
   InScenePlacedSourceGlobalObjectIdHash: 493305276
   AlwaysReplicateAsRoot: 1
   SynchronizeTransform: 1
@@ -178,14 +178,14 @@ MonoBehaviour:
   InLocalSpace: 0
   Interpolate: 1
   SlerpPosition: 0
---- !u!114 &622262104274636855
+--- !u!114 &2264327796880482293
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8644905814343763888}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d8bc9d4ccfbce2e439703e966939ea12, type: 3}
   m_Name: 
@@ -216,20 +216,19 @@ MonoBehaviour:
   CharacterFadeOutAlpha: 0
   CharacterFadeStartDistance: 1
   CharacterFadeEndDistance: 0.3
---- !u!114 &6768262477921428658
+--- !u!114 &4959841705274754429
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8644905814343763888}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 62899f850307741f2a39c98a8b639597, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Actions: {fileID: -944628639613478452, guid: 88f9bd1af09975b41965d86e23fd83f8,
-    type: 3}
+  m_Actions: {fileID: 0}
   m_NotificationBehavior: 2
   m_UIInputModule: {fileID: 0}
   m_DeviceLostEvent:
@@ -241,120 +240,20 @@ MonoBehaviour:
   m_ControlsChangedEvent:
     m_PersistentCalls:
       m_Calls: []
-  m_ActionEvents:
-  - m_PersistentCalls:
-      m_Calls: []
-    m_ActionId: d324a3e4-2be5-4d52-8162-b70f46318f5e
-    m_ActionName: Character/RPGController & RPGMotor
-  - m_PersistentCalls:
-      m_Calls: []
-    m_ActionId: 515c169c-36ff-49e5-a6ec-5328613fcd6f
-    m_ActionName: Character/Movement[/Keyboard/w,/Keyboard/s,/Keyboard/a,/Keyboard/d,/Keyboard/upArrow,/Keyboard/downArrow,/Keyboard/leftArrow,/Keyboard/rightArrow]
-  - m_PersistentCalls:
-      m_Calls: []
-    m_ActionId: 3e2a2ea5-83cf-4a6c-bc73-a5b40108024c
-    m_ActionName: Character/Rotate[/Keyboard/a,/Keyboard/d]
-  - m_PersistentCalls:
-      m_Calls: []
-    m_ActionId: 6e9292cf-e67f-48e1-80ff-d5831b193831
-    m_ActionName: Character/Strafe[/Keyboard/q,/Keyboard/e]
-  - m_PersistentCalls:
-      m_Calls: []
-    m_ActionId: a2c152f4-1389-424e-9ca5-55db99f9de04
-    m_ActionName: Character/Jump[/Keyboard/space]
-  - m_PersistentCalls:
-      m_Calls: []
-    m_ActionId: 08715240-5ff8-4e32-b4d9-82fa385682ed
-    m_ActionName: Character/Toggle Autorunning[/Keyboard/f]
-  - m_PersistentCalls:
-      m_Calls: []
-    m_ActionId: 460f9b54-8bc5-4f31-bc99-d0fe8e142629
-    m_ActionName: Character/Toggle Walking[/Keyboard/x]
-  - m_PersistentCalls:
-      m_Calls: []
-    m_ActionId: 89873a76-118e-4dfe-85c9-3838afaa66f3
-    m_ActionName: Character/Toggle Crouching[/Keyboard/c]
-  - m_PersistentCalls:
-      m_Calls: []
-    m_ActionId: 72a89df9-fba8-4885-9e52-2a014b4b5d95
-    m_ActionName: Character/Sprint[/Keyboard/shift]
-  - m_PersistentCalls:
-      m_Calls: []
-    m_ActionId: de811c1b-bbd6-4a93-b2af-799417fe5997
-    m_ActionName: Character/Dive[/Keyboard/v]
-  - m_PersistentCalls:
-      m_Calls: []
-    m_ActionId: cbad99f2-8430-4680-ab8c-c686af112cdc
-    m_ActionName: Character/Surface[/Keyboard/space]
-  - m_PersistentCalls:
-      m_Calls: []
-    m_ActionId: 87145a03-e58c-49aa-9ba6-a6303643a237
-    m_ActionName: Character/Rotation Modifier[/Mouse/rightButton]
-  - m_PersistentCalls:
-      m_Calls: []
-    m_ActionId: bb0020c9-3394-4b02-8c07-e458595d422d
-    m_ActionName: Character/Move Forward Half 1[/Mouse/leftButton]
-  - m_PersistentCalls:
-      m_Calls: []
-    m_ActionId: b8fc21fa-69d3-45b7-8e8d-3a9815568584
-    m_ActionName: Character/Move Forward Half 2[/Mouse/rightButton]
-  - m_PersistentCalls:
-      m_Calls: []
-    m_ActionId: c9c52604-85af-4b1f-85c5-304d113bc79d
-    m_ActionName: Character/Align With Camera[/Mouse/rightButton]
-  - m_PersistentCalls:
-      m_Calls: []
-    m_ActionId: 5de6b4ec-9506-4886-b528-2eeda0c34e83
-    m_ActionName: Character/Pause Camera Rotation[/Mouse/leftButton]
-  - m_PersistentCalls:
-      m_Calls: []
-    m_ActionId: b4cb3065-ec0f-4a39-8726-ffd6a50825cd
-    m_ActionName: Character/Cancel Climbing[/Keyboard/b]
-  - m_PersistentCalls:
-      m_Calls: []
-    m_ActionId: 4d999cff-5a75-4762-84f0-dea09da4d069
-    m_ActionName: Character/RPGCamera
-  - m_PersistentCalls:
-      m_Calls: []
-    m_ActionId: 0ac13cc5-909c-4a37-95b2-0e3a054f52c2
-    m_ActionName: Character/Activate Orbiting[/Mouse/leftButton]
-  - m_PersistentCalls:
-      m_Calls: []
-    m_ActionId: 471ed402-fdf4-4ef8-92de-976caaf4e695
-    m_ActionName: Character/Activate Orbiting With Character Rotation[/Mouse/rightButton]
-  - m_PersistentCalls:
-      m_Calls: []
-    m_ActionId: 4f84d1f3-0d23-4f68-9747-8e0948b3ec90
-    m_ActionName: Character/Rotation Amount[/Mouse/delta]
-  - m_PersistentCalls:
-      m_Calls: []
-    m_ActionId: e0212761-50a4-4adb-99c6-27a190a857de
-    m_ActionName: Character/Zoom[/Mouse/scroll/y]
-  - m_PersistentCalls:
-      m_Calls: []
-    m_ActionId: ca69aa92-5ef0-4631-a435-d589ebd403ca
-    m_ActionName: Character/Zoom To Min Distance[/Keyboard/pageUp]
-  - m_PersistentCalls:
-      m_Calls: []
-    m_ActionId: 2c2e5781-b98a-4ef6-8278-d1ce7d2e7d92
-    m_ActionName: Character/Zoom To Max Distance[/Keyboard/pageDown]
-  - m_PersistentCalls:
-      m_Calls: []
-    m_ActionId: 32b9965b-d7e4-48ed-9e17-70e8fbb78bf2
-    m_ActionName: Character/Toggle Menu Cursor[/Keyboard/f1]
+  m_ActionEvents: []
   m_NeverAutoSwitchControlSchemes: 0
   m_DefaultControlScheme: 
   m_DefaultActionMap: Character
   m_SplitScreenIndex: -1
   m_Camera: {fileID: 0}
---- !u!114 &4207428920364670620
+--- !u!114 &5915266932952725359
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8644905814343763888}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9823020e3b88e4943a08823f18c03fe8, type: 3}
   m_Name: 
@@ -368,8 +267,8 @@ MonoBehaviour:
   EnableIntelligentPivot: 1
   IntelligentPivotSmoothTime: 0.7
   PivotSmoothTime: 0
-  ActivateControl: 1
-  UseLegacyInputSystem: 0
+  ActivateControl: 0
+  UseLegacyInputSystem: 1
   AlwaysActivateOrbiting: 0
   HideCursor: 1
   CursorBehaviorOrbiting: 2
