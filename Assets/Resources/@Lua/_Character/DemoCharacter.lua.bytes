@@ -3,13 +3,32 @@ local CSharpEventContainer = require("_Common.CSharpEventContainer")
 
 local DemoCharacter = _MOE.class("DemoCharacter", CSharpEventContainer)
 
-function DemoCharacter:RegsterCSharpEvent(pawnObj, binder)
+function DemoCharacter:Ctor(pawnObj, binder)
     self.PawnObj = pawnObj
     self.Binder = binder
 
     local EventType = _MOE.LuaEvent_MonoEventType
     self.Binder:RegisterLuaEvent(EventType.Destroyed:GetHashCode(), self.OnDestroy)
 
+    self:RegsterCSharpEvent(self.PlayerController, "onNetworkSpawn", self.OnNetworkSpawn)
+    self:RegsterCSharpEvent(self.PlayerController, "onNetworkDespawn", self.OnNetworkDespawn)
+end
+
+function DemoCharacter:OnNetworkSpawn()
+    if self.PawnObj and self.PawnObj.IsOwner then
+        local view = self.PawnObj:GetComponent(typeof(CS.JohnStairs.RCC.Character.Cam.RPGViewFrustum))
+        if view then
+            view.enabled = true
+        end
+        local cam = self.PawnObj:GetComponent(typeof(CS.JohnStairs.RCC.Character.Cam.RPGCamera))
+        if cam then
+            cam.enabled = true
+            cam.ActivateControl = true
+        end
+    end
+end
+
+function DemoCharacter:OnNetworkDespawn()
 end
 
 function DemoCharacter:OnDestroy()
