@@ -32,6 +32,8 @@ function DemoCharacter:OnNetworkDespawn()
 end
 
 function DemoCharacter:OnDestroy()
+    self:UnRegsterAllCsharpEvents()
+
     self.PawnObj = nil
     self.Binder = nil
 end
