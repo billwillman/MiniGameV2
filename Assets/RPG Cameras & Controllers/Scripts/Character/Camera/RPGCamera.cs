@@ -8,7 +8,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 
 namespace JohnStairs.RCC.Character.Cam {
-    [RequireComponent(typeof(RPGViewFrustum), typeof(PlayerInput))]
+    [RequireComponent(typeof(RPGViewFrustum))]
     public class RPGCamera : MonoBehaviour, IRPGCamera {
         /// <summary>
         /// Enum value for setting up which camera object should be used by the script, e.g. the main camera of the scene, a newly spawned camera object or the camera assigned to "CameraToUse"
