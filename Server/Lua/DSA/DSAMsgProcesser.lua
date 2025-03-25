@@ -194,16 +194,17 @@ local _OtherServerToMyServer = {
                 ServerData.ip, msg.sceneName, ServerData.ip, ServerData.port)
             elseif platform == 2 then
                 -- linux
-                --[[
-                exePath = "Start ../../outPath/DS_Linux/Server"
-                exePath = string.format("%s '{\"clients\":[%d],\"uids\":[\"%s\"],\"clientLoginTokens\":[\"%s\"],\"dsData\":{\"ip\":\"%s\",\"scene\":\"%s\"},\"GsData\":{\"ip\":\"%s\",\"port\":%d}}'",
+        
+                exePath = "../../outPath/DS_Linux/Server"
+                exePath = string.format("%s '{\"clients\":[%d],\"uids\":[\"%s\"],\"clientLoginTokens\":[\"%s\"],\"dsData\":{\"ip\":\"%s\",\"scene\":\"%s\"},\"GsData\":{\"ip\":\"%s\",\"port\":%d}}' &",
                 exePath, msg.client, msg.uid, msg.loginToken,
                 ServerData.ip, msg.sceneName, ServerData.ip, ServerData.port)
-                ]]
+                --[[
                 exePath = "nohup ../../outPath/DS_Linux/Server"
                 exePath = string.format("%s '{\\\"clients\\\":[%d],\\\"uids\\\":[\\\"%s\\\"],\\\"clientLoginTokens\\\":[\\\"%s\\\"],\\\"dsData\\\":{\\\"ip\\\":\\\"%s\\\",\\\"scene\\\":\\\"%s\\\"},\\\"GsData\\\":{\\\"ip\\\":\\\"%s\\\",\\\"port\\\":%d}}' &",
                 exePath, msg.client, msg.uid, msg.loginToken,
                 ServerData.ip, msg.sceneName, ServerData.ip, ServerData.port)
+                ]]
             end
             -- "{'dsData':{'ip':'127.0.0.1','port':7777, 'scene': 'MultiScene'},'GsData':{'ip':'127.0.0.1','port':1991}}"
             print("[DSA] RunCmd: " .. exePath)
