@@ -161,6 +161,7 @@ namespace SOC.GamePlay
             _MOE.Set<string, bool>("IsEditor", false);
 #endif
             _MOE.Set<string, bool>("IsDS", IsDS); // 是否是DS 
+            _MOE.Set<string, int>("Platform", (int)Application.platform); // 平台
         }
 
         void OnGameStartFinish() {
