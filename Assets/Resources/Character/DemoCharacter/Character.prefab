@@ -20,6 +20,7 @@ GameObject:
   - component: {fileID: 5915266932952725359}
   - component: {fileID: 9073573491060103504}
   - component: {fileID: 8124919132055127080}
+  - component: {fileID: 1780554797349565579}
   m_Layer: 0
   m_HasEditorInfo: 1
   m_Name: Character
@@ -359,3 +360,21 @@ MonoBehaviour:
   CheckMovementInitialOverlaps: 1
   KillVelocityWhenExceedMaxMovementIterations: 1
   KillRemainingMovementWhenExceedMaxMovementIterations: 1
+--- !u!114 &1780554797349565579
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8644905814343763888}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 152b87575f46ace4a8dda4c0d0c2b0df, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Animancer: []
+  m_Head: {fileID: 0}
+  m_Body: {fileID: 0}
+  m_Weapon: {fileID: 0}
+  m_Hair: {fileID: 0}
+  m_OtherSkinedMeshList: []
