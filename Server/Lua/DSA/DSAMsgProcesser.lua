@@ -200,8 +200,8 @@ local _OtherServerToMyServer = {
                 exePath, msg.client, msg.uid, msg.loginToken,
                 ServerData.ip, msg.sceneName, ServerData.ip, ServerData.port)
                 ]]
-                exePath = "Start ../../outPath/DS/Server.exe"
-                exePath = string.format("%s '{\\\"clients\\\":[%d],\\\"uids\\\":[\\\"%s\\\"],\\\"clientLoginTokens\\\":[\\\"%s\\\"],\\\"dsData\\\":{\\\"ip\\\":\\\"%s\\\",\\\"scene\\\":\\\"%s\\\"},\\\"GsData\\\":{\\\"ip\\\":\\\"%s\\\",\\\"port\\\":%d}}'",
+                exePath = "nohup ../../outPath/DS/Server.exe"
+                exePath = string.format("%s '{\\\"clients\\\":[%d],\\\"uids\\\":[\\\"%s\\\"],\\\"clientLoginTokens\\\":[\\\"%s\\\"],\\\"dsData\\\":{\\\"ip\\\":\\\"%s\\\",\\\"scene\\\":\\\"%s\\\"},\\\"GsData\\\":{\\\"ip\\\":\\\"%s\\\",\\\"port\\\":%d}}' &",
                 exePath, msg.client, msg.uid, msg.loginToken,
                 ServerData.ip, msg.sceneName, ServerData.ip, ServerData.port)
             end
