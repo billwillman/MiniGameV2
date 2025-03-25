@@ -1,0 +1,25 @@
+local CSharpEventContainer = require("_Common.CSharpEventContainer")
+
+local BaseCharacterController = _MOE.class("BaseCharacterController", CSharpEventContainer)
+
+function BaseCharacterController:Ctor(CharacterController, binder)
+    self.CharacterController = CharacterController
+    self.Binder = binder
+
+    local EventType = _MOE.LuaEvent_MonoEventType
+    self.Binder:RegisterLuaEvent(EventType.Destroyed:GetHashCode(), self.OnDestroy)
+
+    if not _MOE.IsDS then
+        -- Client操作
+    end
+end
+
+function BaseCharacterController:OnDestroy()
+
+    self:UnRegsterAllCsharpEvents()
+
+    self.CharacterController = nil
+    self.Binder = nil
+end
+
+return BaseCharacterController
