@@ -60,11 +60,11 @@ local function ParseStartupCommands(self)
             if commandArgsType == "userdata" then
                 if commandLineArgs.Length >= 2 then
                     local json = commandLineArgs[1]
-                    if _MOE.Platform == 44 then -- WindowsServer = 44,
+                    --if _MOE.Platform == 44 then -- WindowsServer = 44,
                         if string.len(json) >= 2 then
                             json = string.sub(json, 2, #json - 1)
                         end
-                    end
+                   -- end
                     print("")
                     print(json)
                     print("")
