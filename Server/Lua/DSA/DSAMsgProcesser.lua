@@ -189,17 +189,17 @@ local _OtherServerToMyServer = {
             if platform == 1 then
                 -- windows
                 exePath = "Start ../../outPath/DS/Server.exe"
-                exePath = string.format("%s '{\\\"clients\\\":[%d],\\\"uids\\\":[\\\"%s\\\"],\\\"clientLoginTokens\\\":[\\\"%s\\\"],\\\"dsData\\\":{\\\"ip\\\":\\\"%s\\\",\\\"scene\\\":\\\"%s\\\"},\\\"GsData\\\":{\\\"ip\\\":\\\"%s\\\",\\\"port\\\":%d}}'",
+                exePath = string.format("%s '{\\\"clients\\\":[%d],\\\"uids\\\":[\\\"%s\\\"],\\\"clientLoginTokens\\\":[\\\"%s\\\"],\\\"dsData\\\":{\\\"ip\\\":\\\"0.0.0.0\\\",\\\"scene\\\":\\\"%s\\\"},\\\"GsData\\\":{\\\"ip\\\":\\\"%s\\\",\\\"port\\\":%d}}'",
                 exePath, msg.client, msg.uid, msg.loginToken,
-                ServerData.ip, msg.sceneName, ServerData.ip, ServerData.port)
+                msg.sceneName, ServerData.ip, ServerData.port)
             elseif platform == 2 then
                 -- linux
         
                 exePath = "../../outPath/DS_Linux/Server"
                -- exePath = "../../outPath/DS/Server.exe"
-                exePath = string.format("%s '{\"clients\":[%d],\"uids\":[\"%s\"],\"clientLoginTokens\":[\"%s\"],\"dsData\":{\"ip\":\"%s\",\"scene\":\"%s\"},\"GsData\":{\"ip\":\"%s\",\"port\":%d}}' &",
+                exePath = string.format("%s '{\"clients\":[%d],\"uids\":[\"%s\"],\"clientLoginTokens\":[\"%s\"],\"dsData\":{\"ip\":\"0.0.0.0\",\"scene\":\"%s\"},\"GsData\":{\"ip\":\"%s\",\"port\":%d}}' &",
                 exePath, msg.client, msg.uid, msg.loginToken,
-                ServerData.ip, msg.sceneName, ServerData.ip, ServerData.port)
+                msg.sceneName, ServerData.ip, ServerData.port)
                 --[[
                 exePath = "nohup ../../outPath/DS_Linux/Server"
                 exePath = string.format("%s '{\\\"clients\\\":[%d],\\\"uids\\\":[\\\"%s\\\"],\\\"clientLoginTokens\\\":[\\\"%s\\\"],\\\"dsData\\\":{\\\"ip\\\":\\\"%s\\\",\\\"scene\\\":\\\"%s\\\"},\\\"GsData\\\":{\\\"ip\\\":\\\"%s\\\",\\\"port\\\":%d}}' &",
