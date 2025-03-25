@@ -1,3 +1,7 @@
+安装 Start启动：
+sudo apt update
+sudo apt install -y debianutils
+
 1.DS权限运行不够
 chmod +x Server
 执行运行 ./Server
