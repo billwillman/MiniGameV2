@@ -11,11 +11,26 @@ function BaseCharacterController:Ctor(CharacterController, binder)
 
     if not _MOE.IsDS then
         -- Client操作
+        self:RegsterCSharpEvent()
     end
 end
 
-function BaseCharacterController:OnDestroy()
+function BaseCharacterController:On_Local_Character_ReceiveBegin()
+    if self.CharacterController then
+        self.CharacterController.enabled = true
+    end
+end
 
+function BaseCharacterController:On_Local_Character_ReceiveEnd()
+end
+
+function BaseCharacterController:RegsterCSharpEvent()
+    _MOE.EventManager:RegisterEvent("On_Local_Character_ReceiveBegin", self, self.On_Local_Character_ReceiveBegin)
+    _MOE.EventManager:RegisterEvent("On_Local_Character_ReceiveEnd", self, self.On_Local_Character_ReceiveEnd)
+end
+
+function BaseCharacterController:OnDestroy()
+    _MOE.EventManager:UnRegisterEvents(self)
     self:UnRegsterAllCsharpEvents()
 
     self.CharacterController = nil

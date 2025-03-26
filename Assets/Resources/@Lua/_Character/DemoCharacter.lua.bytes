@@ -25,10 +25,15 @@ function DemoCharacter:OnNetworkSpawn()
             cam.enabled = true
             cam.ActivateControl = true
         end
+
+        _MOE.EventManager:DispatchEvent("On_Local_Character_ReceiveBegin", self)
     end
 end
 
 function DemoCharacter:OnNetworkDespawn()
+    if self.PawnObj and self.PawnObj.IsOwner then
+        _MOE.EventManager:DispatchEvent("On_Local_Character_ReceiveEnd", self)
+    end
 end
 
 function DemoCharacter:OnDestroy()
