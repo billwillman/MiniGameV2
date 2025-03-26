@@ -118,26 +118,54 @@ namespace SOC.GamePlay
         /// This is called when the motor's ground probing detects a ground hit
         /// </summary>
         virtual public void OnGroundHit(Collider hitCollider, Vector3 hitNormal, Vector3 hitPoint, ref HitStabilityReport hitStabilityReport) {
-
+            if (OnGroundHitEvent != null)
+                hitStabilityReport = OnGroundHitEvent(hitCollider, hitNormal, hitPoint, hitStabilityReport);
         }
         /// <summary>
         /// This is called when the motor's movement logic detects a hit
         /// </summary>
         virtual public void OnMovementHit(Collider hitCollider, Vector3 hitNormal, Vector3 hitPoint, ref HitStabilityReport hitStabilityReport) {
-
+            if (OnMovementHitEvent != null)
+                hitStabilityReport = OnMovementHitEvent(hitCollider, hitNormal, hitPoint, hitStabilityReport);
         }
         /// <summary>
         /// This is called after every move hit, to give you an opportunity to modify the HitStabilityReport to your liking
         /// </summary>
         virtual public void ProcessHitStabilityReport(Collider hitCollider, Vector3 hitNormal, Vector3 hitPoint, Vector3 atCharacterPosition, Quaternion atCharacterRotation, ref HitStabilityReport hitStabilityReport) {
-
+            if (OnProcessHitStabilityReport != null)
+                hitStabilityReport = OnProcessHitStabilityReport(hitCollider, hitNormal, hitPoint, atCharacterPosition, atCharacterRotation, hitStabilityReport);
         }
         /// <summary>
         /// This is called when the character detects discrete collisions (collisions that don't result from the motor's capsuleCasts when moving)
         /// </summary>
         virtual public void OnDiscreteCollisionDetected(Collider hitCollider) {
-
+            if (OnDiscreteCollisionDetectedEvent != null)
+                OnDiscreteCollisionDetectedEvent(hitCollider);
         }
         // ----------------------------------------------------------------------------------------------------------------------------- //
+
+        public Func<Collider, Vector3, Vector3, HitStabilityReport, HitStabilityReport> OnGroundHitEvent
+        {
+            get;
+            set;
+        }
+
+        public Func<Collider, Vector3, Vector3, HitStabilityReport, HitStabilityReport> OnMovementHitEvent
+        {
+            get;
+            set;
+        }
+
+        public Action<Collider> OnDiscreteCollisionDetectedEvent
+        {
+            get;
+            set;
+        }
+
+        public Func<Collider, Vector3, Vector3, Vector3, Quaternion, HitStabilityReport, HitStabilityReport> OnProcessHitStabilityReport
+        {
+            get;
+            set;
+        }
     }
 }
