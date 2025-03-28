@@ -7,7 +7,7 @@ end
 
 function _M:OnBtnClickReq()
     -- 请求申请DS
-    _MOE.Models.NetModel:SendMsg(_MOE.MsgIds.CM_ReqDS, {sceneName = "MultiScene"})
+    _MOE.Models.NetModel:SendMsg(_MOE.MsgIds.CM_ReqDS, {sceneName = "Playground"})
 end
 
 function _M:OnMsgSMDSInfoNtf(msg)
