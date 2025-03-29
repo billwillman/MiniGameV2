@@ -245,6 +245,8 @@ namespace SOC.GamePlay
             m_RegisterActions = null;
         }
 
+        private bool m_InitLoadAllActions = false;
+
         public bool LoadAllRegisterActions(int loadPriority = 0) {
             if (m_RegisterActions == null)
                 return false;
@@ -263,9 +265,11 @@ namespace SOC.GamePlay
                 string fileName = string.Format("{0}/{1}.asset", rootPath, skillName);
                 Debug.LogFormat("[RegisterSkills] Start LoadAsync: {0}", fileName);
                 if (!loader.LoadScriptObjectAsync(fileName, this, skillName, _cAnimancerResTag, loadPriority)) {
-                    Debug.LogErrorFormat("[RegisterSkills] Error: {0:D}", fileName);
+                    Debug.LogErrorFormat("[RegisterSkills] Error: {0}", fileName);
                 }
             }
+
+            m_InitLoadAllActions = true;
             return true;
         }
 
@@ -285,7 +289,8 @@ namespace SOC.GamePlay
 
         [BlackList]
         protected new void Start() {
-            LoadAllRegisterActions();
+            if (!m_InitLoadAllActions)
+                LoadAllRegisterActions();
             base.Start();
         }
     }
