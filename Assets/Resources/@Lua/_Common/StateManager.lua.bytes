@@ -68,14 +68,14 @@ function StateManager:ChangeState(stateType, isForce, ...)
     end
     local state = stateClass.New(self, stateType, ...)
     if state:CheckCanEnter() then
-        _MOE.Logger.LogWarning("[StateManager] Exit State:", self:GetStateType())
+        _MOE.Logger.LogWarning("[StateManager] Exit State: {0}", tostring(self:GetStateType()))
         if self.m_State then
             self.m_State:DoExit(stateType)
             self.m_State:DoUnRegisterEvents()
             self.m_State:DoDispose()
         end
         self.m_State = state
-        _MOE.Logger.LogWarning("[StateManager] Enter State:", self:GetStateType())
+        _MOE.Logger.LogWarning("[StateManager] Enter State: {0}", tostring(self:GetStateType()))
         self.m_State:DoRegisterEvents()
         self.m_State:DoEnter()
     else
