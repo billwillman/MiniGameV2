@@ -61,7 +61,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GlobalObjectIdHash: 512812389
+  GlobalObjectIdHash: 493305276
   InScenePlacedSourceGlobalObjectIdHash: 493305276
   AlwaysReplicateAsRoot: 1
   SynchronizeTransform: 1
@@ -470,7 +470,7 @@ MonoBehaviour:
   CustomLuaFunctionName: []
   bInitCustomLuaFunctionInStart: 0
   m_RegisterActions: []
-  m_ActionAssetRootPath: Resources/Character/DemoCharacter/@Anim/
+  m_ActionAssetRootPath: Resources/Character/DemoCharacter/@Skill/
   m_CallLuaActionLoadedEvt: 0
 --- !u!54 &3697691001208229604
 Rigidbody:
