@@ -10,6 +10,7 @@ function SkillManagerBase:GetLuaRoot()
     end
     self.LuaRoot = self.SkillManagerCS.LuaStateRootPath
     if self.LuaRoot and #self.LuaRoot > 0 then
+        self.LuaRoot = string.gsub(self.LuaRoot, "/", ".")
         if self.LuaRoot[#self.LuaRoot] ~= "." then
             self.LuaRoot = self.LuaRoot .. "."
         end
