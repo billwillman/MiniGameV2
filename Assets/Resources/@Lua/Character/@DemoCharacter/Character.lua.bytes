@@ -7,4 +7,8 @@ function DemoSkillCharacter:OnRegisterStateClass()
     self:RegisterSkills(SkillNames, true)
 end
 
+function DemoSkillCharacter:OnInit()
+    self:ChangeState("Locomotion")
+end
+
 return DemoSkillCharacter
