@@ -305,12 +305,13 @@ class AssetBunbleInfo: IDependBinary
 
 	}
 
-	internal static readonly string _SceneExt =
+	internal static readonly string[] _SceneExts = {
 #if TUANJIE_1_0_OR_NEWER
-		".scene"
+		".scene", ".unity"
 #else
 		".unity"
 #endif
+	}
 		;
 
 	private void CheckIsScene()
@@ -334,7 +335,7 @@ class AssetBunbleInfo: IDependBinary
 		{
 			string fileName = GetSubFiles(i);
 			string ext = System.IO.Path.GetExtension(fileName);
-			bool b = (string.Compare (ext, _SceneExt, true) == 0);
+			bool b = AssetBundleBuild.IsSceneExt(ext);
 			if ((i > 0) && (isSceneFiles != b))
 			{
                 // string errStr = StringHelper.Format("AssetBundle [{0}] don't has Scene and other type files", Path);
@@ -359,7 +360,7 @@ class AssetBunbleInfo: IDependBinary
 				{
 					string fileName = mFileList[i];
 					string ext = System.IO.Path.GetExtension(fileName);
-					bool b = (string.Compare (ext, _SceneExt, true) == 0);
+                    bool b = AssetBundleBuild.IsSceneExt(ext);
 					if (!b)
 						fileList.Add(fileName);
 				}
@@ -1094,7 +1095,7 @@ static class AssetBundleRefHelper
 				if (string.IsNullOrEmpty(srcSubFile))
 					continue;
 				string srcExt = Path.GetExtension(srcSubFile);
-				bool isSceneFile = string.Compare(srcExt, AssetBunbleInfo._SceneExt) == 0;
+				bool isSceneFile = AssetBundleBuild.IsSceneExt(srcExt);
 				string yaml = GetYamlStr(srcSubFile);
 				if (string.IsNullOrEmpty(yaml))
 					continue;
@@ -3879,6 +3880,19 @@ public static class AssetBundleBuild
 		return string.Empty;
 	}
 
+	internal static bool IsSceneExt(string newExt)
+	{
+		if (string.IsNullOrEmpty(newExt))
+			return false;
+		for (int i = 0; i < AssetBunbleInfo._SceneExts.Length; ++i)
+		{
+			bool ret = string.Compare(newExt, AssetBunbleInfo._SceneExts[i], true) == 0;
+			if (ret)
+				return ret;
+		}
+		return false;
+	}
+
 	public static string GetXmlFileName(string fileName)
 	{
 		if (string.IsNullOrEmpty (fileName))
@@ -3887,7 +3901,7 @@ public static class AssetBundleBuild
 		string newExt = GetXmlExt (ext);
 		if (string.IsNullOrEmpty (newExt))
 			return string.Empty;
-		if (string.Compare (newExt, AssetBunbleInfo._SceneExt, true) == 0)
+		if (IsSceneExt(newExt))
 			fileName = Path.GetFileName (fileName);
 		return Path.ChangeExtension (fileName, newExt);
 	}
@@ -4050,11 +4064,17 @@ public static class AssetBundleBuild
 					if (name.IndexOf('@') >= 0)
 						return false;
 				} else
-				if (ResourceExts[i] == AssetBunbleInfo._SceneExt)
 				{
-					if (!IsVaildSceneResource(fileName))
-						return false;
+					for (int j = 0; j < AssetBunbleInfo._SceneExts.Length; ++j)
+					{
+						if (ResourceExts[i] == AssetBunbleInfo._SceneExts[j])
+						{
+							if (!IsVaildSceneResource(fileName))
+								return false;
+						}
+					}
 				}
+
 				return true;
 			}
 		}
@@ -4089,10 +4109,15 @@ public static class AssetBundleBuild
 						if (name.IndexOf('@') >= 0)
 							return false;
 					} else
-					if (ResourceExts[j] == AssetBunbleInfo._SceneExt)
 					{
-						if (!IsVaildSceneResource(files[i]))
-							return false;
+						for (int k = 0; k < AssetBunbleInfo._SceneExts.Length; ++k)
+						{
+							if (ResourceExts[j] == AssetBunbleInfo._SceneExts[k])
+							{
+								if (!IsVaildSceneResource(files[i]))
+									return false;
+							}
+						}
 					}
 					return true;
 				}
