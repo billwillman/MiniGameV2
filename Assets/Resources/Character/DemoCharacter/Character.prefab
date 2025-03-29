@@ -210,7 +210,7 @@ MonoBehaviour:
   StartRotationX: 0
   StartRotationRelativeToCharacterRotation: 1
   StartRotationY: 15
-  StartDistance: 7
+  StartDistance: 3
   StartWithZoomOut: 0
   AlignWhenMoving: 1
   OrbitingPausesCharacterAlignment: 1
