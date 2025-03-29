@@ -78,14 +78,14 @@ function SkillManagerBase:RegisterSkills(skillNames, isClearAll)
         isClearAll = false
     end
     if isClearAll then
-        self.RegisterStateClassMap = {}
+        self:UnRegisterAllSkills()
     end
     local actionNames = nil
     local actionMap = nil
     for _, name in ipairs(skillNames) do
         if name and string.len(name) > 0 then
             if not self.RegisterStateClassMap[name] then
-                local skillLuaPath = rootPath .. name
+                local skillLuaPath = rootPath .. "." .. name
                 local skillClass = require(skillLuaPath)
                 self.RegisterStateClassMap[name] = skillClass -- 注册状态类
                 if skillClass.GetActionNames then

@@ -1,6 +1,10 @@
 local Locomotion = _MOE.class("DemoCharacter_Locomotion", _MOE.SkillBase)
 
 function Locomotion:GetActionNames()
+    local ret = {
+        "Loom_walk_run"
+    }
+    return ret
 end
 
 return Locomotion

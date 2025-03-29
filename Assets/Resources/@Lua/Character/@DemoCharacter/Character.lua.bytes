@@ -1,7 +1,10 @@
 local DemoSkillCharacter = _MOE.class("DemoSkillCharacter", _MOE.SkillManagerBase)
 
 function DemoSkillCharacter:OnRegisterStateClass()
-    
+    local SkillNames = {
+        "Locomotion"
+    }
+    self:RegisterSkills(SkillNames, true)
 end
 
 return DemoSkillCharacter
