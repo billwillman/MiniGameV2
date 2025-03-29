@@ -18,6 +18,8 @@ namespace SOC.GamePlay
         private AudioSource m_AudioSource = null;
         private TimelineEventLuaReceiver m_LuaEventReceiver;
 
+        public string LuaStateRootPath = string.Empty;
+
         [BlackList]
         public string[] m_RegisterActions = null;
         [BlackList]

@@ -8,18 +8,18 @@ function SkillManagerBase:GetLuaRoot()
     if not binder then
         return
     end
+    self.LuaRoot = self.SkillManagerCS.LuaStateRootPath
+    if self.LuaRoot and #self.LuaRoot > 0 then
+        if self.LuaRoot[#self.LuaRoot] ~= "." then
+            self.LuaRoot = self.LuaRoot .. "."
+        end
+    end
+    return self.LuaRoot
+    --[[
     local rootPath = binder.LuaPath
     if not rootPath or string.len(rootPath) <= 0 then
         return
     end
-    --[[
-    if rootPath[#rootPath] ~= "/" then
-        rootPath = rootPath .. "/"
-    end
-    rootPath = string.gsub(rootPath, "/", ".")
-    self.LuaRoot = rootPath
-    return rootPath
-    ]]
     rootPath = string.gsub(rootPath, "/", ".")
     local ts = string.reverse(rootPath)
     local _, i = string.find(ts, ".")
@@ -30,6 +30,7 @@ function SkillManagerBase:GetLuaRoot()
     end
     self.LuaRoot = rootPath
     return self.LuaRoot
+    ]]
 end
 
 function SkillManagerBase:Ctor(skillManagerCS, binder)
