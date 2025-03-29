@@ -1,3 +1,7 @@
 local DemoSkillCharacter = _MOE.class("DemoSkillCharacter", _MOE.SkillManagerBase)
 
+function DemoSkillCharacter:OnRegisterStateClass()
+    
+end
+
 return DemoSkillCharacter
