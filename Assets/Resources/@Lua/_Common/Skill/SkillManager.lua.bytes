@@ -25,6 +25,7 @@ function SkillManagerBase:GetLuaRoot()
     local _, i = string.find(ts, ".")
     local m = string.len(ts) - i + 1
     self.LuaRoot  = string.sub(rootPath, 1, m)
+    return self.LuaRoot
 end
 
 function SkillManagerBase:Ctor(skillManagerCS, binder)
