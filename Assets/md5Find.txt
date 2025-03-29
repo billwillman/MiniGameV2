@@ -15,6 +15,7 @@ cf5b322a6295f39257f2a6150ef2660f=assets$resources$ui$@gm.assets
 8870272579ddc714ac02f369e764a1a8=assets$resources$ui$@worldmap.assets
 8885b94f454466764c1b9d5ef599aa09=assets$resources$@matcap.assets
 3c6c8ed16d69b63a11a162e72372cec9=assets$resources$@netcode.assets
+4c779af95621d4d22984b40e2ee7bf45=assets$resources$scenes$playground.unity.assets
 35f40641e622260e4c9210eef88273cd=assets$resources$testdots$entitymanager.prefab.assets
 eade3bd817a986392f8f3fac3a9d97fb=assets$resources$testdots$test.scene.assets
 4f1c01a2bf7dba3875ba9d659d9d6373=assets$resources$ui$ui root.prefab.assets
