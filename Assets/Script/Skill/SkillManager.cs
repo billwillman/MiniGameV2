@@ -261,7 +261,7 @@ namespace SOC.GamePlay
                 if (string.IsNullOrEmpty(skillName) || m_SkillAssetMap.ContainsKey(skillName))
                     continue;
                 string fileName = string.Format("{0}/{1}.asset", rootPath, skillName);
-                Debug.LogFormat("[RegisterSkills] Start LoadAsync: {0:D}", fileName);
+                Debug.LogFormat("[RegisterSkills] Start LoadAsync: {0}", fileName);
                 if (!loader.LoadScriptObjectAsync(fileName, this, skillName, _cAnimancerResTag, loadPriority)) {
                     Debug.LogErrorFormat("[RegisterSkills] Error: {0:D}", fileName);
                 }
