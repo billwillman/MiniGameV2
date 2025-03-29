@@ -12,12 +12,19 @@ function SkillManagerBase:GetLuaRoot()
     if not rootPath or string.len(rootPath) <= 0 then
         return
     end
+    --[[
     if rootPath[#rootPath] ~= "/" then
         rootPath = rootPath .. "/"
     end
     rootPath = string.gsub(rootPath, "/", ".")
     self.LuaRoot = rootPath
     return rootPath
+    ]]
+    rootPath = string.gsub(rootPath, "/", ".")
+    local ts = string.reverse(rootPath)
+    local _, i = string.find(ts, ".")
+    local m = string.len(ts) - i + 1
+    self.LuaRoot  = string.sub(rootPath, 1, m)
 end
 
 function SkillManagerBase:Ctor(skillManagerCS, binder)
