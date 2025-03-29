@@ -4,8 +4,7 @@ function SkillManagerBase:GetLuaRoot()
     if self.LuaRoot then
         return self.LuaRoot
     end
-    local binder = self.Binder
-    if not binder then
+    if not self.SkillManagerCS then
         return
     end
     self.LuaRoot = self.SkillManagerCS.LuaStateRootPath
