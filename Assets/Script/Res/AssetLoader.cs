@@ -1183,8 +1183,7 @@ public sealed class AssetLoader : IResourceLoader
         sceneName = sceneName.ToLower();
 #endif
         //sceneName += _SceneExt;
-        sceneName = StringHelper.Concat(sceneName, _SceneExt);
-        AssetInfo asset = FindAssetInfo(sceneName);
+        AssetInfo asset = FindSceneAssetInfo(ref sceneName);
         if (asset == null)
             return false;
 
@@ -1199,13 +1198,30 @@ public sealed class AssetLoader : IResourceLoader
 
     public static bool UseCDNMapper = false; // 是否使用CDN Mapper
 
-    internal static readonly string _SceneExt =
+    internal static readonly string[] _SceneExts = {
 #if TUANJIE_1_0_OR_NEWER
-        ".scene"
+        ".scene", ".unity"
 #else
         ".unity"
 #endif
-        ;
+        };
+
+    private AssetInfo FindSceneAssetInfo(ref string sceneName)
+    {
+        if (string.IsNullOrEmpty(sceneName))
+            return null;
+        for (int i = 0; i < _SceneExts.Length; ++i)
+        {
+            string sceneNameAndExt = StringHelper.Concat(sceneName, _SceneExts[i]);
+            AssetInfo asset = FindAssetInfo(sceneNameAndExt);
+            if (asset != null)
+            {
+                sceneName = sceneNameAndExt;
+                return asset;
+            }
+        }
+        return null;
+    }
 
     public override bool OnSceneLoadAsync(string sceneName, Action onEnd, int priority = 0) {
         if (string.IsNullOrEmpty(sceneName))
@@ -1214,8 +1230,7 @@ public sealed class AssetLoader : IResourceLoader
         sceneName = sceneName.ToLower();
 #endif
         //sceneName += _SceneExt;
-        sceneName = StringHelper.Concat(sceneName, _SceneExt);
-        AssetInfo asset = FindAssetInfo(sceneName);
+        AssetInfo asset = FindSceneAssetInfo(ref sceneName);
         if (asset == null)
             return false;
         int addCount = 0;
@@ -1270,8 +1285,7 @@ public sealed class AssetLoader : IResourceLoader
         sceneName = sceneName.ToLower();
 #endif
         //sceneName += _SceneExt;
-        sceneName = StringHelper.Concat(sceneName, _SceneExt);
-        AssetInfo asset = FindAssetInfo(sceneName);
+        AssetInfo asset = FindSceneAssetInfo(ref sceneName);
         if (asset == null)
             return false;
 
