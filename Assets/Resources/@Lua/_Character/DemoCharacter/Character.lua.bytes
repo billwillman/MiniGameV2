@@ -1,0 +1,3 @@
+local DemoSkillCharacter = _MOE.class("DemoSkillCharacter", _MOE.SkillManagerBase)
+
+return DemoSkillCharacter
