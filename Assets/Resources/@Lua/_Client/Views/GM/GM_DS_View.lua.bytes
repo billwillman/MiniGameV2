@@ -2,12 +2,17 @@ local _M = _MOE.class("UI_GM_DS", _MOE.BaseViewClass)
 
 function _M:OnInit()
     self:AddButtonClick(self.bp.BtnReq, self.OnBtnClickReq)
+    self:AddButtonClick(self.bp.BtnSinglePlay, self.OnBtnClickSinglePlay)
     self:BindGSMsgNtf(_MOE.MsgIds.SM_DS_Info, self.OnMsgSMDSInfoNtf)
 end
 
 function _M:OnBtnClickReq()
     -- 请求申请DS
     _MOE.Models.NetModel:SendMsg(_MOE.MsgIds.CM_ReqDS, {sceneName = "Playground"})
+end
+
+function _M:OnBtnClickSinglePlay()
+    _MOE.GameApp:SwitchSinglePlayScene("Playground")
 end
 
 function _M:OnMsgSMDSInfoNtf(msg)

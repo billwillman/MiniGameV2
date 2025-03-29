@@ -108,6 +108,19 @@ function _M:Switch_TB_MultiScene()
     return _MOE.SceneManager:SwitchScene(_MOE.SceneEnum.MultiScene, self.DsNetworkManager, false)
 end
 
+--- 单机模式 sceneName是场景名
+function _M:SwitchSinglePlayScene(sceneName)
+    if not sceneName or type(sceneName) == "string" or string.len(sceneName) <= 0 then
+        return false
+    end
+    _MOE.TB = {
+        ["dsData"] = {
+            ["sceneName"] = sceneName,
+        }
+    }
+    return _MOE.SceneManager:SwitchScene(_MOE.SceneEnum.MultiScene, self.DsNetworkManager, true)
+end
+
 function _M:GetLocalPlayerController()
     if not _MOE.PlayerControllerList then
         return nil
