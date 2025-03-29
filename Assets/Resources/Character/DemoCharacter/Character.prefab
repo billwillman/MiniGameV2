@@ -465,7 +465,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7dc4dea05f2be8b4c83538c0e3a2690f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  LuaPath: Resources/@Lua/_Character/DemoCharacter/
+  LuaPath: _Character/DemoCharacter/
   SelfTarget: {fileID: 0}
   CustomLuaFunctionName: []
   bInitCustomLuaFunctionInStart: 0
