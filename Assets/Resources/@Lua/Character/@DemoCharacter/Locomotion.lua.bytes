@@ -1,0 +1,6 @@
+local Locomotion = _MOE.class("DemoCharacter_Locomotion", _MOE.SkillBase)
+
+function Locomotion:GetActionNames()
+end
+
+return Locomotion

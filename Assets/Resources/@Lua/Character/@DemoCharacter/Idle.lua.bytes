@@ -1,6 +1,0 @@
-local Idle = _MOE.class("DemoCharacter_Idle", _MOE.SkillBase)
-
-function Idle:GetActionNames()
-end
-
-return Idle
