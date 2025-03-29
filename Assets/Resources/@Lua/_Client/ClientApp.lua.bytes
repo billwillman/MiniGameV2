@@ -110,7 +110,7 @@ end
 
 --- 单机模式 sceneName是场景名
 function _M:SwitchSinglePlayScene(sceneName)
-    if not sceneName or type(sceneName) == "string" or string.len(sceneName) <= 0 then
+    if not sceneName or type(sceneName) ~= "string" or string.len(sceneName) <= 0 then
         return false
     end
     _MOE.TB = {
