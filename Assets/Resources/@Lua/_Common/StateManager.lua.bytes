@@ -85,7 +85,11 @@ end
 
 function StateManager:GetStateType()
     if not self.m_State then
-        return self.StateType.None
+        if self.StateType then
+            return self.StateType.None
+        else
+            return nil
+        end
     end
     return self.m_State:GetStateType()
 end
