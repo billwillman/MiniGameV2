@@ -186,4 +186,13 @@ end
 function SkillManagerBase:OnDestroyed()
 end
 
+function SkillManagerBase:OnRegisterStateClass()
+end
+
+function SkillManagerBase:OnInit()
+end
+
+function SkillManagerBase:OnUnInit()
+end
+
 return SkillManagerBase
