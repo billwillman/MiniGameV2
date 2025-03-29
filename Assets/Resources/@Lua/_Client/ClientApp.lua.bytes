@@ -115,7 +115,7 @@ function _M:SwitchSinglePlayScene(sceneName)
     end
     _MOE.TB = {
         ["dsData"] = {
-            ["sceneName"] = sceneName,
+            ["scene"] = sceneName,
         }
     }
     return _MOE.SceneManager:SwitchScene(_MOE.SceneEnum.MultiScene, self.DsNetworkManager, true)
