@@ -10,4 +10,8 @@ end
 function Locomotion:OnInit()
 end
 
+function Locomotion:OnScriptObjectLoaded(resName, translition)
+    _MOE.Logger.LogFormat("[Locomotion] resName: {0}", resName)
+end
+
 return Locomotion
