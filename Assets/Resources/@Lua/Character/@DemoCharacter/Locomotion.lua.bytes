@@ -9,14 +9,13 @@ end
 
 function Locomotion:OnInit()
     self.ActionMap = {
-        ["Loom_walk_run"] = {}
+        ["Loom_walk_run"] = true
     }
 end
 
 function Locomotion:OnScriptObjectLoaded(resName, translition)
     _MOE.Logger.LogFormat("[Locomotion] resName: {0}", resName)
     if translition and self.ActionMap[resName] then
-        self.ActionMap[resName] = translition
         self:PlayAction(translition, true)
     end
 end
