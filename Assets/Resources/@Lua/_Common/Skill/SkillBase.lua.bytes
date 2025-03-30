@@ -16,6 +16,24 @@ function SkillBase:GetAnimancerComponent()
     return ret
 end
 
+function SkillBase:PlayAction(translition, isLoop)
+    if not translition then
+        return
+    end
+    if isLoop == nil then
+        isLoop = false
+    end
+    local animancer = self:GetAnimancerComponent()
+    if animancer then
+        local state = animancer:Play(translition)
+        if isLoop and state and state.Events.OnEnd == nil then
+            state.Events.OnEnd = function ()
+                self:PlayAction(translition, isLoop)
+            end
+        end
+    end
+end
+
 --------------------------------------- 可继承方法 --------------------------------
 function SkillBase:GetActionNames()
 end
