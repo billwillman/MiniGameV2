@@ -26,4 +26,4 @@ MonoBehaviour:
           _Callbacks: []
           _Names: []
         _Controller: {fileID: 9100000, guid: b6dc675c6ebe5524693cf7428d8405da, type: 2}
-        _ActionsOnStop: 02000000
+        _ActionsOnStop: 

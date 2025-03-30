@@ -9,15 +9,23 @@ end
 
 function Locomotion:OnInit()
     self.ActionMap = {
-        ["Loom_walk_run"] = {}
+        ["Loom_walk_run"] = {
+            OnInit = function (animState)
+                if not animState then
+                    return
+                end
+                animState:SetFloat("SpeedY", 0.5)
+            end
+        }
     }
 end
 
 function Locomotion:OnScriptObjectLoaded(resName, translition)
     _MOE.Logger.LogFormat("[Locomotion] resName: {0}", resName)
     if translition and self.ActionMap[resName] then
-        self.ActionMap[resName] = translition
-        self:PlayAction(translition, true)
+        self.ActionMap[resName].animState = translition
+        local animState = self:PlayAction(translition, true)
+        self.ActionMap[resName].OnInit(animState)
     end
 end
 

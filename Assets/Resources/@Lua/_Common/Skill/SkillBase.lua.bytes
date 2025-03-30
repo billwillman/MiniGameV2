@@ -16,6 +16,24 @@ function SkillBase:GetAnimancerComponent()
     return ret
 end
 
+function SkillBase:PlayActionState(animState, isLoop)
+    if not animState then
+        return
+    end
+    if isLoop == nil then
+        isLoop = false
+    end
+    local animancer = self:GetAnimancerComponent()
+    if animancer then
+        if isLoop and animState and animState.Events.OnEnd == nil then
+            animState.Events.OnEnd = function ()
+                self:PlayActionState(animState, isLoop)
+            end
+        end
+        animancer:Play(animState)
+    end
+end
+
 function SkillBase:PlayAction(translition, isLoop)
     if not translition then
         return
@@ -28,9 +46,10 @@ function SkillBase:PlayAction(translition, isLoop)
         local state = animancer:Play(translition)
         if isLoop and state and state.Events.OnEnd == nil then
             state.Events.OnEnd = function ()
-                self:PlayAction(translition, isLoop)
+                self:PlayActionState(state, isLoop)
             end
         end
+        return state
     end
 end
 
