@@ -8,10 +8,32 @@ function Locomotion:GetActionNames()
 end
 
 function Locomotion:OnInit()
+    self.ActionMap = {
+        ["Loom_walk_run"] = {}
+    }
+end
+
+function Locomotion:PlayAction(translition)
+    if not translition then
+        return
+    end
+    local animancer = self:GetAnimancerComponent()
+    if animancer then
+        local state = animancer:Play(translition)
+        if state and state.Events.OnEnd == nil then
+            state.Events.OnEnd = function ()
+                self:PlayAction(translition)
+            end
+        end
+    end
 end
 
 function Locomotion:OnScriptObjectLoaded(resName, translition)
     _MOE.Logger.LogFormat("[Locomotion] resName: {0}", resName)
+    if translition and self.ActionMap[resName] then
+        self.ActionMap[resName] = translition
+        self:PlayAction(translition)
+    end
 end
 
 return Locomotion
