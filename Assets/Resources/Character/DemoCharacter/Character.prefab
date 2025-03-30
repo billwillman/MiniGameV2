@@ -467,12 +467,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   LuaPath: Character.@DemoCharacter.Character
   SelfTarget: {fileID: 0}
-  CustomLuaFunctionName: []
+  CustomLuaFunctionName:
+  - OnScriptObjectLoaded
   bInitCustomLuaFunctionInStart: 0
   LuaStateRootPath: Character.@DemoCharacter
   m_RegisterActions: []
   m_ActionAssetRootPath: Resources/Character/DemoCharacter/@Skill/
-  m_CallLuaActionLoadedEvt: 0
+  m_CallLuaActionLoadedEvt: 1
 --- !u!54 &3697691001208229604
 Rigidbody:
   m_ObjectHideFlags: 0
