@@ -16,7 +16,7 @@ function Locomotion:OnInit()
                 if not animState then
                     return
                 end
-                animState:SetFloat("SpeedY", 0.5)
+                animState:SetFloat("SpeedY", 0)
                 self:AnimationState_BindAllEvents(animState)
             end
         }
