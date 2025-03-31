@@ -44,6 +44,55 @@ namespace SOC.GamePlay
             }
         }
 
+
+        // https://kybernetik.com.au/animancer/docs/manual/events/
+        public void AnimationState_BindEvents(AnimancerState state, AnimationClip clip, bool isClearClipEvents = false)
+        {
+            if (state != null && clip != null)
+            {
+                state.Events.AddAllEvents(clip);
+                if (isClearClipEvents)
+                    clip.events = null;
+            }
+        }
+
+        public void AnimationState_BindAllEvents(ClipState state)
+        {
+            if (state != null && state.Clip != null)
+            {
+                state.Events.Clear();
+                AnimationState_BindEvents(state, state.Clip, true);
+            }
+        }
+
+        public void AnimationState_BindAllEvents(ControllerState state)
+        {
+            if (state != null)
+            {
+                state.Events.Clear();
+                var controller = state.Controller;
+                if (controller != null)
+                {
+                    var clips = controller.animationClips;
+                    if (clips != null)
+                    {
+                        for (int i = 0; i < clips.Length; ++i)
+                        {
+                            var clip = clips[i];
+                            if (clip != null)
+                            {
+                                var events = clip.events;
+                                if (events != null && events.Length > 0)
+                                {
+                                    AnimationState_BindEvents(state, clip, true);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         public void RemoveStateEvent(AnimancerState state, string evtName)
         {
             if (state != null && !string.IsNullOrEmpty(evtName))

@@ -50,6 +50,17 @@ function SkillBase:UnRegisterAnimateStateEvent(state, evtName)
     skillCS:RemoveStateEvent(state, evtName)
 end
 
+function SkillBase:AnimationState_BindAllEvents(state)
+    if not state then
+        return false
+    end
+    local skillCS = self:GetSkillManagerCS()
+    if not skillCS then
+        return false
+    end
+    skillCS:AnimationState_BindAllEvents(state)
+end
+
 function SkillBase:PlayActionState(animState, isLoop)
     if not animState then
         return
@@ -59,8 +70,8 @@ function SkillBase:PlayActionState(animState, isLoop)
     end
     local animancer = self:GetAnimancerComponent()
     if animancer then
-        if isLoop and animState and animState.Events.OnEnd == nil then
-            animState.Events.OnEnd = function ()
+        if isLoop and animState and animState.Events["OnEnd"] == nil then
+            animState.Events["OnEnd"] = function ()
                 self:PlayActionState(animState, isLoop)
             end
         end
@@ -78,8 +89,8 @@ function SkillBase:PlayAction(translition, isLoop)
     local animancer = self:GetAnimancerComponent()
     if animancer then
         local state = animancer:Play(translition)
-        if isLoop and state and state.Events.OnEnd == nil then
-            state.Events.OnEnd = function ()
+        if isLoop and state and state.Events["OnEnd"] == nil then
+            state.Events["OnEnd"] = function ()
                 self:PlayActionState(state, isLoop)
             end
         end
