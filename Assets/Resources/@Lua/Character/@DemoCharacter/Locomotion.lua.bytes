@@ -17,7 +17,6 @@ function Locomotion:OnInit()
                     return
                 end
                 animState:SetFloat("SpeedY", 0)
-                
             end
         }
     }
