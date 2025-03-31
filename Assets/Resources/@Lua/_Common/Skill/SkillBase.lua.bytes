@@ -16,6 +16,40 @@ function SkillBase:GetAnimancerComponent()
     return ret
 end
 
+function SkillBase:RegisterAnimateStateEvent(state, evtName, func)
+    if not state or not evtName or not func then
+        return false
+    end
+    local skillCS = self:GetSkillManagerCS()
+    if not skillCS then
+        return false
+    end
+    local ret = skillCS:AddStateEvent(state, evtName, func)
+    return ret
+end
+
+function SkillBase:UnRegisterAllAnimateStateEvents(state)
+    if not state then
+        return
+    end
+    local skillCS = self:GetSkillManagerCS()
+    if not skillCS then
+        return
+    end
+    skillCS:RemoveStateAllEvents(state)
+end
+
+function SkillBase:UnRegisterAnimateStateEvent(state, evtName)
+    if not state or not evtName then
+        return
+    end
+    local skillCS = self:GetSkillManagerCS()
+    if not skillCS then
+        return
+    end
+    skillCS:RemoveStateEvent(state, evtName)
+end
+
 function SkillBase:PlayActionState(animState, isLoop)
     if not animState then
         return
