@@ -6,6 +6,7 @@ using Unity.Collections;
 using Unity.VisualScripting;
 using Animancer;
 using XLua;
+using System.Diagnostics.Tracing;
 
 namespace SOC.GamePlay
 {
@@ -48,6 +49,14 @@ namespace SOC.GamePlay
             if (state != null && !string.IsNullOrEmpty(evtName))
             {
                 state.Events.Remove(evtName);
+            }
+        }
+
+        public void RemoveStateAllEvents(AnimancerState state)
+        {
+            if (state != null)
+            {
+                state.Events.Clear();
             }
         }
 
