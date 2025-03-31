@@ -7,6 +7,8 @@ function Locomotion:GetActionNames()
     return ret
 end
 
+-- xlua.private_accessible(CS.Animancer.AnimancerEvent)
+
 function Locomotion:OnInit()
     self.ActionMap = {
         ["Loom_walk_run"] = {

@@ -34,6 +34,23 @@ namespace SOC.GamePlay
             }
         }
 
+        public void AddStateEvent(AnimancerState state, string evtName, Action evt)
+        {
+            if (state != null && !string.IsNullOrEmpty(evtName) && evt != null)
+            {
+                state.Events.Remove(evtName);
+                state.Events.AddCallback(evtName, evt);
+            }
+        }
+
+        public void RemoveStateEvent(AnimancerState state, string evtName)
+        {
+            if (state != null && !string.IsNullOrEmpty(evtName))
+            {
+                state.Events.Remove(evtName);
+            }
+        }
+
         public AudioSource Audio
         {
             get
