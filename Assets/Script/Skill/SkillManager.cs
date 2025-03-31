@@ -175,7 +175,10 @@ namespace SOC.GamePlay
                 {
                     var state = playable.Play(action);
                     if (onEnd != null)
+                    {
                         state.Events.OnEnd = onEnd;
+                        state.Events.NormalizedEndTime = 1.0f;
+                    }
                     return state;
                 } else
                 {
@@ -186,7 +189,10 @@ namespace SOC.GamePlay
                         return null;
                     var state = layer.Play(action);
                     if (onEnd != null)
+                    {
                         state.Events.OnEnd = onEnd;
+                        state.Events.NormalizedEndTime = 1.0f;
+                    }
                     return state;
                 }
             }

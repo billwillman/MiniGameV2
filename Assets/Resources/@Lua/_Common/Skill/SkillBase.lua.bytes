@@ -74,6 +74,7 @@ function SkillBase:PlayActionState(animState, isLoop)
             animState.Events["OnEnd"] = function ()
                 self:PlayActionState(animState, isLoop)
             end
+            animState.Events.NormalizedEndTime = 1.0
         end
         animancer:Play(animState)
     end
@@ -93,6 +94,7 @@ function SkillBase:PlayAction(translition, isLoop)
             state.Events["OnEnd"] = function ()
                 self:PlayActionState(state, isLoop)
             end
+            state.Events.NormalizedEndTime = 1.0
         end
         return state
     end
