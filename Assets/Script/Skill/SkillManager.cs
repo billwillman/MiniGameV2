@@ -65,6 +65,46 @@ namespace SOC.GamePlay
             }
         }
 
+        public void AnimationState_ClearAllEvents(AnimationClip clip)
+        {
+            if (clip != null)
+                clip.events = null;
+        }
+
+        public void AnimationState_ClearAllEvents(ClipState state, bool isClearAnimancerEvent = false)
+        {
+            if (state != null)
+            {
+                if (isClearAnimancerEvent)
+                    state.Events.Clear();
+                if (state != null)
+                {
+                    AnimationState_ClearAllEvents(state.Clip);
+                }
+            }
+        }
+
+        public void AnimationState_ClearAllEvents(ControllerState state, bool isClearAnimancerEvent = false)
+        {
+            if (state != null)
+            {
+                if (isClearAnimancerEvent)
+                    state.Events.Clear();
+                var controller = state.Controller;
+                if (controller != null)
+                {
+                    var clips = controller.animationClips;
+                    if (clips != null)
+                    {
+                        for (int i = 0; i < clips.Length; ++i)
+                        {
+                            AnimationState_ClearAllEvents(clips[i]);
+                        }
+                    }
+                }
+            }
+        }
+
         public void AnimationState_BindAllEvents(ControllerState state)
         {
             if (state != null)
