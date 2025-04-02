@@ -72,8 +72,8 @@ function SkillBase:PlayActionState(animState, isLoop)
     if animancer then
         if isLoop and animState and animState.Events["OnEnd"] == nil then
             animState.Events["OnEnd"] = function ()
-                --self:PlayActionState(animState, isLoop)
-                animState.NormalizedTime = 0
+                self:PlayActionState(animState, isLoop)
+                --animState.NormalizedTime = 0
             end
             animState.Events.NormalizedEndTime = 1.0
         end
@@ -93,8 +93,8 @@ function SkillBase:PlayAction(translition, isLoop)
         local state = animancer:Play(translition)
         if isLoop and state and state.Events["OnEnd"] == nil then
             state.Events["OnEnd"] = function ()
-                --self:PlayActionState(state, isLoop)
-                state.NormalizedTime = 0
+                self:PlayActionState(state, isLoop)
+                --state.NormalizedTime = 0
             end
             state.Events.NormalizedEndTime = 1.0
         end
