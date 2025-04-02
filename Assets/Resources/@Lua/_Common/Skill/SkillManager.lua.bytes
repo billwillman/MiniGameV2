@@ -42,8 +42,8 @@ function SkillManagerBase:Ctor(skillManagerCS, binder)
     -- 注册的技能类（对应Lua），一个技能支持多个Layer,一个Layer支持多个State(每个Layer可以State独立)
     -- self.RegisterStateClassMap = {}
     -- 调用父类方法
-    -- _MOE.StateManagerBase.CallSuper(self, "Ctor", skillManagerCS, binder)
-    _MOE.StateManagerBase.Ctor(self, skillManagerCS, binder)
+    SkillManagerBase:CallSuper("Ctor", self, skillManagerCS, binder)
+    --_MOE.StateManagerBase.Ctor(self, skillManagerCS, binder)
 
     -- 注册CS事件
     if binder ~= nil then
@@ -58,8 +58,8 @@ function SkillManagerBase:Dispose()
     self.Binder = nil
     self.AnimancerComponent = nil
     -- 调用父类方法
-    -- _MOE.StateManagerBase.CallSuper(self, "Dispose")
-    _MOE.StateManagerBase.Dispose(self)
+    SkillManagerBase:CallSuper("Dispose", self)
+    --_MOE.StateManagerBase.Dispose(self)
 end
 
 function SkillManagerBase:GetSkillManagerCS()
