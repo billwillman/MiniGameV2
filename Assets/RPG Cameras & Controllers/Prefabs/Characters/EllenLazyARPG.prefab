@@ -1,15 +1,16 @@
 %YAML 1.1
-%TAG !u! tag:unity3d.com,2011:
+%TAG !u! tag:yousandi.cn,2023:
 --- !u!1 &180145314103702353
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 183242560118772111}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Left_PinkyEnd
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -23,12 +24,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180145314103702353}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -0.017690951, y: -0.0000029276878, z: 0.0000000378032}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 185952166431783451}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &180148925692801205
 GameObject:
@@ -36,10 +38,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 183441367311174043}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Left_EyebrowIntermediate
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -53,12 +56,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180148925692801205}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -0.12863201, y: -0.043015625, z: 0.11057044}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 186206573371793635}
-  m_RootOrder: 7
   m_LocalEulerAnglesHint: {x: 6.4973874e-11, y: 0.00039461406, z: -0.000012258359}
 --- !u!1 &180149767999617271
 GameObject:
@@ -66,10 +70,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 186035391622114983}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Root
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -83,13 +88,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180149767999617271}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 182983918358501323}
   m_Father: {fileID: 183001015816273873}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &180151477302240401
 GameObject:
@@ -97,10 +103,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 183234842997173485}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Right_Foot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -114,13 +121,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180151477302240401}
+  serializedVersion: 2
   m_LocalRotation: {x: 0.0000018033381, y: 0.5735907, z: 0.0000041817393, w: 0.81914204}
   m_LocalPosition: {x: 0.38453895, y: 1.2967404e-15, z: -0.00000005776047}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 183402031635050807}
   m_Father: {fileID: 183325154055210111}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: -4.0296907, y: 67.492325, z: -1.2014934}
 --- !u!1 &180173771741698275
 GameObject:
@@ -128,10 +136,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 185925728914243927}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Right_LowerMouth
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -145,12 +154,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180173771741698275}
+  serializedVersion: 2
   m_LocalRotation: {x: 0.000000059604623, y: -0.00000008940694, z: 0.075100124, w: 0.99717605}
   m_LocalPosition: {x: -0.064295545, y: 0.033273116, z: 0.0169392}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 186212144280638327}
-  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 8.614}
 --- !u!1 &180191807281738693
 GameObject:
@@ -158,10 +168,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 183330158003891137}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Left_ThumbProximal
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -175,13 +186,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180191807281738693}
+  serializedVersion: 2
   m_LocalRotation: {x: -0.2189437, y: 0.3889538, z: 0.23894195, w: 0.862372}
   m_LocalPosition: {x: -0.006713212, y: -0.017, z: 0.02027406}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 183225903883089967}
   m_Father: {fileID: 186271286553645967}
-  m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: -31.08043, y: 35.40916, z: 33.583817}
 --- !u!1 &180211366159985057
 GameObject:
@@ -189,10 +201,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 183445196505209159}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Left_UpperEyelid
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -206,12 +219,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180211366159985057}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -0.09907945, y: -0.040060196, z: 0.099212565}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 186206573371793635}
-  m_RootOrder: 12
   m_LocalEulerAnglesHint: {x: 7.117464e-11, y: 0.0003944123, z: -0.0000119720125}
 --- !u!1 &180214493701232489
 GameObject:
@@ -219,10 +233,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 185780817130587131}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Left_UpperArm
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -236,13 +251,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180214493701232489}
+  serializedVersion: 2
   m_LocalRotation: {x: -0.0000012773254, y: -0.026176948, z: 0.00000012758106, w: 0.99965733}
   m_LocalPosition: {x: -0.1031225, y: -0.0073200064, z: -0.017839856}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 183499348783331753}
   m_Father: {fileID: 183353935115910575}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 63.14, z: 0}
 --- !u!1 &180238634659688217
 GameObject:
@@ -250,10 +266,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 183443035164215747}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Right_UpperLeg
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -267,13 +284,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180238634659688217}
+  serializedVersion: 2
   m_LocalRotation: {x: 0.9992603, y: -0.000000056457267, z: 0.03845631, w: 0.000001467006}
   m_LocalPosition: {x: 0.016839733, y: 0.0756434, z: -0.0024668525}
   m_LocalScale: {x: 1.0000054, y: 0.9999974, z: 0.9999974}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 183325154055210111}
   m_Father: {fileID: 182983918358501323}
-  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 27.759632, y: 154.86797, z: 177.52754}
 --- !u!1 &180244477382313769
 GameObject:
@@ -281,10 +299,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 183334915700283133}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Chest
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -298,13 +317,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180244477382313769}
+  serializedVersion: 2
   m_LocalRotation: {x: 1.0408341e-17, y: -0.0000018736508, z: -2.7105054e-19, w: 1}
   m_LocalPosition: {x: -0.0990385, y: -3.3259708e-18, z: 0.009736111}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 185812459259790969}
   m_Father: {fileID: 185947575249519141}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0.035022058, y: 0.05593767, z: 0.093691744}
 --- !u!1 &180287586761576467
 GameObject:
@@ -312,10 +332,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 183420741123991567}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Left_Eye
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -329,12 +350,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180287586761576467}
+  serializedVersion: 2
   m_LocalRotation: {x: 1.3877788e-16, y: -8.326673e-17, z: -7.5689455e-14, w: 1}
   m_LocalPosition: {x: -0.09196023, y: -0.04, z: 0.075729996}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 186206573371793635}
-  m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: -1.0944567, y: -8.406314, z: -8.809537}
 --- !u!1 &180287947295819507
 GameObject:
@@ -342,10 +364,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 185970628097245853}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Left_Hand_Attach
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -359,12 +382,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180287947295819507}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -0.04, y: -0.03, z: -5.3290704e-17}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 186271286553645967}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &180312024287401031
 GameObject:
@@ -372,10 +396,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 185987878315654823}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Right_LowerEyelid
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -389,12 +414,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180312024287401031}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -0.07790839, y: 0.0400602, z: 0.09371063}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 186206573371793635}
-  m_RootOrder: 19
   m_LocalEulerAnglesHint: {x: 6.4973874e-11, y: 0.00039461406, z: -0.000012258359}
 --- !u!1 &180336379516530761
 GameObject:
@@ -402,10 +428,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 186290872043463727}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: StrafeCamPosition
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -419,12 +446,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180336379516530761}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -0.5, y: 0.6, z: -1.5}
   m_LocalScale: {x: 0.9999604, y: 1, z: 0.9999608}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 185812459259790969}
-  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &180344307111455927
 GameObject:
@@ -432,10 +460,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 185851206789790411}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Left_RingIntermediate
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -449,13 +478,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180344307111455927}
+  serializedVersion: 2
   m_LocalRotation: {x: 0.000000012441874, y: 0.0000000045676485, z: 0.121538624, w: 0.99258673}
   m_LocalPosition: {x: -0.026134476, y: 0.000003469287, z: 0.000000019614149}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 183005678032047087}
   m_Father: {fileID: 185908534518075917}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 13.084927, y: -24.925215, z: 69.12473}
 --- !u!1 &180348530909545995
 GameObject:
@@ -463,10 +493,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 183032120757867141}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_HeadEnd
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -480,12 +511,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180348530909545995}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -0.25294384, y: 2.82228e-16, z: -5.479516e-17}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 186206573371793635}
-  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &180365182355838413
 GameObject:
@@ -493,10 +525,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 183448795415638107}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Right_UpperEyelid
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -510,12 +543,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180365182355838413}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -0.09907839, y: 0.0400602, z: 0.09921253}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 186206573371793635}
-  m_RootOrder: 22
   m_LocalEulerAnglesHint: {x: 7.117464e-11, y: 0.0003944123, z: -0.0000119720125}
 --- !u!1 &180387220448171759
 GameObject:
@@ -523,10 +557,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 182962586086324343}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Right_ThumbEnd
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -540,12 +575,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180387220448171759}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0.025002666, y: 0.00000030623602, z: -0.00000027281143}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 183323226193956979}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &180388450205652723
 GameObject:
@@ -553,10 +589,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 185941053816914419}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Right_MiddleDistal
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -570,13 +607,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180388450205652723}
+  serializedVersion: 2
   m_LocalRotation: {x: 0.0000000061153633, y: -0.000000006811874, z: 0.06975648, w: 0.9975641}
   m_LocalPosition: {x: 0.023897897, y: 0.0000014233088, z: -0.00000002866143}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 185967420000740945}
   m_Father: {fileID: 185994952349002039}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: -0.00000082545176, y: -0.0000024570627, z: 39.593937}
 --- !u!1 &180389555944667341
 GameObject:
@@ -584,10 +622,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 183345352812212121}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Right_Cheek
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -601,12 +640,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180389555944667341}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -0.05581839, y: 0.0416791, z: 0.10033993}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 186206573371793635}
-  m_RootOrder: 14
   m_LocalEulerAnglesHint: {x: 7.117464e-11, y: 0.0003944123, z: -0.0000119720125}
 --- !u!1 &180395879751153241
 GameObject:
@@ -614,10 +654,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 183341965749362643}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Left_UpperMouth
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -631,12 +672,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180395879751153241}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -0.010951886, y: -0.016939176, z: 0.105329365}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 186206573371793635}
-  m_RootOrder: 13
   m_LocalEulerAnglesHint: {x: 6.4973874e-11, y: 0.00039461406, z: -0.000012258359}
 --- !u!1 &180397095644649727
 GameObject:
@@ -644,10 +686,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 183499348783331753}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Left_Arm
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -661,13 +704,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180397095644649727}
+  serializedVersion: 2
   m_LocalRotation: {x: 0.0000003630029, y: 0.104528464, z: -0.00000010681809, w: 0.9945219}
   m_LocalPosition: {x: -0.23377727, y: -0.000000006110441, z: -0.0021768187}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 186271286553645967}
   m_Father: {fileID: 185780817130587131}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0.00012895803, y: 107.39185, z: 0.000054731157}
 --- !u!1 &180398185495986653
 GameObject:
@@ -675,10 +719,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 186227645450435937}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Right_ThumbIntermediate
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -692,14 +737,15 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180398185495986653}
+  serializedVersion: 2
   m_LocalRotation: {x: -0.0000000028787999, y: -0.104528464, z: 0.0000000040174557,
     w: 0.9945219}
   m_LocalPosition: {x: 0.027158605, y: 0.000002688841, z: 0.0000018471096}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 183323226193956979}
   m_Father: {fileID: 185851867705437389}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: -0.0000007000429, y: 5.3255434, z: 0.000000029533084}
 --- !u!1 &180408795075582537
 GameObject:
@@ -707,10 +753,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 183448309400142461}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Right_Shoulder
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -724,13 +771,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180408795075582537}
+  serializedVersion: 2
   m_LocalRotation: {x: 0.70297897, y: 0.70297897, z: -0.0762927, w: -0.0762927}
   m_LocalPosition: {x: -0.11539749, y: 0.0400466, z: -0.015376454}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 186051256429035275}
   m_Father: {fileID: 185812459259790969}
-  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 1.389123, y: -158.4169, z: 69.76795}
 --- !u!1 &180415249645671609
 GameObject:
@@ -738,10 +786,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 183001015816273873}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Skeleton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -755,13 +804,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180415249645671609}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 186035391622114983}
   m_Father: {fileID: 183226182416686803}
-  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &180423183156841823
 GameObject:
@@ -769,10 +819,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 183400702810787695}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Right_RingIntermediate
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -786,13 +837,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180423183156841823}
+  serializedVersion: 2
   m_LocalRotation: {x: 0.00000000648467, y: -0.0000000046149142, z: 0.121538624, w: 0.99258673}
   m_LocalPosition: {x: 0.026134476, y: -0.0000034694167, z: -0.000000019839222}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 183096915959802437}
   m_Father: {fileID: 186244909250494697}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0.00000014717185, y: -0.00000040893403, z: 33.260883}
 --- !u!1 &180431211937998977
 GameObject:
@@ -800,10 +852,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 186027365140186037}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_JawEnd
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -817,12 +870,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180431211937998977}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -0.07773014, y: -3.8857806e-18, z: 1.7259559e-17}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 186212144280638327}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &180433187728561695
 GameObject:
@@ -830,10 +884,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 186051256429035275}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Right_UpperArm
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -847,14 +902,15 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180433187728561695}
+  serializedVersion: 2
   m_LocalRotation: {x: -0.000000022968617, y: -0.026175682, z: 0.000000008056003,
     w: 0.9996574}
   m_LocalPosition: {x: 0.10312239, y: 0.00732, z: 0.01783983}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 183465166709280007}
   m_Father: {fileID: 183448309400142461}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: -26.215904, y: -43.69113, z: 14.446372}
 --- !u!1 &180437364372758011
 GameObject:
@@ -862,10 +918,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 183447980794479239}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Right_RingEnd
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -879,12 +936,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180437364372758011}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0.021361079, y: 0.000003810049, z: 0.000000027045216}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 183096915959802437}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &180438083668334477
 GameObject:
@@ -892,10 +950,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 186083555484950937}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Right_PinkyEnd
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -909,12 +968,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180438083668334477}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0.017690951, y: 0.0000029277512, z: -0.00000003831311}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 185876619272729771}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &180438142191282547
 GameObject:
@@ -922,10 +982,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 186206573371793635}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Head
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -939,9 +1000,11 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180438142191282547}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0.02929325, z: -0, w: 0.9995709}
   m_LocalPosition: {x: -0.07600874, y: -6.1187675e-18, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 183459447337125283}
   - {fileID: 183311783673597093}
@@ -970,7 +1033,6 @@ Transform:
   - {fileID: 183455687456888883}
   - {fileID: 185853668318515729}
   m_Father: {fileID: 183223394005166331}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: -0.22339791, y: -6.086446, z: 0.13678436}
 --- !u!1 &180465355923546303
 GameObject:
@@ -978,10 +1040,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 183056603481702009}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Right_IndexIntermediate
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -995,14 +1058,15 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180465355923546303}
+  serializedVersion: 2
   m_LocalRotation: {x: 0.0000000058185248, y: -0.0000000036353427, z: 0.104528464,
     w: 0.9945219}
   m_LocalPosition: {x: 0.026209345, y: 0.000004978231, z: 0.00000022464761}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 183403011494977053}
   m_Father: {fileID: 183355452422668295}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0.00000005625991, y: -0.0000003584346, z: 39.155674}
 --- !u!1 &180467172096131207
 GameObject:
@@ -1010,10 +1074,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 186250998257830001}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Left_IndexIntermediate
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1027,13 +1092,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180467172096131207}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0.104528464, w: 0.9945219}
   m_LocalPosition: {x: -0.026209345, y: -0.0000049786618, z: -0.00000022501166}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 183176885351861757}
   m_Father: {fileID: 186070865745577305}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 4.7458653, y: -9.482299, z: 45.101593}
 --- !u!1 &180472404483624245
 GameObject:
@@ -1041,10 +1107,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 183399906510758593}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Right_Hand
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1058,9 +1125,11 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180472404483624245}
+  serializedVersion: 2
   m_LocalRotation: {x: 0.0000000062866006, y: 0.0000012384974, z: -5.044839e-10, w: 1}
   m_LocalPosition: {x: 0.2519886, y: -5.6822224e-11, z: -0.002696406}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 182967695411326515}
   - {fileID: 183355452422668295}
@@ -1069,7 +1138,6 @@ Transform:
   - {fileID: 186244909250494697}
   - {fileID: 185851867705437389}
   m_Father: {fileID: 183465166709280007}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 26.386791, y: -32.91825, z: -42.833412}
 --- !u!1 &180473614710064741
 GameObject:
@@ -1077,10 +1145,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 183323226193956979}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Right_ThumbDistal
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1094,14 +1163,15 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180473614710064741}
+  serializedVersion: 2
   m_LocalRotation: {x: 0.000000009301053, y: -0.12186934, z: -0.0000000015865252,
     w: 0.9925462}
   m_LocalPosition: {x: 0.021591228, y: -0.000005928127, z: -0.0000029428468}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 182962586086324343}
   m_Father: {fileID: 186227645450435937}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: -0.0000006772239, y: -14.920295, z: -0.00000007121224}
 --- !u!1 &180481122718075493
 GameObject:
@@ -1109,10 +1179,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 183353935115910575}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Left_Shoulder
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1126,13 +1197,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180481122718075493}
+  serializedVersion: 2
   m_LocalRotation: {x: 0.07629283, y: 0.07629283, z: 0.70297897, w: 0.70297897}
   m_LocalPosition: {x: -0.11539749, y: -0.040046573, z: -0.015376453}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 185780817130587131}
   m_Father: {fileID: 185812459259790969}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 1.3683045, y: 21.586756, z: 69.727646}
 --- !u!1 &180491552027571819
 GameObject:
@@ -1140,10 +1212,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 183096915959802437}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Right_RingDistal
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1157,13 +1230,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180491552027571819}
+  serializedVersion: 2
   m_LocalRotation: {x: 0.0000000061156213, y: -0.00000000751562, z: 0.058671642, w: 0.99827737}
   m_LocalPosition: {x: 0.023830751, y: 0.0000041929547, z: 0.000000023672413}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 183447980794479239}
   m_Father: {fileID: 183400702810787695}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0.00000008586821, y: -0.000000608103, z: 26.0262}
 --- !u!1 &180511381903393123
 GameObject:
@@ -1171,10 +1245,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 183460145444244261}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Left_UpperLeg
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1188,13 +1263,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180511381903393123}
+  serializedVersion: 2
   m_LocalRotation: {x: -0.039260365, y: -0.0000014448043, z: 0.999229, w: -0.0000002501847}
   m_LocalPosition: {x: 0.01683994, y: -0.07564337, z: -0.0024667897}
   m_LocalScale: {x: 1.000005, y: 0.9999975, z: 0.9999975}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 185838928063984255}
   m_Father: {fileID: 182983918358501323}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0.5043276, y: -34.425304, z: 168.68657}
 --- !u!1 &180511854031336225
 GameObject:
@@ -1202,10 +1278,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 182995490189429091}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Right_ToeEnd
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1219,12 +1296,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180511854031336225}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0.055805743, y: 1.064401e-10, z: -0.000000006959264}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 183402031635050807}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &180527980830481263
 GameObject:
@@ -1232,10 +1310,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 183465166709280007}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Right_Arm
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1249,13 +1328,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180527980830481263}
+  serializedVersion: 2
   m_LocalRotation: {x: 0.000000010478995, y: 0.104525976, z: -0.000000001101357, w: 0.9945222}
   m_LocalPosition: {x: 0.23377691, y: 2.9006416e-16, z: 0.0021768876}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 183399906510758593}
   m_Father: {fileID: 186051256429035275}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 103.4702, z: 0}
 --- !u!1 &180534839594098859
 GameObject:
@@ -1263,10 +1343,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 186268644603765111}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Hair_SideIntermediate
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1280,13 +1361,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180534839594098859}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0.31908512, w: 0.9477261}
   m_LocalPosition: {x: -0.09988152, y: -4.0509046e-17, z: 1.4571677e-17}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 185826951204654151}
   m_Father: {fileID: 183311783673597093}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: -8.228298, y: -30.098267, z: 28.568832}
 --- !u!1 &180540850623449917
 GameObject:
@@ -1294,10 +1376,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 185851867705437389}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Right_ThumbProximal
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1311,13 +1394,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180540850623449917}
+  serializedVersion: 2
   m_LocalRotation: {x: -0.2189437, y: 0.3889538, z: 0.23894197, w: 0.862372}
   m_LocalPosition: {x: 0.0067132125, y: 0.016999999, z: -0.02027406}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 186227645450435937}
   m_Father: {fileID: 183399906510758593}
-  m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: -23.432478, y: 24.021105, z: 42.32497}
 --- !u!1 &180542323664941353
 GameObject:
@@ -1325,10 +1409,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 185884273007861323}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Right_MiddleProximal
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1342,13 +1427,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180542323664941353}
+  serializedVersion: 2
   m_LocalRotation: {x: -0.0002890712, y: -0.0031064951, z: 0.09264683, w: 0.99569416}
   m_LocalPosition: {x: 0.06624978, y: 0.01239, z: -0.0033889036}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 185994952349002039}
   m_Father: {fileID: 183399906510758593}
-  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: -0.0000032349928, y: -0.35751688, z: 36.74295}
 --- !u!1 &180546553486815285
 GameObject:
@@ -1356,10 +1442,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 183204280587708495}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_TongueDistal
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1373,13 +1460,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180546553486815285}
+  serializedVersion: 2
   m_LocalRotation: {x: -3.2921735e-15, y: 0.25881907, z: 8.1874284e-16, w: 0.9659259}
   m_LocalPosition: {x: -0.025052534, y: 1.7989082e-17, z: 8.336938e-18}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 186081200600529025}
   m_Father: {fileID: 183455687456888883}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 30, z: 0}
 --- !u!1 &180574388129090071
 GameObject:
@@ -1387,10 +1475,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 185812459259790969}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_UpperChest
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1404,9 +1493,11 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180574388129090071}
+  serializedVersion: 2
   m_LocalRotation: {x: 6.938895e-18, y: -0.0784585, z: -8.673618e-19, w: 0.9969174}
   m_LocalPosition: {x: -0.119210415, y: 1.822249e-16, z: 0.0000001441841}
   m_LocalScale: {x: 1, y: 0.9999982, z: 0.9999982}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 183353935115910575}
   - {fileID: 183223394005166331}
@@ -1415,7 +1506,6 @@ Transform:
   - {fileID: 186212293883518613}
   - {fileID: 185964978561880323}
   m_Father: {fileID: 183334915700283133}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: -2.5939462, y: -7.9521646, z: 0.43553117}
 --- !u!1 &180577721776062881
 GameObject:
@@ -1423,10 +1513,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 183403011494977053}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Right_IndexDistal
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1440,13 +1531,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180577721776062881}
+  serializedVersion: 2
   m_LocalRotation: {x: 0.0000000055782454, y: -0.000000005993808, z: 0.05233596, w: 0.9986295}
   m_LocalPosition: {x: 0.01969795, y: -0.0000035291935, z: -0.00000014501906}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 185974352362181357}
   m_Father: {fileID: 183056603481702009}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: -0.000000054321983, y: -0.0000005306513, z: 33.155674}
 --- !u!1 &180590166037507021
 GameObject:
@@ -1454,10 +1546,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 183174164675484407}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Left_ThumbEnd
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1471,12 +1564,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180590166037507021}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -0.025002666, y: -0.00000030675074, z: 0.0000002728114}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 182987741655364423}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &180592020716359487
 GameObject:
@@ -1484,10 +1578,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 185879161877182821}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Right_PinkyIntermediate
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1501,14 +1596,15 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180592020716359487}
+  serializedVersion: 2
   m_LocalRotation: {x: 0.0000000063256205, y: -0.0000000039521866, z: 0.104528464,
     w: 0.9945219}
   m_LocalPosition: {x: 0.019617017, y: -0.000006033377, z: -0.00000004139099}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 185876619272729771}
   m_Father: {fileID: 185946569539365007}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0.0000001101971, y: -0.00000036431408, z: 18.660355}
 --- !u!1 &180599878654315347
 GameObject:
@@ -1516,10 +1612,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 183225903883089967}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Left_ThumbIntermediate
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1533,13 +1630,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180599878654315347}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0.104528464, z: -0, w: 0.9945219}
   m_LocalPosition: {x: -0.027158605, y: -0.0000026897221, z: -0.0000018471097}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 182987741655364423}
   m_Father: {fileID: 183330158003891137}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: -4.209297, y: -6.516803, z: -17.741093}
 --- !u!1 &180629577028106003
 GameObject:
@@ -1547,10 +1645,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 183311783673597093}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Hair_SideProximal
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1564,13 +1663,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180629577028106003}
+  serializedVersion: 2
   m_LocalRotation: {x: -0.07438336, y: 0.22970386, z: 0.9232157, w: 0.29895836}
   m_LocalPosition: {x: -0.22379531, y: -0.04975701, z: -0.000044778677}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 186268644603765111}
   m_Father: {fileID: 186206573371793635}
-  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: -26.044508, y: 3.4902241, z: 110.5323}
 --- !u!1 &180632194650426963
 GameObject:
@@ -1578,10 +1678,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 186081200600529025}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_TongueEnd
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1595,12 +1696,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180632194650426963}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -0.022627987, y: 2.0456726e-16, z: -8.4241635e-17}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 183204280587708495}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &180681745115327147
 GameObject:
@@ -1608,10 +1710,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 186244909250494697}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Right_RingProximal
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1625,13 +1728,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180681745115327147}
+  serializedVersion: 2
   m_LocalRotation: {x: -0.009482426, y: -0.05207179, z: 0.0901767, w: 0.9945184}
   m_LocalPosition: {x: 0.06420124, y: 0.01271, z: 0.0165448}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 183400702810787695}
   m_Father: {fileID: 183399906510758593}
-  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 7.008441, y: -20.250736, z: 41.855724}
 --- !u!1 &180702830562015687
 GameObject:
@@ -1639,10 +1743,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 182987741655364423}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Left_ThumbDistal
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1656,13 +1761,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180702830562015687}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0.12186934, z: -0, w: 0.99254614}
   m_LocalPosition: {x: -0.021591228, y: 0.0000059275294, z: 0.0000029428468}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 183174164675484407}
   m_Father: {fileID: 183225903883089967}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 4.099017, y: -27.942593, z: 4.878968}
 --- !u!1 &180724750536997613
 GameObject:
@@ -1670,10 +1776,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 185994952349002039}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Right_MiddleIntermediate
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1687,13 +1794,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180724750536997613}
+  serializedVersion: 2
   m_LocalRotation: {x: 0.000000006235018, y: -0.0000000036806278, z: 0.09806386, w: 0.99518013}
   m_LocalPosition: {x: 0.029408824, y: 0.000004214682, z: 0.000000036662954}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 185941053816914419}
   m_Father: {fileID: 185884273007861323}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: -0.00000024976995, y: -0.00000056413916, z: 42.84932}
 --- !u!1 &180725311044158169
 GameObject:
@@ -1701,10 +1809,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 185946569539365007}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Right_PinkyProximal
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1718,13 +1827,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180725311044158169}
+  serializedVersion: 2
   m_LocalRotation: {x: -0.020754555, y: -0.1404174, z: 0.1135691, w: 0.9833383}
   m_LocalPosition: {x: 0.057514366, y: 0.016840002, z: 0.035751257}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 185879161877182821}
   m_Father: {fileID: 183399906510758593}
-  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 18.704493, y: -36.983547, z: 70.340416}
 --- !u!1 &180733863042138105
 GameObject:
@@ -1732,10 +1842,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 183369000828142079}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Right_Mouth
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1749,12 +1860,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180733863042138105}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -0.014438391, y: 0.0327092, z: 0.093694724}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 186206573371793635}
-  m_RootOrder: 20
   m_LocalEulerAnglesHint: {x: 0.75105053, y: 4.279164, z: -9.937253}
 --- !u!1 &180747594972766783
 GameObject:
@@ -1762,10 +1874,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 185967420000740945}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Right_MiddleEnd
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1779,12 +1892,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180747594972766783}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0.02135735, y: -0.0000025931608, z: -0.00000008737671}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 185941053816914419}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &180750472592486235
 GameObject:
@@ -1792,10 +1906,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 183193851977843663}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Right_UpperMouth
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1809,12 +1924,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180750472592486235}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -0.010948391, y: 0.0169392, z: 0.10532922}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 186206573371793635}
-  m_RootOrder: 23
   m_LocalEulerAnglesHint: {x: 6.4973874e-11, y: 0.00039461406, z: -0.000012258359}
 --- !u!1 &180752469361879655
 GameObject:
@@ -1822,10 +1938,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 183023162679751681}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Left_Foot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1839,13 +1956,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180752469361879655}
+  serializedVersion: 2
   m_LocalRotation: {x: 1.2186698e-11, y: 0.57357645, z: -8.5332175e-12, w: 0.81915206}
   m_LocalPosition: {x: -0.3845391, y: 0, z: 0.00000003700288}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 186005003426787129}
   m_Father: {fileID: 185838928063984255}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: -3.091006, y: 99.62518, z: 2.0458703}
 --- !u!1 &180773042672458481
 GameObject:
@@ -1853,10 +1971,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 185947575249519141}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Spine
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1870,13 +1989,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180773042672458481}
+  serializedVersion: 2
   m_LocalRotation: {x: -1.387779e-17, y: -0.090525955, z: 6.5052136e-19, w: 0.99589413}
   m_LocalPosition: {x: -0.092656136, y: 2.852687e-17, z: -1.7763568e-17}
   m_LocalScale: {x: 1, y: 1.0000205, z: 1.0000205}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 183334915700283133}
   m_Father: {fileID: 182983918358501323}
-  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: -1.2017697, y: -15.78709, z: -6.8411264}
 --- !u!1 &180777429570326361
 GameObject:
@@ -1884,10 +2004,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 186098689176674051}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Right_Eye
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1901,12 +2022,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180777429570326361}
+  serializedVersion: 2
   m_LocalRotation: {x: 2.4980018e-16, y: 1.110223e-16, z: 1.1907142e-13, w: 1}
   m_LocalPosition: {x: -0.09195839, y: 0.04, z: 0.075730026}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 186206573371793635}
-  m_RootOrder: 15
   m_LocalEulerAnglesHint: {x: -1.032999, y: -7.915265, z: -8.83919}
 --- !u!1 &180780353861934167
 GameObject:
@@ -1914,10 +2036,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 183176885351861757}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Left_IndexDistal
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1931,13 +2054,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180780353861934167}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0.052335955, w: 0.9986295}
   m_LocalPosition: {x: -0.01969795, y: 0.00000352887, z: 0.00000014457697}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 183487395500499125}
   m_Father: {fileID: 186250998257830001}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: -1.9060029, y: 17.22358, z: 24.123785}
 --- !u!1 &180784075447322627
 GameObject:
@@ -1945,10 +2069,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 185908534518075917}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Left_RingProximal
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1962,13 +2087,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180784075447322627}
+  serializedVersion: 2
   m_LocalRotation: {x: -0.009482432, y: -0.05207179, z: 0.0901767, w: 0.9945184}
   m_LocalPosition: {x: -0.06420124, y: -0.01271, z: -0.016544797}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 185851206789790411}
   m_Father: {fileID: 186271286553645967}
-  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: -0.5425748, y: -6.0437374, z: 27.315722}
 --- !u!1 &180787188738929635
 GameObject:
@@ -1976,10 +2102,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 186111892921767083}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Right_EyebrowDistal
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1993,12 +2120,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180787188738929635}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -0.12370839, y: 0.067081295, z: 0.09538603}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 186206573371793635}
-  m_RootOrder: 16
   m_LocalEulerAnglesHint: {x: 6.4973874e-11, y: 0.00039461406, z: -0.000012258359}
 --- !u!1 &180789198632720003
 GameObject:
@@ -2006,10 +2134,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 185821175019485195}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Left_Nostril
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2023,12 +2152,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180789198632720003}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -0.037429273, y: -0.01640998, z: 0.10998011}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 186206573371793635}
-  m_RootOrder: 11
   m_LocalEulerAnglesHint: {x: 6.4973874e-11, y: 0.00039461406, z: -0.000012258359}
 --- !u!1 &180795841270663841
 GameObject:
@@ -2036,10 +2166,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 186311618371288937}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Hair_FrontalLeftEnd
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2053,12 +2184,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180795841270663841}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -0.070578255, y: -5.3871835e-17, z: 2.733924e-17}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 183090820373221667}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &180800507082818571
 GameObject:
@@ -2066,10 +2198,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 185853668318515729}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_UpperMouth
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2083,12 +2216,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180800507082818571}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -0.009703392, y: -7.645604e-17, z: 0.11099901}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 186206573371793635}
-  m_RootOrder: 25
   m_LocalEulerAnglesHint: {x: 6.4973874e-11, y: 0.00039461406, z: -0.000012258359}
 --- !u!1 &180807973487590081
 GameObject:
@@ -2096,10 +2230,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 183052126368282889}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Right_EyebrowProximal
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2113,12 +2248,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180807973487590081}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -0.11793839, y: 0.0200758, z: 0.116039224}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 186206573371793635}
-  m_RootOrder: 18
   m_LocalEulerAnglesHint: {x: 6.4973874e-11, y: 0.00039461406, z: -0.000012258359}
 --- !u!1 &180820726761436681
 GameObject:
@@ -2126,10 +2262,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 182973382468619749}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Left_MiddleProximal
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2143,13 +2280,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180820726761436681}
+  serializedVersion: 2
   m_LocalRotation: {x: -0.00028907775, y: -0.0031064956, z: 0.09264683, w: 0.99569416}
   m_LocalPosition: {x: -0.06624978, y: -0.012390001, z: 0.003388903}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 186234018873240393}
   m_Father: {fileID: 186271286553645967}
-  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: -0.0000030015399, y: -0.35751662, z: 39.85169}
 --- !u!1 &180829156862480357
 GameObject:
@@ -2157,10 +2295,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 186212144280638327}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Jaw
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2174,16 +2313,17 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180829156862480357}
+  serializedVersion: 2
   m_LocalRotation: {x: -0.38694054, y: 0.5918422, z: 0.5918421, w: 0.38694048}
   m_LocalPosition: {x: -0.009947283, y: -7.581754e-17, z: 0.031856135}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 186027365140186037}
   - {fileID: 183310730110784151}
   - {fileID: 183465948073651271}
   - {fileID: 185925728914243927}
   m_Father: {fileID: 186206573371793635}
-  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: -89.99999, y: 180, z: -66.353}
 --- !u!1 &180849236410311531
 GameObject:
@@ -2191,11 +2331,12 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 185964978561880323}
   - component: {fileID: 217394223628856099}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Point Light
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2209,12 +2350,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180849236410311531}
+  serializedVersion: 2
   m_LocalRotation: {x: 0.07629271, y: 0.07629271, z: 0.70297897, w: 0.70297897}
   m_LocalPosition: {x: -0.21287645, y: 0, z: -0.16477343}
   m_LocalScale: {x: 0.9999608, y: 1, z: 0.999961}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 185812459259790969}
-  m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!108 &217394223628856099
 Light:
@@ -2275,18 +2417,21 @@ Light:
   m_UseColorTemperature: 0
   m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
   m_UseBoundingSphereOverride: 0
+  m_UseViewFrustumForShadowCasterCull: 1
   m_ShadowRadius: 0
   m_ShadowAngle: 0
+  m_UseOcclusionCulling: 1
 --- !u!1 &180854899537288405
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 185838928063984255}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Left_LowerLeg
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2300,14 +2445,15 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180854899537288405}
+  serializedVersion: 2
   m_LocalRotation: {x: -4.6553055e-13, y: -0.0000011001869, z: -0.00000038725435,
     w: 1}
   m_LocalPosition: {x: -0.38615477, y: 0.000000043533287, z: 0}
   m_LocalScale: {x: 1.000005, y: 0.9999975, z: 0.9999975}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 183023162679751681}
   m_Father: {fileID: 183460145444244261}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: -0.00000039938865, y: -52.074085, z: -0.0000003112057}
 --- !u!1 &180865489177837183
 GameObject:
@@ -2315,10 +2461,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 186052264917190497}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Left_EyebrowDistal
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2332,12 +2479,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180865489177837183}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -0.12370628, y: -0.067081295, z: 0.095386066}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 186206573371793635}
-  m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 6.4973874e-11, y: 0.00039461406, z: -0.000012258359}
 --- !u!1 &180873711202034209
 GameObject:
@@ -2345,10 +2493,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 183325154055210111}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Right_LowerLeg
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2362,13 +2511,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180873711202034209}
+  serializedVersion: 2
   m_LocalRotation: {x: -1.3365769e-15, y: -0.00000023199607, z: -3.380797e-15, w: 1}
   m_LocalPosition: {x: 0.38615513, y: 1.1457501e-15, z: -0.00000005034822}
   m_LocalScale: {x: 1.0000054, y: 0.9999974, z: 0.9999974}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 183234842997173485}
   m_Father: {fileID: 183443035164215747}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 1.0118412e-13, y: -65.57258, z: 1.5089435e-14}
 --- !u!1 &180875301417348953
 GameObject:
@@ -2376,10 +2526,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 186311379008406569}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Left_MiddleDistal
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2393,13 +2544,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180875301417348953}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0.06975647, w: 0.9975641}
   m_LocalPosition: {x: -0.023897897, y: -0.0000014235393, z: 0.000000028244418}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 182982563450295927}
   m_Father: {fileID: 186234018873240393}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: -2.1263328, y: 17.19854, z: 26.090876}
 --- !u!1 &180876972075985047
 GameObject:
@@ -2407,10 +2559,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 183310730110784151}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Left_LowerMouth
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2424,12 +2577,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180876972075985047}
+  serializedVersion: 2
   m_LocalRotation: {x: -0.000000029802308, y: -0.000000029802308, z: 0.08762807, w: 0.99615335}
   m_LocalPosition: {x: -0.06429684, y: 0.033270802, z: -0.016939176}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 186212144280638327}
-  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 10.054001}
 --- !u!1 &180882277423063843
 GameObject:
@@ -2437,10 +2591,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 183455687456888883}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_TongueProximal
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2454,13 +2609,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180882277423063843}
+  serializedVersion: 2
   m_LocalRotation: {x: -1.3784265e-16, y: 0.5032367, z: -1.6084328e-17, w: 0.8641486}
   m_LocalPosition: {x: 0.006377836, y: -4.4622366e-18, z: 0.058495402}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 183204280587708495}
   m_Father: {fileID: 186206573371793635}
-  m_RootOrder: 24
   m_LocalEulerAnglesHint: {x: 5.3980165e-10, y: 52.667515, z: 0.0000000039606665}
 --- !u!1 &180883920599326721
 GameObject:
@@ -2468,10 +2624,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 183009647615561259}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Left_PinkyIntermediate
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2485,13 +2642,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180883920599326721}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0.104528464, w: 0.9945219}
   m_LocalPosition: {x: -0.019617017, y: 0.0000060334473, z: 0.000000041177646}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 185952166431783451}
   m_Father: {fileID: 185857169513472221}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 16.286257}
 --- !u!1 &180886072762227461
 GameObject:
@@ -2499,10 +2657,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 183223394005166331}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Neck
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2516,13 +2675,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180886072762227461}
+  serializedVersion: 2
   m_LocalRotation: {x: -8.636421e-18, y: 0.13697012, z: 8.658312e-19, w: 0.9905752}
   m_LocalPosition: {x: -0.19708396, y: -6.840626e-17, z: -7.3872404e-17}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 186206573371793635}
   m_Father: {fileID: 185812459259790969}
-  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: -3.532608, y: 24.479918, z: -0.05511545}
 --- !u!1 &180891802844668007
 GameObject:
@@ -2530,10 +2690,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 186234018873240393}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Left_MiddleIntermediate
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2547,13 +2708,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180891802844668007}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0.09806386, w: 0.99518013}
   m_LocalPosition: {x: -0.029408824, y: -0.0000042149654, z: -0.000000036917093}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 186311379008406569}
   m_Father: {fileID: 182973382468619749}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 80.040855}
 --- !u!1 &180905159595238135
 GameObject:
@@ -2561,11 +2723,12 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 183259716194207137}
   - component: {fileID: 244162846032640745}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Body
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2579,12 +2742,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180905159595238135}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 183226182416686803}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!137 &244162846032640745
 SkinnedMeshRenderer:
@@ -2597,10 +2761,14 @@ SkinnedMeshRenderer:
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 0
+  m_StaticShadowCaster: 0
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 3
+  m_RayTraceProcedural: 0
+  m_virtualGeometry: 0
+  m_virtualGeometryShadow: 0
   m_RenderingLayerMask: 4294967295
   m_RendererPriority: 0
   m_Materials:
@@ -2727,16 +2895,19 @@ SkinnedMeshRenderer:
     m_Center: {x: 0.0068225563, y: 0, z: -0.009298004}
     m_Extent: {x: 0.87855244, y: 0.7656409, z: 0.25213572}
   m_DirtyAABB: 0
+  m_EnableVSSkinning: 1
+  m_ReleaseMeshData: 1
 --- !u!1 &180907606053359907
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 183184225800249345}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Left_Mouth
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2750,12 +2921,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180907606053359907}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -0.014438359, y: -0.032709207, z: 0.09369477}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 186206573371793635}
-  m_RootOrder: 10
   m_LocalEulerAnglesHint: {x: -2.6826396, y: 5.340104, z: 26.604603}
 --- !u!1 &180911161661824375
 GameObject:
@@ -2763,10 +2935,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 185826951204654151}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Hair_SideDistal
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2780,13 +2953,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180911161661824375}
+  serializedVersion: 2
   m_LocalRotation: {x: 0.12940952, y: 0.22414386, z: -0.4829629, w: 0.8365163}
   m_LocalPosition: {x: -0.09096314, y: 1.7293457e-16, z: 4.6250682e-17}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 183182445327301117}
   m_Father: {fileID: 186268644603765111}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 2.8087418, y: -3.9260638, z: -63.427475}
 --- !u!1 &180922371112900897
 GameObject:
@@ -2794,10 +2968,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 183182445327301117}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Hair_SideEnd
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2811,12 +2986,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180922371112900897}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -0.049033895, y: -7.494005e-18, z: 7.843419e-18}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 185826951204654151}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &180924000132552017
 GameObject:
@@ -2824,10 +3000,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 183005678032047087}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Left_RingDistal
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2841,13 +3018,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180924000132552017}
+  serializedVersion: 2
   m_LocalRotation: {x: 0.000000010128669, y: 0.00000000876639, z: 0.05867164, w: 0.99827737}
   m_LocalPosition: {x: -0.023830751, y: -0.0000041930098, z: -0.000000019147421}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 183437139606251879}
   m_Father: {fileID: 185851206789790411}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0.0000009700769, y: 0.000001005868, z: 23.652105}
 --- !u!1 &180936477016029355
 GameObject:
@@ -2855,10 +3033,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 186208249399692873}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Right_Nostril
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2872,12 +3051,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180936477016029355}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -0.03742839, y: 0.01641, z: 0.109980226}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 186206573371793635}
-  m_RootOrder: 21
   m_LocalEulerAnglesHint: {x: 6.4973874e-11, y: 0.00039461406, z: -0.000012258359}
 --- !u!1 &180951605906044831
 GameObject:
@@ -2885,10 +3065,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 185952166431783451}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Left_PinkyDistal
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2902,13 +3083,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180951605906044831}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0.104528464, w: 0.9945219}
   m_LocalPosition: {x: -0.017391909, y: -0.0000017637104, z: -0.000000027558691}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 183242560118772111}
   m_Father: {fileID: 183009647615561259}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 16.286259}
 --- !u!1 &180963591610222957
 GameObject:
@@ -2916,10 +3098,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 183487395500499125}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Left_IndexEnd
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2933,12 +3116,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180963591610222957}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -0.021357665, y: 0.0000029947614, z: 0.000000043119037}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 183176885351861757}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &180975790361517649
 GameObject:
@@ -2946,10 +3130,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 182983918358501323}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Hips
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2963,15 +3148,16 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 180975790361517649}
+  serializedVersion: 2
   m_LocalRotation: {x: 0.043167837, y: 0.043167837, z: -0.7057879, w: 0.7057879}
   m_LocalPosition: {x: 1.1979284e-33, y: 0.8400196, z: 0.027500711}
   m_LocalScale: {x: 1, y: 1.000021, z: 1.000021}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 183460145444244261}
   - {fileID: 183443035164215747}
   - {fileID: 185947575249519141}
   m_Father: {fileID: 186035391622114983}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 13.829125, y: -12.798734, z: -83.001656}
 --- !u!1 &181177203753712637
 GameObject:
@@ -2979,10 +3165,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 182982563450295927}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Left_MiddleEnd
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2996,12 +3183,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 181177203753712637}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -0.02135735, y: 0.000002592955, z: 0.00000008687872}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 186311379008406569}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &181188905746916539
 GameObject:
@@ -3009,7 +3197,7 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 183226182416686803}
   - component: {fileID: 276153443557068003}
@@ -3021,6 +3209,7 @@ GameObject:
   - component: {fileID: 7106879606897433374}
   - component: {fileID: 6094663705939758603}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: EllenLazyARPG
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3034,18 +3223,19 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 181188905746916539}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 183259716194207137}
   - {fileID: 183001015816273873}
   m_Father: {fileID: 0}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!95 &276153443557068003
 Animator:
-  serializedVersion: 3
+  serializedVersion: 5
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -3058,10 +3248,12 @@ Animator:
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
   m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
   m_WarningMessage: 
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
-  m_KeepAnimatorControllerStateOnDisable: 0
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!143 &250421435674151557
 CharacterController:
   m_ObjectHideFlags: 0
@@ -3070,9 +3262,17 @@ CharacterController:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 181188905746916539}
   m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
   m_IsTrigger: 0
+  m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 2
+  serializedVersion: 3
   m_Height: 1.65
   m_Radius: 0.3
   m_SlopeLimit: 45
@@ -3129,7 +3329,7 @@ MonoBehaviour:
   StartWithZoomOut: 0
   AlignWhenMoving: 1
   OrbitingPausesCharacterAlignment: 1
-  AlignOnlyIfLockedOnTarget: 0
+  AlignOnlyIfLockedOnTarget: 1
   AlignmentSmoothTime: 0.2
   SupportMovingBackwards: 0
   ShakeFrequency: 5
@@ -3426,10 +3626,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 183437139606251879}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Left_RingEnd
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3443,12 +3644,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 181189541263330755}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -0.021361079, y: -0.0000038101546, z: -0.000000027505568}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 183005678032047087}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &182118244819136635
 GameObject:
@@ -3456,10 +3658,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 186269256048860579}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Left_LowerEyelid
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3473,12 +3676,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 182118244819136635}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -0.07791286, y: -0.040060196, z: 0.09371064}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 186206573371793635}
-  m_RootOrder: 9
   m_LocalEulerAnglesHint: {x: 6.4973874e-11, y: 0.00039461406, z: -0.000012258359}
 --- !u!1 &182125134043543227
 GameObject:
@@ -3486,10 +3690,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 185857169513472221}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Left_PinkyProximal
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3503,13 +3708,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 182125134043543227}
+  serializedVersion: 2
   m_LocalRotation: {x: -0.020754565, y: -0.14041741, z: 0.1135691, w: 0.98333836}
   m_LocalPosition: {x: -0.057514366, y: -0.01684, z: -0.035751257}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 183009647615561259}
   m_Father: {fileID: 186271286553645967}
-  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 7.1574697, y: -30.457901, z: 42.32147}
 --- !u!1 &182130600725146951
 GameObject:
@@ -3517,10 +3723,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 186212293883518613}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: StrafeCamTarget
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3534,12 +3741,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 182130600725146951}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 10}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 185812459259790969}
-  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &182136542775479199
 GameObject:
@@ -3547,10 +3755,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 186005003426787129}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Left_Toes
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3564,13 +3773,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 182136542775479199}
+  serializedVersion: 2
   m_LocalRotation: {x: 1.5627435e-11, y: 0.15643446, z: -2.4751425e-12, w: 0.98768836}
   m_LocalPosition: {x: -0.11155971, y: -5.301315e-17, z: -2.0888253e-17}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 186099729294346931}
   m_Father: {fileID: 183023162679751681}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: -0.0000059106774, y: 18.000235, z: 0.000018191016}
 --- !u!1 &182149431124573715
 GameObject:
@@ -3578,10 +3788,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 183402031635050807}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Right_Toes
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3595,13 +3806,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 182149431124573715}
+  serializedVersion: 2
   m_LocalRotation: {x: 0.0000011445127, y: 0.10711714, z: -0.0000071603354, w: 0.9942464}
   m_LocalPosition: {x: 0.11155968, y: -1.9539925e-16, z: 0.00000003284919}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 182995490189429091}
   m_Father: {fileID: 183234842997173485}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0.00024756035, y: 17.99863, z: -0.00075817783}
 --- !u!1 &182159125136538585
 GameObject:
@@ -3609,10 +3821,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 186070865745577305}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Left_IndexProximal
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3626,13 +3839,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 182159125136538585}
+  serializedVersion: 2
   m_LocalRotation: {x: -0.008651514, y: 0.07297629, z: 0.15051496, w: 0.9858727}
   m_LocalPosition: {x: -0.060939856, y: -0.01136, z: 0.022294216}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 186250998257830001}
   m_Father: {fileID: 186271286553645967}
-  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: -2.2366283, y: 8.12852, z: 40.938908}
 --- !u!1 &182171962455288651
 GameObject:
@@ -3640,10 +3854,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 185974352362181357}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Right_IndexEnd
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3657,12 +3872,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 182171962455288651}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0.021357665, y: -0.000002995112, z: -0.000000043682526}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 183403011494977053}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &182173903629772097
 GameObject:
@@ -3670,10 +3886,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 183355452422668295}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Right_IndexProximal
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3687,13 +3904,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 182173903629772097}
+  serializedVersion: 2
   m_LocalRotation: {x: -0.008651508, y: 0.0729763, z: 0.15051496, w: 0.9858727}
   m_LocalPosition: {x: 0.060939856, y: 0.011359999, z: -0.022294216}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 183056603481702009}
   m_Father: {fileID: 183399906510758593}
-  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: -5.638502, y: 11.705383, z: 19.552275}
 --- !u!1 &182184487107817749
 GameObject:
@@ -3701,10 +3919,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 186298630940671049}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Left_EyebrowProximal
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3718,12 +3937,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 182184487107817749}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -0.11793615, y: -0.020075835, z: 0.11603943}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 186206573371793635}
-  m_RootOrder: 8
   m_LocalEulerAnglesHint: {x: 6.4973874e-11, y: 0.00039461406, z: -0.000012258359}
 --- !u!1 &182193405097569165
 GameObject:
@@ -3731,10 +3951,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 186271286553645967}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Left_Hand
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3748,9 +3969,11 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 182193405097569165}
+  serializedVersion: 2
   m_LocalRotation: {x: 0.0000007480406, y: 4.3830017e-13, z: 0.000000146312, w: 1}
   m_LocalPosition: {x: -0.2519881, y: 0.000000001362619, z: 0.0026964587}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 185970628097245853}
   - {fileID: 186070865745577305}
@@ -3759,7 +3982,6 @@ Transform:
   - {fileID: 185908534518075917}
   - {fileID: 183330158003891137}
   m_Father: {fileID: 183499348783331753}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: -6.789938, y: -23.952457, z: -92.83568}
 --- !u!1 &182202384302586627
 GameObject:
@@ -3767,10 +3989,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 183459447337125283}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Hair_FrontalBase
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3784,14 +4007,15 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 182202384302586627}
+  serializedVersion: 2
   m_LocalRotation: {x: -0.018152112, y: 0.040053662, z: 0.9099482, w: 0.41238382}
   m_LocalPosition: {x: -0.22313794, y: -0.012683479, z: 0.09037614}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 183090820373221667}
   - {fileID: 186212730032246091}
   m_Father: {fileID: 186206573371793635}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: -8.625684, y: -5.1641784, z: 116.50406}
 --- !u!1 &182204601998362621
 GameObject:
@@ -3799,10 +4023,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 182967695411326515}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Right_Hand_Attach
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3816,12 +4041,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 182204601998362621}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0.04, y: 0.03, z: -5.3290704e-17}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 183399906510758593}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &182206936864127593
 GameObject:
@@ -3829,10 +4055,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 186051616211309803}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Right_EyebrowIntermediate
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3846,12 +4073,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 182206936864127593}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -0.12862839, y: 0.0430156, z: 0.11057023}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 186206573371793635}
-  m_RootOrder: 17
   m_LocalEulerAnglesHint: {x: 6.4973874e-11, y: 0.00039461406, z: -0.000012258359}
 --- !u!1 &182217147256891237
 GameObject:
@@ -3859,10 +4087,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 185878920543137957}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Left_Cheek
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3876,12 +4105,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 182217147256891237}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -0.055818874, y: -0.041679144, z: 0.100339904}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 186206573371793635}
-  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 6.4973874e-11, y: 0.00039461406, z: -0.000012258359}
 --- !u!1 &182218391451710395
 GameObject:
@@ -3889,10 +4119,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 186099729294346931}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Left_ToeEnd
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3906,12 +4137,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 182218391451710395}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -0.05580593, y: 4.718448e-18, z: -2.8681962e-18}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 186005003426787129}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &182230524220403239
 GameObject:
@@ -3919,10 +4151,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 183090820373221667}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Hair_FrontalLeft
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3936,13 +4169,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 182230524220403239}
+  serializedVersion: 2
   m_LocalRotation: {x: -0.07874085, y: 0.13517256, z: 0.49715015, w: 0.85344595}
   m_LocalPosition: {x: -0.09316513, y: 5.0490837e-17, z: 1.3322676e-17}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 186311618371288937}
   m_Father: {fileID: 183459447337125283}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: -21.218748, y: 13.175925, z: 37.23533}
 --- !u!1 &182233325498310971
 GameObject:
@@ -3950,10 +4184,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 186212730032246091}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_HairFrontalRight
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3967,13 +4202,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 182233325498310971}
+  serializedVersion: 2
   m_LocalRotation: {x: 0.016982505, y: 0.08418327, z: -0.19701831, w: 0.9766312}
   m_LocalPosition: {x: 0.020156497, y: -0.07086173, z: 0.020871341}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 183250614612761921}
   m_Father: {fileID: 183459447337125283}
-  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 8.284234, y: 5.944988, z: -36.028187}
 --- !u!1 &182246919974993231
 GameObject:
@@ -3981,10 +4217,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 183465948073651271}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_LowerMouth
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3998,12 +4235,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 182246919974993231}
+  serializedVersion: 2
   m_LocalRotation: {x: 6.938894e-17, y: 4.1633363e-17, z: -1.3877788e-17, w: 1}
   m_LocalPosition: {x: -0.069821775, y: 0.033670582, z: 1.510618e-17}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 186212144280638327}
-  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 6.3496736e-15, y: 0.00000057321546, z: 0.00016957123}
 --- !u!1 &182248114532251341
 GameObject:
@@ -4011,10 +4249,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 183250614612761921}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_HairFrontalRightEnd
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4028,12 +4267,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 182248114532251341}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -0.08461037, y: -4.67077e-17, z: -1.5543122e-17}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 186212730032246091}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &182248701874279697
 GameObject:
@@ -4041,10 +4281,11 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
+  serializedVersion: 7
   m_Component:
   - component: {fileID: 185876619272729771}
   m_Layer: 8
+  m_HasEditorInfo: 1
   m_Name: Ellen_Right_PinkyDistal
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4058,12 +4299,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 182248701874279697}
+  serializedVersion: 2
   m_LocalRotation: {x: 0.0000000063985333, y: -0.000000008359772, z: 0.104528464,
     w: 0.9945219}
   m_LocalPosition: {x: 0.017391909, y: 0.0000017637728, z: 0.000000027205617}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 186083555484950937}
   m_Father: {fileID: 185879161877182821}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0.000000215062, y: -0.00000070757886, z: 18.660355}
