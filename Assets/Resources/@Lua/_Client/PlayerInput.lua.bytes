@@ -63,6 +63,13 @@ end
 
 function PlayerInput:OnInputEvent(CallbackContext)
     _MOE.Logger.Log("OnInputEvent")
+    if self.LuaInputActionCallBacks ~= nil and CallbackContext ~= nil and CallbackContext.action  ~= nil then
+        local actionName = CallbackContext.action.name
+        local func = self.LuaInputActionCallBacks[actionName]
+        if func ~= nil then
+            func(CallbackContext)
+        end
+    end
 end
 
 function PlayerInput:OnAwake()
