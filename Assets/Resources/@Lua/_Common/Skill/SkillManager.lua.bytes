@@ -183,6 +183,14 @@ function SkillManagerBase:OnTriggerLuaEvent(...)
     end
 end
 
+--- 键盘输入回调
+function SkillManagerBase:OnPlayerInputEvent(actionName, CallbackContext)
+    local curState = self:GetCurrentState()
+    if curState then
+        curState:OnPlayerInputEvent(actionName, CallbackContext)
+    end
+end
+
 ---------------------------------------- 继承方法 ------------------------
 
 function SkillManagerBase:OnStart()

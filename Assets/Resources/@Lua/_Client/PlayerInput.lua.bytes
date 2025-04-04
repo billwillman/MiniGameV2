@@ -49,7 +49,7 @@ function PlayerInput:RegisterLuaActionCallBack(actionName, func, this)
     end
     self.LuaInputActionCallBacks[actionName] = function(CallbackContext)
         if this ~= nil then
-            func(this, CallbackContext)
+            func(this, actionName, CallbackContext)
         end
     end
 end
