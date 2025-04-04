@@ -71,6 +71,7 @@ _MOE.StateBase = require("_Common.IState")
 _MOE.StateManagerBase = require("_Common.StateManager")
 _MOE.SkillBase = require("_Common.Skill.SkillBase")
 _MOE.SkillManagerBase = require("_Common.Skill.SkillManager")
+_MOE.PlayerInputUtils = CS.UnityEngine.InputSystem.PlayerInputUtils
 
 _MOE.FindMainCamera = function ()
     local gameObj = _MOE.GameObject.FindGameObjectWithTag("MainCamera")
