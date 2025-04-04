@@ -7,6 +7,7 @@ function PlayerInput:Ctor(target, binder)
     _MOE.Logger.Log("[PlayerInput] PlayerInput Create")
     self.PlayerInput = target
     self.Binder = binder
+    _MOE.LuaPlayerInput = self
 
     local EventType = _MOE.LuaEvent_MonoEventType
     self.LuaInputActionCallBacks = {}
@@ -62,7 +63,7 @@ function PlayerInput:UnRegisterLuaActionCallBack(actionName)
 end
 
 function PlayerInput:OnInputEvent(CallbackContext)
-    _MOE.Logger.Log("OnInputEvent")
+    -- _MOE.Logger.Log("OnInputEvent")
     if self.LuaInputActionCallBacks ~= nil and CallbackContext ~= nil and CallbackContext.action  ~= nil then
         local actionName = CallbackContext.action.name
         local func = self.LuaInputActionCallBacks[actionName]
@@ -77,6 +78,7 @@ function PlayerInput:OnAwake()
 end
 
 function PlayerInput:OnDestroy()
+    _MOE.LuaPlayerInput = nil
     self:UnRegsterAllCsharpEvents()
     CSharUtils.RemoveUnityEvent(self.MoveCSharpEvt, self.MoveLuaEvt)
     self.MoveCSharpEvt = nil
