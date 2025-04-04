@@ -63,6 +63,7 @@ namespace SOC.GamePlay
         }
 
         public void RegisterLuaEvent(int evtType, LuaFunction func) {
+            // UnityEngine.InputSystem.InputAction.CallbackContext context;
             if (m_LuaEventMap == null)
                 m_LuaEventMap = new Dictionary<int, LuaFunction>();
             m_LuaEventMap[evtType] = func;

@@ -87,4 +87,30 @@ function PlayerInput:OnDestroy()
     _MOE.Logger.Log("[PlayerInput] OnDestroy")
 end
 
+PlayerInput.InputActionType = {
+    Started = CS.UnityEngine.InputSystem.InputAction.started, -- 进入
+    Performed =  CS.UnityEngine.InputSystem.InputAction.Performed, -- 持续
+    Canceled = CS.UnityEngine.InputSystem.InputAction.Canceled, -- 取消
+}
+
+PlayerInput.ValueType = {
+    Value = CS.UnityEngine.InputSystem.InputActionType.Value,
+    Button = CS.UnityEngine.InputSystem.InputActionType.Button,
+    PassThrough = CS.UnityEngine.InputSystem.InputActionType.PassThrough,
+}
+
+function PlayerInput:TransAction2DControlContext(CallbackContext)
+    if not CallbackContext then
+        return
+    end
+    local ret = {
+        actionType = CallbackContext.phase, -- 类型
+        time = CallbackContext.time, -- 按键时间
+        id = CallbackContext.action.id, -- 事件标识
+        controlType = CallbackContext.action.expectedControlType, -- 类型, 例如：Vector2
+        valueType = CallbackContext.action.type,    -- 值类型
+    }
+    return ret
+end
+
 return PlayerInput

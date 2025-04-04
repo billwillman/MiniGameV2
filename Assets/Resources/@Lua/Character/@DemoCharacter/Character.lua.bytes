@@ -7,7 +7,7 @@ function DemoSkillCharacter:OnRegisterStateClass()
     self:RegisterSkills(SkillNames, true)
 end
 
-function DemoSkillCharacter:_OnPlayerInputMove(action)
+function DemoSkillCharacter:_OnPlayerInputMove(CallbackContext)
     _MOE.Logger.Log("[DemoSkillCharacter] _OnPlayerInputMove")
 end
 
