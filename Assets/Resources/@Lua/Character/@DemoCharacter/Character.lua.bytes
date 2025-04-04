@@ -7,8 +7,17 @@ function DemoSkillCharacter:OnRegisterStateClass()
     self:RegisterSkills(SkillNames, true)
 end
 
+function DemoSkillCharacter:_OnPlayerInputMove(action)
+    _MOE.Logger.Log("[DemoSkillCharacter] _OnPlayerInputMove")
+end
+
 function DemoSkillCharacter:OnInit()
+    _MOE.PlayerInput:RegisterLuaActionCallBack("Move", self._OnPlayerInputMove, self)
     self:ChangeState("Locomotion")
+end
+
+function DemoSkillCharacter:OnUnInit()
+    _MOE.PlayerInput:UnRegisterLuaActionCallBack("Move")
 end
 
 return DemoSkillCharacter
