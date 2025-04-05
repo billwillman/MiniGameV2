@@ -32,4 +32,14 @@ function Locomotion:OnScriptObjectLoaded(resName, translition)
     end
 end
 
+function Locomotion:OnSkillBaseInputEvent(actionName, Context)
+    if actionName == "Move" then
+        -- 移动
+        if Context.actionType == _MOE.InputActionPhase.Performed then
+            local movePt = Context:GetVector2D()
+            _MOE.Logger.Log("[movePt]")
+        end
+    end
+end
+
 return Locomotion

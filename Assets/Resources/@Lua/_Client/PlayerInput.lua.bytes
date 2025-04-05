@@ -68,7 +68,10 @@ function PlayerInput:OnInputEvent(CallbackContext)
         local actionName = CallbackContext.action.name
         local func = self.LuaInputActionCallBacks[actionName]
         if func ~= nil then
-            func(CallbackContext)
+            local transContext = self:TransActionControlContext(CallbackContext) -- 转换
+            if transContext ~= nil then
+                func(transContext)
+            end
         end
     end
 end
@@ -115,6 +118,12 @@ function PlayerInput:TransActionControlContext(CallbackContext)
         id = CallbackContext.action.id, -- 事件标识
         controlType = CallbackContext.action.expectedControlType, -- 类型, 例如：Vector2
         valueType = CallbackContext.action.type,    -- 值类型 ValueType
+        GetVector2D = function()
+            return self:GetVector2DCallbackContext(CallbackContext)
+        end,
+        GetButtonBool = function ()
+            return self:GetButtonCallbackContext(CallbackContext)
+        end,
     }
     return ret
 end
