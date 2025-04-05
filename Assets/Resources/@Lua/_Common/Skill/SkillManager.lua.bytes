@@ -51,9 +51,11 @@ function SkillManagerBase:Ctor(skillManagerCS, binder)
         binder:RegisterLuaEvent(_MOE.LuaEvent_MonoEventType.Destroyed, self.OnDestroyed)
     end
     --
+    self.RegisterInputDefaultActionNames = {}
 end
 
 function SkillManagerBase:Dispose()
+    self:UnRegisterInputActionsDefault() -- Default的Input回调UnRegister
     self.SkillManagerCS = nil
     self.Binder = nil
     self.AnimancerComponent = nil
@@ -213,6 +215,24 @@ function SkillManagerBase:UnRegisterInputActionCallBack(actionName)
         return true
     end
     return false
+end
+
+function SkillManagerBase:UnRegisterInputActionsDefault()
+    if self.RegisterInputDefaultActionNames then
+        for _, actionName in ipairs(self.RegisterInputDefaultActionNames) do
+            self:UnRegisterInputActionCallBack(actionName)
+        end
+    end
+end
+
+function SkillManagerBase:RegisterInputActionsDefault(actionNames)
+    self:UnRegisterInputActionsDefault()
+    self.RegisterInputDefaultActionNames = actionNames
+    if self.RegisterInputDefaultActionNames then
+        for _, actionName in ipairs(self.RegisterInputDefaultActionNames) do
+            self:RegisterInputActionCallBack(actionName, self.OnSkillBaseInputEvent)
+        end
+    end
 end
 
 ---------------------------------------- 继承方法 ------------------------

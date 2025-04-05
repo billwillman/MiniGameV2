@@ -7,18 +7,9 @@ function DemoSkillCharacter:OnRegisterStateClass()
     self:RegisterSkills(SkillNames, true)
 end
 
-function DemoSkillCharacter:_OnPlayerInputMove(actionName, CallbackContext)
-    _MOE.Logger.Log("[DemoSkillCharacter] _OnPlayerInputMove")
-    self:OnSkillBaseInputEvent(actionName, CallbackContext)-- 发送到针对状态
-end
-
 function DemoSkillCharacter:OnInit()
-    self:RegisterInputActionCallBack("Move", self._OnPlayerInputMove)
+    self:RegisterInputActionsDefault({"Move"})
     self:ChangeState("Locomotion")
-end
-
-function DemoSkillCharacter:OnUnInit()
-    self:UnRegisterInputActionCallBack("Move")
 end
 
 return DemoSkillCharacter
