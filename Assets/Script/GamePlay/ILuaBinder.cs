@@ -69,6 +69,13 @@ namespace SOC.GamePlay
             m_LuaEventMap[evtType] = func;
         }
 
+        public bool UnRegisterLuaEvent(int evtType)
+        {
+            if (m_LuaEventMap == null)
+                return false;
+            return m_LuaEventMap.Remove(evtType);
+        }
+
         public System.Object[] CallCustomLuaFunc(string evtName, params System.Object[] param) {
             if (m_LuaCustomFuncs != null)
             {
