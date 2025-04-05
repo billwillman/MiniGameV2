@@ -54,6 +54,18 @@ function SkillManagerBase:Ctor(skillManagerCS, binder)
     self.RegisterInputDefaultActionNames = {}
 end
 
+function SkillManagerBase:GetOwner()
+    if self.SkillManagerCS then
+        return self.SkillManagerCS.gameObject
+    end
+end
+
+function SkillManagerBase:GetOwnerTransform()
+    if self.SkillManagerCS then
+        return self.SkillManagerCS.transform
+    end
+end
+
 function SkillManagerBase:RegisterLuaEventUpdate()
     if self.Binder ~= nil then
         self.Binder:RegisterLuaEvent(_MOE.LuaEvent_MonoEventType.Update:GetHashCode(), self.OnUpdate)

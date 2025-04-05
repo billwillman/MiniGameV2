@@ -127,6 +127,18 @@ function SkillBase:SetSubStateManager(subStateMgr)
     self.SubStateManager = subStateMgr
 end
 
+function SkillBase:GetOwner()
+    if self.m_StateMgr then
+        return self.m_StateMgr:GetOwner()
+    end
+end
+
+function SkillBase:GetOwnerTransform()
+    if self.m_StateMgr then
+        return self.m_StateMgr:GetOwnerTransform()
+    end
+end
+
 --------------------------------------- 可继承方法 --------------------------------
 function SkillBase:GetActionNames()
 end

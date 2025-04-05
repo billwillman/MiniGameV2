@@ -56,6 +56,15 @@ function Locomotion:ResetIdle()
     self.MovePt = nil
 end
 
+function Locomotion:UpdateForwardByControlCamera()
+    if self.Camera then
+        local forward = self.Camera.transform.forward
+        forward.y = 0
+        local transform = self:GetOwnerTransform()
+        transform.forward = forward
+    end
+end
+
 function Locomotion:OnSkillBaseInputEvent(actionName, Context)
     if actionName == "Move" then
         -- 移动
@@ -65,6 +74,7 @@ function Locomotion:OnSkillBaseInputEvent(actionName, Context)
                 -- _MOE.Logger.LogFormat("[movePt]: ({0:F}, {1:F})", movePt.x, movePt.y)
                 if movePt.y > 0 then
                     self.MovePt = movePt
+                    self:UpdateForwardByControlCamera() -- 根据相机更新角色朝向（暂时这样直接硬切，后续用子状态机来切换状态，限定一个范围，超过范围，则做一个快速转动后再移动，再范围内再硬切）
                    if not self:IsRegisterLuaEventUpdate() then
                         self:RegisterLuaEventUpdate()
                    end
@@ -105,6 +115,7 @@ end
 
 function Locomotion:OnUpdate()
     Locomotion:CallSuper("OnUpdate", self)
+    self:UpdateForwardByControlCamera()
     self:UpdateCurrentMoveSpeed()
 end
 
