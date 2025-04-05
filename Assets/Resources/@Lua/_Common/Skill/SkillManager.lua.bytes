@@ -49,6 +49,7 @@ function SkillManagerBase:Ctor(skillManagerCS, binder)
     if binder ~= nil then
         binder:RegisterLuaEvent(_MOE.LuaEvent_MonoEventType.Start, self.OnStart)
         binder:RegisterLuaEvent(_MOE.LuaEvent_MonoEventType.Destroyed, self.OnDestroyed)
+        binder:RegisterLuaEvent(_MOE.LuaEvent_MonoEventType.Update, self.OnUpdate)
     end
     --
     self.RegisterInputDefaultActionNames = {}
@@ -250,6 +251,13 @@ function SkillManagerBase:OnInit()
 end
 
 function SkillManagerBase:OnUnInit()
+end
+
+function SkillManagerBase:OnUpdate()
+    local curState = self:GetCurrentState()
+    if curState and curState.OnUpdate then
+        curState:OnUpdate()
+    end
 end
 
 return SkillManagerBase
