@@ -122,6 +122,11 @@ function SkillBase:IsRegisterLuaEventUpdate()
     return false
 end
 
+--- 单技能子状态机
+function SkillBase:SetSubStateManager(subStateMgr)
+    self.SubStateManager = subStateMgr
+end
+
 --------------------------------------- 可继承方法 --------------------------------
 function SkillBase:GetActionNames()
 end
@@ -139,6 +144,10 @@ function SkillBase:OnInit()
 end
 
 function SkillBase:OnDispose()
+    if self.SubStateManager then
+        self.SubStateManager:Dispose()
+        self.SubStateManager = nil
+    end
 end
 
 function SkillBase:OnEnter()
