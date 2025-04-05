@@ -99,7 +99,7 @@ PlayerInput.ValueType = {
     PassThrough = CS.UnityEngine.InputSystem.InputActionType.PassThrough,
 }
 
-function PlayerInput:TransAction2DControlContext(CallbackContext)
+function PlayerInput:TransActionControlContext(CallbackContext)
     if not CallbackContext then
         return
     end
