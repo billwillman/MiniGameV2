@@ -24,10 +24,7 @@ function Locomotion:OnInit()
         }
     }
     self.CurrentMoveSpeed = 0
-    local CameraGameObj = _MOE.GameObject.FindGameObjectWithTag("MainCamera")
-    if CameraGameObj then
-        self.Camera = CameraGameObj:GetComponent(typeof(CS.UnityEngine.Camera))
-    end
+    self.Camera = _MOE.FindMainCamera()
 end
 
 function Locomotion:OnScriptObjectLoaded(resName, translition)
