@@ -40,7 +40,7 @@ end
 
 function Locomotion:UpdateSpeedToAnimState()
     if self.CurrentAnimState then
-        local SpeedY = 0.5 + self:GetCurrentMoveSpeed()
+        local SpeedY = 0.5 + self:GetCurrentMoveSpeed()/2.0
         self.CurrentAnimState:SetFloat("SpeedY", SpeedY)
     end
 end
@@ -82,6 +82,8 @@ function Locomotion:OnUpdate()
     if self.MovePt ~= nil then
         if self.MovePt.y > 0 then
             self.CurrentMoveSpeed = self.CurrentMoveSpeed + 5 * _MOE.UnityTime.deltaTime
+            self.CurrentMoveSpeed = math.min(1.0, self.CurrentMoveSpeed)
+            self:UpdateSpeedToAnimState()
         end
     end
 end
