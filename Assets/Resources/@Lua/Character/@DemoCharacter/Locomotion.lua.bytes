@@ -10,6 +10,8 @@ end
 -- xlua.private_accessible(CS.Animancer.AnimancerEvent)
 
 function Locomotion:OnInit()
+    Locomotion:CallSuper("OnInit", self)
+
     self.ActionMap = {
         ["Loom_walk_run"] = {
             OnInit = function (animState)
@@ -76,6 +78,7 @@ end
 function Locomotion:OnExit()
     self.CurrentAnimState = nil
     self.MovePt = nil
+    Locomotion:CallSuper("OnExit", self)
 end
 
 function Locomotion:UpdateCurrentMoveSpeed()
@@ -90,6 +93,7 @@ function Locomotion:UpdateCurrentMoveSpeed()
 end
 
 function Locomotion:OnUpdate()
+    Locomotion:CallSuper("OnUpdate", self)
     self:UpdateCurrentMoveSpeed()
 end
 
