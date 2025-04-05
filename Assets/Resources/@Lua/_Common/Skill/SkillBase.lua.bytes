@@ -102,6 +102,26 @@ function SkillBase:PlayAction(translition, isLoop)
     end
 end
 
+function SkillBase:RegisterLuaEventUpdate()
+    if self.m_StateMgr then
+        self.m_StateMgr:RegisterLuaEventUpdate()
+    end
+end
+
+function SkillBase:UnRegisterLuaEventUpdate()
+    if self.m_StateMgr then
+        return self.m_StateMgr:UnRegisterLuaEventUpdate()
+    end
+    return false
+end
+
+function SkillBase:IsRegisterLuaEventUpdate()
+    if self.m_StateMgr then
+        return self.m_StateMgr:IsRegisterLuaEventUpdate()
+    end
+    return false
+end
+
 --------------------------------------- 可继承方法 --------------------------------
 function SkillBase:GetActionNames()
 end
