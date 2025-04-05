@@ -92,7 +92,7 @@ end
 
 PlayerInput.InputActionPhase = {
     Started = CS.UnityEngine.InputSystem.InputActionPhase.started, -- 进入
-    Performed =  CS.UnityEngine.InputSystem.InputActionPhase.Performed, -- 持续
+    Performed =  CS.UnityEngine.InputSystem.InputActionPhase.Performed, -- 已执行
     Canceled = CS.UnityEngine.InputSystem.InputActionPhase.Canceled, -- 取消
 }
 

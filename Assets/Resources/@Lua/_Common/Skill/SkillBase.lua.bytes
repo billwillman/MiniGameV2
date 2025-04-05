@@ -115,4 +115,16 @@ end
 function SkillBase:OnSkillBaseInputEvent(actionName, Context)
 end
 
+function SkillBase:OnInit()
+end
+
+function SkillBase:OnDispose()
+end
+
+function SkillBase:OnEnter()
+end
+
+function SkillBase:OnExit(newStateType)
+end
+
 return SkillBase

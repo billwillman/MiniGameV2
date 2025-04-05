@@ -29,17 +29,31 @@ function Locomotion:OnScriptObjectLoaded(resName, translition)
         self.ActionMap[resName].animState = translition
         local animState = self:PlayAction(translition)
         self.ActionMap[resName].OnInit(animState)
+        self.CurrentAnimState = animState
     end
 end
 
 function Locomotion:OnSkillBaseInputEvent(actionName, Context)
     if actionName == "Move" then
         -- 移动
-        if Context.actionType == _MOE.InputActionPhase.Performed then
-            local movePt = Context:GetVector2D()
-            _MOE.Logger.Log("[movePt]")
+        if Context.actionType == _MOE.InputActionPhase.Performed or Context.actionType == _MOE.InputActionPhase.Canceled then
+            if self.CurrentAnimState  then
+                local movePt = Context:GetVector2D()
+                -- _MOE.Logger.LogFormat("[movePt]: ({0:F}, {1:F})", movePt.x, movePt.y)
+                local SpeedY = 0.5
+                if movePt.y > 0 then
+                    SpeedY = 1.0
+                elseif movePt.y < 0 then
+                    -- SpeedY = 0
+                end
+                self.CurrentAnimState:SetFloat("SpeedY", SpeedY)
+            end
         end
     end
+end
+
+function Locomotion:OnExit()
+    self.CurrentAnimState = nil
 end
 
 return Locomotion
