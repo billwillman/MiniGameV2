@@ -9,7 +9,7 @@ end
 
 function DemoSkillCharacter:_OnPlayerInputMove(actionName, CallbackContext)
     _MOE.Logger.Log("[DemoSkillCharacter] _OnPlayerInputMove")
-    self:OnPlayerInputEvent(actionName, CallbackContext)-- 发送到针对状态
+    self:OnSkillBaseInputEvent(actionName, CallbackContext)-- 发送到针对状态
 end
 
 function DemoSkillCharacter:OnInit()

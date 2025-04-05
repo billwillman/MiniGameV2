@@ -112,7 +112,7 @@ end
 function SkillBase:OnTriggerLuaEvent(...)
 end
 
-function SkillBase:OnPlayerInputEvent(actionName, CallbackContext)
+function SkillBase:OnSkillBaseInputEvent(actionName, CallbackContext)
 end
 
 return SkillBase
