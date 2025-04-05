@@ -99,6 +99,8 @@ PlayerInput.ValueType = {
     PassThrough = CS.UnityEngine.InputSystem.InputActionType.PassThrough,
 }
 
+---------------------------------------------- CallbackContext 处理 ------------------------------------------------
+
 function PlayerInput:TransActionControlContext(CallbackContext)
     if not CallbackContext then
         return
@@ -112,5 +114,23 @@ function PlayerInput:TransActionControlContext(CallbackContext)
     }
     return ret
 end
+
+function PlayerInput:GetVector2DCallbackContext(CallbackContext)
+    if not CallbackContext then
+        return
+    end
+    local ret = _MOE.PlayerInputUtils.GetVector2DCallbackContext(CallbackContext)
+    return ret
+end
+
+function PlayerInput:GetButtonCallbackContext(CallbackContext)
+    if not CallbackContext then
+        return
+    end
+    local ret = _MOE.PlayerInputUtils.GetButtonCallbackContext(CallbackContext)
+    return ret
+end
+
+-------------------------------------------------------------------------------------------------------------------------
 
 return PlayerInput
