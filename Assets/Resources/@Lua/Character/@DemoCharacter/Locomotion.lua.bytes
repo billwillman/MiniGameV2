@@ -83,7 +83,7 @@ function Locomotion:UpdateCurrentMoveSpeed()
         if self.MovePt.y > 0 then
             self.CurrentMoveSpeed = self.CurrentMoveSpeed + 2 * _MOE.UnityTime.deltaTime
             self.CurrentMoveSpeed = math.min(1.0, self.CurrentMoveSpeed)
-            _MOE.Logger.LogFormat("[Locomotion] Speed: {0:F}", self.CurrentMoveSpeed)
+            -- _MOE.Logger.LogFormat("[Locomotion] Speed: {0:F}", self.CurrentMoveSpeed)
             self:UpdateSpeedToAnimState()
         end
     end
