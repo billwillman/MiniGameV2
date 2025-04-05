@@ -62,6 +62,13 @@ namespace SOC.GamePlay
             }
         }
 
+        public bool IsRegisterLuaEvent(int evtType)
+        {
+            LuaFunction func;
+            bool ret = m_LuaEventMap.TryGetValue(evtType, out func) && func != null;
+            return ret;
+        }
+
         public void RegisterLuaEvent(int evtType, LuaFunction func) {
             // UnityEngine.InputSystem.InputAction.CallbackContext context;
             if (m_LuaEventMap == null)
