@@ -13,16 +13,12 @@ function DemoSkillCharacter:_OnPlayerInputMove(actionName, CallbackContext)
 end
 
 function DemoSkillCharacter:OnInit()
-    if _MOE.LuaPlayerInput then
-        _MOE.LuaPlayerInput:RegisterLuaActionCallBack("Move", self._OnPlayerInputMove, self)
-    end
+    self:RegisterInputActionCallBack("Move", self._OnPlayerInputMove)
     self:ChangeState("Locomotion")
 end
 
 function DemoSkillCharacter:OnUnInit()
-    if _MOE.LuaPlayerInput then
-        _MOE.LuaPlayerInput:UnRegisterLuaActionCallBack("Move")
-    end
+    self:UnRegisterInputActionCallBack("Move")
 end
 
 return DemoSkillCharacter

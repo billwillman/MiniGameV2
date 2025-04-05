@@ -191,6 +191,30 @@ function SkillManagerBase:OnPlayerInputEvent(actionName, CallbackContext)
     end
 end
 
+------ 注册InputAction回调
+function SkillManagerBase:RegisterInputActionCallBack(actionName, selfCallBack)
+    if not actionName or not selfCallBack then
+        return false
+    end
+    if _MOE.LuaPlayerInput then
+        _MOE.LuaPlayerInput:RegisterLuaActionCallBack(actionName, selfCallBack, self)
+        return true
+    end
+    return false
+end
+
+----- 解注册InputAction回调
+function SkillManagerBase:UnRegisterInputActionCallBack(actionName)
+    if not actionName then
+        return false
+    end
+    if _MOE.LuaPlayerInput then
+        _MOE.LuaPlayerInput:UnRegisterLuaActionCallBack(actionName)
+        return true
+    end
+    return false
+end
+
 ---------------------------------------- 继承方法 ------------------------
 
 function SkillManagerBase:OnStart()
