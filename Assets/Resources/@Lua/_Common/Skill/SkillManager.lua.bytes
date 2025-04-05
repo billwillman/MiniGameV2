@@ -49,10 +49,29 @@ function SkillManagerBase:Ctor(skillManagerCS, binder)
     if binder ~= nil then
         binder:RegisterLuaEvent(_MOE.LuaEvent_MonoEventType.Start, self.OnStart)
         binder:RegisterLuaEvent(_MOE.LuaEvent_MonoEventType.Destroyed, self.OnDestroyed)
-        binder:RegisterLuaEvent(_MOE.LuaEvent_MonoEventType.Update, self.OnUpdate)
     end
     --
     self.RegisterInputDefaultActionNames = {}
+end
+
+function SkillManagerBase:RegisterLuaEventUpdate()
+    if self.Binder ~= nil then
+        self.Binder:RegisterLuaEvent(_MOE.LuaEvent_MonoEventType.Update, self.OnUpdate)
+    end
+end
+
+function SkillManagerBase:UnRegisterLuaEventUpdate()
+    if self.Binder ~= nil then
+       return self.Binder:UnRegisterLuaEvent(_MOE.LuaEvent_MonoEventType.Update)
+    end
+    return false
+end
+
+function SkillManagerBase:IsRegisterLuaEventUpdate()
+    if self.Binder ~= nil then
+        return self.Binder:IsRegisterLuaEvent(_MOE.LuaEvent_MonoEventType.Update)
+    end
+    return false
 end
 
 function SkillManagerBase:Dispose()
