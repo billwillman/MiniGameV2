@@ -93,11 +93,15 @@ PlayerInput.InputActionPhase = {
     Canceled = CS.UnityEngine.InputSystem.InputActionPhase.Canceled, -- 取消
 }
 
+_MOE.InputActionPhase = PlayerInput.InputActionPhase
+
 PlayerInput.ValueType = {
     Value = CS.UnityEngine.InputSystem.InputActionType.Value,
     Button = CS.UnityEngine.InputSystem.InputActionType.Button,
     PassThrough = CS.UnityEngine.InputSystem.InputActionType.PassThrough,
 }
+
+_MOE.InputValueType = PlayerInput.ValueType
 
 ---------------------------------------------- CallbackContext 处理 ------------------------------------------------
 
