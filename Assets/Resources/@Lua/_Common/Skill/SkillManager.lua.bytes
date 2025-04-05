@@ -47,8 +47,8 @@ function SkillManagerBase:Ctor(skillManagerCS, binder)
 
     -- 注册CS事件
     if binder ~= nil then
-        binder:RegisterLuaEvent(_MOE.LuaEvent_MonoEventType.Start, self.OnStart)
-        binder:RegisterLuaEvent(_MOE.LuaEvent_MonoEventType.Destroyed, self.OnDestroyed)
+        binder:RegisterLuaEvent(_MOE.LuaEvent_MonoEventType.Start:GetHashCode(), self.OnStart)
+        binder:RegisterLuaEvent(_MOE.LuaEvent_MonoEventType.Destroyed:GetHashCode(), self.OnDestroyed)
     end
     --
     self.RegisterInputDefaultActionNames = {}
@@ -56,20 +56,20 @@ end
 
 function SkillManagerBase:RegisterLuaEventUpdate()
     if self.Binder ~= nil then
-        self.Binder:RegisterLuaEvent(_MOE.LuaEvent_MonoEventType.Update, self.OnUpdate)
+        self.Binder:RegisterLuaEvent(_MOE.LuaEvent_MonoEventType.Update:GetHashCode(), self.OnUpdate)
     end
 end
 
 function SkillManagerBase:UnRegisterLuaEventUpdate()
     if self.Binder ~= nil then
-       return self.Binder:UnRegisterLuaEvent(_MOE.LuaEvent_MonoEventType.Update)
+       return self.Binder:UnRegisterLuaEvent(_MOE.LuaEvent_MonoEventType.Update:GetHashCode())
     end
     return false
 end
 
 function SkillManagerBase:IsRegisterLuaEventUpdate()
     if self.Binder ~= nil then
-        return self.Binder:IsRegisterLuaEvent(_MOE.LuaEvent_MonoEventType.Update)
+        return self.Binder:IsRegisterLuaEvent(_MOE.LuaEvent_MonoEventType.Update:GetHashCode())
     end
     return false
 end
