@@ -24,6 +24,10 @@ function Locomotion:OnInit()
         }
     }
     self.CurrentMoveSpeed = 0
+    local CameraGameObj = _MOE.GameObject.FindGameObjectWithTag("MainCamera")
+    if CameraGameObj then
+        self.Camera = CameraGameObj:GetComponent(typeof(CS.UnityEngine.Camera))
+    end
 end
 
 function Locomotion:OnScriptObjectLoaded(resName, translition)
@@ -75,10 +79,20 @@ function Locomotion:OnSkillBaseInputEvent(actionName, Context)
     end
 end
 
-function Locomotion:OnExit()
+function Locomotion:ResetData()
     self.CurrentAnimState = nil
     self.MovePt = nil
+    self.Camera = nil
+end
+
+function Locomotion:OnExit()
+    self:ResetData()
     Locomotion:CallSuper("OnExit", self)
+end
+
+function Locomotion:OnDispose()
+    self:ResetData()
+    Locomotion:CallSuper("OnDispose", self)
 end
 
 function Locomotion:UpdateCurrentMoveSpeed()
