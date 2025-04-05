@@ -147,4 +147,7 @@ end
 function SkillBase:OnExit(newStateType)
 end
 
+function SkillBase:OnUpdate()
+end
+
 return SkillBase

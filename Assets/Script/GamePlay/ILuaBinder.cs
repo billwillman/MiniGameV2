@@ -73,6 +73,8 @@ namespace SOC.GamePlay
             // UnityEngine.InputSystem.InputAction.CallbackContext context;
             if (m_LuaEventMap == null)
                 m_LuaEventMap = new Dictionary<int, LuaFunction>();
+            else
+                UnRegisterLuaEvent(evtType);
             m_LuaEventMap[evtType] = func;
         }
 
@@ -80,7 +82,14 @@ namespace SOC.GamePlay
         {
             if (m_LuaEventMap == null)
                 return false;
-            return m_LuaEventMap.Remove(evtType);
+            LuaFunction func;
+            if (m_LuaEventMap.TryGetValue(evtType, out func))
+            {
+                if (func != null)
+                    func.Dispose();
+                return m_LuaEventMap.Remove(evtType);
+            }
+            return false;
         }
 
         public System.Object[] CallCustomLuaFunc(string evtName, params System.Object[] param) {

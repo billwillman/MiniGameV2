@@ -21,6 +21,7 @@ function Locomotion:OnInit()
             end
         }
     }
+    self.CurrentMoveSpeed = 0
 end
 
 function Locomotion:OnScriptObjectLoaded(resName, translition)
@@ -33,6 +34,25 @@ function Locomotion:OnScriptObjectLoaded(resName, translition)
     end
 end
 
+function Locomotion:GetCurrentMoveSpeed()
+    return self.CurrentMoveSpeed or 0
+end
+
+function Locomotion:UpdateSpeedToAnimState()
+    if self.CurrentAnimState then
+        local SpeedY = 0.5 + self:GetCurrentMoveSpeed()
+        self.CurrentAnimState:SetFloat("SpeedY", SpeedY)
+    end
+end
+
+-- 重置IDLE
+function Locomotion:ResetIdle()
+    self.CurrentMoveSpeed = 0
+    self:UpdateSpeedToAnimState()
+    self:UnRegisterLuaEventUpdate()
+    self.MovePt = nil
+end
+
 function Locomotion:OnSkillBaseInputEvent(actionName, Context)
     if actionName == "Move" then
         -- 移动
@@ -40,13 +60,14 @@ function Locomotion:OnSkillBaseInputEvent(actionName, Context)
             if self.CurrentAnimState  then
                 local movePt = Context:GetVector2D()
                 -- _MOE.Logger.LogFormat("[movePt]: ({0:F}, {1:F})", movePt.x, movePt.y)
-                local SpeedY = 0.5
                 if movePt.y > 0 then
-                    SpeedY = 1.0
-                elseif movePt.y < 0 then
-                    -- SpeedY = 0
+                    self.MovePt = movePt
+                   if not self:IsRegisterLuaEventUpdate() then
+                        self:RegisterLuaEventUpdate()
+                   end
+                else
+                    self:ResetIdle() -- 重置IDLE
                 end
-                self.CurrentAnimState:SetFloat("SpeedY", SpeedY)
             end
         end
     end
@@ -54,6 +75,15 @@ end
 
 function Locomotion:OnExit()
     self.CurrentAnimState = nil
+    self.MovePt = nil
+end
+
+function Locomotion:OnUpdate()
+    if self.MovePt ~= nil then
+        if self.MovePt.y > 0 then
+            self.CurrentMoveSpeed = self.CurrentMoveSpeed + 5 * _MOE.UnityTime.deltaTime
+        end
+    end
 end
 
 return Locomotion
