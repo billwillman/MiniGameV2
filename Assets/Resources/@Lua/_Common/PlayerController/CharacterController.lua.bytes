@@ -36,7 +36,9 @@ function BaseCharacterController:OnDestroy()
 
     self.CharacterController = nil
     self.Binder = nil
-    _MOE.LocalLuaCharacterController = nil
+    if not _MOE.IsDS then
+        _MOE.LocalLuaCharacterController = nil
+    end
 end
 
 return BaseCharacterController
