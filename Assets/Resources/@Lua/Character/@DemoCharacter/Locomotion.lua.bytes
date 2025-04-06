@@ -50,12 +50,15 @@ end
 
 -- 重置IDLE
 function Locomotion:ResetIdle()
+    self:UnRegisterCharacterKCC()
+
     self.CurrentMoveSpeed = 0
     self:UpdateSpeedToAnimState()
     self:UnRegisterLuaEventUpdate()
     self.MovePt = nil
 end
 
+-- 根据相机更新角色朝向（暂时这样直接硬切，后续用子状态机来切换状态，限定一个范围，超过范围，则做一个快速转动后再移动，再范围内再硬切）
 function Locomotion:UpdateForwardByControlCamera()
     if self.Camera then
         local forward = self.Camera.transform.forward
@@ -69,6 +72,40 @@ function Locomotion:UpdateForwardByControlCamera()
     end
 end
 
+function Locomotion:OnKcc_UpdateRotation()
+end
+
+function Locomotion:RegisterCharacterKCC()
+    local luaPlayerController = _MOE.LocalLuaCharacterController
+    if luaPlayerController then
+        local kccController = luaPlayerController:GetKCC_CharacterController()
+        if kccController then
+            self:RegsterCSharpEvent(kccController, "onUpdateRotation", self.OnKcc_UpdateRotation)
+        end
+    end
+end
+
+function Locomotion:UnRegisterCharacterKCC()
+    local luaPlayerController = _MOE.LocalLuaCharacterController
+    if luaPlayerController then
+        local kccController = luaPlayerController:GetKCC_CharacterController()
+        if kccController then
+            self:UnRegsterCSharpEvent(kccController, "onUpdateRotation")
+        end
+    end
+end
+
+function Locomotion:BeginMoveControl()
+    if not self:IsRegisterLuaEventUpdate() then
+        self:RegisterLuaEventUpdate()
+        xpcall(self.RegisterCharacterKCC, _G.ErrorHandler, self)
+   end
+end
+
+function Locomotion:EndMoveControl()
+    self:ResetIdle() -- 重置IDLE
+end
+
 function Locomotion:OnSkillBaseInputEvent(actionName, Context)
     if actionName == "Move" then
         -- 移动
@@ -78,12 +115,9 @@ function Locomotion:OnSkillBaseInputEvent(actionName, Context)
                 -- _MOE.Logger.LogFormat("[movePt]: ({0:F}, {1:F})", movePt.x, movePt.y)
                 if movePt.y > 0 then
                     self.MovePt = movePt
-                    self:UpdateForwardByControlCamera() -- 根据相机更新角色朝向（暂时这样直接硬切，后续用子状态机来切换状态，限定一个范围，超过范围，则做一个快速转动后再移动，再范围内再硬切）
-                   if not self:IsRegisterLuaEventUpdate() then
-                        self:RegisterLuaEventUpdate()
-                   end
+                    self:BeginMoveControl()
                 else
-                    self:ResetIdle() -- 重置IDLE
+                    self:EndMoveControl()
                 end
             end
         end
@@ -97,11 +131,13 @@ function Locomotion:ResetData()
 end
 
 function Locomotion:OnExit()
+    xpcall(self.UnRegisterCharacterKCC, _G.ErrorHandler, self)
     self:ResetData()
     Locomotion:CallSuper("OnExit", self)
 end
 
 function Locomotion:OnDispose()
+    xpcall(self.UnRegisterCharacterKCC, _G.ErrorHandler, self)
     self:ResetData()
     Locomotion:CallSuper("OnDispose", self)
 end
