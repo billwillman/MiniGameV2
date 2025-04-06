@@ -56,6 +56,7 @@ function Locomotion:ResetIdle()
     self:UpdateSpeedToAnimState()
     self:UnRegisterLuaEventUpdate()
     self.MovePt = nil
+    self.RotAngle = nil
 end
 
 -- 根据相机更新角色朝向（暂时这样直接硬切，后续用子状态机来切换状态，限定一个范围，超过范围，则做一个快速转动后再移动，再范围内再硬切）
@@ -63,16 +64,19 @@ function Locomotion:UpdateForwardByControlCamera()
     if self.Camera then
         local forward = self.Camera.transform.forward
         forward.y = 0
-        local transform = self:GetOwnerTransform()
+        -- local transform = self:GetOwnerTransform()
         local originforward = _MOE.Vector3(0, 0, 1)
         -- 旋转
         local angle = _MOE.Vector3.Angle(originforward, forward)
         angle = forward.x < 0 and -angle or angle
-        transform.eulerAngles = _MOE.Vector3(0, angle, 0)
+        self.RotAngle = angle
     end
 end
 
 function Locomotion:OnKcc_UpdateRotation(quat, deltaTime)
+    if self.RotAngle then
+        quat = _MOE.Quaternion.Euler(0, self.RotAngle, 0)
+    end
     return quat
 end
 
