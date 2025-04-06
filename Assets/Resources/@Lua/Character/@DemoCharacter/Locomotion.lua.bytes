@@ -72,27 +72,16 @@ function Locomotion:UpdateForwardByControlCamera()
     end
 end
 
-function Locomotion:OnKcc_UpdateRotation()
+function Locomotion:OnKcc_UpdateRotation(quat, deltaTime)
+    return quat
 end
 
 function Locomotion:RegisterCharacterKCC()
-    local luaPlayerController = _MOE.LocalLuaCharacterController
-    if luaPlayerController then
-        local kccController = luaPlayerController:GetKCC_CharacterController()
-        if kccController then
-            self:RegsterCSharpEvent(kccController, "onUpdateRotation", self.OnKcc_UpdateRotation)
-        end
-    end
+    self:RegisterKCC_Controller_Event("onUpdateRotation", self.OnKcc_UpdateRotation)
 end
 
 function Locomotion:UnRegisterCharacterKCC()
-    local luaPlayerController = _MOE.LocalLuaCharacterController
-    if luaPlayerController then
-        local kccController = luaPlayerController:GetKCC_CharacterController()
-        if kccController then
-            self:UnRegsterCSharpEvent(kccController, "onUpdateRotation")
-        end
-    end
+    self:UnRegisterKCC_Controller_Event("onUpdateRotation")
 end
 
 function Locomotion:BeginMoveControl()
