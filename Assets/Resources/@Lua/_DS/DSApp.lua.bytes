@@ -41,7 +41,7 @@ end
 
 local function GetTestParams()
     -- ds的服务器数据和GS的服务器数据
-    local json = "{'dsData':{'ip':'0.0.0.0','port':7777, 'scene': 'MultiScene'},'GsData':{'ip':'127.0.0.1','port':1991}}"
+    local json = "{'dsData':{'ip':'0.0.0.0','port':7777, 'scene': 'Playground'},'GsData':{'ip':'127.0.0.1','port':1991}}"
     json = string.gsub(json, "'", "\"")
     return _MOE.Json.decode(json)
 end
