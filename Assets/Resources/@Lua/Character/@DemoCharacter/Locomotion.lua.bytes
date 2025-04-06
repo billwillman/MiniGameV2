@@ -91,8 +91,11 @@ function Locomotion:UnRegisterCharacterKCC()
 end
 
 function Locomotion:BeginMoveControl()
+    --[[
     if not self:IsRegisterLuaEventUpdate() then
         self:RegisterLuaEventUpdate()
+    ]]
+    if not self:HasCSharpEvent("onUpdateRotation") then
         xpcall(self.RegisterCharacterKCC, _G.ErrorHandler, self)
    end
 end
@@ -151,12 +154,12 @@ function Locomotion:UpdateCurrentMoveSpeed(deltaTime)
     end
 end
 
+--[[
 function Locomotion:OnUpdate()
     Locomotion:CallSuper("OnUpdate", self)
-    --[[
     self:UpdateRotAngleByControlCamera()
     self:UpdateCurrentMoveSpeed()
-    ]]
 end
+]]
 
 return Locomotion

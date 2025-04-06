@@ -19,6 +19,18 @@ function CSharpEventContainer:RegsterCSharpEvent(csharpObj, eventName, func)
     end
 end
 
+function CSharpEventContainer:HasCSharpEvent(csharpObj, eventName)
+    if not csharpObj or not eventName then
+        return false
+    end
+    local events = self.CSharpEvents[csharpObj]
+    if not events then
+        return false
+    end
+    local ret = events[eventName] ~= nil
+    return ret
+end
+
 function CSharpEventContainer:UnRegsterCSharpEvent(csharpObj, eventName)
     if not csharpObj or not eventName or not self.CSharpEvents then
         return
