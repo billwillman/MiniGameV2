@@ -15,25 +15,29 @@ function DemoCharacter:Ctor(pawnObj, binder)
 end
 
 function DemoCharacter:OnNetworkSpawn()
-    if self.PawnObj and self.PawnObj.IsOwner then
-        local view = self.PawnObj:GetComponent(typeof(CS.JohnStairs.RCC.Character.Cam.RPGViewFrustum))
-        if view then
-            view.enabled = true
+    if not _MOE.IsDS then
+        if self.PawnObj and self.PawnObj.IsOwner then
+            local view = self.PawnObj:GetComponent(typeof(CS.JohnStairs.RCC.Character.Cam.RPGViewFrustum))
+            if view then
+                view.enabled = true
+            end
+            local cam = self.PawnObj:GetComponent(typeof(CS.JohnStairs.RCC.Character.Cam.RPGCamera))
+            if cam then
+                cam.enabled = true
+                cam.ActivateControl = true
+            end
+            --- 事件通知CharacterController
+            _MOE.EventManager:DispatchEvent("On_Local_Character_ReceiveBegin", self)
         end
-        local cam = self.PawnObj:GetComponent(typeof(CS.JohnStairs.RCC.Character.Cam.RPGCamera))
-        if cam then
-            cam.enabled = true
-            cam.ActivateControl = true
-        end
-        --- 事件通知CharacterController
-        _MOE.EventManager:DispatchEvent("On_Local_Character_ReceiveBegin", self)
     end
 end
 
 function DemoCharacter:OnNetworkDespawn()
-    if self.PawnObj and self.PawnObj.IsOwner then
-        --- 事件通知CharacterController
-        _MOE.EventManager:DispatchEvent("On_Local_Character_ReceiveEnd", self)
+    if not _MOE.IsDS then
+        if self.PawnObj and self.PawnObj.IsOwner then
+            --- 事件通知CharacterController
+            _MOE.EventManager:DispatchEvent("On_Local_Character_ReceiveEnd", self)
+        end
     end
 end
 
