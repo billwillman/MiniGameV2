@@ -60,6 +60,10 @@ public static class ExampleGenConfig
                 typeof(Func<string, Action, bool>),
                 typeof(List<ulong>),
                 typeof(NetworkSceneManager.OnEventCompletedDelegateHandler),
+                // KCC PlayerController
+                typeof(Func<Quaternion, float, Quaternion>),
+                typeof(Func<Vector3, float, Vector3>),
+                typeof(Func<Collider, bool>),
                 // RPC Event
                 typeof(Action<string, string>),
                 typeof(Action<ulong, string, string>),
@@ -87,6 +91,10 @@ public static class ExampleGenConfig
                 typeof(Func<string, Action, bool>),
                 typeof(List<ulong>),
                 typeof(NetworkSceneManager.OnEventCompletedDelegateHandler),
+                // KCC PlayerController
+                typeof(Func<Quaternion, float, Quaternion>),
+                typeof(Func<Vector3, float, Vector3>),
+                typeof(Func<Collider, bool>),
                 // RPC Event
                 typeof(Action<string, string>),
                 typeof(Action<ulong, string, string>),
