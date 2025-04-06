@@ -30,6 +30,14 @@ namespace SOC.GamePlay
                 m_CharacterMotor.CharacterController = this;
         }
 
+        public KinematicCharacterMotor Motor
+        {
+            get
+            {
+                return m_CharacterMotor;
+            }
+        }
+
         void InitSkinMesh() {
            
         }
