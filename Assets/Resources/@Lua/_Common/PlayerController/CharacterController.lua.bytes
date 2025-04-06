@@ -22,6 +22,10 @@ function BaseCharacterController:On_Local_Character_ReceiveBegin()
     end
 end
 
+function BaseCharacterController:GetKCC_CharacterController()
+    return self.CharacterController
+end
+
 function BaseCharacterController:On_Local_Character_ReceiveEnd()
 end
 
