@@ -61,7 +61,8 @@ function Locomotion:UpdateForwardByControlCamera()
         local forward = self.Camera.transform.forward
         forward.y = 0
         local transform = self:GetOwnerTransform()
-        transform.forward = forward
+        local originforward = transform.forward
+        -- 旋转
     end
 end
 
