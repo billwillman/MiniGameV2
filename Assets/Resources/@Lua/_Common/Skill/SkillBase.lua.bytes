@@ -180,6 +180,8 @@ function SkillBase:OnDispose()
         self.SubStateManager:Dispose()
         self.SubStateManager = nil
     end
+
+    self:UnRegsterAllCsharpEvents()
 end
 
 function SkillBase:OnEnter()
