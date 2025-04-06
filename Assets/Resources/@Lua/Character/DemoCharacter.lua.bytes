@@ -37,6 +37,12 @@ function DemoCharacter:OnNetworkDespawn()
     end
 end
 
+function DemoCharacter:GetOwnerGameObject()
+    if self.PawnObj then
+        return self.PawnObj.gameObject
+    end
+end
+
 function DemoCharacter:OnDestroy()
     self:UnRegsterAllCsharpEvents()
 

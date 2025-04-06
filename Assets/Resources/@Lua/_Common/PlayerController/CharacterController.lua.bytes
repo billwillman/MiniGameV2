@@ -16,10 +16,16 @@ function BaseCharacterController:Ctor(CharacterController, binder)
     end
 end
 
-function BaseCharacterController:On_Local_Character_ReceiveBegin()
-    local kccController = self:GetKCCharacterController()
-    if kccController then
-        kccController.enabled = true
+function BaseCharacterController:On_Local_Character_ReceiveBegin(character)
+    if not character then
+        return
+    end
+    local gameObject = character:GetOwnerGameObject()
+    if gameObject then
+        local kccController = self:GetKCCharacterController()
+        if kccController and kccController.gameObject == gameObject then
+            kccController.enabled = true
+        end
     end
 end
 
