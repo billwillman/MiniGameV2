@@ -6,6 +6,7 @@ using KinematicCharacterController;
 using Animancer;
 using System.Collections.Generic;
 using System;
+using XLua;
 
 namespace SOC.GamePlay
 {
@@ -42,36 +43,42 @@ namespace SOC.GamePlay
            
         }
 
+        [CSharpCallLua]
         public Func<Quaternion, float, Quaternion> onUpdateRotation
         {
             get;
             set;
         }
 
+        [CSharpCallLua]
         public Func<Vector3, float, Vector3> onUpdateVelocity
         {
             get;
             set;
         }
 
+        [CSharpCallLua]
         public Action<float> onBeforeCharacterUpdate
         {
             get;
             set;
         }
 
+        [CSharpCallLua]
         public Action<float> onPostGroundingUpdate
         {
             get;
             set;
         }
 
+        [CSharpCallLua]
         public Action<float> onAfterCharacterUpdate
         {
             get;
             set;
         }
 
+        [CSharpCallLua]
         public Func<Collider, bool> onIsColliderValidForCollisions
         {
             get;
