@@ -63,6 +63,8 @@ function Locomotion:UpdateForwardByControlCamera()
         local transform = self:GetOwnerTransform()
         local originforward = transform.forward
         -- 旋转
+        local angle = _MOE.Vector3.Angle(originforward, forward)
+        transform.eulerAngles = _MOE.Vector3(0, angle, 0)
     end
 end
 
