@@ -53,7 +53,7 @@ function Locomotion:ResetIdle()
     self:UnRegisterCharacterKCC()
 
     self.CurrentMoveSpeed = 0
-    self:ApplyMoeCharacterDefaultVelocity(0)
+    self:ApplyZeroMoeCharacterDefaultVelocity()
     self:UpdateSpeedToAnimState()
     self:UnRegisterLuaEventUpdate()
     self.MovePt = nil
@@ -91,7 +91,7 @@ function Locomotion:UpdateKCC_CurrentVelecity()
             self:ApplyMoeCharacterDefaultVelocity(currentVelocity)
         end
     else
-        self:ApplyMoeCharacterDefaultVelocity(0)
+        self:ApplyZeroMoeCharacterDefaultVelocity()
     end
 end
 
@@ -143,14 +143,14 @@ end
 
 function Locomotion:OnExit()
     xpcall(self.UnRegisterCharacterKCC, _G.ErrorHandler, self)
-    self:ApplyMoeCharacterDefaultVelocity(0)
+    self:ApplyZeroMoeCharacterDefaultVelocity()
     self:ResetData()
     Locomotion:CallSuper("OnExit", self)
 end
 
 function Locomotion:OnDispose()
     xpcall(self.UnRegisterCharacterKCC, _G.ErrorHandler, self)
-    self:ApplyMoeCharacterDefaultVelocity(0)
+    self:ApplyZeroMoeCharacterDefaultVelocity()
     self:ResetData()
     Locomotion:CallSuper("OnDispose", self)
 end

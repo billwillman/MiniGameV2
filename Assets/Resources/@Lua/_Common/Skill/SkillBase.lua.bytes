@@ -187,6 +187,10 @@ function SkillBase:ApplyMoeCharacterDefaultVelocity(currentVelocity)
         moeController.CurrentVelocity = currentVelocity
     end
 end
+
+function SkillBase:ApplyZeroMoeCharacterDefaultVelocity()
+    self:ApplyMoeCharacterDefaultVelocity(_MOE.Vector3.Zero)
+end
 --------------------------------------- 可继承方法 --------------------------------
 function SkillBase:GetActionNames()
 end
