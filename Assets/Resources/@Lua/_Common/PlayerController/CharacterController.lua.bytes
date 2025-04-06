@@ -12,6 +12,7 @@ function BaseCharacterController:Ctor(CharacterController, binder)
     if not _MOE.IsDS then
         -- Client操作
         self:RegsterCSharpEvent()
+        _MOE.LocalLuaCharacterController = self -- 局部Character Controller
     end
 end
 
@@ -35,6 +36,7 @@ function BaseCharacterController:OnDestroy()
 
     self.CharacterController = nil
     self.Binder = nil
+    _MOE.LocalLuaCharacterController = nil
 end
 
 return BaseCharacterController
