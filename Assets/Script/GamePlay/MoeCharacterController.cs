@@ -24,8 +24,15 @@ namespace SOC.GamePlay
 
         public Vector3 CurrentVelocity
         {
-            get;
-            set;
+            get
+            {
+                return m_CharacterMotor.BaseVelocity;
+            }
+
+            set
+            {
+                m_CharacterMotor.BaseVelocity = value;
+            }
         }
 
         public List<SkinnedMeshRenderer> m_OtherSkinedMeshList = null;
@@ -105,11 +112,6 @@ namespace SOC.GamePlay
         virtual public void UpdateVelocity(ref Vector3 currentVelocity, float deltaTime) {
             if (onUpdateVelocity != null)
                 currentVelocity = onUpdateVelocity(currentVelocity, deltaTime);
-            else
-            {
-                // Ä¬ÈÏ´¦Àí
-                currentVelocity = CurrentVelocity;
-            }
         }
         /// <summary>
         /// This is called before the motor does anything
