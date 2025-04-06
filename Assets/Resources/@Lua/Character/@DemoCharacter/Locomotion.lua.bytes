@@ -74,6 +74,8 @@ function Locomotion:UpdateRotAngleByControlCamera()
 end
 
 function Locomotion:OnKcc_UpdateRotation(quat, deltaTime)
+    self:UpdateRotAngleByControlCamera()
+    self:UpdateCurrentMoveSpeed(deltaTime)
     if self.RotAngle then
         quat = _MOE.Quaternion.Euler(0, self.RotAngle, 0)
     end
@@ -151,8 +153,10 @@ end
 
 function Locomotion:OnUpdate()
     Locomotion:CallSuper("OnUpdate", self)
+    --[[
     self:UpdateRotAngleByControlCamera()
     self:UpdateCurrentMoveSpeed()
+    ]]
 end
 
 return Locomotion
