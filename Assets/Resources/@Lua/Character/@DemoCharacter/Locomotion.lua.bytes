@@ -135,10 +135,13 @@ function Locomotion:OnDispose()
     Locomotion:CallSuper("OnDispose", self)
 end
 
-function Locomotion:UpdateCurrentMoveSpeed()
+function Locomotion:UpdateCurrentMoveSpeed(deltaTime)
     if self.MovePt ~= nil then
         if self.MovePt.y > 0 then
-            self.CurrentMoveSpeed = self.CurrentMoveSpeed + 2 * _MOE.UnityTime.deltaTime
+            if deltaTime == nil then
+                deltaTime = _MOE.UnityTime.deltaTime
+            end
+            self.CurrentMoveSpeed = self.CurrentMoveSpeed + 2 * deltaTime
             self.CurrentMoveSpeed = math.min(1.0, self.CurrentMoveSpeed)
             -- _MOE.Logger.LogFormat("[Locomotion] Speed: {0:F}", self.CurrentMoveSpeed)
             self:UpdateSpeedToAnimState()
