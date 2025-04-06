@@ -17,7 +17,7 @@ function BaseCharacterController:Ctor(CharacterController, binder)
 end
 
 function BaseCharacterController:On_Local_Character_ReceiveBegin()
-    local kccController = self:GetKCC_CharacterController()
+    local kccController = self:GetKCCharacterController()
     if kccController then
         kccController.enabled = true
     end
