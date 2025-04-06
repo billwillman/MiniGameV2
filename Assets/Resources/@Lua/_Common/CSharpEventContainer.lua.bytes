@@ -15,7 +15,7 @@ function CSharpEventContainer:RegsterCSharpEvent(csharpObj, eventName, func)
     end
     events[eventName] = func
     csharpObj[eventName] = function (...)
-        func(self, ...)
+        return func(self, ...)
     end
 end
 
