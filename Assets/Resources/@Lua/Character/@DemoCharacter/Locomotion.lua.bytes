@@ -53,6 +53,7 @@ function Locomotion:ResetIdle()
     self:UnRegisterCharacterKCC()
 
     self.CurrentMoveSpeed = 0
+    self:ApplyMoeCharacterDefaultVelocity(0)
     self:UpdateSpeedToAnimState()
     self:UnRegisterLuaEventUpdate()
     self.MovePt = nil
@@ -80,6 +81,18 @@ function Locomotion:OnKcc_UpdateRotation(quat, deltaTime)
         quat = _MOE.Quaternion.Euler(0, self.RotAngle, 0)
     end
     return quat
+end
+
+function Locomotion:UpdateKCC_CurrentVelecity()
+    if self.CurrentMoveSpeed then
+        local transform = self:GetLocalCharacterTransform()
+        if transform then
+            local currentVelocity = transform.forward * self.CurrentMoveSpeed * 5.0
+            self:ApplyMoeCharacterDefaultVelocity(currentVelocity)
+        end
+    else
+        self:ApplyMoeCharacterDefaultVelocity(0)
+    end
 end
 
 function Locomotion:RegisterCharacterKCC()
@@ -130,12 +143,14 @@ end
 
 function Locomotion:OnExit()
     xpcall(self.UnRegisterCharacterKCC, _G.ErrorHandler, self)
+    self:ApplyMoeCharacterDefaultVelocity(0)
     self:ResetData()
     Locomotion:CallSuper("OnExit", self)
 end
 
 function Locomotion:OnDispose()
     xpcall(self.UnRegisterCharacterKCC, _G.ErrorHandler, self)
+    self:ApplyMoeCharacterDefaultVelocity(0)
     self:ResetData()
     Locomotion:CallSuper("OnDispose", self)
 end
@@ -150,6 +165,7 @@ function Locomotion:UpdateCurrentMoveSpeed(deltaTime)
             self.CurrentMoveSpeed = math.min(1.0, self.CurrentMoveSpeed)
             -- _MOE.Logger.LogFormat("[Locomotion] Speed: {0:F}", self.CurrentMoveSpeed)
             self:UpdateSpeedToAnimState()
+            self:UpdateKCC_CurrentVelecity()
         end
     end
 end

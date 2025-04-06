@@ -23,11 +23,27 @@ function BaseCharacterController:On_Local_Character_ReceiveBegin()
     end
 end
 
+function BaseCharacterController:GetOwnerCharacter()
+    local controller = self:GetMoeCharacterController()
+    if controller then
+        local ret = controller.gameObject
+        return ret
+    end
+end
+
+function BaseCharacterController:GetOwnerCharacterTransform()
+    local controller = self:GetMoeCharacterController()
+    if controller then
+        local ret = controller.transform
+        return ret
+    end
+end
+
 function BaseCharacterController:GetMoeCharacterController()
     return self.CharacterController
 end
 
-function BaseCharacterController:GetKCC_CharacterController()
+function BaseCharacterController:GetKCCharacterController()
     local moeCharacterController = self:GetMoeCharacterController()
     if moeCharacterController then
         return moeCharacterController.Motor

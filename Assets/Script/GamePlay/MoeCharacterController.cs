@@ -22,6 +22,12 @@ namespace SOC.GamePlay
         public SkinnedMeshRenderer m_Weapon = null;
         public SkinnedMeshRenderer m_Hair = null;
 
+        public Vector3 CurrentVelocity
+        {
+            get;
+            set;
+        }
+
         public List<SkinnedMeshRenderer> m_OtherSkinedMeshList = null;
 
         void Awake() {
@@ -99,6 +105,11 @@ namespace SOC.GamePlay
         virtual public void UpdateVelocity(ref Vector3 currentVelocity, float deltaTime) {
             if (onUpdateVelocity != null)
                 currentVelocity = onUpdateVelocity(currentVelocity, deltaTime);
+            else
+            {
+                // Ä¬ÈÏ´¦Àí
+                currentVelocity = CurrentVelocity;
+            }
         }
         /// <summary>
         /// This is called before the motor does anything

@@ -159,6 +159,34 @@ function SkillBase:UnRegisterKCC_Controller_Event(evtName)
     end
 end
 
+function SkillBase:GetLocalCharacterGameObject()
+    local luaPlayerController = _MOE.LocalLuaCharacterController
+    if luaPlayerController then
+        return luaPlayerController:GetOwnerCharacter()
+    end
+end
+
+function SkillBase:GetLocalCharacterTransform()
+    local luaPlayerController = _MOE.LocalLuaCharacterController
+    if luaPlayerController then
+        return luaPlayerController:GetOwnerCharacterTransform()
+    end
+end
+
+function SkillBase:GetLocalMoeCharacterController()
+    local luaPlayerController = _MOE.LocalLuaCharacterController
+    if luaPlayerController then
+        local moeCharacterController = luaPlayerController:GetMoeCharacterController()
+        return moeCharacterController
+    end
+end
+
+function SkillBase:ApplyMoeCharacterDefaultVelocity(currentVelocity)
+    local moeController = self:GetLocalMoeCharacterController()
+    if moeController then
+        moeController.CurrentVelocity = currentVelocity
+    end
+end
 --------------------------------------- 可继承方法 --------------------------------
 function SkillBase:GetActionNames()
 end
