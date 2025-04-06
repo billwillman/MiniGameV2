@@ -105,9 +105,9 @@ namespace SOC.GamePlay
             {
                 // var pawnNetworkObject = PawnClassPrefab.GetComponent<NetworkObject>();
                 //Pawn = this.NetworkManager.SpawnManager.InstantiateAndSpawn(pawnNetworkObject, OwnerClientId, false, true, true);  //OwnerClientId
-                string name = PawnClassPrefab.gameObject.name;
+                //string name = PawnClassPrefab.gameObject.name;
                 var gameObj = GameObject.Instantiate(PawnClassPrefab.gameObject);
-                gameObj.name = name;
+                //gameObj.name = name;
                 Pawn = gameObj.GetComponent<NetworkObject>();
                 if (Pawn != null)
                 {
