@@ -142,9 +142,9 @@ end
 function SkillBase:RegisterKCC_Controller_Event(evtName, selfFunc)
     local luaPlayerController = _MOE.LocalLuaCharacterController
     if luaPlayerController then
-        local kccController = luaPlayerController:GetKCC_CharacterController()
-        if kccController then
-            self:RegsterCSharpEvent(kccController, evtName, selfFunc)
+        local moeController = luaPlayerController:GetMoeCharacterController()
+        if moeController then
+            self:RegsterCSharpEvent(moeController, evtName, selfFunc)
         end
     end
 end
@@ -152,9 +152,9 @@ end
 function SkillBase:UnRegisterKCC_Controller_Event(evtName)
     local luaPlayerController = _MOE.LocalLuaCharacterController
     if luaPlayerController then
-        local kccController = luaPlayerController:GetKCC_CharacterController()
-        if kccController then
-            self:UnRegsterCSharpEvent(kccController, evtName)
+        local moeController = luaPlayerController:GetMoeCharacterController()
+        if moeController then
+            self:UnRegsterCSharpEvent(moeController, evtName)
         end
     end
 end

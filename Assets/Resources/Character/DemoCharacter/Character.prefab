@@ -324,7 +324,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   LuaPath: _Common.PlayerController.CharacterController
-  SelfTarget: {fileID: 8124919132055127080}
+  SelfTarget: {fileID: 1780554797349565579}
   CustomLuaFunctionName: []
   bInitCustomLuaFunctionInStart: 0
 --- !u!114 &5381336624466941795

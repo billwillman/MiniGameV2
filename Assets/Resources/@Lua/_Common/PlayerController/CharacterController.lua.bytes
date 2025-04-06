@@ -17,13 +17,21 @@ function BaseCharacterController:Ctor(CharacterController, binder)
 end
 
 function BaseCharacterController:On_Local_Character_ReceiveBegin()
-    if self.CharacterController then
-        self.CharacterController.enabled = true
+    local kccController = self:GetKCC_CharacterController()
+    if kccController then
+        kccController.enabled = true
     end
 end
 
-function BaseCharacterController:GetKCC_CharacterController()
+function BaseCharacterController:GetMoeCharacterController()
     return self.CharacterController
+end
+
+function BaseCharacterController:GetKCC_CharacterController()
+    local moeCharacterController = self:GetMoeCharacterController()
+    if moeCharacterController then
+        return moeCharacterController.Motor
+    end
 end
 
 function BaseCharacterController:On_Local_Character_ReceiveEnd()
