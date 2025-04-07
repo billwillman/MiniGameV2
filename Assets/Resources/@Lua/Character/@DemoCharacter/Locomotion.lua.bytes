@@ -31,9 +31,11 @@ function Locomotion:OnScriptObjectLoaded(resName, translition)
     _MOE.Logger.LogFormat("[Locomotion] resName: {0}", resName)
     if translition and self.ActionMap[resName] then
         self.ActionMap[resName].animState = translition
-        local animState = self:PlayAction(translition)
-        self.ActionMap[resName].OnInit(animState)
-        self.CurrentAnimState = animState
+		if not _MOE.IsDS then
+			local animState = self:PlayAction(translition)
+			self.ActionMap[resName].OnInit(animState)
+			self.CurrentAnimState = animState
+		end
     end
 end
 
