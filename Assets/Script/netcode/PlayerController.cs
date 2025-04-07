@@ -209,6 +209,10 @@ namespace SOC.GamePlay
         [XLua.BlackList]
         public NetworkVariable<ulong> PawnId = new NetworkVariable<ulong>(default, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
+        // Int属性数组
+        [NonSerialized]
+        public NetworkVariable<NativeArray<int>> NetworkIntAttribute = new NetworkVariable<NativeArray<int>>(default, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server); 
+
         // 运行时的角色
         public NetworkObject Pawn
         {
