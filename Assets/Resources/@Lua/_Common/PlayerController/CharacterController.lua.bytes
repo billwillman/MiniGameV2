@@ -11,9 +11,10 @@ function BaseCharacterController:Ctor(CharacterController, binder)
 
     if not _MOE.IsDS then
         -- Client操作
-        self:RegisterNetworkEvents()
         _MOE.LocalLuaCharacterController = self -- 局部Character Controller
     end
+
+    self:RegisterNetworkEvents()
 end
 
 function BaseCharacterController:RegisterNetworkEvents()
