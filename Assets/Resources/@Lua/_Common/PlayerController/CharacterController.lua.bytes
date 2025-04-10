@@ -55,6 +55,7 @@ end
 function BaseCharacterController:OnNetworkDespawn()
     if not _MOE.IsDS then
         if self:IsLocalOwner() then
+            _MOE.LocalLuaCharacterController = nil
             --- 事件通知CharacterController
             _MOE.EventManager:DispatchEvent("On_Local_Character_ReceiveEnd")
         else
@@ -105,9 +106,6 @@ function BaseCharacterController:OnDestroy()
 
     self.CharacterController = nil
     self.Binder = nil
-    if not _MOE.IsDS then
-        _MOE.LocalLuaCharacterController = nil
-    end
 end
 
 return BaseCharacterController
