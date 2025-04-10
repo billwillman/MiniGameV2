@@ -9,11 +9,6 @@ function BaseCharacterController:Ctor(CharacterController, binder)
     local EventType = _MOE.LuaEvent_MonoEventType
     self.Binder:RegisterLuaEvent(EventType.Destroyed:GetHashCode(), self.OnDestroy)
 
-    if not _MOE.IsDS then
-        -- Client操作
-        _MOE.LocalLuaCharacterController = self -- 局部Character Controller
-    end
-
     self:RegisterNetworkEvents()
 end
 
@@ -30,6 +25,8 @@ end
 function BaseCharacterController:OnNetworkSpawn()
     if not _MOE.IsDS then
         if self:IsLocalOwner() then
+            _MOE.LocalLuaCharacterController = self -- 局部Character Controller
+
             --- KCC控制器
             local kccController = self:GetKCCharacterController()
             if kccController then
