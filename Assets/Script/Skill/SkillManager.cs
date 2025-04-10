@@ -12,12 +12,14 @@ namespace SOC.GamePlay
 {
     [LuaCallCSharp]
     [RequireComponent(typeof(BaseResLoaderAsyncMono), typeof(TimelineEventLuaReceiver), typeof(AudioSource))]
+    [RequireComponent(typeof(PawnNetworkObject))]
     public class SkillManager : ILuaBinder, ICustomLoaderEvent
     {
         private AnimancerComponent m_AnimancerComponent = null;
         private BaseResLoaderAsyncMono m_Loader = null;
         private AudioSource m_AudioSource = null;
         private TimelineEventLuaReceiver m_LuaEventReceiver;
+        private PawnNetworkObject m_PawnObj = null;
 
         public string LuaStateRootPath = string.Empty;
 
@@ -33,6 +35,29 @@ namespace SOC.GamePlay
             get {
                 return this;
             }
+        }
+
+        public PawnNetworkObject PawnObj
+        {
+            get
+            {
+                if (m_PawnObj == null)
+                    m_PawnObj = GetComponent<PawnNetworkObject>();
+                return m_PawnObj;
+            }
+        }
+
+        public bool IsLocalOwner
+        {
+            get
+            {
+                var pawn = this.PawnObj;
+                if (pawn == null)
+                    return false;
+                bool ret = pawn.IsOwner;
+                return ret;
+            }
+
         }
 
         public void AddStateEvent(AnimancerState state, string evtName, Action evt)
