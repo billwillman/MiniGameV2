@@ -30,9 +30,20 @@ end
 function BaseCharacterController:OnNetworkSpawn()
     if not _MOE.IsDS then
         if self:IsLocalOwner() then
+            --- KCC控制器
             local kccController = self:GetKCCharacterController()
             if kccController then
                 kccController.enabled = true
+            end
+            --- 相机激活
+            local view = self.CharacterController:GetComponent(typeof(CS.JohnStairs.RCC.Character.Cam.RPGViewFrustum))
+            if view then
+                view.enabled = true
+            end
+            local cam = self.CharacterController:GetComponent(typeof(CS.JohnStairs.RCC.Character.Cam.RPGCamera))
+            if cam then
+                cam.enabled = true
+                cam.ActivateControl = true
             end
             --- 事件通知CharacterController
             _MOE.EventManager:DispatchEvent("On_Local_Character_ReceiveBegin")
