@@ -27,20 +27,32 @@ function BaseCharacterController:RegisterNetworkEvents()
 end
 
 function BaseCharacterController:OnNetworkSpawn()
-    if not _MOE.IsDS and self:IsLocalOwner() then
-        local kccController = self:GetKCCharacterController()
-        if kccController then
-            kccController.enabled = true
+    if not _MOE.IsDS then
+        if self:IsLocalOwner() then
+            local kccController = self:GetKCCharacterController()
+            if kccController then
+                kccController.enabled = true
+            end
+            --- 事件通知CharacterController
+            _MOE.EventManager:DispatchEvent("On_Local_Character_ReceiveBegin")
+        else
+            _MOE.EventManager:DispatchEvent("On_Simlate_Character_ReceiveBegin")
         end
-        --- 事件通知CharacterController
-        _MOE.EventManager:DispatchEvent("On_Local_Character_ReceiveBegin")
+    elseif _MOE.IsDS then
+        _MOE.EventManager:DispatchEvent("On_Server_Character_ReceiveBegin")
     end
 end
 
 function BaseCharacterController:OnNetworkDespawn()
-    if not _MOE.IsDS and self:IsLocalOwner() then
-        --- 事件通知CharacterController
-        _MOE.EventManager:DispatchEvent("On_Local_Character_ReceiveEnd")
+    if not _MOE.IsDS then
+        if self:IsLocalOwner() then
+            --- 事件通知CharacterController
+            _MOE.EventManager:DispatchEvent("On_Local_Character_ReceiveEnd")
+        else
+            _MOE.EventManager:DispatchEvent("On_Simlate_Character_ReceiveEnd")
+        end
+    else
+        _MOE.EventManager:DispatchEvent("On_Server_Character_ReceiveEnd")
     end
 end
 
