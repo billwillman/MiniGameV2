@@ -10,11 +10,10 @@ function DemoCharacter:Ctor(pawnObj, binder)
     local EventType = _MOE.LuaEvent_MonoEventType
     self.Binder:RegisterLuaEvent(EventType.Destroyed:GetHashCode(), self.OnDestroy)
 
-    self:RegsterCSharpEvent(self.PawnObj, "onNetworkSpawn", self.OnNetworkSpawn)
-    self:RegsterCSharpEvent(self.PawnObj, "onNetworkDespawn", self.OnNetworkDespawn)
+    _MOE.EventManager:RegisterEvent("On_Local_Character_ReceiveBegin", self, self.On_Local_Character_ReceiveBegin)
 end
 
-function DemoCharacter:OnNetworkSpawn()
+function DemoCharacter:On_Local_Character_ReceiveBegin()
     if not _MOE.IsDS then
         if self.PawnObj and self.PawnObj.IsOwner then
             local view = self.PawnObj:GetComponent(typeof(CS.JohnStairs.RCC.Character.Cam.RPGViewFrustum))
@@ -26,28 +25,12 @@ function DemoCharacter:OnNetworkSpawn()
                 cam.enabled = true
                 cam.ActivateControl = true
             end
-            --- 事件通知CharacterController
-            _MOE.EventManager:DispatchEvent("On_Local_Character_ReceiveBegin", self)
         end
-    end
-end
-
-function DemoCharacter:OnNetworkDespawn()
-    if not _MOE.IsDS then
-        if self.PawnObj and self.PawnObj.IsOwner then
-            --- 事件通知CharacterController
-            _MOE.EventManager:DispatchEvent("On_Local_Character_ReceiveEnd", self)
-        end
-    end
-end
-
-function DemoCharacter:GetOwnerGameObject()
-    if self.PawnObj then
-        return self.PawnObj.gameObject
     end
 end
 
 function DemoCharacter:OnDestroy()
+    _MOE.EventManager:UnRegisterEvents(self)
     self:UnRegsterAllCsharpEvents()
 
     self.PawnObj = nil

@@ -12,6 +12,7 @@ namespace SOC.GamePlay
 {
     // 加上这个可以在LUA覆写方法
     [XLua.LuaCallCSharp]
+    [RequireComponent(typeof(PawnNetworkObject))]
     public class MoeCharacterController : MonoBehaviour, /*NetworkBehaviour,*/ ICharacterController
     {
         private KinematicCharacterMotor m_CharacterMotor = null;
@@ -21,6 +22,31 @@ namespace SOC.GamePlay
         public SkinnedMeshRenderer m_Body = null;
         public SkinnedMeshRenderer m_Weapon = null;
         public SkinnedMeshRenderer m_Hair = null;
+
+        private PawnNetworkObject m_PawnObj = null;
+
+        public PawnNetworkObject PawnObj
+        {
+            get
+            {
+                if (m_PawnObj == null)
+                    m_PawnObj = GetComponent<PawnNetworkObject>();
+                return m_PawnObj;
+            }
+        }
+
+        public bool IsLocalOwner
+        {
+            get
+            {
+                var pawn = this.PawnObj;
+                if (pawn == null)
+                    return false;
+                bool ret = pawn.IsOwner;
+                return ret;
+            }
+
+        }
 
         public Vector3 CurrentVelocity
         {

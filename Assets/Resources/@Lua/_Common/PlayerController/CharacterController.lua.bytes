@@ -11,22 +11,44 @@ function BaseCharacterController:Ctor(CharacterController, binder)
 
     if not _MOE.IsDS then
         -- Client操作
-        self:RegsterCSharpEvent()
+        self:RegisterNetworkEvents()
         _MOE.LocalLuaCharacterController = self -- 局部Character Controller
     end
 end
 
-function BaseCharacterController:On_Local_Character_ReceiveBegin(character)
-    if not character then
-        return
-    end
-    local gameObject = character:GetOwnerGameObject()
-    if gameObject then
-        local kccController = self:GetKCCharacterController()
-        if kccController and kccController.gameObject == gameObject then
-            kccController.enabled = true
+function BaseCharacterController:RegisterNetworkEvents()
+    if self.CharacterController then
+        local PawnObj = self.CharacterController.PawnObj
+        if PawnObj then
+            self:RegsterCSharpEvent(PawnObj, "onNetworkSpawn", self.OnNetworkSpawn)
+            self:RegsterCSharpEvent(PawnObj, "onNetworkDespawn", self.OnNetworkDespawn)
         end
     end
+end
+
+function BaseCharacterController:OnNetworkSpawn()
+    if not _MOE.IsDS and self:IsLocalOwner() then
+        local kccController = self:GetKCCharacterController()
+        if kccController then
+            kccController.enabled = true
+        end
+        --- 事件通知CharacterController
+        _MOE.EventManager:DispatchEvent("On_Local_Character_ReceiveBegin")
+    end
+end
+
+function BaseCharacterController:OnNetworkDespawn()
+    if not _MOE.IsDS and self:IsLocalOwner() then
+        --- 事件通知CharacterController
+        _MOE.EventManager:DispatchEvent("On_Local_Character_ReceiveEnd")
+    end
+end
+
+function BaseCharacterController:IsLocalOwner()
+    if not self.CharacterController then
+        return false
+    end
+    return self.CharacterController.IsLocalOwner
 end
 
 function BaseCharacterController:GetOwnerCharacter()
@@ -54,14 +76,6 @@ function BaseCharacterController:GetKCCharacterController()
     if moeCharacterController then
         return moeCharacterController.Motor
     end
-end
-
-function BaseCharacterController:On_Local_Character_ReceiveEnd()
-end
-
-function BaseCharacterController:RegsterCSharpEvent()
-    _MOE.EventManager:RegisterEvent("On_Local_Character_ReceiveBegin", self, self.On_Local_Character_ReceiveBegin)
-    _MOE.EventManager:RegisterEvent("On_Local_Character_ReceiveEnd", self, self.On_Local_Character_ReceiveEnd)
 end
 
 function BaseCharacterController:OnDestroy()

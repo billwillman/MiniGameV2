@@ -52,6 +52,19 @@ function SkillManagerBase:Ctor(skillManagerCS, binder)
     end
     --
     self.RegisterInputDefaultActionNames = {}
+
+    if not _MOE.IsDS then
+        _MOE.EventManager:RegisterEvent("On_Local_Character_ReceiveBegin", self, self.On_Local_Character_ReceiveBegin)
+        _MOE.EventManager:RegisterEvent("On_Local_Character_ReceiveEnd", self, self.On_Local_Character_ReceiveEnd)
+    end
+end
+
+function SkillManagerBase:On_Local_Character_ReceiveBegin()
+    self:OnLocalReceiveBegin()
+end
+
+function SkillManagerBase:On_Local_Character_ReceiveEnd()
+    self:OnLocalReceiveEnd()
 end
 
 function SkillManagerBase:GetOwner()
@@ -88,6 +101,7 @@ end
 
 function SkillManagerBase:Dispose()
     self:UnRegisterInputActionsDefault() -- Default的Input回调UnRegister
+    _MOE.EventManager:UnRegisterEvents(self)
     self.SkillManagerCS = nil
     self.Binder = nil
     self.AnimancerComponent = nil
@@ -294,6 +308,12 @@ function SkillManagerBase:OnInit()
 end
 
 function SkillManagerBase:OnUnInit()
+end
+
+function SkillManagerBase:OnLocalReceiveBegin()
+end
+
+function SkillManagerBase:OnLocalReceiveEnd()
 end
 
 function SkillManagerBase:OnUpdate()

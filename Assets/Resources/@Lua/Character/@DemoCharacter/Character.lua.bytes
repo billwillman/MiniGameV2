@@ -8,8 +8,11 @@ function DemoSkillCharacter:OnRegisterStateClass()
 end
 
 function DemoSkillCharacter:OnInit()
-    self:RegisterInputActionsDefault({"Move"})
     self:ChangeState("Locomotion")
+end
+
+function DemoSkillCharacter:OnLocalReceiveBegin()
+    self:RegisterInputActionsDefault({"Move"})
 end
 
 return DemoSkillCharacter
