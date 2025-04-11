@@ -62,11 +62,35 @@ function Locomotion:ResetIdle()
     self.RotAngle = nil
 end
 
+-- 获得移动的方向
+function Locomotion:GetMoveDir()
+    if self.Camera and self.MovePt then
+        local trans = self.Camera.transform
+        local xAxis = trans.right
+        local zAxis = trans.forward
+        -- 正交矩阵的逆矩阵是正交矩阵的转置
+        local matrix = {
+                            M11 = xAxis.x, M12 = zAxis.x,
+                            M21 = xAxis.z, M22 = zAxis.z
+                        }
+        local vec = {
+                        x = matrix.M11 * self.MovePt.x + matrix.M12 * self.MovePt.y,
+                        y = matrix.M21 * self.MovePt.x + matrix.M22 * self.MovePt.y
+                    }
+        local ret = _MOE.Vector3(vec.x, 0, vec.y)
+        ret = ret.normalized
+        return ret
+    end
+end
+
 -- 根据相机更新角色朝向（暂时这样直接硬切，后续用子状态机来切换状态，限定一个范围，超过范围，则做一个快速转动后再移动，再范围内再硬切）
 function Locomotion:UpdateRotAngleByControlCamera()
-    if self.Camera then
+    if self.Camera and self.MovePt then
+        --[[
         local forward = self.Camera.transform.forward
         forward.y = 0
+        ]]
+        local forward = self:GetMoveDir()
         -- local transform = self:GetOwnerTransform()
         local originforward = _MOE.Vector3(0, 0, 1)
         -- 旋转
