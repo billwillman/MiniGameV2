@@ -126,7 +126,7 @@ function Locomotion:OnSkillBaseInputEvent(actionName, Context)
             if self.CurrentAnimState  then
                 local movePt = Context:GetVector2D()
                 -- _MOE.Logger.LogFormat("[movePt]: ({0:F}, {1:F})", movePt.x, movePt.y)
-                if movePt.y > 0 then
+                if math.abs(movePt.y) > 0.000001 or math.abs(movePt.x) > 0.000001 then
                     if self.MovePt == nil or ((movePt - self.MovePt).sqrMagnitude > 0.0001) then
                         self.CurrentMoveSpeed = 0
                     end
