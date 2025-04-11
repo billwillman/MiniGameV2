@@ -11,7 +11,6 @@ GameObject:
   - component: {fileID: 129501311174106110}
   - component: {fileID: 7048151790945982399}
   - component: {fileID: 6698146899850524634}
-  - component: {fileID: -7617239415691319215}
   - component: {fileID: -1855780408332834849}
   - component: {fileID: 2264327796880482293}
   - component: {fileID: 5915266932952725359}
@@ -83,22 +82,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6d820165d85d1de4f84fe17dec7135c2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &-7617239415691319215
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8644905814343763888}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 64533a518d657d748bea84e24762d653, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  LuaPath: Character.DemoCharacter
-  SelfTarget: {fileID: 6698146899850524634}
-  CustomLuaFunctionName: []
-  bInitCustomLuaFunctionInStart: 0
 --- !u!114 &-1855780408332834849
 MonoBehaviour:
   m_ObjectHideFlags: 0
