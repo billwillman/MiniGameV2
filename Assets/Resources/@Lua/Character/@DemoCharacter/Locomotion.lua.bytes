@@ -127,6 +127,9 @@ function Locomotion:OnSkillBaseInputEvent(actionName, Context)
                 local movePt = Context:GetVector2D()
                 -- _MOE.Logger.LogFormat("[movePt]: ({0:F}, {1:F})", movePt.x, movePt.y)
                 if movePt.y > 0 then
+                    if self.MovePt == nil or ((movePt - self.MovePt).sqrMagnitude > 0.0001) then
+                        self.CurrentMoveSpeed = 0
+                    end
                     self.MovePt = movePt
                     self:BeginMoveControl()
                 else
@@ -159,7 +162,7 @@ end
 
 function Locomotion:UpdateCurrentMoveSpeed(deltaTime)
     if self.MovePt ~= nil then
-        if self.MovePt.y > 0 then
+        if math.abs(self.MovePt.y) > 0.000001 or math.abs(self.MovePt.x) > 0.000001 then
             if deltaTime == nil then
                 deltaTime = _MOE.UnityTime.deltaTime
             end
