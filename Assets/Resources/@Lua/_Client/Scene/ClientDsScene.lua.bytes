@@ -159,9 +159,15 @@ function DsScene:_UnInitDSNet()
 end
 
 function DsScene:OpenControllerUI()
+    if self.Config and self.Config.ControllerUI then
+        _MOE.UIManager:OpenWindow(self.Config.ControllerUI)
+    end
 end
 
 function DsScene:CloseControllerUI()
+    if self.Config and self.Config.ControllerUI then
+        _MOE.UIManager:CloseWindow(self.Config.ControllerUI)
+    end
 end
 
 function DsScene:OnEnter()
