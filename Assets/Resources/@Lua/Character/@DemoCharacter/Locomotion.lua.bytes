@@ -151,7 +151,7 @@ function Locomotion:CheckMovePtSpeedZero(newMovePt)
         return true
     end
     local angle = math.abs(_MOE.Vector2.Angle(self.MovePt, newMovePt))
-    if angle > 5 then
+    if angle > 30 then
         return true
     end
     return false
