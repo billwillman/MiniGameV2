@@ -1,6 +1,7 @@
 _MOE.WindowName = {
     Login = "Login",
-    GM_DS = "GM_DS"
+    GM_DS = "GM_DS",
+    JoyStick = "JoyStick",
 }
 
 _MOE.WindowConfig = {
@@ -14,4 +15,8 @@ _MOE.WindowConfig = {
         LayerId = 1,
         class = "GM.GM_DS_View"
     },
+    JoyStick = {
+        resPath = "@JoyStick/JoyStick",
+        LayerId = 0
+    }
 }

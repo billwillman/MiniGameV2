@@ -1,4 +1,12 @@
 local BaseScene = require("_Common.Scene.ClientDsScene")
 local PlaygroundScene = _MOE.class("PlaygroundScene", BaseScene)
 
+function PlaygroundScene:OnSceneLoadFinish()
+    _MOE.UIManager:OpenWindow(_MOE.WindowName.JoyStick)
+end
+
+function PlaygroundScene:OnExit()
+    PlaygroundScene:CallSuper("OnExit", self)
+end
+
 return PlaygroundScene
