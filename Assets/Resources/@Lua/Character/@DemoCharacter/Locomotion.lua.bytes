@@ -148,15 +148,12 @@ function Locomotion:CheckMovePtSpeedZero(newMovePt)
         return false
     end
     if self.MovePt == nil then
-        self.MovePt = newMovePt
         return true
     end
-    local angle = math.abs(_MOE.Vector3.Angle(self.MovePt, newMovePt)) * 180.0/math.pi
+    local angle = math.abs(_MOE.Vector2.Angle(self.MovePt, newMovePt))
     if angle > 5 then
-        self.MovePt = newMovePt
         return true
     end
-    self.MovePt = newMovePt
     return false
 end
 
@@ -168,7 +165,8 @@ function Locomotion:OnSkillBaseInputEvent(actionName, Context)
                 local movePt = Context:GetVector2D()
                 -- _MOE.Logger.LogFormat("[movePt]: ({0:F}, {1:F})", movePt.x, movePt.y)
                 if math.abs(movePt.y) > 0.000001 or math.abs(movePt.x) > 0.000001 then
-                    if self.MovePt == nil or ((movePt - self.MovePt).sqrMagnitude > 0.0001) then
+                    -- if self.MovePt == nil or ((movePt - self.MovePt).sqrMagnitude > 0.0001) then
+                    if self:CheckMovePtSpeedZero(movePt) then
                         self.CurrentMoveSpeed = 0
                     end
                     self.MovePt = movePt
