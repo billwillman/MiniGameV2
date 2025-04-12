@@ -61,6 +61,17 @@ function SkillBase:AnimationState_BindAllEvents(state)
     skillCS:AnimationState_BindAllEvents(state)
 end
 
+function SkillBase:AnimationState_ClearAllEvents(state)
+    if not state then
+        return false
+    end
+    local skillCS = self:GetSkillManagerCS()
+    if not skillCS then
+        return false
+    end
+    skillCS:AnimationState_ClearAllEvents(state)
+end
+
 function SkillBase:PlayActionState(animState, isLoop)
     if not animState then
         return
