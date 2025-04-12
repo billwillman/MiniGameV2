@@ -25,7 +25,7 @@ namespace SOC.GamePlay
             float3 transformPos = transformPosArray[index] + forward * deltaTime;
             transformPosArray[index] = transformPos;
           //  }
-            Debug.Log(string.Format("[TestMyJob] ThreadId: {0:D}", System.Threading.Thread.CurrentThread.ManagedThreadId));
+           // Debug.Log(string.Format("[TestMyJob] ThreadId: {0:D}", System.Threading.Thread.CurrentThread.ManagedThreadId));
         }
     }
     [BurstCompile]
