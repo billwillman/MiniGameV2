@@ -28,7 +28,7 @@ MonoBehaviour:
     MemorySize: 256
     HideAfterCallMain: 1
     preloadFiles: 
-    Orientation: 0
+    Orientation: 1
     bgImageSrc: Assets/Script/XLua/Doc/logo.png
     dataFileSubPrefix: 
     maxStorage: 200
