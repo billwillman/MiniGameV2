@@ -95,10 +95,14 @@ function UILayer:_AppendWindow(wndName)
         if viewTrans then
             viewTrans:SetParent(self.RootTransform, false)
             -- local rectTrans = cast(viewTrans, _MOE.RectTransformClass)
+
+            --[[
             viewTrans.anchorMin = _rootAnchorMin
             viewTrans.anchorMax = _rootAnchorMax
             viewTrans.offsetMin = _rootAnchorMin
             viewTrans.offsetMax = _rootAnchorMin
+            ]]
+            _MOE.UGUIHelper.ApplyUILoadAnchorAndOffsetMin(viewTrans, _rootAnchorMin, _rootAnchorMax, _rootAnchorMin, _rootAnchorMin)
         end
         local zorder = GetUseZOrder(self)
         local data = {

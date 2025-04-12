@@ -59,6 +59,7 @@ _MOE.Matrix3x2 = CS.UnityEngine.Matrix3x2
 _MOE.Quaternion = CS.UnityEngine.Quaternion
 _MOE.ILuaBinder = CS.SOC.GamePlay.ILuaBinder
 _MOE.LuaEvent_MonoEventType = CS.SOC.GamePlay.LuaEvent_MonoEventType
+_MOE.UGUIHelper = CS.SOC.GamePlay.UGUIHelper
 --[[
 _MOE.LuaEvent_MonoEventType = {
     None = 0,

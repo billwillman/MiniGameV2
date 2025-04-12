@@ -512,7 +512,6 @@ public class AssetInfo
         else
             m_AsyncTask = BundleCreateAsyncTask.Create(mFileName, priority);
 #else
-        UnityEngine.RectTransform trans;
         if (AssetLoader.UseCDNMapper)
             m_AsyncTask = WebAsseetBundleAsyncTask.Create(mFileName, priority);
         else
