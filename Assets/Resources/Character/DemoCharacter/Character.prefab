@@ -449,12 +449,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7dc4dea05f2be8b4c83538c0e3a2690f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  LuaPath: Character.@DemoCharacter.Character
+  LuaPath: _Character.@DemoCharacter.Character
   SelfTarget: {fileID: 0}
   CustomLuaFunctionName:
   - OnScriptObjectLoaded
   bInitCustomLuaFunctionInStart: 0
-  LuaStateRootPath: Character.@DemoCharacter
+  LuaStateRootPath: _Character.@DemoCharacter
   m_RegisterActions: []
   m_ActionAssetRootPath: Resources/Character/DemoCharacter/@Skill/
   m_CallLuaActionLoadedEvt: 1
