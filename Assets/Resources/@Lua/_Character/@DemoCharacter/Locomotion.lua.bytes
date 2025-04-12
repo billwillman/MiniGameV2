@@ -145,6 +145,7 @@ function Locomotion:EndMoveControl()
 end
 
 function Locomotion:CheckMovePtSpeedZero(newMovePt)
+    --[[
     if not newMovePt then
         return false
     end
@@ -155,6 +156,8 @@ function Locomotion:CheckMovePtSpeedZero(newMovePt)
     if angle > 30 then
         return true
     end
+    return false
+    ]]
     return false
 end
 
