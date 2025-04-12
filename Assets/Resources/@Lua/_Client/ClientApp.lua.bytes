@@ -143,7 +143,7 @@ function _M:OnInit()
         CreateDsNetWorkObject(self, self.OnPreloadFinish) then
         _MOE.BaseViewClass = require("_Client.BaseView")
         --- 这里给个默认值
-        _MOE.GsData = {ip = "127.0.0.1", port = 5000}
+        _MOE.GsData = {ip = "49.235.182.106", port = 5000}
         --- 注册网络Model
         InitGSNetRegisterFunc(self)
 
