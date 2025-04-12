@@ -32,6 +32,7 @@ function BaseCharacterController:OnNetworkSpawn()
             if kccController then
                 kccController.enabled = true
             end
+            self.KCCController = kccController
             --- 相机激活
             local view = self.CharacterController:GetComponent(typeof(CS.JohnStairs.RCC.Character.Cam.RPGViewFrustum))
             if view then
@@ -42,6 +43,7 @@ function BaseCharacterController:OnNetworkSpawn()
                 cam.enabled = true
                 cam.ActivateControl = true
             end
+            self.RPGCamera = cam
             --- 事件通知CharacterController
             _MOE.EventManager:DispatchEvent("On_Local_Character_ReceiveBegin")
         else
@@ -49,6 +51,15 @@ function BaseCharacterController:OnNetworkSpawn()
         end
     elseif _MOE.IsDS then
         _MOE.EventManager:DispatchEvent("On_Server_Character_ReceiveBegin")
+    end
+end
+
+function BaseCharacterController:SetEnableCameraControl(isEnabled)
+    if isEnabled == nil then
+        isEnabled = true
+    end
+    if self.RPGCamera then
+        self.RPGCamera.ActivateControl = isEnabled
     end
 end
 
@@ -64,6 +75,9 @@ function BaseCharacterController:OnNetworkDespawn()
     else
         _MOE.EventManager:DispatchEvent("On_Server_Character_ReceiveEnd")
     end
+
+    self.KCCController = nil
+    self.RPGCamera = nil
 end
 
 function BaseCharacterController:IsLocalOwner()
@@ -106,6 +120,8 @@ function BaseCharacterController:OnDestroy()
 
     self.CharacterController = nil
     self.Binder = nil
+    self.RPGCamera = nil
+    self.KCCController = nil
 end
 
 return BaseCharacterController

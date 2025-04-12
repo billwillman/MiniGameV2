@@ -1,3 +1,6 @@
 local UI_JoyStick = _MOE.class("UI_JoyStick", _MOE.BaseViewClass)
 
+function UI_JoyStick:OnInit()
+end
+
 return UI_JoyStick
