@@ -1028,11 +1028,14 @@ public class BundleCreateAsyncTask: IAssetBundleAsyncTask
 			}
 			case RuntimePlatform.Android:
 			{
-				if (isUseABCreateFromFile)
+#if !TUANJIE_1_0_OR_NEWER
+					if (isUseABCreateFromFile)
 					ret = Application.dataPath + "!assets";
 				else
+#else
 					ret = Application.streamingAssetsPath;
-				if (usePlatform)
+#endif
+					if (usePlatform)
 					ret += "/Android";
 				break;
 			}
