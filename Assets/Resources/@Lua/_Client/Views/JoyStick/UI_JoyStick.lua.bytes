@@ -6,11 +6,15 @@ function UI_JoyStick:OnInit()
 end
 
 function UI_JoyStick:OnJoyStickPointerDown()
-    _MOE.Logger.Log("OnJoyStickPointerDown")
+    if _MOE.LocalLuaCharacterController then
+        _MOE.LocalLuaCharacterController:SetEnableCameraControl(false)
+    end
 end
 
 function UI_JoyStick:OnJoyStickPointerUp()
-    _MOE.Logger.Log("OnJoyStickPointerUp")
+    if _MOE.LocalLuaCharacterController then
+        _MOE.LocalLuaCharacterController:SetEnableCameraControl(true)
+    end
 end
 
 return UI_JoyStick
