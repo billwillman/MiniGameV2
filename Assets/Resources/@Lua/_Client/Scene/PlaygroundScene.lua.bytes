@@ -1,0 +1,4 @@
+local BaseScene = require("_Common.Scene.ClientDsScene")
+local PlaygroundScene = _MOE.class("PlaygroundScene", BaseScene)
+
+return PlaygroundScene

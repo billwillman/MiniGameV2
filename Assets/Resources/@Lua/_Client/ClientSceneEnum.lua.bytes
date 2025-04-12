@@ -14,7 +14,7 @@ local DSSceneConfig = {
     },
     ["MultiScene"] = {
         canLoadSame = true,
-        LuaScene = "_Common.Scene.ClientDsScene",
+        LuaScene = "_Client.Scene.PlaygroundScene",
         --Pawn = "Resources/Character/DemoCharacter/Character.prefab",
         GetResSceneName = function ()
             if _MOE.TB then
