@@ -852,6 +852,7 @@ PlayerSettings:
   webGLMemoryGeometricGrowthCap: 96
   webGLPowerPreference: 2
   scriptingDefineSymbols:
+    Android: ENABLE_INPUT_SYSTEM
     Standalone: NODECANVAS
     WeixinMiniGame: NODECANVAS
   additionalCompilerArguments: {}
