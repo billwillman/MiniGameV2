@@ -158,18 +158,6 @@ function DsScene:_UnInitDSNet()
     self.OnClientSceneLoadCallBack = nil
 end
 
-function DsScene:OpenControllerUI()
-    if self.Config and self.Config.ControllerUI then
-        _MOE.UIManager:OpenWindow(self.Config.ControllerUI)
-    end
-end
-
-function DsScene:CloseControllerUI()
-    if self.Config and self.Config.ControllerUI then
-        _MOE.UIManager:CloseWindow(self.Config.ControllerUI)
-    end
-end
-
 function DsScene:OnEnter()
     _MOE.Logger.Log("DsScene Enter")
     if self.IsSinglePlay then
@@ -177,12 +165,9 @@ function DsScene:OnEnter()
     else
         self:_InitDSClientNet() -- 联机模式
     end
-
-    self:OpenControllerUI()
 end
 
 function DsScene:OnExit()
-    self:CloseControllerUI()
     _MOE.EventManager:UnRegisterEvents(self)
     self:_UnInitDSNet()
     self.DsNetworkManager = nil
