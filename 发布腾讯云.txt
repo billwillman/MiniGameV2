@@ -67,3 +67,17 @@ db.createUser({
 })
 
 https://zhuanlan.zhihu.com/p/700211093
+
+
+--------------------------------- 配置腾讯云正式连接环境 --------------------------------
+1.修改 ClientApp.lua.bytes
+_MOE.GsData = {ip = "49.235.182.106", port = 5000}
+
+2.修改服务器 Server.json，DSA中增加 extIp
+"DSA": {
+        "ip": "127.0.0.1",
+        "port": 1991,
+        "Debug": 20003,
+        "isSaveQuit": false,
+        "extIp": "49.235.182.106"
+    },
