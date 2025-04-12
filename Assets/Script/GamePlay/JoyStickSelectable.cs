@@ -12,11 +12,15 @@ namespace SOC.GamePlay
         public override void OnPointerDown(PointerEventData eventData)
         {
             base.OnPointerDown(eventData);
+            if (OnPointerDownEvent != null)
+                OnPointerDownEvent(eventData);
         }
 
         public override void OnPointerUp(PointerEventData eventData)
         {
             base.OnPointerUp(eventData);
+            if (OnPointerUpEvent != null)
+                OnPointerUpEvent(eventData);
         }
 
         public Action<PointerEventData> OnPointerDownEvent

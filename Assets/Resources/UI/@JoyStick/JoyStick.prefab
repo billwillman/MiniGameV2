@@ -9,8 +9,8 @@ GameObject:
   serializedVersion: 7
   m_Component:
   - component: {fileID: 4611851924502423502}
-  - component: {fileID: 1672940355298431380}
   - component: {fileID: 3734179776007741243}
+  - component: {fileID: 8868187328566727821}
   - component: {fileID: 40680718465520750}
   - component: {fileID: 5641920973851113843}
   m_Layer: 5
@@ -40,7 +40,15 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 300, y: 300}
   m_Pivot: {x: 0, y: 0}
---- !u!114 &1672940355298431380
+--- !u!222 &3734179776007741243
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2289237577778612174}
+  m_CullTransparentMesh: 1
+--- !u!114 &8868187328566727821
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -49,7 +57,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 2289237577778612174}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7a98125502f715b4b83cfb77b434e436, type: 3}
+  m_Script: {fileID: 11500000, guid: 1bef1ed711d6b8949a9d7cd5bd66d19c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   m_Navigation:
@@ -81,14 +89,6 @@ MonoBehaviour:
     m_DisabledTrigger: Disabled
   m_Interactable: 1
   m_TargetGraphic: {fileID: 40680718465520750}
---- !u!222 &3734179776007741243
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2289237577778612174}
-  m_CullTransparentMesh: 1
 --- !u!114 &40680718465520750
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -271,4 +271,4 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_BindControls:
-  - {fileID: 1672940355298431380}
+  - {fileID: 8868187328566727821}

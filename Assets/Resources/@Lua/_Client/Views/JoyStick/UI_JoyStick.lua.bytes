@@ -1,7 +1,16 @@
 local UI_JoyStick = _MOE.class("UI_JoyStick", _MOE.BaseViewClass)
 
 function UI_JoyStick:OnInit()
-    
+   self:RegsterCSharpEvent(self.bp.BtnControl, "OnPointerDownEvent", self.OnJoyStickPointerDown)
+   self:RegsterCSharpEvent(self.bp.BtnControl, "OnPointerUpEvent", self.OnJoyStickPointerUp)
+end
+
+function UI_JoyStick:OnJoyStickPointerDown()
+    _MOE.Logger.Log("OnJoyStickPointerDown")
+end
+
+function UI_JoyStick:OnJoyStickPointerUp()
+    _MOE.Logger.Log("OnJoyStickPointerUp")
 end
 
 return UI_JoyStick
