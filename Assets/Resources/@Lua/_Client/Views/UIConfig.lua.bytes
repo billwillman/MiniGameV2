@@ -17,6 +17,7 @@ _MOE.WindowConfig = {
     },
     JoyStick = {
         resPath = "@JoyStick/JoyStick",
-        LayerId = 0
+        LayerId = 0,
+        class = "JoyStick.UI_JoyStick"
     }
 }
