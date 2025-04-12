@@ -1013,7 +1013,7 @@ PlayerSettings:
   weixinMiniGameSIMDSupport: 0
   weixinMiniGameUseSlimMetaFileFormat: 1
   weixinMiniGamePhysicsEngine: 0
-  weixinMiniGameInjectStrippedMethodLogger: 0
+  weixinMiniGameInjectStrippedMethodLogger: 1
   weixinMiniGameEnableDotNetWasmExceptionHandling: 1
   weixinMiniGamePreserveEventDelegate: 0
   activeInputHandler: 2
