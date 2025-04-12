@@ -20,6 +20,7 @@ function Locomotion:OnInit()
                 end
                 animState:SetFloat("SpeedY", 0.5)
                 --self:AnimationState_BindAllEvents(animState)
+                self:AnimationState_ClearAllEvents(animState)
             end
         }
     }
