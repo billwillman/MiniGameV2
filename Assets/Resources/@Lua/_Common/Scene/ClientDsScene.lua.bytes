@@ -33,12 +33,14 @@ local function RegisterDSClientEvents(self)
                 self:_OnClient_ClientStarted()
             end
         )
+    self:RegsterCSharpEvent(self.DsNetworkManager, "OnClientDisconnectCallback", self._OnClientDisconnectCallback)
 end
 
-local function UnRegisterDSClientEvents()
+local function UnRegisterDSClientEvents(self)
     if _MOE.DsNetworkHelper and _MOE.DsNetworkHelper.NetworkManager_ClearAllEvents then
         _MOE.DsNetworkHelper.NetworkManager_ClearAllEvents()
     end
+    self:UnRegsterCSharpEvent(self.DsNetworkManager, "OnClientDisconnectCallback")
 end
 
 local function LoadMainSceneABAsync(self, sceneName)
@@ -54,13 +56,17 @@ local function LoadMainSceneABAsync(self, sceneName)
     return ret
 end
 
+function DsScene:_OnClientDisconnectCallback(reason)
+    _MOE.Logger.LogFormat("[DsScene] DS DisConnect: {0:D}", reason)
+end
+
 function DsScene:_OnClient_ClientStopped(b)
     _MOE.Logger.Log("[DsScene] OnConnectionEvent: " .. tostring(b))
-    UnRegisterDSClientEvents()
+    UnRegisterDSClientEvents(self)
 end
 
 function DsScene:_OnClient_ClientStarted()
-    UnRegisterDSClientEvents()
+    UnRegisterDSClientEvents(self)
 end
 
 --- 设置DS验证信息（DS连接用）
@@ -153,7 +159,7 @@ end
 
 function DsScene:_UnInitDSNet()
     self.DsNetworkManager.NetworkConfig.ConnectionData = "" -- 对应 SetConnectionApprovalData 的清理
-    UnRegisterDSClientEvents()
+    UnRegisterDSClientEvents(self)
     _MOE.NetCodeHelper.UnInitHelper()
     self.OnClientSceneLoadCallBack = nil
 end
