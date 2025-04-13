@@ -33,14 +33,17 @@ local function RegisterDSClientEvents(self)
                 self:_OnClient_ClientStarted()
             end
         )
-    self:RegsterCSharpEvent(self.DsNetworkManager, "OnClientDisconnectCallback", self._OnClientDisconnectCallback)
+        _MOE.DsNetworkHelper.NetworkManager_SetOnClientDisconnected(
+            function (reason)
+                self:_OnClientDisconnectCallback(reason)
+            end
+        )
 end
 
 local function UnRegisterDSClientEvents(self)
     if _MOE.DsNetworkHelper and _MOE.DsNetworkHelper.NetworkManager_ClearAllEvents then
         _MOE.DsNetworkHelper.NetworkManager_ClearAllEvents()
     end
-    self:UnRegsterCSharpEvent(self.DsNetworkManager, "OnClientDisconnectCallback")
 end
 
 local function LoadMainSceneABAsync(self, sceneName)

@@ -9,6 +9,7 @@ namespace SOC.GamePlay
     public static class DsNetworkHelper
     {
         private static Action<bool> m_OnClientStopped = null;
+        private static Action<ulong> m_OnClientDisconnected = null;
         private static Action m_OnClientStarted = null;
         private static Action m_OnTransportFailure = null;
         private static Action<NetworkManager, ConnectionEventData> m_OnConnectionEvent = null;
@@ -63,6 +64,29 @@ namespace SOC.GamePlay
                 return true;
             }
             return false;
+        }
+
+        public static bool NetworkManager_SetOnClientDisconnected(Action<ulong> onClientDisconnected)
+        {
+            if (NetworkManager.Singleton != null)
+            {
+                if (m_OnClientDisconnected != null)
+                    NetworkManager.Singleton.OnClientDisconnectCallback -= m_OnClientDisconnected;
+                if (onClientDisconnected != null)
+                    NetworkManager.Singleton.OnClientDisconnectCallback += onClientDisconnected;
+                m_OnClientDisconnected = onClientDisconnected;
+                return true;
+            }
+            return false;
+        }
+
+        public static void NetworkManager_ClearOnClientDisconnected()
+        {
+            if (m_OnClientDisconnected != null && NetworkManager.Singleton != null)
+            {
+                NetworkManager.Singleton.OnClientDisconnectCallback -= m_OnClientDisconnected;
+            }
+            m_OnClientDisconnected = null;
         }
 
         public static bool NetworkManager_SetOnClientStarted(Action onClientStarted) {
@@ -136,6 +160,7 @@ namespace SOC.GamePlay
             NetworkManager_ClearOnConnectionEvent();
             NetworkManager_ClearOnLoadEventCompleted();
             NetworkManager_ClearOnUnloadEventCompleted();
+            NetworkManager_ClearOnClientDisconnected();
         }
     }
 }
