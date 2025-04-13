@@ -73,6 +73,7 @@ public static class ExampleGenConfig
                 typeof(Action<ulong, string, int, int>),
                 typeof(Action<string, int, int, int>),
                 typeof(Action<float, bool, GameObject>),
+                typeof(Action<ulong>),
                 typeof(Action<NetworkManager, ConnectionEventData>),
                 //--
             };
@@ -104,6 +105,7 @@ public static class ExampleGenConfig
                 typeof(Action<ulong, string, int, int>),
                 typeof(Action<string, int, int, int>),
                 typeof(Action<NetworkManager, ConnectionEventData>),
+                typeof(Action<ulong>),
                 //--
                 typeof(Action<AsyncOperation, bool>),
                 typeof(UnityEngine.Events.UnityAction),
