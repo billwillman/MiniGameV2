@@ -1173,7 +1173,7 @@ public class ResourceMgr : Singleton<ResourceMgr>
         return mResLoader.LoadScriptableObjectAsync(fileName, cacheType, onProcess, priority);
     }
 
-#if UNITY_5
+#if UNITY_5 || UNITY_2017_1_OR_NEWER
 
     public ShaderVariantCollection LoadShaderVarCollection(string fileName, ResourceCacheType cacheType)
     {
