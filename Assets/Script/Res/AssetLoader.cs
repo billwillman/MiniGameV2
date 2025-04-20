@@ -6,6 +6,10 @@
 // 模块描述：
 //----------------------------------------------------------------*/
 
+#if UNITY_WEIXINMINIGAME && !UNITY_EDITOR
+    #define _USE_WX
+#endif
+
 #define USE_UNITY5_X_BUILD
 #define USE_LOWERCHAR
 #define USE_HAS_EXT
@@ -506,7 +510,7 @@ public class AssetInfo
             AddNoOwnerToTaskList(taskList, m_AsyncTask);
             return true;
         }
-#if UNITY_WEIXINMINIGAME && !UNITY_EDITOR
+#if _USE_WX
         if (WXAssetBundleAsyncTask.HasCDNFile(mFileName)) // 远程文件才使用 WXAssetBundleAsyncTask
             m_AsyncTask = WXAssetBundleAsyncTask.Create(mFileName, priority);
         else
@@ -623,7 +627,7 @@ public class AssetInfo
         if (mCompressType == AssetCompressType.astNone) {
             //	ClearTaskData();
 #if UNITY_5_3 || UNITY_5_4 || UNITY_5_5 || UNITY_5_6 || UNITY_2018 || UNITY_2019 || UNITY_2017 || UNITY_2017_1_OR_NEWER
-#if UNITY_WEIXINMINIGAME && !UNITY_EDITOR
+#if _USE_WX
             mBundle = WXAssetBundle.LoadFromFile(mFileName);
 #else
             mBundle = AssetBundle.LoadFromFile(mFileName);
@@ -643,7 +647,7 @@ public class AssetInfo
             // Lz4 new compressType
             //	ClearTaskData();
 #if UNITY_5_3 || UNITY_5_4 || UNITY_5_5 || UNITY_5_6 || UNITY_2018 || UNITY_2019 || UNITY_2017 || UNITY_2017_1_OR_NEWER
-#if UNITY_WEIXINMINIGAME && !UNITY_EDITOR
+#if _USE_WX
             mBundle = WXAssetBundle.LoadFromFile(mFileName);
 #else
             mBundle = AssetBundle.LoadFromFile(mFileName);
@@ -980,7 +984,7 @@ public class AssetInfo
 
     public void _BundleUnLoadFalse() {
         if (IsVaild()) {
-#if UNITY_WEIXINMINIGAME && !UNITY_EDITOR
+#if _USE_WX
             mBundle.WXUnload(false);
 #else
             mBundle.Unload(false);
@@ -1001,7 +1005,7 @@ public class AssetInfo
         m_AsyncLoadDict.Clear();
         ClearUsingCnt();
         if (isVaild) {
-#if UNITY_WEIXINMINIGAME && !UNITY_EDITOR
+#if _USE_WX
             mBundle.WXUnload(true);
 #else
             mBundle.Unload(true);
@@ -2866,7 +2870,7 @@ public sealed class AssetLoader : IResourceLoader
         LoadConfigProcess = 0f;
         float startTime = Time.realtimeSinceStartup;
         string fileName = GetXmlFileName();
-#if UNITY_WEIXINMINIGAME && !UNITY_EDITOR
+#if _USE_WX
         string transFileName = WXAssetBundleAsyncTask.GetCDNFileName(fileName);
 #else
         string transFileName;
@@ -2905,14 +2909,14 @@ public sealed class AssetLoader : IResourceLoader
                     LoadBinary(asset.bytes, OnFinishEvent, async, false);
                     usedTime = Time.realtimeSinceStartup - startTime;
                     Debug.LogFormat("解析XML时间：{0}", usedTime.ToString());
-#if UNITY_WEIXINMINIGAME && !UNITY_EDITOR
+#if _USE_WX
                     bundle.WXUnload(true);
 #else
                     bundle.Unload(true);
 #endif
                 } else {
                     Debug.LogErrorFormat("[LoadConfig]读取TextAsset {0} 失敗", name);
-#if UNITY_WEIXINMINIGAME && !UNITY_EDITOR
+#if _USE_WX
                     bundle.WXUnload(true);
 #else
                     bundle.Unload(true);
@@ -2929,7 +2933,7 @@ public sealed class AssetLoader : IResourceLoader
 #if USE_DEP_BINARY && USE_DEP_BINARY_AB
         Debug.Log("[DoWebAssetBundleXml] " + fileName);
         if (isLocalFile) {
-#if UNITY_WEIXINMINIGAME && !UNITY_EDITOR
+#if _USE_WX
             AssetBundle bundle = WXAssetBundle.LoadFromFile(fileName);
 #else
             AssetBundle bundle = AssetBundle.LoadFromFile(fileName);
@@ -2937,14 +2941,14 @@ public sealed class AssetLoader : IResourceLoader
             doOkFunc(bundle);
             yield break;
         }
-#if UNITY_WEIXINMINIGAME && !UNITY_EDITOR
+#if _USE_WX
         var req = WXAssetBundle.GetAssetBundle(fileName);
 #else
         var req = UnityWebRequestAssetBundle.GetAssetBundle(fileName);
 #endif
         yield return req.SendWebRequest();
         if (req.isDone) {
-#if UNITY_WEIXINMINIGAME && !UNITY_EDITOR
+#if _USE_WX
             AssetBundle bundle = (req.downloadHandler as DownloadHandlerWXAssetBundle).assetBundle;
 #else
             AssetBundle bundle = (req.downloadHandler as DownloadHandlerAssetBundle).assetBundle;
@@ -2986,7 +2990,7 @@ public sealed class AssetLoader : IResourceLoader
         AssetBundle bundle;
         string fileName = GetXmlFileName();
 #if UNITY_5_3 || UNITY_5_4 || UNITY_5_5 || UNITY_5_6 || UNITY_2018 || UNITY_2019 || UNITY_2017 || UNITY_2017_1_OR_NEWER
-#if UNITY_WEIXINMINIGAME && !UNITY_EDITOR
+#if _USE_WX
         bundle = WXAssetBundle.LoadFromFile(fileName);
 #else
         bundle = AssetBundle.LoadFromFile(fileName);
@@ -3018,14 +3022,14 @@ public sealed class AssetLoader : IResourceLoader
 #endif
                 usedTime = Time.realtimeSinceStartup - startTime;
                 Debug.LogFormat("解析XML时间：{0}", usedTime.ToString());
-#if UNITY_WEIXINMINIGAME && !UNITY_EDITOR
+#if _USE_WX
                 bundle.WXUnload(true);
 #else
                 bundle.Unload(true);
 #endif
             } else {
                 Debug.LogErrorFormat("[LoadConfig]读取TextAsset {0} 失敗", name);
-#if UNITY_WEIXINMINIGAME && !UNITY_EDITOR
+#if _USE_WX
                 bundle.WXUnload(true);
 #else
                 bundle.Unload(true);
