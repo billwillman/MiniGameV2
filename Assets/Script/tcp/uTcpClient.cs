@@ -463,7 +463,11 @@ namespace NsTcpClient
 
         public bool ConnectMoonServer(string ip, int port) {
             DisConnect();
+#if USE_WXTCP
+            mTcpClient = new WXTcpClient();
+#else
             mTcpClient = new TcpClient();
+#endif
             mTcpClient.OnThreadBufferProcess = OnMoonPacketThreadBufferProcess;
             bool ret = mTcpClient.Connect(ip, port, cSocketConnWaitTime);
             if (ret) {
