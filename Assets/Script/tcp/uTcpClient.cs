@@ -2,6 +2,10 @@
 //#define USE_PROTOBUF_NET
 //#define USE_CapnProto
 
+#if UNITY_WEIXINMINIGAME  && !UNITY_EDITOR
+    #define USE_WXTCP
+#endif
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -16,6 +20,8 @@ using CapnProto;
 #endif
 using Utils;
 using System.IO;
+
+
 
 namespace NsTcpClient
 {
@@ -308,11 +314,12 @@ namespace NsTcpClient
             int dstSize = headerSize;
             if (hasBufData)
                 dstSize += bufSize;
-#if !UNITY_WEIXINMINIGAME
+#if !USE_WXTCP
             var dstStream = NetByteArrayPool.GetByteBufferNode(dstSize);
 #endif
-            try {
-#if UNITY_WEIXINMINIGAME
+            try
+            {
+#if USE_WXTCP
                 byte[] dstBuffer = new byte[dstSize];
 #else
                 byte[] dstBuffer = dstStream.GetBuffer();
@@ -323,7 +330,7 @@ namespace NsTcpClient
                     Buffer.BlockCopy(buf, 0, dstBuffer, headerSize, bufSize);
                 mTcpClient.Send(dstBuffer, dstSize);
             } finally {
-#if !UNITY_WEIXINMINIGAME
+#if !USE_WXTCP
                 dstStream.Dispose();
                 dstStream = null;
 #endif
@@ -369,11 +376,12 @@ namespace NsTcpClient
             // 下面注释是未优化代码
             //byte[] dstBuffer = new byte[dstSize];
             // 此处已优化
-#if !UNITY_WEIXINMINIGAME
+#if !USE_WXTCP
             var dstStream = NetByteArrayPool.GetByteBufferNode(dstSize);
 #endif
-            try {
-#if UNITY_WEIXINMINIGAME
+            try
+            {
+#if USE_WXTCP
                 byte[] dstBuffer = new byte[dstSize];
 #else
                 byte[] dstBuffer = dstStream.GetBuffer();
@@ -415,14 +423,14 @@ namespace NsTcpClient
                     Buffer.BlockCopy(buf, 0, dstBuffer, headerSize, bufSize);
                 mTcpClient.Send(dstBuffer, dstSize);
             } finally {
-#if !UNITY_WEIXINMINIGAME
+#if !USE_WXTCP
                 if (dstStream != null) {
                     dstStream.Dispose();
                     dstStream = null;
                 }
 #endif
             }
-		}
+        }
 
 		public void SendString(string str, int packetHandle)
 		{
@@ -435,7 +443,7 @@ namespace NsTcpClient
         public bool Connect(string ip, int port)
 		{
 			DisConnect ();
-#if UNITY_WEIXINMINIGAME && !UNITY_EDITOR
+#if USE_WXTCP
             mTcpClient = new WXTcpClient();
 #else
             mTcpClient = new TcpClient ();
