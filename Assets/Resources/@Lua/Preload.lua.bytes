@@ -87,6 +87,7 @@ _MOE.SkillBase = require("_Common.Skill.SkillBase")
 _MOE.SkillManagerBase = require("_Common.Skill.SkillManager")
 _MOE.UnityTime = CS.UnityEngine.Time
 _MOE.PlayerInputUtils = CS.UnityEngine.InputSystem.PlayerInputUtils
+_MOE.DsNetUtils = require("_Common.Net.DsNetUtils")
 
 _MOE.FindMainCamera = function ()
     local gameObj = _MOE.GameObject.FindGameObjectWithTag("MainCamera")

@@ -10,8 +10,8 @@ GameObject:
   m_Component:
   - component: {fileID: 5106573896504949211}
   - component: {fileID: 3934526033181271297}
-  - component: {fileID: 8083298353217757625}
   - component: {fileID: 3912720752496253734}
+  - component: {fileID: 8183825921956135926}
   m_Layer: 0
   m_HasEditorInfo: 1
   m_Name: DsNetworkManager
@@ -49,7 +49,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   NetworkConfig:
     ProtocolVersion: 0
-    NetworkTransport: {fileID: 8083298353217757625}
+    NetworkTransport: {fileID: 8183825921956135926}
     PlayerPrefab: {fileID: 4542616285461940895, guid: 663a1efcd48b22e478eb3b486a4c10be,
       type: 3}
     Prefabs:
@@ -73,35 +73,6 @@ MonoBehaviour:
     OldPrefabList: []
   RunInBackground: 1
   LogLevel: 1
---- !u!114 &8083298353217757625
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7164277755889661227}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6960e84d07fb87f47956e7a81d71c4e6, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_ProtocolType: 0
-  m_UseWebSockets: 1
-  m_UseEncryption: 0
-  m_MaxPacketQueueSize: 128
-  m_MaxPayloadSize: 6144
-  m_HeartbeatTimeoutMS: 500
-  m_ConnectTimeoutMS: 1000
-  m_MaxConnectAttempts: 5
-  m_DisconnectTimeoutMS: 10000
-  ConnectionData:
-    Address: 127.0.0.1
-    Port: 7777
-    ServerListenAddress: 127.0.0.1
-  DebugSimulator:
-    PacketDelayMS: 0
-    PacketJitterMS: 0
-    PacketDropRate: 0
 --- !u!114 &3912720752496253734
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -115,3 +86,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   bClearAllResourcesOnDestroy: 1
+--- !u!114 &8183825921956135926
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7164277755889661227}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d7886ab2351e01b40b279694f4f02ba1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Host: 127.0.0.1
+  Port: 7777
+  DiscardInvalidKcpPacket: 1

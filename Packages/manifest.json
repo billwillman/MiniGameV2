@@ -1,6 +1,8 @@
 {
   "dependencies": {
     "cn.tuanjie.minigame.host": "1.0.6",
+    "cn.unity.uos.multiverse.netcode.kcp": "https://e.coding.net/unitychina/uos/NetcodeTransport.git?path=kcp",
+    "cn.unity.uos.multiverse.netcode.websocket": "https://e.coding.net/unitychina/uos/NetcodeTransport.git?path=websocket",
     "com.qq.weixin.minigame": "https://github.com/wechat-miniprogram/minigame-tuanjie-transform-sdk.git",
     "com.unity.ai.navigation": "1.1.5",
     "com.unity.burst": "1.8.17",

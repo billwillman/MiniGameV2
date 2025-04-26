@@ -40,7 +40,8 @@ function DsScene:_InitDSNet()
     local dsData = _MOE.TB["dsData"]
     local ip = dsData.ip or "127.0.0.1"
     local port = dsData.port or 7777
-    self.Transport:SetConnectionData(ip, port)
+    -- self.Transport:SetConnectionData(ip, port)
+    _MOE.DsNetUtils.SetTransportIpAndPort(self.Transport, ip, port)
     if not self.DsNetworkManager:StartServer() then
         _MOE.Logger.LogError("[DS] DsScene:StartServer False")
         _MOE.GameApp:QuitGame()

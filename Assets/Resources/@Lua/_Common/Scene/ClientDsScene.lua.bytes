@@ -86,7 +86,8 @@ end
 function DsScene:_InitDSClientNet()
     self:SetConnectionApprovalData() -- 设置DS验证信息
     local dsData = _MOE.TB["dsData"]
-    self.Transport:SetConnectionData(dsData.ip, dsData.port)
+    _MOE.DsNetUtils.SetTransportIpAndPort(self.Transport, dsData.ip, dsData.port)
+    -- self.Transport:SetConnectionData(dsData.ip, dsData.port)
     if self.DsNetworkManager:StartClient() then
         _MOE.Logger.Log("[DsScene] StartClient: OK")
         GenerateScenesInBuild(self)

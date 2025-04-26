@@ -7,6 +7,20 @@
       "dependencies": {},
       "url": "https://packages.tuanjie.cn"
     },
+    "cn.unity.uos.multiverse.netcode.kcp": {
+      "version": "https://e.coding.net/unitychina/uos/NetcodeTransport.git?path=kcp",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "9cfca79bad94e8758d99b43ffe61e6e9a43f685a"
+    },
+    "cn.unity.uos.multiverse.netcode.websocket": {
+      "version": "https://e.coding.net/unitychina/uos/NetcodeTransport.git?path=websocket",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "9cfca79bad94e8758d99b43ffe61e6e9a43f685a"
+    },
     "com.autodesk.fbx": {
       "version": "4.2.1",
       "depth": 2,

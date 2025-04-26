@@ -1,0 +1,17 @@
+local _M = {}
+
+function _M.SetTransportIpAndPort(transport, ip, port)
+    -- Unity Transport
+    if transport.SetConnectionData ~= nil then
+        transport:SetConnectionData(ip, port)
+        return
+    end
+    -- KCP transport
+    if transport.Host ~= nil and transport.Port ~= nil then
+        transport.Host = ip
+        transport.Port = port
+        return
+    end
+end
+
+return _M
