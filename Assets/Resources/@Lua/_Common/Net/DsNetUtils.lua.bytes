@@ -20,6 +20,18 @@ function _M.SetTransportIpAndPort(transport, ip, port)
     end
 end
 
+function _M.GetTransportConnectionData(transport)
+    -- Unity Transport
+    if transport.ConnectionData ~= nil then
+        return transport.ConnectionData
+    end
+    -- KCP transport
+    if transport.Host ~= nil and transport.Port ~= nil then
+        local ConnectionData = {Address = transport.Host, Port = transport.Port}
+        return ConnectionData
+    end
+end
+
 function _M.GetTransportComponent(dsNetworkManager, transportType)
     if transportType == _M.TransportType.UnityTransport then
         return dsNetworkManager.gameObject:GetComponent(typeof(CS.Unity.Netcode.Transports.UTP.UnityTransport))
