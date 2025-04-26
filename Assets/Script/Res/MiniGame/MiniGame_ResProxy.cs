@@ -1,3 +1,7 @@
+#if UNITY_WEIXINMINIGAME && !UNITY_EDITOR
+    #define _USE_WX
+#endif
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -49,7 +53,7 @@ public class MiniGame_ResProxyMgr: SingetonMono<MiniGame_ResProxyMgr>
         AssetLoader.UseCDNMapper = false;
         WebAsseetBundleAsyncTask.CDN_RootDir = string.Empty;
         WebAsseetBundleAsyncTask.Mapper = null;
-#if UNITY_WEIXINMINIGAME && !UNITY_EDITOR
+#if _USE_WX
         WXAssetBundleAsyncTask.CDN_RootDir = string.Empty;
         WXAssetBundleAsyncTask.Mapper = null;
 #endif
@@ -66,7 +70,7 @@ public class MiniGame_ResProxyMgr: SingetonMono<MiniGame_ResProxyMgr>
         }
         AssetLoader.UseCDNMapper = UseCDNMapper;
         string baseUrl = string.Format("{0}/{1}", CDNRoot, AppResVersion);
-#if UNITY_WEIXINMINIGAME && !UNITY_EDITOR
+#if _USE_WX
         WXAssetBundleAsyncTask.CDN_RootDir = baseUrl;
 #else
         WebAsseetBundleAsyncTask.CDN_RootDir = baseUrl;
@@ -107,7 +111,7 @@ public class MiniGame_ResProxyMgr: SingetonMono<MiniGame_ResProxyMgr>
                     return;
                 }
                 // fileListÊý¾Ý
-#if UNITY_WEIXINMINIGAME && !UNITY_EDITOR
+#if _USE_WX
                 WXAssetBundleAsyncTask.Mapper = new FileListDataLoader(req.ResponeText);
 #else
                 WebAsseetBundleAsyncTask.Mapper = new FileListDataLoader(req.ResponeText);

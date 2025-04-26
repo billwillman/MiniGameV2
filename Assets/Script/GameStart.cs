@@ -1,3 +1,7 @@
+#if UNITY_WEIXINMINIGAME && !UNITY_EDITOR
+    #define _USE_WX
+#endif
+
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -99,7 +103,7 @@ namespace SOC.GamePlay
         }
 
         void OnInit() {
-#if UNITY_WEIXINMINIGAME && !UNITY_EDITOR
+#if _USE_WX
             WX.InitSDK((int code) =>
             {
                 Debug.Log("WX InitSDK code: " + code);
