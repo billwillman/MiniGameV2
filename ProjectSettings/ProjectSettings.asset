@@ -854,7 +854,7 @@ PlayerSettings:
   scriptingDefineSymbols:
     Android: ENABLE_INPUT_SYSTEM;NODECANVAS
     Standalone: NODECANVAS
-    WeixinMiniGame: NODECANVAS;_USE_WX
+    WeixinMiniGame: NODECANVAS
   additionalCompilerArguments: {}
   platformArchitecture: {}
   scriptingBackend:
@@ -994,10 +994,11 @@ PlayerSettings:
   weixinMiniGameShowDiagnostics: 0
   weixinMiniGameDataCaching: 0
   weixinMiniGameDebugSymbols: 1
-  weixinMiniGameEmscriptenArgs: ' -s EXPORTED_FUNCTIONS=_sbrk,_emscripten_stack_get_base,_emscripten_stack_get_end
-    -s TOTAL_MEMORY=256MB --profiling-funcs '
+  weixinMiniGameEmscriptenArgs: ' -s EXPORTED_FUNCTIONS=_main,_sbrk,_emscripten_stack_get_base,_emscripten_stack_get_end
+    -s ERROR_ON_UNDEFINED_SYMBOLS=0 -s TOTAL_MEMORY=256MB -s EXPORTED_RUNTIME_METHODS=''["ccall","cwrap","stackTrace","addRunDependency","removeRunDependency","FS_createPath","FS_createDataFile","stackTrace","writeStackCookie","checkStackCookie","lengthBytesUTF8","stringToUTF8"]''
+    --profiling-funcs '
   weixinMiniGameModulesDirectory: 
-  weixinMiniGameTemplate: PROJECT:WXTemplate
+  weixinMiniGameTemplate: PATH:D:\MiniGameV2\Library\PackageCache\com.qq.weixin.minigame@2c858e5dd9\WebGLTemplates\WXTemplate2022TJ
   weixinMiniGameAnalyzeBuildSize: 0
   weixinMiniGameUseEmbeddedResources: 0
   weixinMiniGameCompressionFormat: 2
