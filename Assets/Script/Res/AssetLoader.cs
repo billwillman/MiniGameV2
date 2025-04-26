@@ -514,7 +514,8 @@ public class AssetInfo
         if (WXAssetBundleAsyncTask.HasCDNFile(mFileName)) // 远程文件才使用 WXAssetBundleAsyncTask
             m_AsyncTask = WXAssetBundleAsyncTask.Create(mFileName, priority);
         else
-            m_AsyncTask = BundleCreateAsyncTask.Create(mFileName, priority);
+            return false; // 微信不支持
+            //m_AsyncTask = BundleCreateAsyncTask.Create(mFileName, priority);
 #else
         if (AssetLoader.UseCDNMapper)
             m_AsyncTask = WebAsseetBundleAsyncTask.Create(mFileName, priority);

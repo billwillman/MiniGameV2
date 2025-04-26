@@ -663,11 +663,11 @@ public class BundleCreateAsyncTask: IAssetBundleAsyncTask
 
 	public override AssetBundle StartLoad() {
 		if (m_Req == null) {
-#if _USE_WX
-            m_Req = WXAssetBundle.LoadFromFileAsync(m_FileName);
-#else
+//#if _USE_WX
+//            m_Req = WXAssetBundle.LoadFromFileAsync(m_FileName);
+//#else
             m_Req = AssetBundle.LoadFromFileAsync(m_FileName);
-#endif
+//#endif
 			if (m_Req != null) {
 				m_Req.priority = m_Priority;
 				if (m_Req.isDone)
@@ -807,11 +807,11 @@ public class BundleCreateAsyncTask: IAssetBundleAsyncTask
 
 	private string m_FileName = string.Empty;
 	private int m_Priority = 0;
-#if _USE_WX
-	private WXAssetBundleRequest m_Req = null;
-#else
+//#if _USE_WX
+//	private WXAssetBundleRequest m_Req = null;
+//#else
     private AssetBundleCreateRequest m_Req = null;
-#endif
+//#endif
 	private float m_Progress = 0;
 	private AssetBundle m_Bundle = null;
 
