@@ -8,7 +8,7 @@ local MsgIds = require("_NetMsg.MsgId")
 
 function DsScene:Ctor(sceneName, dsNetworkManager)
     self.DsNetworkManager = dsNetworkManager
-    self.Transport = dsNetworkManager.gameObject:GetComponent(typeof(CS.Unity.Netcode.Transports.UTP.UnityTransport))
+    self.Transport = _MOE.DsNetUtils.GetTransportComponent(dsNetworkManager, _MOE.DsNetUtils.TransportType.UOSKCP)
 
     ---- 注册Model ------
     self:RegisterModel("DsPlayerModel", "_DS.Model.DsPlayerModel", false)

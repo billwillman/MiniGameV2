@@ -4,7 +4,7 @@ DsScene[".superctor"] = true -- 会调用父类方法
 
 function DsScene:Ctor(sceneName, dsNetworkManager, isSinglePlay)
     self.DsNetworkManager = dsNetworkManager
-    self.Transport = dsNetworkManager.gameObject:GetComponent(typeof(CS.Unity.Netcode.Transports.UTP.UnityTransport))
+    self.Transport = _MOE.DsNetUtils.GetTransportComponent(dsNetworkManager, _MOE.DsNetUtils.TransportType.UOSKCP)
     self.SceneLoader = dsNetworkManager.gameObject:GetComponent(typeof(_MOE.BaseResLoaderAsyncType))
     if isSinglePlay == nil then
         isSinglePlay = false
@@ -135,7 +135,8 @@ end
 
 -- Host模式
 function DsScene:_InitDSHostNet()
-    self.Transport:SetConnectionData("127.0.0.1", 0)
+    _MOE.DsNetUtils.SetTransportIpAndPort(self.Transport, "127.0.0.1", 0)
+    -- self.Transport:SetConnectionData("127.0.0.1", 0)
     if self.DsNetworkManager:StartHost() then
         _MOE.Logger.Log("[DsScene] StartHost: OK")
         GenerateScenesInBuild(self)

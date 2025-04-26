@@ -1,5 +1,11 @@
 local _M = {}
 
+_M.TransportType = {
+    UnityTransport = 0,
+    UOSWebSocket = 1,
+    UOSKCP = 2,
+}
+
 function _M.SetTransportIpAndPort(transport, ip, port)
     -- Unity Transport
     if transport.SetConnectionData ~= nil then
@@ -11,6 +17,16 @@ function _M.SetTransportIpAndPort(transport, ip, port)
         transport.Host = ip
         transport.Port = port
         return
+    end
+end
+
+function _M.GetTransportComponent(dsNetworkManager, transportType)
+    if transportType == _M.TransportType.UnityTransport then
+        return dsNetworkManager.gameObject:GetComponent(typeof(CS.Unity.Netcode.Transports.UTP.UnityTransport))
+    end
+    -- KCP
+    if transportType == _M.TransportType.UOSKCP then
+        return dsNetworkManager.gameObject:GetComponent(typeof(CS.Netcode.Transports.KCP.Kcp2kTransport))
     end
 end
 
