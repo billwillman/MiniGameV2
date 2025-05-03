@@ -7,7 +7,7 @@
 */
 
 #if UNITY_WEIXINMINIGAME && !UNITY_EDITOR
-    #define _USE_WX
+    //#define _USE_WX
 #endif
 
 #if USE_UNI_LUA
