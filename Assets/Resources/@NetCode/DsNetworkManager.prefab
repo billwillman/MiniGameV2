@@ -87,7 +87,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Host: 127.0.0.1
   Port: 7777
-  DiscardInvalidKcpPacket: 1
+  DiscardInvalidKcpPacket: 0
 --- !u!114 &3912720752496253734
 MonoBehaviour:
   m_ObjectHideFlags: 0
