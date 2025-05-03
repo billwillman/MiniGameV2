@@ -78,9 +78,11 @@ function StateManager:ChangeState(stateType, isForce, ...)
         _MOE.Logger.LogWarningFormat("[StateManager] Enter State: {0}", tostring(self:GetStateType()))
         self.m_State:DoRegisterEvents()
         self.m_State:DoEnter()
+        return true
     else
         state:DoDispose()
     end
+    return false
 end
 
 function StateManager:GetStateType()
