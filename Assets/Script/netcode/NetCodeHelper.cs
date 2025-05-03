@@ -263,6 +263,7 @@ namespace Unity.Netcode
         public static void GenerateScenesInBuild2(NetworkSceneManager networkManager, LuaTable arr) {
             if (arr == null || networkManager == null)
                 return;
+            Debug.Log("[GenerateScenesInBuild2] Start");
             HashToBuildIndex.Clear();
             BuildIndexToHash.Clear();
             BuildSceneArray.Clear();
@@ -280,6 +281,8 @@ namespace Unity.Netcode
                     }
                 }
             }
+
+            Debug.Log("[GenerateScenesInBuild2] End");
         }
     }
 }
