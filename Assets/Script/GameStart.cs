@@ -9,6 +9,7 @@ using UnityEngine;
 using XLua;
 #if UNITY_WEIXINMINIGAME
 using WeChatWASM;
+using UnityEditor;
 #endif
 
 namespace SOC.GamePlay
@@ -144,6 +145,9 @@ namespace SOC.GamePlay
             get {
 #if UNITY_EDITOR
                 var subTarget = UnityEditor.EditorUserBuildSettings.standaloneBuildSubtarget;
+                if (EditorUserBuildSettings.activeBuildTarget != BuildTarget.StandaloneLinux64 && EditorUserBuildSettings.activeBuildTarget != BuildTarget.StandaloneWindows &&
+                        EditorUserBuildSettings.activeBuildTarget != BuildTarget.StandaloneWindows64 && EditorUserBuildSettings.activeBuildTarget != BuildTarget.StandaloneOSX)
+                    subTarget = StandaloneBuildSubtarget.Player;
                 bool isServer = (subTarget == UnityEditor.StandaloneBuildSubtarget.Server);
                 return isServer;
 #else
