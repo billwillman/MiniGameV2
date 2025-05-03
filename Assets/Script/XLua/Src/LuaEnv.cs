@@ -460,7 +460,9 @@ namespace XLua
 
         internal void equeueGCAction(GCAction action)
         {
+#if !_USE_WX
             lock (refQueue)
+#endif
             {
                 refQueue.Enqueue(action);
             }
