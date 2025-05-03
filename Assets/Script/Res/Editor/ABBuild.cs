@@ -2144,7 +2144,11 @@ class AssetBundleMgr
 		bool isServer = platform == eBuildPlatform.eBuildDS || platform == eBuildPlatform.eBuildDS_LINUX;
 		bool isSubTargetChanged = false;
 #if UNITY_2022_1_OR_NEWER
-		isSubTargetChanged = EditorUserBuildSettings.standaloneBuildSubtarget != (isServer ? StandaloneBuildSubtarget.Server : StandaloneBuildSubtarget.Player);
+		var currentStandaloneBuildSubtarget = EditorUserBuildSettings.standaloneBuildSubtarget;
+		if (EditorUserBuildSettings.activeBuildTarget != BuildTarget.StandaloneLinux64 && EditorUserBuildSettings.activeBuildTarget != BuildTarget.StandaloneWindows &&
+			EditorUserBuildSettings.activeBuildTarget != BuildTarget.StandaloneWindows64 && EditorUserBuildSettings.activeBuildTarget != BuildTarget.StandaloneOSX)
+			currentStandaloneBuildSubtarget = StandaloneBuildSubtarget.Player;
+        isSubTargetChanged = currentStandaloneBuildSubtarget != (isServer ? StandaloneBuildSubtarget.Server : StandaloneBuildSubtarget.Player);
 #endif
 		if (EditorUserBuildSettings.activeBuildTarget != target || isSubTargetChanged)
 		{
