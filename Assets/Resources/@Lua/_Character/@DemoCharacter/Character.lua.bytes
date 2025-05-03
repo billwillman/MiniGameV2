@@ -1,18 +1,20 @@
 local DemoSkillCharacter = _MOE.class("DemoSkillCharacter", _MOE.SkillManagerBase)
 
 function DemoSkillCharacter:OnRegisterStateClass()
+    --[[
     local SkillNames = {
         "Locomotion"
     }
     self:RegisterSkills(SkillNames, true)
+    ]]
 end
 
 function DemoSkillCharacter:OnInit()
-    self:ChangeState("Locomotion")
+    --self:ChangeState("Locomotion")
 end
 
 function DemoSkillCharacter:OnLocalReceiveBegin()
-    self:RegisterInputActionsDefault({"Move"})
+    --self:RegisterInputActionsDefault({"Move"})
 end
 
 return DemoSkillCharacter
