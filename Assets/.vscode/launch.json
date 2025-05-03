@@ -12,7 +12,7 @@
             "description": "通用模式,通常调试项目请选择此模式 | launchVer:3.2.0",
             "cwd": "${workspaceFolder}",
             "luaFileExtension": ".lua.bytes",
-            "connectionPort": 31001,
+            "connectionPort": 31000,
             "stopOnEntry": true,
             "useCHook": true,
             "autoPathMode": true,
@@ -32,7 +32,7 @@
             "luaPath": "",
             "packagePath": [],
             "luaFileExtension": ".lua.bytes",
-            "connectionPort": 31001,
+            "connectionPort": 31000,
             "stopOnEntry": true,
             "useCHook": true
         }
