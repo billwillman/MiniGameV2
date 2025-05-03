@@ -6,6 +6,10 @@
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 */
 
+#if UNITY_WEIXINMINIGAME && !UNITY_EDITOR
+    #define _USE_WX
+#endif
+
 #if USE_UNI_LUA
 using LuaAPI = UniLua.Lua;
 using RealStatePtr = UniLua.ILuaState;
@@ -341,8 +345,10 @@ namespace XLua
             {
 #endif
                 var _L = L;
-                lock (refQueue)
-                {
+#if !_USE_WX
+            lock (refQueue)
+#endif
+            {
                     while (refQueue.Count > 0)
                     {
                         GCAction gca = refQueue.Dequeue();
