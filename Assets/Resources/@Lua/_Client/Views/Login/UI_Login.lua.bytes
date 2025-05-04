@@ -20,7 +20,17 @@ function _M:_On_GS_SM_LOGIN_RET(msg)
     end
 end
 
+function _M:ApplyServerIp()
+    if not self.bp or not self.bp.ListServer then
+        return
+    end
+    local text = self.bp.ListServer.captionText.text
+    _MOE.Logger.Log("[ApplyServerIp] " .. text)
+    _MOE.GsData.ip = text
+end
+
 function _M:_OnBtnLogin()
+    self:ApplyServerIp()
     _MOE.Models.NetModel:ConnectServer()
     _MOE.Models.RootAttr:SendLoginMsg(self.bp.EdtUserName.text)
 end
