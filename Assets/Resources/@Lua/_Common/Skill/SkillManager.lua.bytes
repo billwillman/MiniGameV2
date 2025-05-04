@@ -56,7 +56,17 @@ function SkillManagerBase:Ctor(skillManagerCS, binder)
     if not _MOE.IsDS then
         _MOE.EventManager:RegisterEvent("On_Local_Character_ReceiveBegin", self, self.On_Local_Character_ReceiveBegin)
         _MOE.EventManager:RegisterEvent("On_Local_Character_ReceiveEnd", self, self.On_Local_Character_ReceiveEnd)
+        _MOE.EventManager:RegisterEvent("On_Simlate_Character_ReceiveEnd", self, self.On_Simlate_Character_ReceiveEnd)
+        _MOE.EventManager:RegisterEvent("On_Simlate_Character_ReceiveBegin", self, self.On_Simlate_Character_ReceiveBegin)
     end
+end
+
+function SkillManagerBase:On_Simlate_Character_ReceiveEnd()
+    self:OnSimlateReceiveEnd()
+end
+
+function SkillManagerBase:On_Simlate_Character_ReceiveBegin()
+    self:OnSimlateReceiveBegin()
 end
 
 function SkillManagerBase:On_Local_Character_ReceiveBegin()
@@ -314,6 +324,12 @@ function SkillManagerBase:OnLocalReceiveBegin()
 end
 
 function SkillManagerBase:OnLocalReceiveEnd()
+end
+
+function SkillManagerBase:OnSimlateReceiveBegin()
+end
+
+function SkillManagerBase:OnSimlateReceiveEnd()
 end
 
 function SkillManagerBase:OnUpdate()
