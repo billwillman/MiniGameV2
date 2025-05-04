@@ -5,6 +5,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using Unity.VisualScripting;
 using UnityEngine;
 using XLua;
 #if UNITY_WEIXINMINIGAME
@@ -145,9 +146,9 @@ namespace SOC.GamePlay
             get {
 #if UNITY_EDITOR
                 var subTarget = UnityEditor.EditorUserBuildSettings.standaloneBuildSubtarget;
-                if (EditorUserBuildSettings.activeBuildTarget != BuildTarget.StandaloneLinux64 && EditorUserBuildSettings.activeBuildTarget != BuildTarget.StandaloneWindows &&
-                        EditorUserBuildSettings.activeBuildTarget != BuildTarget.StandaloneWindows64 && EditorUserBuildSettings.activeBuildTarget != BuildTarget.StandaloneOSX)
-                    subTarget = StandaloneBuildSubtarget.Player;
+                if (UnityEditor.EditorUserBuildSettings.activeBuildTarget != UnityEditor.BuildTarget.StandaloneLinux64 && UnityEditor.EditorUserBuildSettings.activeBuildTarget != UnityEditor.BuildTarget.StandaloneWindows &&
+                        UnityEditor.EditorUserBuildSettings.activeBuildTarget != UnityEditor.BuildTarget.StandaloneWindows64 && UnityEditor.EditorUserBuildSettings.activeBuildTarget != UnityEditor.BuildTarget.StandaloneOSX)
+                    subTarget = UnityEditor.StandaloneBuildSubtarget.Player;
                 bool isServer = (subTarget == UnityEditor.StandaloneBuildSubtarget.Server);
                 return isServer;
 #else
