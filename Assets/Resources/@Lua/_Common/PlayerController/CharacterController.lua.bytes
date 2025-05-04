@@ -22,6 +22,14 @@ function BaseCharacterController:RegisterNetworkEvents()
     end
 end
 
+function BaseCharacterController:GetInstanceID()
+    if self.InstanceID then
+        return self.InstanceID
+    end
+    self.InstanceID = self.Binder.gameObject:GetInstanceID()
+    return self.InstanceID
+end
+
 function BaseCharacterController:OnNetworkSpawn()
     if not _MOE.IsDS then
         if self:IsLocalOwner() then
@@ -45,12 +53,12 @@ function BaseCharacterController:OnNetworkSpawn()
             end
             self.RPGCamera = cam
             --- 事件通知CharacterController
-            _MOE.EventManager:DispatchEvent("On_Local_Character_ReceiveBegin")
+            _MOE.EventManager:DispatchEvent("On_Local_Character_ReceiveBegin", self:GetInstanceID())
         else
-            _MOE.EventManager:DispatchEvent("On_Simlate_Character_ReceiveBegin")
+            _MOE.EventManager:DispatchEvent("On_Simlate_Character_ReceiveBegin", self:GetInstanceID())
         end
     elseif _MOE.IsDS then
-        _MOE.EventManager:DispatchEvent("On_Server_Character_ReceiveBegin")
+        _MOE.EventManager:DispatchEvent("On_Server_Character_ReceiveBegin", self:GetInstanceID())
     end
 end
 

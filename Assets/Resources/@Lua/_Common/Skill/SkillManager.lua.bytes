@@ -61,20 +61,40 @@ function SkillManagerBase:Ctor(skillManagerCS, binder)
     end
 end
 
-function SkillManagerBase:On_Simlate_Character_ReceiveEnd()
-    self:OnSimlateReceiveEnd()
+function SkillManagerBase:GetInstanceID()
+    if self.InstanceID then
+        return self.InstanceID
+    end
+    self.InstanceID = self.Binder.gameObject:GetInstanceID()
+    return self.InstanceID
 end
 
-function SkillManagerBase:On_Simlate_Character_ReceiveBegin()
-    self:OnSimlateReceiveBegin()
+function SkillManagerBase:On_Simlate_Character_ReceiveEnd(InstanceID)
+    local myInstanceID = self:GetInstanceID()
+    if myInstanceID == InstanceID then
+        self:OnSimlateReceiveEnd()
+    end
 end
 
-function SkillManagerBase:On_Local_Character_ReceiveBegin()
-    self:OnLocalReceiveBegin()
+function SkillManagerBase:On_Simlate_Character_ReceiveBegin(InstanceID)
+    local myInstanceID = self:GetInstanceID()
+    if myInstanceID == InstanceID then
+        self:OnSimlateReceiveBegin()
+    end
 end
 
-function SkillManagerBase:On_Local_Character_ReceiveEnd()
-    self:OnLocalReceiveEnd()
+function SkillManagerBase:On_Local_Character_ReceiveBegin(InstanceID)
+    local myInstanceID = self:GetInstanceID()
+    if myInstanceID == InstanceID then
+        self:OnLocalReceiveBegin()
+    end
+end
+
+function SkillManagerBase:On_Local_Character_ReceiveEnd(InstanceID)
+    local myInstanceID = self:GetInstanceID()
+    if myInstanceID == InstanceID then
+        self:OnLocalReceiveEnd()
+    end
 end
 
 function SkillManagerBase:GetOwner()
