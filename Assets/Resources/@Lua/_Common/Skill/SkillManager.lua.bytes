@@ -80,6 +80,8 @@ function SkillManagerBase:On_Simlate_Character_ReceiveBegin(InstanceID)
     local myInstanceID = self:GetInstanceID()
     if myInstanceID == InstanceID then
         self:OnSimlateReceiveBegin()
+        _MOE.EventManager:UnRegisterEvent("On_Local_Character_ReceiveBegin", self)
+        _MOE.EventManager:UnRegisterEvent("On_Local_Character_ReceiveEnd", self)
     end
 end
 
@@ -87,6 +89,8 @@ function SkillManagerBase:On_Local_Character_ReceiveBegin(InstanceID)
     local myInstanceID = self:GetInstanceID()
     if myInstanceID == InstanceID then
         self:OnLocalReceiveBegin()
+        _MOE.EventManager:UnRegisterEvent("On_Simlate_Character_ReceiveEnd", self)
+        _MOE.EventManager:UnRegisterEvent("On_Simlate_Character_ReceiveBegin", self)
     end
 end
 
