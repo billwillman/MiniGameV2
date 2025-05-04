@@ -10,7 +10,6 @@ using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Serialization;
-using static UnityEditor.Progress;
 
 namespace UnityEngine.InputSystem.UI
 {
