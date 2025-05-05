@@ -58,6 +58,9 @@ function SkillManagerBase:Ctor(skillManagerCS, binder)
         _MOE.EventManager:RegisterEvent("On_Local_Character_ReceiveEnd", self, self.On_Local_Character_ReceiveEnd)
         _MOE.EventManager:RegisterEvent("On_Simlate_Character_ReceiveEnd", self, self.On_Simlate_Character_ReceiveEnd)
         _MOE.EventManager:RegisterEvent("On_Simlate_Character_ReceiveBegin", self, self.On_Simlate_Character_ReceiveBegin)
+    else
+        _MOE.EventManager:RegisterEvent("On_Server_Character_ReceiveEnd", self, self.On_Server_Character_ReceiveEnd)
+        _MOE.EventManager:RegisterEvent("On_Server_Character_ReceiveBegin", self, self.On_Server_Character_ReceiveBegin)
     end
 end
 
@@ -67,6 +70,22 @@ function SkillManagerBase:GetInstanceID()
     end
     self.InstanceID = self.Binder.gameObject:GetInstanceID()
     return self.InstanceID
+end
+
+function SkillManagerBase:On_Server_Character_ReceiveBegin(InstanceID)
+    local myInstanceID = self:GetInstanceID()
+    if myInstanceID == InstanceID then
+        _MOE.EventManager:UnRegisterEvent("On_Server_Character_ReceiveBegin", self)
+        self:OnServerReceiveBegin()
+    end
+end
+
+function SkillManagerBase:On_Server_Character_ReceiveEnd(InstanceID)
+    local myInstanceID = self:GetInstanceID()
+    if myInstanceID == InstanceID then
+        _MOE.EventManager:UnRegisterEvent("On_Server_Character_ReceiveEnd", self)
+        self:OnServerReceiveEnd()
+    end
 end
 
 function SkillManagerBase:On_Simlate_Character_ReceiveEnd(InstanceID)
@@ -358,6 +377,12 @@ function SkillManagerBase:OnSimlateReceiveBegin()
 end
 
 function SkillManagerBase:OnSimlateReceiveEnd()
+end
+
+function SkillManagerBase:OnServerReceiveBegin()
+end
+
+function SkillManagerBase:OnServerReceiveEnd()
 end
 
 function SkillManagerBase:OnUpdate()

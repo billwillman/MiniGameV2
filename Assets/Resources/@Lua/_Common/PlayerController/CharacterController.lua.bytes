@@ -76,12 +76,12 @@ function BaseCharacterController:OnNetworkDespawn()
         if self:IsLocalOwner() then
             _MOE.LocalLuaCharacterController = nil
             --- 事件通知CharacterController
-            _MOE.EventManager:DispatchEvent("On_Local_Character_ReceiveEnd")
+            _MOE.EventManager:DispatchEvent("On_Local_Character_ReceiveEnd", self:GetInstanceID())
         else
-            _MOE.EventManager:DispatchEvent("On_Simlate_Character_ReceiveEnd")
+            _MOE.EventManager:DispatchEvent("On_Simlate_Character_ReceiveEnd", self:GetInstanceID())
         end
     else
-        _MOE.EventManager:DispatchEvent("On_Server_Character_ReceiveEnd")
+        _MOE.EventManager:DispatchEvent("On_Server_Character_ReceiveEnd", self:GetInstanceID())
     end
 
     self.KCCController = nil
