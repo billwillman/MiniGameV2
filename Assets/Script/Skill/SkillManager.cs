@@ -392,9 +392,11 @@ namespace SOC.GamePlay
         }
 
         private bool m_InitLoadAllActions = false;
+        [BlackList]
+        private bool m_IsRunStarted = false;
 
         public bool LoadAllRegisterActions(int loadPriority = 0) {
-            if (m_RegisterActions == null)
+            if (m_RegisterActions == null || !m_IsRunStarted)
                 return false;
             // º”‘ÿ◊ ‘¥
             var loader = this.Loader;
@@ -435,8 +437,11 @@ namespace SOC.GamePlay
 
         [BlackList]
         protected new void Start() {
+            m_IsRunStarted = true;
             if (!m_InitLoadAllActions)
+            {
                 LoadAllRegisterActions();
+            }
             base.Start();
         }
     }
