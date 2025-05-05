@@ -396,6 +396,7 @@ namespace SOC.GamePlay
         private bool m_IsRunStarted = false;
 
         public bool LoadAllRegisterActions(int loadPriority = 0) {
+            // m_IsRunStarted 是因为在LUA侧 Ctor里会调用加载动作，但会导致第二次加载立马到，这里必须 LoadAllRegisterActions 在Start之后执行
             if (m_RegisterActions == null || !m_IsRunStarted)
                 return false;
             // 加载资源
