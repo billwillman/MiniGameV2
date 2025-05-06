@@ -11,4 +11,9 @@ namespace SOC.GamePlay.Attribute
     {
         public OrderedDictionary<ushort, T> AttributeMap = new OrderedDictionary<ushort, T>();
     }
+
+    public class AttributeGroupMap<T>: UserNetworkVariableSerialization<T>
+    {
+        public OrderedDictionary<string, AttributeGroup<T>> IntValueBoard = new OrderedDictionary<string, AttributeGroup<T>>();
+    }
 }
