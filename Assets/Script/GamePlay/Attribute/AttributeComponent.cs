@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace SOC.GamePlay
+namespace SOC.GamePlay.Attribute
 {
     public class AttributeComponent : MonoBehaviour
     {}
