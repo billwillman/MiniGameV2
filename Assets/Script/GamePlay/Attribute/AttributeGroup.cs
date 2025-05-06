@@ -1,16 +1,13 @@
 using System.Collections;
 using System.Collections.Generic;
+using OD;
 using UnityEngine;
 
 namespace SOC.GamePlay.Attribute
 {
-    public struct Attribute<T>
-    {
-        public T Value;
-    }
 
-    public struct AttributeGroupMeta
+   public class AttributeGroup<T>
     {
-        public string Name; // Ãû×Ö
+        public OrderedDictionary<string, T> AttributeMap = new OrderedDictionary<string, T>();
     }
 }
