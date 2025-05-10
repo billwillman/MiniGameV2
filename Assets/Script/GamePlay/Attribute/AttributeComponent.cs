@@ -12,7 +12,7 @@ namespace SOC.GamePlay.Attribute
     public class AttributeComponent : BaseNetworkMono
     {
         // 数据面板(支持同步)
-        public NetworkVariable<AttributeGroupMap<int>> IntValueBoard = new NetworkVariable<AttributeGroupMap<int>>(default, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+        public NetworkVariable<IntAttributeGroupMap> IntValueBoard = new NetworkVariable<IntAttributeGroupMap>(default, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
         public NetworkVariable<AttributeGroupMap<float>> FloatValueBoard = new NetworkVariable<AttributeGroupMap<float>>(default, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
         public NetworkVariable<AttributeGroupMap<string>> StringValueBoard = new NetworkVariable<AttributeGroupMap<string>>(default, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
         public NetworkVariable<AttributeGroupMap<long>> LongValueBoard = new NetworkVariable<AttributeGroupMap<long>>(default, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
