@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using OD;
@@ -17,43 +18,31 @@ namespace SOC.GamePlay.Attribute
                 return m_AttributeMap;
             }
         }
-    }
 
-    public class AttributeGroupMap<T>: UserNetworkVariableSerialization<AttributeGroupMap<T>>
-    {
-        private OrderedDictionary<string, AttributeGroup<T>> m_IntValueBoard = new OrderedDictionary<string, AttributeGroup<T>>();
-        public OrderedDictionary<string, AttributeGroup<T>> IntValueBoard
+        public void NetworkWrite(FastBufferWriter writer)
         {
-            get
+            ushort Count = (ushort)m_AttributeMap.Count;
+            NetworkVariableSerialization<ushort>.Write(writer, ref Count);
+            foreach (var iter in AttributeMap)
             {
-                return m_IntValueBoard;
-            }
-
-        }
-    }
-
-    public class IntAttributeGroupMap: AttributeGroupMap<int>
-    {
-        static void OnWriteValueDelegate(FastBufferWriter writer, in AttributeGroupMap<int> value)
-        {
-            if (value == null)
-                return;
-            var board = value.IntValueBoard;
-            if (board == null)
-            {
-                writer.WriteValue<ushort>(0); // 长度
-                return;
-            }
-            writer.WriteValue<ushort>((ushort)board.Count); // 不要超过ushort
-            foreach(var iter in board)
-            {
-                //writer.WriteValue<string>(iter.Key);
+                writer.WriteValue<ushort>(iter.Key);
+                var Value = iter.Value;
+                NetworkVariableSerialization<T>.Write(writer, ref Value);
             }
         }
+    }
 
-        static IntAttributeGroupMap()
+    public class IntAttributeGroup: AttributeGroup<int>
+    {
+
+        static IntAttributeGroup()
         {
-            WriteValue = OnWriteValueDelegate;
+            WriteValue = OnWriteValue;
+        }
+
+        private static void OnWriteValue(FastBufferWriter writer, in AttributeGroup<int> value)
+        {
+            
         }
     }
 }
