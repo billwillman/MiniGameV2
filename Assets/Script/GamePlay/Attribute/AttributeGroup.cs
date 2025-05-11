@@ -168,4 +168,26 @@ namespace SOC.GamePlay.Attribute
         public NetworkStringAttributeGroup(): base(default, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server)
         { }
     }
+
+    [System.Serializable]
+    public enum NetworkAttributeType
+    {
+        Int = 0,
+        Int64 = 1,
+        String = 2,
+    }
+
+    [System.Serializable]
+    public class NetworkAttributeMeta
+    {
+        public string AttributeName = string.Empty;
+    }
+
+    [System.Serializable]
+    public class NetworkAttributeGroupMeta
+    {
+        public string AttributeGroupName = string.Empty;
+        public NetworkAttributeType AttributeType = NetworkAttributeType.Int;
+        public NetworkAttributeMeta[] Attributes = null;
+    }
 }

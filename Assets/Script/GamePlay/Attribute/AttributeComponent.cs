@@ -11,8 +11,13 @@ namespace SOC.GamePlay.Attribute
 {
     public class AttributeComponent : BaseNetworkMono
     {
+        public NetworkAttributeGroupMeta AttributeGroupMeta = null;
+
+        [System.NonSerialized]
         public NetworkStringAttributeGroup[] NetworkStringGroupVars;
+        [System.NonSerialized]
         public NetworkIntAttributeGroup[] NetworkIntGroupVars;
+        [System.NonSerialized]
         public NetworkInt64AttributeGroup[] NetworkInt64GroupVars;
     }
 }
