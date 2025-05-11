@@ -14,10 +14,18 @@ namespace SOC.GamePlay.Attribute
         public NetworkAttributeGroupMeta AttributeGroupMeta = null;
 
         [System.NonSerialized]
-        public NetworkStringAttributeGroup[] NetworkStringGroupVars;
+        public List<NetworkStringAttributeGroup> NetworkStringGroupVars;
         [System.NonSerialized]
-        public NetworkIntAttributeGroup[] NetworkIntGroupVars;
+        public List<NetworkIntAttributeGroup> NetworkIntGroupVars;
         [System.NonSerialized]
-        public NetworkInt64AttributeGroup[] NetworkInt64GroupVars;
+        public List<NetworkInt64AttributeGroup> NetworkInt64GroupVars;
+
+        private void Awake()
+        {
+            if (AttributeGroupMeta != null)
+            {
+
+            }
+        }
     }
 }
