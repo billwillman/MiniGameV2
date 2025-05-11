@@ -11,8 +11,8 @@ namespace SOC.GamePlay.Attribute
 {
     public class AttributeComponent : BaseNetworkMono
     {
-        // 数据面板(支持同步)
-        
-        //---------
+        public StringAttributeGroup[] StringGroupVars;
+        public IntAttributeGroup[] IntGroupVars;
+        public Int64AttributeGroup[] Int64GroupVars;
     }
 }

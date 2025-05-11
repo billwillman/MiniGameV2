@@ -65,6 +65,7 @@ namespace SOC.GamePlay.Attribute
         }
     }
 
+    [System.Serializable]
     public class Int64AttributeGroup: AttributeGroup<long>
     {
         static Int64AttributeGroup()
@@ -91,6 +92,7 @@ namespace SOC.GamePlay.Attribute
         }
     }
 
+    [System.Serializable]
     public class StringAttributeGroup: AttributeGroup<string>
     {
         static StringAttributeGroup()
@@ -117,6 +119,7 @@ namespace SOC.GamePlay.Attribute
         }
     }
 
+    [System.Serializable]
     public class IntAttributeGroup: AttributeGroup<int>
     {
 
