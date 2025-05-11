@@ -10,9 +10,19 @@ using UnityEngine.UIElements;
 
 namespace SOC.GamePlay.Attribute
 {
+    [System.Serializable]
+    public enum AttributeInitType
+    {
+        Awake = 0,
+        Start = 1,
+    }
+
     public class AttributeComponent : BaseNetworkMono
     {
         public NetworkAttributeGroupMeta[] AttributeGroupMeta = null;
+
+        public AttributeInitType ServerInitType = AttributeInitType.Awake;
+        public AttributeInitType ClientInitType = AttributeInitType.Start;
 
         [System.NonSerialized]
         public List<NetworkStringAttributeGroup> NetworkStringGroupVars;
@@ -84,9 +94,24 @@ namespace SOC.GamePlay.Attribute
             }
         }
 
-        private void Awake()
+        protected virtual void Awake()
         {
-            InitAttributeGroup();
+            if (GameStart.IsDS)
+            {
+                if (ServerInitType == AttributeInitType.Awake)
+                    InitAttributeGroup();
+            } else if (ClientInitType == AttributeInitType.Awake)
+                InitAttributeGroup();
+        }
+
+        protected virtual void Start()
+        {
+            if (GameStart.IsDS)
+            {
+                if (ServerInitType == AttributeInitType.Start)
+                    InitAttributeGroup();
+            } else if (ClientInitType == AttributeInitType.Start)
+                InitAttributeGroup();
         }
     }
 }
