@@ -50,6 +50,19 @@ namespace SOC.GamePlay.Attribute
                 }
             }
         }
+
+        public void NetworkDuplicateTo(AttributeGroup<T> other)
+        {
+            other.AttributeMap.Clear();
+            foreach (var iter in m_AttributeMap)
+            {
+                ushort key = 0;
+                NetworkVariableSerialization<ushort>.Duplicate((ushort)iter.Key, ref key);
+                T value = default(T);
+                NetworkVariableSerialization<T>.Duplicate(iter.Value, ref value);
+                other.AttributeMap[key] = value;
+            }
+        }
     }
 
     public class IntAttributeGroup: AttributeGroup<int>
@@ -59,11 +72,18 @@ namespace SOC.GamePlay.Attribute
         {
             WriteValue = OnWriteValue;
             ReadValue = OnReadValue;
+            DuplicateValue = OnDuplicateValue;
+        }
+
+        private static void OnDuplicateValue(in AttributeGroup<int> value, ref AttributeGroup<int> duplicatedValue)
+        {
+            value.NetworkDuplicateTo(duplicatedValue);
         }
 
         private static void OnReadValue(FastBufferReader reader, out AttributeGroup<int> value)
         {
-            throw new NotImplementedException();
+            value = new AttributeGroup<int>();
+            value.NetworkRead(reader);
         }
 
         private static void OnWriteValue(FastBufferWriter writer, in AttributeGroup<int> value)
