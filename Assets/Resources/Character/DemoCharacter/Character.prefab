@@ -532,9 +532,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 92c22af35999acb43a81bbd171a2d9db, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  NetworkStringGroupVars: []
-  NetworkIntGroupVars: []
-  NetworkInt64GroupVars: []
+  AttributeGroupMeta: []
 --- !u!1001 &3195904286305349789
 PrefabInstance:
   m_ObjectHideFlags: 0
