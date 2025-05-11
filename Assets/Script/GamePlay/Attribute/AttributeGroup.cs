@@ -181,6 +181,9 @@ namespace SOC.GamePlay.Attribute
     public class NetworkAttributeMeta
     {
         public string AttributeName = string.Empty;
+        public int IntDefaultValue = 0;
+        public long Int64DefaultValue = 0;
+        public string StringDefaultValue = string.Empty;
     }
 
     [System.Serializable]
@@ -189,5 +192,9 @@ namespace SOC.GamePlay.Attribute
         public string AttributeGroupName = string.Empty;
         public NetworkAttributeType AttributeType = NetworkAttributeType.Int;
         public NetworkAttributeMeta[] Attributes = null;
+        public bool bRepNotify = false;
+        public NetworkVariable<IntAttributeGroup>.OnValueChangedDelegate OnIntGroupValueChanged;
+        public NetworkVariable<Int64AttributeGroup>.OnValueChangedDelegate OnInt64GroupValueChanged;
+        public NetworkVariable<StringAttributeGroup>.OnValueChangedDelegate OnStringGroupValueChanged;
     }
 }
