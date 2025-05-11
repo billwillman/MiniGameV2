@@ -30,6 +30,26 @@ namespace SOC.GamePlay.Attribute
                 NetworkVariableSerialization<T>.Write(writer, ref Value);
             }
         }
+        
+        public void NetworkRead(FastBufferReader reader)
+        {
+            ushort Count = 0;
+            NetworkVariableSerialization<ushort>.Read(reader, ref Count);
+            if (Count <= 0)
+                m_AttributeMap.Clear();
+            else
+            {
+                m_AttributeMap.Clear();
+                for (int idx = 0; idx < Count; ++idx)
+                {
+                    ushort key = 0;
+                    NetworkVariableSerialization<ushort>.Read(reader, ref key);
+                    T value = default(T);
+                    NetworkVariableSerialization<T>.Read(reader, ref value);
+                    m_AttributeMap[key] = value;
+                }
+            }
+        }
     }
 
     public class IntAttributeGroup: AttributeGroup<int>
@@ -38,11 +58,17 @@ namespace SOC.GamePlay.Attribute
         static IntAttributeGroup()
         {
             WriteValue = OnWriteValue;
+            ReadValue = OnReadValue;
+        }
+
+        private static void OnReadValue(FastBufferReader reader, out AttributeGroup<int> value)
+        {
+            throw new NotImplementedException();
         }
 
         private static void OnWriteValue(FastBufferWriter writer, in AttributeGroup<int> value)
         {
-            
+            value.NetworkWrite(writer);
         }
     }
 }
