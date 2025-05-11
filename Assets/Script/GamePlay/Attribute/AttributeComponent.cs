@@ -17,6 +17,7 @@ namespace SOC.GamePlay.Attribute
         Start = 1,
     }
 
+    [XLua.LuaCallCSharp]
     public class AttributeComponent : BaseNetworkMono
     {
         public NetworkAttributeGroupMeta[] AttributeGroupMeta = null;
@@ -31,6 +32,7 @@ namespace SOC.GamePlay.Attribute
         [System.NonSerialized]
         public List<NetworkInt64AttributeGroup> NetworkInt64GroupVars;
 
+        [XLua.BlackList]
         public void InitAttributeGroup()
         {
             if (AttributeGroupMeta != null)
@@ -94,6 +96,7 @@ namespace SOC.GamePlay.Attribute
             }
         }
 
+        [XLua.BlackList]
         protected virtual void Awake()
         {
             if (GameStart.IsDS)
@@ -104,6 +107,7 @@ namespace SOC.GamePlay.Attribute
                 InitAttributeGroup();
         }
 
+        [XLua.BlackList]
         protected virtual void Start()
         {
             if (GameStart.IsDS)
