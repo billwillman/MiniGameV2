@@ -65,6 +65,58 @@ namespace SOC.GamePlay.Attribute
         }
     }
 
+    public class Int64AttributeGroup: AttributeGroup<long>
+    {
+        static Int64AttributeGroup()
+        {
+            WriteValue = OnWriteValue;
+            ReadValue = OnReadValue;
+            DuplicateValue = OnDuplicateValue;
+        }
+
+        private static void OnDuplicateValue(in AttributeGroup<long> value, ref AttributeGroup<long> duplicatedValue)
+        {
+            value.NetworkDuplicateTo(duplicatedValue);
+        }
+
+        private static void OnReadValue(FastBufferReader reader, out AttributeGroup<long> value)
+        {
+            value = new AttributeGroup<long>();
+            value.NetworkRead(reader);
+        }
+
+        private static void OnWriteValue(FastBufferWriter writer, in AttributeGroup<long> value)
+        {
+            value.NetworkWrite(writer);
+        }
+    }
+
+    public class StringAttributeGroup: AttributeGroup<string>
+    {
+        static StringAttributeGroup()
+        {
+            WriteValue = OnWriteValue;
+            ReadValue = OnReadValue;
+            DuplicateValue = OnDuplicateValue;
+        }
+
+        private static void OnDuplicateValue(in AttributeGroup<string> value, ref AttributeGroup<string> duplicatedValue)
+        {
+            value.NetworkDuplicateTo(duplicatedValue);
+        }
+
+        private static void OnReadValue(FastBufferReader reader, out AttributeGroup<string> value)
+        {
+            value = new AttributeGroup<string>();
+            value.NetworkRead(reader);
+        }
+
+        private static void OnWriteValue(FastBufferWriter writer, in AttributeGroup<string> value)
+        {
+            value.NetworkWrite(writer);
+        }
+    }
+
     public class IntAttributeGroup: AttributeGroup<int>
     {
 
