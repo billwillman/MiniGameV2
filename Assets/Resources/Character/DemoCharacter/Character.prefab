@@ -62,7 +62,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GlobalObjectIdHash: 512812389
+  GlobalObjectIdHash: 493305276
   InScenePlacedSourceGlobalObjectIdHash: 493305276
   AlwaysReplicateAsRoot: 1
   SynchronizeTransform: 1
@@ -532,6 +532,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 92c22af35999acb43a81bbd171a2d9db, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  NetworkStringGroupVars: []
+  NetworkIntGroupVars: []
+  NetworkInt64GroupVars: []
 --- !u!1001 &3195904286305349789
 PrefabInstance:
   m_ObjectHideFlags: 0
