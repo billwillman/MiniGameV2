@@ -146,4 +146,26 @@ namespace SOC.GamePlay.Attribute
             value.NetworkWrite(writer);
         }
     }
+
+    [System.Serializable]
+    public class NetworkIntAttributeGroup: NetworkVariable<IntAttributeGroup>
+    {
+        // new IntAttributeGroup()
+        public NetworkIntAttributeGroup(): base(default, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server)
+        { }
+    }
+
+    [System.Serializable]
+    public class NetworkInt64AttributeGroup: NetworkVariable<Int64AttributeGroup>
+    {
+        public NetworkInt64AttributeGroup(): base(default, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server)
+        { }
+    }
+
+    [System.Serializable]
+    public class NetworkStringAttributeGroup: NetworkVariable<StringAttributeGroup>
+    {
+        public NetworkStringAttributeGroup(): base(default, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server)
+        { }
+    }
 }
