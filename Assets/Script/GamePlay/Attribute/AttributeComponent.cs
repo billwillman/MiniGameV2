@@ -32,6 +32,123 @@ namespace SOC.GamePlay.Attribute
         [System.NonSerialized]
         public List<NetworkInt64AttributeGroup> NetworkInt64GroupVars;
 
+        public int GetNetworkStringGroupVarsNum()
+        {
+            if (NetworkStringGroupVars == null)
+                return 0;
+            return NetworkStringGroupVars.Count;
+        }
+
+        public bool GetNetworkIntGroupVars(int index, out IntAttributeGroup ret)
+        {
+            ret = default(IntAttributeGroup);
+            if (index < 0 || index >= GetNetworkIntGroupVarsNum())
+                return false;
+            var item = NetworkIntGroupVars[index];
+            if (item == null)
+                return false;
+            ret = item.Value;
+            return true;
+        }
+
+        public bool SetNetworkIntGroupVars(int index, ushort key, int value)
+        {
+            if (index < 0 || index >= GetNetworkIntGroupVarsNum())
+                return false;
+            var item = NetworkIntGroupVars[index];
+            if (item == null || item.Value == null || item.Value.AttributeMap == null)
+                return false;
+            item.Value.AttributeMap[key] = value;
+            return true;
+        }
+
+        public bool SetNetworkInt64GroupVars(int index, ushort key, long value)
+        {
+            if (index < 0 || index >= GetNetworkInt64GroupVarsNum())
+                return false;
+            var item = NetworkInt64GroupVars[index];
+            if (item == null || item.Value == null || item.Value.AttributeMap == null)
+                return false;
+            item.Value.AttributeMap[key] = value;
+            return true;
+        }
+
+        public bool SetNetworkStringGroupVars(int index, ushort key, string value)
+        {
+            if (index < 0 || index >= GetNetworkStringGroupVarsNum())
+                return false;
+            var item = NetworkStringGroupVars[index];
+            if (item == null || item.Value == null || item.Value.AttributeMap == null)
+                return false;
+            item.Value.AttributeMap[key] = value;
+            return true;
+        }
+
+        public bool GetNetworkStringGroupVars(int index, ushort key, out string ret)
+        {
+            ret = default(string);
+            StringAttributeGroup group;
+            if (!GetNetworkStringGroupVars(index, out group) || group == null || group.AttributeMap == null)
+                return false;
+            return group.AttributeMap.TryGetValue(key, out ret);
+        }
+
+        public bool GetNetworkIntGroupVars(int index, ushort key, out int ret)
+        {
+            ret = default(int);
+            IntAttributeGroup group;
+            if (!GetNetworkIntGroupVars(index, out group) || group == null || group.AttributeMap == null)
+                return false;
+            return group.AttributeMap.TryGetValue(key, out ret);
+        }
+
+        public bool GetNetworkInt64GroupVars(int index, ushort key, out long ret)
+        {
+            ret = default(long);
+            Int64AttributeGroup group;
+            if (!GetNetworkInt64GroupVars(index, out group) || group == null || group.AttributeMap == null)
+                return false;
+            return group.AttributeMap.TryGetValue(key, out ret);
+        }
+
+        public bool GetNetworkStringGroupVars(int index, out StringAttributeGroup ret)
+        {
+            ret = default(StringAttributeGroup);
+            if (index < 0 || index >= GetNetworkStringGroupVarsNum())
+                return false;
+            var item = NetworkStringGroupVars[index];
+            if (item == null)
+                return false;
+            ret = item.Value;
+            return true;
+        }
+
+        public bool GetNetworkInt64GroupVars(int index, out Int64AttributeGroup ret)
+        {
+            ret = default(Int64AttributeGroup);
+            if (index < 0 || index >= GetNetworkInt64GroupVarsNum())
+                return false;
+            var item = NetworkInt64GroupVars[index];
+            if (item == null)
+                return false;
+            ret = item.Value;
+            return true;
+        }
+
+        public int GetNetworkIntGroupVarsNum()
+        {
+            if (NetworkIntGroupVars == null)
+                return 0;
+            return NetworkIntGroupVars.Count;
+        }
+
+        public int GetNetworkInt64GroupVarsNum()
+        {
+            if (NetworkInt64GroupVars == null)
+                return 0;
+            return NetworkInt64GroupVars.Count;
+        }
+
         [XLua.BlackList]
         public void InitAttributeGroup()
         {
