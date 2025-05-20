@@ -59,6 +59,7 @@ namespace SOC.GamePlay.Attribute
             if (item == null || item.Value == null || item.Value.AttributeMap == null)
                 return false;
             item.Value.AttributeMap[key] = value;
+            item.SetDirty(true);
             return true;
         }
 
@@ -70,6 +71,7 @@ namespace SOC.GamePlay.Attribute
             if (item == null || item.Value == null || item.Value.AttributeMap == null)
                 return false;
             item.Value.AttributeMap[key] = value;
+            item.SetDirty(true);
             return true;
         }
 
@@ -81,6 +83,7 @@ namespace SOC.GamePlay.Attribute
             if (item == null || item.Value == null || item.Value.AttributeMap == null)
                 return false;
             item.Value.AttributeMap[key] = value;
+            item.SetDirty(true);
             return true;
         }
 
