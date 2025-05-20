@@ -1057,7 +1057,7 @@ MonoBehaviour:
       StringDefaultValue: 
     bRepNotify: 0
   ServerInitType: 0
-  ClientInitType: 1
+  ClientInitType: 0
 --- !u!1 &9130053351090552919
 GameObject:
   m_ObjectHideFlags: 0
