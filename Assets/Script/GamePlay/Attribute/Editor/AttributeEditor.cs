@@ -51,6 +51,8 @@ public class AttributeComponentEditor : Editor
                     stream.Close();
                     stream.Dispose();
                 }
+                Debug.Log("生成Attribute完成");
+                AssetDatabase.Refresh();
             }
         }
     }
