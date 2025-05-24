@@ -33,17 +33,19 @@ public class AttributeComponentEditor : Editor
                     foreach (var groupMeta in component.AttributeGroupMeta)
                     {
                         StringBuilder metaBuilder = new StringBuilder();
+                        metaBuilder.AppendLine();
                         int key = 0;
                         foreach (var meta in groupMeta.Attributes)
                         {
                             if (string.IsNullOrEmpty(meta.AttributeName))
                                 continue;
-                            metaBuilder.Append("\n      ").Append(meta.AttributeName).Append(" = ").Append(key).Append(",").AppendLine();
+                            metaBuilder.Append("      ").Append(meta.AttributeName).Append(" = ").Append(key++).Append(",").AppendLine();
                         }
 
-                        attributesBuilder.AppendFormat("    {0} = {{1}},", groupMeta.AttributeGroupName, metaBuilder.ToString());
+                        attributesBuilder.AppendFormat("    ").Append(groupMeta.AttributeGroupName).Append(" = {").Append(metaBuilder.ToString()).Append("    },").AppendLine();
                     }
-                    string content = string.Format("local _M = {\n{0}\n}", attributesBuilder.ToString());
+                    string content = "local _M = {\n" + attributesBuilder.ToString() + "}\n\nreturn _M";
+                    Debug.Log(content);
                     byte[] buffer = System.Text.Encoding.UTF8.GetBytes(content);
                     stream.Write(buffer, 0, buffer.Length);
                 } finally
