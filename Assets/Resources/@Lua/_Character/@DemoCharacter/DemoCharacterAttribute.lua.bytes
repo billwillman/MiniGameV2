@@ -1,5 +1,24 @@
 local CSharpEventContainer = require("_Common.CSharpEventContainer")
+local AttributeDefine = require("_Attribute.Character_AttributeDefine")
 
 local _M = _MOE.class("DemoCharacterAttribute", CSharpEventContainer)
+
+function _M:Ctor(AttributeComponent, binder)
+    self.AttributeComponent = AttributeComponent
+    self.Binder = binder
+
+    self:RegisterNetworkEvents()
+end
+
+function _M:RegisterNetworkEvents()
+    self:RegsterCSharpEvent(self.AttributeComponent, "OnInitAttributeEvent", self.OnInitAttributeEvent)
+end
+
+function _M:OnInitAttributeEvent()
+    if _MOE.IsDS then
+    else
+        
+    end
+end
 
 return _M

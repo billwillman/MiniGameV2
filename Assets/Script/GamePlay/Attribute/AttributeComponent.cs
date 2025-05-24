@@ -152,7 +152,13 @@ namespace SOC.GamePlay.Attribute
             return NetworkInt64GroupVars.Count;
         }
 
-        public Action OnInitAttributeEvent
+        public Action OnPostInitAttributeEvent
+        {
+            get;
+            set;
+        }
+
+        public Action OnPreInitAttributeEvent
         {
             get;
             set;
@@ -163,6 +169,9 @@ namespace SOC.GamePlay.Attribute
         {
             if (AttributeGroupMeta != null)
             {
+                if (OnPreInitAttributeEvent != null)
+                    OnPreInitAttributeEvent();
+
                 foreach (var iter in AttributeGroupMeta)
                 {
                     switch (iter.AttributeType)
@@ -219,8 +228,8 @@ namespace SOC.GamePlay.Attribute
                             break;
                     }
                 }
-                if (OnInitAttributeEvent != null)
-                    OnInitAttributeEvent();
+                if (OnPostInitAttributeEvent != null)
+                    OnPostInitAttributeEvent();
             }
         }
 
