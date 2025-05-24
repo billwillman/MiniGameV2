@@ -14,6 +14,7 @@ using System.Linq;
 using System.Reflection;
 using NsHttpClient;
 using Unity.Netcode;
+using SOC.GamePlay.Attribute;
 
 //配置的详细介绍请看Doc下《XLua的配置.doc》
 public static class ExampleGenConfig
@@ -75,6 +76,10 @@ public static class ExampleGenConfig
                 typeof(Action<float, bool, GameObject>),
                 typeof(Action<ulong>),
                 typeof(Action<NetworkManager, ConnectionEventData>),
+
+                typeof(NetworkVariable<IntAttributeGroup>.OnValueChangedDelegate),
+                typeof(NetworkVariable<Int64AttributeGroup>.OnValueChangedDelegate),
+                typeof(NetworkVariable<StringAttributeGroup>.OnValueChangedDelegate),
                 //--
             };
 
@@ -113,7 +118,11 @@ public static class ExampleGenConfig
                 typeof(Action<HttpClient, HttpListenerStatus>),
                 typeof(UnityEngine.Events.UnityAction<UnityEngine.InputSystem.InputAction.CallbackContext>),
                 typeof(Action<float, bool, GameObject>),
-                typeof(Action<NetworkManager.ConnectionApprovalRequest, NetworkManager.ConnectionApprovalResponse>)
+                typeof(Action<NetworkManager.ConnectionApprovalRequest, NetworkManager.ConnectionApprovalResponse>),
+
+                typeof(NetworkVariable<IntAttributeGroup>.OnValueChangedDelegate),
+                typeof(NetworkVariable<Int64AttributeGroup>.OnValueChangedDelegate),
+                typeof(NetworkVariable<StringAttributeGroup>.OnValueChangedDelegate),
             };
 
     //黑名单
