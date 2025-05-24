@@ -20,6 +20,8 @@ function _M:OnDestroy()
 end
 
 function _M:OnStart()
+    self.AttributeComponent:SetAttributeChangeEvent(AttributeDefine.HPGroup._Index, function()
+    end)
 end
 
 return _M
