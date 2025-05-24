@@ -11,10 +11,10 @@ function _M:Ctor(AttributeComponent, binder)
 end
 
 function _M:RegisterNetworkEvents()
-    self:RegsterCSharpEvent(self.AttributeComponent, "OnInitAttributeEvent", self.OnInitAttributeEvent)
+    self:RegsterCSharpEvent(self.AttributeComponent, "OnPreInitAttributeEvent", self.OnPreInitAttributeEvent)
 end
 
-function _M:OnInitAttributeEvent()
+function _M:OnPreInitAttributeEvent()
     if _MOE.IsDS then
     else
         
