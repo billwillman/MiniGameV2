@@ -152,6 +152,12 @@ namespace SOC.GamePlay.Attribute
             return NetworkInt64GroupVars.Count;
         }
 
+        public Action OnInitAttributeEvent
+        {
+            get;
+            set;
+        }
+
         [XLua.BlackList]
         public void InitAttributeGroup()
         {
@@ -213,6 +219,8 @@ namespace SOC.GamePlay.Attribute
                             break;
                     }
                 }
+                if (OnInitAttributeEvent != null)
+                    OnInitAttributeEvent();
             }
         }
 
