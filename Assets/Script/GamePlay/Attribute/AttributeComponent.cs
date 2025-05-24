@@ -23,7 +23,7 @@ namespace SOC.GamePlay.Attribute
         public NetworkAttributeGroupMeta[] AttributeGroupMeta = null;
 
         public AttributeInitType ServerInitType = AttributeInitType.Awake;
-        public AttributeInitType ClientInitType = AttributeInitType.Start;
+        public AttributeInitType ClientInitType = AttributeInitType.Awake;
 
         [System.NonSerialized]
         public List<NetworkStringAttributeGroup> NetworkStringGroupVars;
