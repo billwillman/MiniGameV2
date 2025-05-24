@@ -14,10 +14,14 @@ function _M:RegisterNetworkEvents()
     self:RegsterCSharpEvent(self.AttributeComponent, "OnPreInitAttributeEvent", self.OnPreInitAttributeEvent)
 end
 
+function _M:OnHPGroupChanged()
+end
+
 function _M:OnPreInitAttributeEvent()
     if _MOE.IsDS then
     else
-        
+        local meta = self.AttributeComponent.AttributeGroupMeta[AttributeDefine.HPGroup._Index]
+        self:RegsterCSharpEvent(meta, "OnValueChangedDelegate", self.OnHPGroupChanged)
     end
 end
 
