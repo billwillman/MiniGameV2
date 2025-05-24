@@ -187,7 +187,6 @@ namespace SOC.GamePlay.Attribute
                                 ushort currentKey = 0;
                                 foreach (var intIter in iter.Attributes)
                                 {
-                                    Group1.Value = new IntAttributeGroup();
                                     Group1.Value.AttributeMap.Add(currentKey++, intIter.IntDefaultValue);
                                 }
                                 Group1.SetDirty(false); // 默认值不认为是
@@ -205,7 +204,6 @@ namespace SOC.GamePlay.Attribute
                                 ushort currentKey = 0;
                                 foreach (var int64Iter in iter.Attributes)
                                 {
-                                    Group2.Value = new Int64AttributeGroup();
                                     Group2.Value.AttributeMap.Add(currentKey++, int64Iter.Int64DefaultValue);
                                 }
                                 Group2.SetDirty(false);
@@ -222,7 +220,6 @@ namespace SOC.GamePlay.Attribute
                                 ushort currentKey = 0;
                                 foreach (var stringIter in iter.Attributes)
                                 {
-                                    Group3.Value = new StringAttributeGroup();
                                     Group3.Value.AttributeMap.Add(currentKey++, stringIter.StringDefaultValue);
                                 }
                                 Group3.SetDirty(false);
