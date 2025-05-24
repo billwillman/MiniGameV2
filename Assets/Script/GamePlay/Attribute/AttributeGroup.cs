@@ -151,21 +151,21 @@ namespace SOC.GamePlay.Attribute
     public class NetworkIntAttributeGroup: NetworkVariable<IntAttributeGroup>
     {
         // new IntAttributeGroup()
-        public NetworkIntAttributeGroup(): base(new IntAttributeGroup(), NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner)
+        public NetworkIntAttributeGroup(): base(new IntAttributeGroup(), NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server)
         {}
     }
 
     [System.Serializable]
     public class NetworkInt64AttributeGroup: NetworkVariable<Int64AttributeGroup>
     {
-        public NetworkInt64AttributeGroup(): base(new Int64AttributeGroup(), NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner)
+        public NetworkInt64AttributeGroup(): base(new Int64AttributeGroup(), NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server)
         {}
     }
 
     [System.Serializable]
     public class NetworkStringAttributeGroup: NetworkVariable<StringAttributeGroup>
     {
-        public NetworkStringAttributeGroup(): base(new StringAttributeGroup(), NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner)
+        public NetworkStringAttributeGroup(): base(new StringAttributeGroup(), NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server)
         {}
     }
 
