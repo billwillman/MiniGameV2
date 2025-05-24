@@ -5,6 +5,7 @@ using JetBrains.Annotations;
 using OD;
 using SOC.GamePlay;
 using Unity.Netcode;
+using UnityEditor.UI;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -162,6 +163,24 @@ namespace SOC.GamePlay.Attribute
         {
             get;
             set;
+        }
+
+        public void SetAttributeChangeEvent(int index, NetworkVariable<IntAttributeGroup>.OnValueChangedDelegate evt)
+        {
+            var Group = NetworkIntGroupVars[index];
+            Group.OnValueChanged = evt;
+        }
+
+        public void SetAttributeChangeEvent(int index, NetworkVariable<Int64AttributeGroup>.OnValueChangedDelegate evt)
+        {
+            var Group = NetworkInt64GroupVars[index];
+            Group.OnValueChanged = evt;
+        }
+
+        public void SetAttributeChangeEvent(int index, NetworkVariable<StringAttributeGroup>.OnValueChangedDelegate evt)
+        {
+            var Group = NetworkStringGroupVars[index];
+            Group.OnValueChanged = evt;
         }
 
         [XLua.BlackList]
