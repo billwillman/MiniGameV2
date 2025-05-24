@@ -25,7 +25,7 @@ public class AttributeComponentEditor : Editor
                 const string Clone = "(Clone)";
                 if (name.EndsWith(Clone, System.StringComparison.CurrentCultureIgnoreCase))
                     name = name.Substring(0, name.Length - Clone.Length);
-                string path = string.Format("{0}{1}_Attribute.lua", _rootDir, name);
+                string path = string.Format("{0}{1}_AttributeDefine.lua", _rootDir, name);
                 FileStream stream = new FileStream(path, FileMode.Create, FileAccess.Write);
                 try
                 {
