@@ -544,7 +544,7 @@ MonoBehaviour:
       IntDefaultValue: 100
       Int64DefaultValue: 0
       StringDefaultValue: 
-    bRepNotify: 0
+    bRepNotify: 1
   - AttributeGroupName: MPGroup
     AttributeType: 0
     Attributes:
@@ -556,7 +556,7 @@ MonoBehaviour:
       IntDefaultValue: 100
       Int64DefaultValue: 0
       StringDefaultValue: 
-    bRepNotify: 0
+    bRepNotify: 1
   ServerInitType: 0
   ClientInitType: 0
 --- !u!1001 &3195904286305349789
