@@ -6,6 +6,7 @@ local _M = _MOE.class("DemoCharacterAttribute", CSharpEventContainer)
 function _M:Ctor(AttributeComponent, binder)
     self.AttributeComponent = AttributeComponent
     self.Binder = binder
+    self.Binder:RegisterLuaEvent(EventType.Destroyed:GetHashCode(), self.OnDestroy)
 
     self:RegisterNetworkEvents()
 end
@@ -23,6 +24,13 @@ function _M:OnPreInitAttributeEvent()
         local meta = self.AttributeComponent.AttributeGroupMeta[AttributeDefine.HPGroup._Index]
         self:RegsterCSharpEvent(meta, "OnValueChangedDelegate", self.OnHPGroupChanged)
     end
+end
+
+function _M:OnDestroy()
+    _MOE.EventManager:UnRegisterEvents(self)
+    self:UnRegsterAllCsharpEvents()
+    self.Binder = nil
+    self.AttributeComponent = nil
 end
 
 return _M
