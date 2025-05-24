@@ -1,11 +1,11 @@
 local _M = {
     HPGroup = {
-    _Index = 0,
+      _Index = 0,
       CurrentHP = 0,
       MaxHP = 1,
     },
     MPGroup = {
-    _Index = 1,
+      _Index = 1,
       CurrentMP = 0,
       MaxMP = 1,
     },
