@@ -6,6 +6,8 @@ local _M = _MOE.class("DemoCharacterAttribute", CSharpEventContainer)
 function _M:Ctor(AttributeComponent, binder)
     self.AttributeComponent = AttributeComponent
     self.Binder = binder
+
+    local EventType = _MOE.LuaEvent_MonoEventType
     self.Binder:RegisterLuaEvent(EventType.Destroyed:GetHashCode(), self.OnDestroy)
 
     self:RegisterNetworkEvents()
