@@ -43,7 +43,7 @@ public class AttributeComponentEditor : Editor
                             metaBuilder.Append("      ").Append(meta.AttributeName).Append(" = ").Append(key++).Append(",").AppendLine();
                         }
 
-                        attributesBuilder.AppendFormat("    ").Append(groupMeta.AttributeGroupName).Append(" = {").AppendLine().Append("    _Index = ").Append(index++).Append(",").Append(metaBuilder.ToString()).Append("    },").AppendLine();
+                        attributesBuilder.AppendFormat("    ").Append(groupMeta.AttributeGroupName).Append(" = {").AppendLine().Append("      _Index = ").Append(index++).Append(",").Append(metaBuilder.ToString()).Append("    },").AppendLine();
                     }
                     string content = "local _M = {\n" + attributesBuilder.ToString() + "}\n\nreturn _M";
                     Debug.Log(content);
