@@ -13,6 +13,8 @@ function _M:Ctor(AttributeComponent, binder)
 end
 
 function _M:OnDestroy()
+    self.AttributeComponent:SetAttributeChangeEvent(AttributeDefine.HPGroup._Index, nil)
+
     _MOE.EventManager:UnRegisterEvents(self)
     self:UnRegsterAllCsharpEvents()
     self.Binder = nil
