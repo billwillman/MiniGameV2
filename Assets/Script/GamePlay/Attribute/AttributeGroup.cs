@@ -77,6 +77,8 @@ namespace SOC.GamePlay.Attribute
 
         private static void OnDuplicateValue(in AttributeGroup<long> value, ref AttributeGroup<long> duplicatedValue)
         {
+            if (duplicatedValue == null)
+                duplicatedValue = new AttributeGroup<long>();
             value.NetworkDuplicateTo(duplicatedValue);
         }
 
@@ -104,6 +106,8 @@ namespace SOC.GamePlay.Attribute
 
         private static void OnDuplicateValue(in AttributeGroup<string> value, ref AttributeGroup<string> duplicatedValue)
         {
+            if (duplicatedValue == null)
+                duplicatedValue = new AttributeGroup<string>();
             value.NetworkDuplicateTo(duplicatedValue);
         }
 
@@ -132,6 +136,8 @@ namespace SOC.GamePlay.Attribute
 
         private static void OnDuplicateValue(in AttributeGroup<int> value, ref AttributeGroup<int> duplicatedValue)
         {
+            if (duplicatedValue == null)
+                duplicatedValue = new AttributeGroup<int>();
             value.NetworkDuplicateTo(duplicatedValue);
         }
 
