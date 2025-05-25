@@ -113,9 +113,10 @@ namespace SOC.GamePlay.Attribute
             value.NetworkDuplicateTo(duplicatedValue);
         }
 
-        private static void OnReadValue(FastBufferReader reader, out Int64AttributeGroup value)
+        private static void OnReadValue(FastBufferReader reader, ref Int64AttributeGroup value)
         {
-            value = new Int64AttributeGroup();
+            if (value == null)
+                value = new Int64AttributeGroup();
             value.NetworkRead(reader);
         }
 
@@ -131,9 +132,10 @@ namespace SOC.GamePlay.Attribute
             value.NetworkDuplicateTo(duplicatedValue);
         }
 
-        private static void OnReadValue(FastBufferReader reader, out AttributeGroup<long> value)
+        private static void OnReadValue(FastBufferReader reader, ref AttributeGroup<long> value)
         {
-            value = new AttributeGroup<long>();
+            if (value == null)
+                value = new AttributeGroup<long>();
             value.NetworkRead(reader);
         }
 
@@ -169,9 +171,10 @@ namespace SOC.GamePlay.Attribute
             value.NetworkDuplicateTo(duplicatedValue);
         }
 
-        private static void OnReadValue(FastBufferReader reader, out StringAttributeGroup value)
+        private static void OnReadValue(FastBufferReader reader, ref StringAttributeGroup value)
         {
-            value = new StringAttributeGroup();
+            if (value == null)
+                value = new StringAttributeGroup();
             value.NetworkRead(reader);
         }
 
@@ -187,9 +190,10 @@ namespace SOC.GamePlay.Attribute
             value.NetworkDuplicateTo(duplicatedValue);
         }
 
-        private static void OnReadValue(FastBufferReader reader, out AttributeGroup<string> value)
+        private static void OnReadValue(FastBufferReader reader, ref AttributeGroup<string> value)
         {
-            value = new AttributeGroup<string>();
+            if (value == null)
+                value = new AttributeGroup<string>();
             value.NetworkRead(reader);
         }
 
@@ -231,9 +235,10 @@ namespace SOC.GamePlay.Attribute
             value.NetworkWrite(writer);
         }
 
-        private static void OnReadValue(FastBufferReader reader, out IntAttributeGroup value)
+        private static void OnReadValue(FastBufferReader reader, ref IntAttributeGroup value)
         {
-            value = new IntAttributeGroup();
+            if (value == null)
+                value = new IntAttributeGroup();
             value.NetworkRead(reader);
         }
 
@@ -244,9 +249,10 @@ namespace SOC.GamePlay.Attribute
             value.NetworkDuplicateTo(duplicatedValue);
         }
 
-        private static void OnReadValue(FastBufferReader reader, out AttributeGroup<int> value)
+        private static void OnReadValue(FastBufferReader reader, ref AttributeGroup<int> value)
         {
-            value = new AttributeGroup<int>();
+            if (value == null)
+                value = new AttributeGroup<int>();
             value.NetworkRead(reader);
         }
 
