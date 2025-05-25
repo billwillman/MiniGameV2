@@ -11,7 +11,7 @@ namespace SOC.GamePlay.Attribute
 
     public class AttributeGroup<T> : UserNetworkVariableSerialization<AttributeGroup<T>>
     {
-        private OrderedDictionary<ushort, T> m_AttributeMap = new OrderedDictionary<ushort, T>();
+        protected OrderedDictionary<ushort, T> m_AttributeMap = new OrderedDictionary<ushort, T>();
         public OrderedDictionary<ushort, T> AttributeMap
         {
             get
@@ -41,37 +41,11 @@ namespace SOC.GamePlay.Attribute
             return true;
         }
 
-        public void NetworkWrite(FastBufferWriter writer)
-        {
-            ushort Count = (ushort)m_AttributeMap.Count;
-            NetworkVariableSerialization<ushort>.Write(writer, ref Count);
-            foreach (var iter in AttributeMap)
-            {
-                writer.WriteValue<ushort>(iter.Key);
-                var Value = iter.Value;
-                NetworkVariableSerialization<T>.Write(writer, ref Value);
-            }
-        }
-        
-        public void NetworkRead(FastBufferReader reader)
-        {
-            ushort Count = 0;
-            NetworkVariableSerialization<ushort>.Read(reader, ref Count);
-            if (Count <= 0)
-                m_AttributeMap.Clear();
-            else
-            {
-                m_AttributeMap.Clear();
-                for (int idx = 0; idx < Count; ++idx)
-                {
-                    ushort key = 0;
-                    NetworkVariableSerialization<ushort>.Read(reader, ref key);
-                    T value = default(T);
-                    NetworkVariableSerialization<T>.Read(reader, ref value);
-                    m_AttributeMap[key] = value;
-                }
-            }
-        }
+        public virtual void NetworkWrite(FastBufferWriter writer)
+        {}
+
+        public virtual void NetworkRead(FastBufferReader reader)
+        {}
 
         public void NetworkDuplicateTo(AttributeGroup<T> other)
         {
@@ -99,6 +73,38 @@ namespace SOC.GamePlay.Attribute
             UserNetworkVariableSerialization<Int64AttributeGroup>.ReadValue = OnReadValue;
             UserNetworkVariableSerialization<Int64AttributeGroup>.WriteValue = OnWriteValue;
             NetworkVariableSerialization<Int64AttributeGroup>.AreEqual = OnAreEqual;
+        }
+
+        public override void NetworkRead(FastBufferReader reader)
+        {
+            ushort Count;
+            reader.ReadValue(out Count);
+            if (Count <= 0)
+                m_AttributeMap.Clear();
+            else
+            {
+                m_AttributeMap.Clear();
+                for (int idx = 0; idx < Count; ++idx)
+                {
+                    ushort key = 0;
+                    reader.ReadValue(out key);
+                    long value;
+                    reader.ReadValue(out value);
+                    m_AttributeMap[key] = value;
+                }
+            }
+        }
+
+        public override void NetworkWrite(FastBufferWriter writer)
+        {
+            ushort Count = (ushort)m_AttributeMap.Count;
+            writer.WriteValue<ushort>(Count);
+            foreach (var iter in AttributeMap)
+            {
+                writer.WriteValue<ushort>(iter.Key);
+                var Value = iter.Value;
+                writer.WriteValue(Value);
+            }
         }
 
         private static bool OnAreEqual(ref Int64AttributeGroup a, ref Int64AttributeGroup b)
@@ -159,6 +165,38 @@ namespace SOC.GamePlay.Attribute
             NetworkVariableSerialization<StringAttributeGroup>.AreEqual = OnAreEqual;
         }
 
+        public override void NetworkRead(FastBufferReader reader)
+        {
+            ushort Count;
+            reader.ReadValue(out Count);
+            if (Count <= 0)
+                m_AttributeMap.Clear();
+            else
+            {
+                m_AttributeMap.Clear();
+                for (int idx = 0; idx < Count; ++idx)
+                {
+                    ushort key = 0;
+                    reader.ReadValue(out key);
+                    string value;
+                    reader.ReadValue(out value);
+                    m_AttributeMap[key] = value;
+                }
+            }
+        }
+
+        public override void NetworkWrite(FastBufferWriter writer)
+        {
+            ushort Count = (ushort)m_AttributeMap.Count;
+            writer.WriteValue<ushort>(Count);
+            foreach (var iter in AttributeMap)
+            {
+                writer.WriteValue<ushort>(iter.Key);
+                var Value = iter.Value;
+                writer.WriteValue(Value);
+            }
+        }
+
         private static bool OnAreEqual(ref StringAttributeGroup a, ref StringAttributeGroup b)
         {
             return CompareAttributeGroup(a, b);
@@ -216,6 +254,38 @@ namespace SOC.GamePlay.Attribute
             UserNetworkVariableSerialization<IntAttributeGroup>.WriteValue = OnWriteValue;
             UserNetworkVariableSerialization<IntAttributeGroup>.ReadValue = OnReadValue;
             NetworkVariableSerialization<IntAttributeGroup>.AreEqual = OnAreEqual;
+        }
+
+        public override void NetworkRead(FastBufferReader reader)
+        {
+            ushort Count;
+            reader.ReadValue(out Count);
+            if (Count <= 0)
+                m_AttributeMap.Clear();
+            else
+            {
+                m_AttributeMap.Clear();
+                for (int idx = 0; idx < Count; ++idx)
+                {
+                    ushort key = 0;
+                    reader.ReadValue(out key);
+                    int value;
+                    reader.ReadValue(out value);
+                    m_AttributeMap[key] = value;
+                }
+            }
+        }
+
+        public override void NetworkWrite(FastBufferWriter writer)
+        {
+            ushort Count = (ushort)m_AttributeMap.Count;
+            writer.WriteValue<ushort>(Count);
+            foreach (var iter in AttributeMap)
+            {
+                writer.WriteValue<ushort>(iter.Key);
+                var Value = iter.Value;
+                writer.WriteValue(Value);
+            }
         }
 
         private static bool OnAreEqual(ref IntAttributeGroup a, ref IntAttributeGroup b)
