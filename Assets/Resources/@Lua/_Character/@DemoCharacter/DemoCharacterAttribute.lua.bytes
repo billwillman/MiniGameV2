@@ -29,6 +29,8 @@ end
 
 function _M:RegisterAttributeChangeEvents()
     self.AttributeComponent:SetAttributeChangeEvent(AttributeDefine.HPGroup._Index, function()
+        local isOk, maxHP = self:GetNetworkIntGroupVarsToInt(AttributeDefine.HPGroup._Index, AttributeDefine.HPGroup.MaxHP)
+        _MOE.Logger.LogFormat("[AttributeComponent] isOk: {0}, maxHp: {1:D}", tostring(isOk), maxHP)
     end)
 end
 
