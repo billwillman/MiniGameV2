@@ -5,6 +5,7 @@ using JetBrains.Annotations;
 using OD;
 using SOC.GamePlay;
 using Unity.Netcode;
+using UnityEditor.UI;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -200,6 +201,25 @@ namespace SOC.GamePlay.Attribute
             Group.OnValueChanged = evt;
         }
 
+        protected T FindNetVarsToAttribute<T>(string AttributeGroupName) where T: NetworkVariableBase
+        {
+            if (string.IsNullOrEmpty(AttributeGroupName))
+                return null;
+            if (this.IsClient && this.NetworkVariableFields != null)
+            {
+                for (int i = 0; i < this.NetworkVariableFields.Count; ++i)
+                {
+                    var field = this.NetworkVariableFields[i] as T;
+                    if (field != null)
+                    {
+                        if (string.Compare(field.Name, AttributeGroupName) == 0)
+                            return field;
+                    }
+                }
+            }
+            return null;
+        }
+
         [XLua.BlackList]
         public void InitAttributeGroup()
         {
@@ -216,16 +236,22 @@ namespace SOC.GamePlay.Attribute
                             {
                                 if (NetworkIntGroupVars == null)
                                     NetworkIntGroupVars = new List<NetworkIntAttributeGroup>();
-                                var Group1 = new NetworkIntAttributeGroup();
+                                NetworkIntAttributeGroup Group1 = FindNetVarsToAttribute<NetworkIntAttributeGroup>(iter.AttributeGroupName);
+                                bool isHasNetVar = Group1 != null;
+                                if (Group1 == null)
+                                    Group1 = new NetworkIntAttributeGroup();
                                 Group1.Initialize(this);
                                 Group1.Name = iter.AttributeGroupName;
                                 Group1.bRepNotify = iter.bRepNotify;
                                 Group1.OnValueChanged = iter.OnIntGroupValueChanged;
-                                NetworkVariableFields.Add(Group1);
-                                ushort currentKey = 0;
-                                foreach (var intIter in iter.Attributes)
+                                if (!isHasNetVar)
                                 {
-                                    Group1.Value.AttributeMap.Add(currentKey++, intIter.IntDefaultValue);
+                                    NetworkVariableFields.Add(Group1);
+                                    ushort currentKey = 0;
+                                    foreach (var intIter in iter.Attributes)
+                                    {
+                                        Group1.Value.AttributeMap.Add(currentKey++, intIter.IntDefaultValue);
+                                    }
                                 }
                                 Group1.SetDirty(false); // 默认值不认为是
                                 NetworkIntGroupVars.Add(Group1);
@@ -236,16 +262,22 @@ namespace SOC.GamePlay.Attribute
                             {
                                 if (NetworkInt64GroupVars == null)
                                     NetworkInt64GroupVars = new List<NetworkInt64AttributeGroup>();
-                                var Group2 = new NetworkInt64AttributeGroup();
+                                NetworkInt64AttributeGroup Group2 = FindNetVarsToAttribute<NetworkInt64AttributeGroup>(iter.AttributeGroupName);
+                                bool isHasNetVar = Group2 != null;
+                                if (Group2 == null)
+                                    Group2 = new NetworkInt64AttributeGroup();
                                 Group2.Initialize(this);
                                 Group2.Name = iter.AttributeGroupName;
                                 Group2.bRepNotify = iter.bRepNotify;
                                 Group2.OnValueChanged = iter.OnInt64GroupValueChanged;
-                                NetworkVariableFields.Add(Group2);
-                                ushort currentKey = 0;
-                                foreach (var int64Iter in iter.Attributes)
+                                if (!isHasNetVar)
                                 {
-                                    Group2.Value.AttributeMap.Add(currentKey++, int64Iter.Int64DefaultValue);
+                                    NetworkVariableFields.Add(Group2);
+                                    ushort currentKey = 0;
+                                    foreach (var int64Iter in iter.Attributes)
+                                    {
+                                        Group2.Value.AttributeMap.Add(currentKey++, int64Iter.Int64DefaultValue);
+                                    }
                                 }
                                 Group2.SetDirty(false);
                                 NetworkInt64GroupVars.Add(Group2);
@@ -256,15 +288,21 @@ namespace SOC.GamePlay.Attribute
                             {
                                 if (NetworkStringGroupVars == null)
                                     NetworkStringGroupVars = new List<NetworkStringAttributeGroup>();
-                                var Group3 = new NetworkStringAttributeGroup();
+                                NetworkStringAttributeGroup Group3 = FindNetVarsToAttribute<NetworkStringAttributeGroup>(iter.AttributeGroupName);
+                                bool isHasNetVar = Group3 != null;
+                                if (Group3 == null)
+                                    Group3 = new NetworkStringAttributeGroup();
                                 Group3.Initialize(this);
                                 Group3.Name = iter.AttributeGroupName;
                                 Group3.bRepNotify = iter.bRepNotify;
-                                NetworkVariableFields.Add(Group3);
-                                ushort currentKey = 0;
-                                foreach (var stringIter in iter.Attributes)
+                                if (!isHasNetVar)
                                 {
-                                    Group3.Value.AttributeMap.Add(currentKey++, stringIter.StringDefaultValue);
+                                    NetworkVariableFields.Add(Group3);
+                                    ushort currentKey = 0;
+                                    foreach (var stringIter in iter.Attributes)
+                                    {
+                                        Group3.Value.AttributeMap.Add(currentKey++, stringIter.StringDefaultValue);
+                                    }
                                 }
                                 Group3.SetDirty(false);
                                 NetworkStringGroupVars.Add(Group3);
