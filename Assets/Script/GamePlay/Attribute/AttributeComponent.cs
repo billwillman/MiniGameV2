@@ -203,7 +203,7 @@ namespace SOC.GamePlay.Attribute
 
         protected T FindNetVarsToAttribute<T>(string AttributeGroupName) where T: NetworkVariableBase
         {
-            if (string.IsNullOrEmpty(AttributeGroupName))
+            if (!this.IsSpawned || string.IsNullOrEmpty(AttributeGroupName))
                 return null;
             if (this.IsClient && this.NetworkVariableFields != null)
             {
