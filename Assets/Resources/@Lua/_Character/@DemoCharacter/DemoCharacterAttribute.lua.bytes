@@ -37,6 +37,8 @@ end
 function _M:OnStart()
     if not _MOE.IsDS then
         self:RegisterAttributeChangeEvents()
+    else
+        self.AttributeComponent:SetNetworkIntGroupVars(AttributeDefine.HPGroup._Index, AttributeDefine.HPGroup.MaxHP, 500)
     end
 end
 
