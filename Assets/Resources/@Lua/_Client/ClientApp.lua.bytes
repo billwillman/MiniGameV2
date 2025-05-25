@@ -139,6 +139,7 @@ end
 
 ------------------------------ 继承方法 -------------------------------
 function _M:OnInit()
+    _MOE.IsClient = true
     if CreateUIRoot(self, self.OnPreloadFinish) and CreateMyPlayerInput(self, self.OnPreloadFinish) and
         CreateDsNetWorkObject(self, self.OnPreloadFinish) then
         _MOE.BaseViewClass = require("_Client.BaseView")

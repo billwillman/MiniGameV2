@@ -135,6 +135,7 @@ end
 
 -- Host模式
 function DsScene:_InitDSHostNet()
+    _MOE.IsServer = true -- Host模式也是服务器
     _MOE.DsNetUtils.SetTransportIpAndPort(self.Transport, "127.0.0.1", 0)
     -- self.Transport:SetConnectionData("127.0.0.1", 0)
     if self.DsNetworkManager:StartHost() then

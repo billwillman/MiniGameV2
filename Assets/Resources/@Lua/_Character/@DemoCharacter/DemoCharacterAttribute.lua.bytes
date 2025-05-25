@@ -17,7 +17,7 @@ function _M:ClearAllAttributeChangeEvents()
 end
 
 function _M:OnDestroy()
-    if not _MOE.IsDS then
+    if _MOE.IsClient then
         self:ClearAllAttributeChangeEvents()
     end
 
@@ -35,9 +35,10 @@ function _M:RegisterAttributeChangeEvents()
 end
 
 function _M:OnStart()
-    if not _MOE.IsDS then
+    if _MOE.IsClient then
         self:RegisterAttributeChangeEvents()
-    else
+    end
+    if _MOE.IsServer then
         self.AttributeComponent:SetNetworkIntGroupVars(AttributeDefine.HPGroup._Index, AttributeDefine.HPGroup.MaxHP, 500)
     end
 end
