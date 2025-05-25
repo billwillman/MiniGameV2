@@ -98,10 +98,10 @@ namespace SOC.GamePlay.Attribute
         public override void NetworkWrite(FastBufferWriter writer)
         {
             ushort Count = (ushort)m_AttributeMap.Count;
-            writer.WriteValue<ushort>(Count);
+            writer.WriteValue(Count);
             foreach (var iter in AttributeMap)
             {
-                writer.WriteValue<ushort>(iter.Key);
+                writer.WriteValue(iter.Key);
                 var Value = iter.Value;
                 writer.WriteValue(Value);
             }
@@ -188,10 +188,10 @@ namespace SOC.GamePlay.Attribute
         public override void NetworkWrite(FastBufferWriter writer)
         {
             ushort Count = (ushort)m_AttributeMap.Count;
-            writer.WriteValue<ushort>(Count);
+            writer.WriteValue(Count);
             foreach (var iter in AttributeMap)
             {
-                writer.WriteValue<ushort>(iter.Key);
+                writer.WriteValue(iter.Key);
                 var Value = iter.Value;
                 writer.WriteValue(Value);
             }
@@ -279,10 +279,10 @@ namespace SOC.GamePlay.Attribute
         public override void NetworkWrite(FastBufferWriter writer)
         {
             ushort Count = (ushort)m_AttributeMap.Count;
-            writer.WriteValue<ushort>(Count);
+            writer.WriteValue(Count);
             foreach (var iter in AttributeMap)
             {
-                writer.WriteValue<ushort>(iter.Key);
+                writer.WriteValue(iter.Key);
                 var Value = iter.Value;
                 writer.WriteValue(Value);
             }
