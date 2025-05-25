@@ -180,6 +180,7 @@ function DsScene:OnEnter()
 end
 
 function DsScene:OnExit()
+    _MOE.IsServer = false
     _MOE.EventManager:UnRegisterEvents(self)
     self:_UnInitDSNet()
     self.DsNetworkManager = nil
