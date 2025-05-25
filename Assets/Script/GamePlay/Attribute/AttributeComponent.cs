@@ -222,6 +222,7 @@ namespace SOC.GamePlay.Attribute
                                     NetworkIntGroupVars = new List<NetworkIntAttributeGroup>();
                                 var Group1 = new NetworkIntAttributeGroup();
                                 Group1.Initialize(this);
+                                Group1.Name = iter.AttributeGroupName;
                                 Group1.bRepNotify = iter.bRepNotify;
                                 Group1.OnValueChanged = iter.OnIntGroupValueChanged;
                                 NetworkVariableFields.Add(Group1);
@@ -241,6 +242,7 @@ namespace SOC.GamePlay.Attribute
                                     NetworkInt64GroupVars = new List<NetworkInt64AttributeGroup>();
                                 var Group2 = new NetworkInt64AttributeGroup();
                                 Group2.Initialize(this);
+                                Group2.Name = iter.AttributeGroupName;
                                 Group2.bRepNotify = iter.bRepNotify;
                                 Group2.OnValueChanged = iter.OnInt64GroupValueChanged;
                                 NetworkVariableFields.Add(Group2);
@@ -260,6 +262,7 @@ namespace SOC.GamePlay.Attribute
                                     NetworkStringGroupVars = new List<NetworkStringAttributeGroup>();
                                 var Group3 = new NetworkStringAttributeGroup();
                                 Group3.Initialize(this);
+                                Group3.Name = iter.AttributeGroupName;
                                 Group3.bRepNotify = iter.bRepNotify;
                                 NetworkVariableFields.Add(Group3);
                                 ushort currentKey = 0;
