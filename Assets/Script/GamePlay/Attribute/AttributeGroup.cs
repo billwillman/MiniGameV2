@@ -3,12 +3,13 @@ using System.Collections;
 using System.Collections.Generic;
 using OD;
 using Unity.Netcode;
+using Unity.VisualScripting;
 using UnityEngine;
 
 namespace SOC.GamePlay.Attribute
 {
 
-   public class AttributeGroup<T>: UserNetworkVariableSerialization<AttributeGroup<T>>
+    public class AttributeGroup<T> : UserNetworkVariableSerialization<AttributeGroup<T>>
     {
         private OrderedDictionary<ushort, T> m_AttributeMap = new OrderedDictionary<ushort, T>();
         public OrderedDictionary<ushort, T> AttributeMap
@@ -73,6 +74,27 @@ namespace SOC.GamePlay.Attribute
             WriteValue = OnWriteValue;
             ReadValue = OnReadValue;
             DuplicateValue = OnDuplicateValue;
+            UserNetworkVariableSerialization<Int64AttributeGroup>.DuplicateValue = OnDuplicateValue;
+            UserNetworkVariableSerialization<Int64AttributeGroup>.ReadValue = OnReadValue;
+            UserNetworkVariableSerialization<Int64AttributeGroup>.WriteValue = OnWriteValue;
+        }
+
+        private static void OnDuplicateValue(in Int64AttributeGroup value, ref Int64AttributeGroup duplicatedValue)
+        {
+            if (duplicatedValue == null)
+                duplicatedValue = new Int64AttributeGroup();
+            value.NetworkDuplicateTo(duplicatedValue);
+        }
+
+        private static void OnReadValue(FastBufferReader reader, out Int64AttributeGroup value)
+        {
+            value = new Int64AttributeGroup();
+            value.NetworkRead(reader);
+        }
+
+        private static void OnWriteValue(FastBufferWriter writer, in Int64AttributeGroup value)
+        {
+            value.NetworkWrite(writer);
         }
 
         private static void OnDuplicateValue(in AttributeGroup<long> value, ref AttributeGroup<long> duplicatedValue)
@@ -102,6 +124,27 @@ namespace SOC.GamePlay.Attribute
             WriteValue = OnWriteValue;
             ReadValue = OnReadValue;
             DuplicateValue = OnDuplicateValue;
+            UserNetworkVariableSerialization<StringAttributeGroup>.DuplicateValue = OnDuplicateValue;
+            UserNetworkVariableSerialization<StringAttributeGroup>.ReadValue = OnReadValue;
+            UserNetworkVariableSerialization<StringAttributeGroup>.WriteValue = OnWriteValue;
+        }
+
+        private static void OnDuplicateValue(in StringAttributeGroup value, ref StringAttributeGroup duplicatedValue)
+        {
+            if (duplicatedValue == null)
+                duplicatedValue = new StringAttributeGroup();
+            value.NetworkDuplicateTo(duplicatedValue);
+        }
+
+        private static void OnReadValue(FastBufferReader reader, out StringAttributeGroup value)
+        {
+            value = new StringAttributeGroup();
+            value.NetworkRead(reader);
+        }
+
+        private static void OnWriteValue(FastBufferWriter writer, in StringAttributeGroup value)
+        {
+            value.NetworkWrite(writer);
         }
 
         private static void OnDuplicateValue(in AttributeGroup<string> value, ref AttributeGroup<string> duplicatedValue)
@@ -132,6 +175,27 @@ namespace SOC.GamePlay.Attribute
             WriteValue = OnWriteValue;
             ReadValue = OnReadValue;
             DuplicateValue = OnDuplicateValue;
+            UserNetworkVariableSerialization<IntAttributeGroup>.DuplicateValue = OnDuplicateValue;
+            UserNetworkVariableSerialization<IntAttributeGroup>.WriteValue = OnWriteValue;
+            UserNetworkVariableSerialization<IntAttributeGroup>.ReadValue = OnReadValue;
+        }
+
+        private static void OnDuplicateValue(in IntAttributeGroup value, ref IntAttributeGroup duplicatedValue)
+        {
+            if (duplicatedValue == null)
+                duplicatedValue = new IntAttributeGroup();
+            value.NetworkDuplicateTo(duplicatedValue);
+        }
+
+        private static void OnWriteValue(FastBufferWriter writer, in IntAttributeGroup value)
+        {
+            value.NetworkWrite(writer);
+        }
+
+        private static void OnReadValue(FastBufferReader reader, out IntAttributeGroup value)
+        {
+            value = new IntAttributeGroup();
+            value.NetworkRead(reader);
         }
 
         private static void OnDuplicateValue(in AttributeGroup<int> value, ref AttributeGroup<int> duplicatedValue)
