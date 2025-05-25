@@ -10,6 +10,12 @@ function _M:Ctor(AttributeComponent, binder)
     local EventType = _MOE.LuaEvent_MonoEventType
     self.Binder:RegisterLuaEvent(EventType.Destroyed:GetHashCode(), self.OnDestroy)
     self.Binder:RegisterLuaEvent(EventType.Start:GetHashCode(), self.OnStart)
+    self:RegsterCSharpEvent(self.AttributeComponent, "onNetworkSpawn", self.OnNetworkSpawn)
+end
+
+function _M:OnNetworkSpawn()
+    local isOk, maxHP = self.AttributeComponent:GetNetworkIntGroupVarsToInt(AttributeDefine.HPGroup._Index, AttributeDefine.HPGroup.MaxHP)
+        _MOE.Logger.LogFormat("[AttributeComponent] isOk: {0}, maxHp: {1:D}", tostring(isOk), maxHP)
 end
 
 function _M:ClearAllAttributeChangeEvents()
