@@ -102,7 +102,6 @@ namespace SOC.GamePlay.Attribute
             foreach (var iter in AttributeMap)
             {
                 BytePacker.WriteValuePacked(writer, iter.Key);
-                writer.WriteValue(iter.Key);
                 var Value = iter.Value;
                 BytePacker.WriteValuePacked(writer, Value);
             }
@@ -193,7 +192,6 @@ namespace SOC.GamePlay.Attribute
             foreach (var iter in AttributeMap)
             {
                 BytePacker.WriteValuePacked(writer, iter.Key);
-                writer.WriteValue(iter.Key);
                 var Value = iter.Value;
                 BytePacker.WriteValuePacked(writer, Value);
             }
@@ -285,7 +283,6 @@ namespace SOC.GamePlay.Attribute
             foreach (var iter in AttributeMap)
             {
                 BytePacker.WriteValuePacked(writer, iter.Key);
-                writer.WriteValue(iter.Key);
                 var Value = iter.Value;
                 BytePacker.WriteValuePacked(writer, Value);
             }
