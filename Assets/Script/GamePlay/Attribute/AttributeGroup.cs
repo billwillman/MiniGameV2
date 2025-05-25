@@ -78,7 +78,7 @@ namespace SOC.GamePlay.Attribute
         public override void NetworkRead(FastBufferReader reader)
         {
             ushort Count;
-            reader.ReadValue(out Count);
+            ByteUnpacker.ReadValuePacked(reader, out Count);
             if (Count <= 0)
                 m_AttributeMap.Clear();
             else
@@ -87,9 +87,9 @@ namespace SOC.GamePlay.Attribute
                 for (int idx = 0; idx < Count; ++idx)
                 {
                     ushort key = 0;
-                    reader.ReadValue(out key);
+                    ByteUnpacker.ReadValuePacked(reader, out key);
                     long value;
-                    reader.ReadValue(out value);
+                    ByteUnpacker.ReadValuePacked(reader, out value);
                     m_AttributeMap[key] = value;
                 }
             }
@@ -98,12 +98,13 @@ namespace SOC.GamePlay.Attribute
         public override void NetworkWrite(FastBufferWriter writer)
         {
             ushort Count = (ushort)m_AttributeMap.Count;
-            writer.WriteValue(Count);
+            BytePacker.WriteValuePacked(writer, Count);
             foreach (var iter in AttributeMap)
             {
+                BytePacker.WriteValuePacked(writer, iter.Key);
                 writer.WriteValue(iter.Key);
                 var Value = iter.Value;
-                writer.WriteValue(Value);
+                BytePacker.WriteValuePacked(writer, Value);
             }
         }
 
@@ -168,7 +169,7 @@ namespace SOC.GamePlay.Attribute
         public override void NetworkRead(FastBufferReader reader)
         {
             ushort Count;
-            reader.ReadValue(out Count);
+            ByteUnpacker.ReadValuePacked(reader, out Count);
             if (Count <= 0)
                 m_AttributeMap.Clear();
             else
@@ -177,9 +178,9 @@ namespace SOC.GamePlay.Attribute
                 for (int idx = 0; idx < Count; ++idx)
                 {
                     ushort key = 0;
-                    reader.ReadValue(out key);
+                    ByteUnpacker.ReadValuePacked(reader, out key);
                     string value;
-                    reader.ReadValue(out value);
+                    ByteUnpacker.ReadValuePacked(reader, out value);
                     m_AttributeMap[key] = value;
                 }
             }
@@ -188,12 +189,13 @@ namespace SOC.GamePlay.Attribute
         public override void NetworkWrite(FastBufferWriter writer)
         {
             ushort Count = (ushort)m_AttributeMap.Count;
-            writer.WriteValue(Count);
+            BytePacker.WriteValuePacked(writer, Count);
             foreach (var iter in AttributeMap)
             {
+                BytePacker.WriteValuePacked(writer, iter.Key);
                 writer.WriteValue(iter.Key);
                 var Value = iter.Value;
-                writer.WriteValue(Value);
+                BytePacker.WriteValuePacked(writer, Value);
             }
         }
 
@@ -259,7 +261,7 @@ namespace SOC.GamePlay.Attribute
         public override void NetworkRead(FastBufferReader reader)
         {
             ushort Count;
-            reader.ReadValue(out Count);
+            ByteUnpacker.ReadValuePacked(reader, out Count);
             if (Count <= 0)
                 m_AttributeMap.Clear();
             else
@@ -268,9 +270,9 @@ namespace SOC.GamePlay.Attribute
                 for (int idx = 0; idx < Count; ++idx)
                 {
                     ushort key = 0;
-                    reader.ReadValue(out key);
+                    ByteUnpacker.ReadValuePacked(reader, out key);
                     int value;
-                    reader.ReadValue(out value);
+                    ByteUnpacker.ReadValuePacked(reader, out value);
                     m_AttributeMap[key] = value;
                 }
             }
@@ -279,12 +281,13 @@ namespace SOC.GamePlay.Attribute
         public override void NetworkWrite(FastBufferWriter writer)
         {
             ushort Count = (ushort)m_AttributeMap.Count;
-            writer.WriteValue(Count);
+            BytePacker.WriteValuePacked(writer, Count);
             foreach (var iter in AttributeMap)
             {
+                BytePacker.WriteValuePacked(writer, iter.Key);
                 writer.WriteValue(iter.Key);
                 var Value = iter.Value;
-                writer.WriteValue(Value);
+                BytePacker.WriteValuePacked(writer, Value);
             }
         }
 
