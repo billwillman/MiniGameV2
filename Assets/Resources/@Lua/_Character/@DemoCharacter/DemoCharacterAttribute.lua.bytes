@@ -12,8 +12,14 @@ function _M:Ctor(AttributeComponent, binder)
     self.Binder:RegisterLuaEvent(EventType.Start:GetHashCode(), self.OnStart)
 end
 
-function _M:OnDestroy()
+function _M:ClearAllAttributeChangeEvents()
     self.AttributeComponent:SetAttributeChangeEvent(AttributeDefine.HPGroup._Index, nil)
+end
+
+function _M:OnDestroy()
+    if not _MOE.IsDS then
+        self:ClearAllAttributeChangeEvents()
+    end
 
     _MOE.EventManager:UnRegisterEvents(self)
     self:UnRegsterAllCsharpEvents()
@@ -21,9 +27,15 @@ function _M:OnDestroy()
     self.AttributeComponent = nil
 end
 
-function _M:OnStart()
+function _M:RegisterAttributeChangeEvents()
     self.AttributeComponent:SetAttributeChangeEvent(AttributeDefine.HPGroup._Index, function()
     end)
+end
+
+function _M:OnStart()
+    if not _MOE.IsDS then
+        self:RegisterAttributeChangeEvents()
+    end
 end
 
 return _M
