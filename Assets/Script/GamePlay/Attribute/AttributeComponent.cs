@@ -60,12 +60,13 @@ namespace SOC.GamePlay.Attribute
             if (item == null || item.Value == null || item.Value.AttributeMap == null)
                 return false;
             item.Value.AttributeMap[key] = value;
+            /*
             bool isHostServer = this.IsHost && this.IsServer;
             if (isHostServer)
             {
                 if (item.OnValueChanged != null)
                     item.OnValueChanged(item.Value, item.Value);
-            } else
+            } else*/
                 item.SetDirty(true);
             return true;
         }
@@ -77,13 +78,14 @@ namespace SOC.GamePlay.Attribute
             var item = NetworkInt64GroupVars[index];
             if (item == null || item.Value == null || item.Value.AttributeMap == null)
                 return false;
+            /*
             bool isHostServer = this.IsHost && this.IsServer;
             item.Value.AttributeMap[key] = value;
             if (isHostServer)
             {
                 if (item.OnValueChanged != null)
                     item.OnValueChanged(item.Value, item.Value);
-            } else
+            } else*/
                 item.SetDirty(true);
             return true;
         }
@@ -96,12 +98,13 @@ namespace SOC.GamePlay.Attribute
             if (item == null || item.Value == null || item.Value.AttributeMap == null)
                 return false;
             item.Value.AttributeMap[key] = value;
+            /*
             bool isHostServer = this.IsHost && this.IsServer;
             if (isHostServer)
             {
                 if (item.OnValueChanged != null)
                     item.OnValueChanged(item.Value, item.Value);
-            } else
+            } else*/
                 item.SetDirty(true);
             return true;
         }

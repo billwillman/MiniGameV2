@@ -1,5 +1,5 @@
 local CSharpEventContainer = require("_Common.CSharpEventContainer")
-local AttributeDefine = require("_Attribute.Character_AttributeDefine")
+local AttributeDefine = require("_Attribute.CharacterAttribute_AttributeDefine")
 
 local _M = _MOE.class("DemoCharacterAttribute", CSharpEventContainer)
 

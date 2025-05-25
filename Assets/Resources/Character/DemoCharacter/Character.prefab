@@ -1,5 +1,94 @@
 %YAML 1.1
 %TAG !u! tag:yousandi.cn,2023:
+--- !u!1 &6650950174036469960
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 7
+  m_Component:
+  - component: {fileID: 4465823825400726333}
+  - component: {fileID: 8083178452258061320}
+  - component: {fileID: 3836440883460758519}
+  m_Layer: 0
+  m_HasEditorInfo: 1
+  m_Name: CharacterAttribute
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4465823825400726333
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6650950174036469960}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 129501311174106110}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8083178452258061320
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6650950174036469960}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 92c22af35999acb43a81bbd171a2d9db, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  AttributeGroupMeta:
+  - AttributeGroupName: HPGroup
+    AttributeType: 0
+    Attributes:
+    - AttributeName: CurrentHP
+      IntDefaultValue: 100
+      Int64DefaultValue: 0
+      StringDefaultValue: 
+    - AttributeName: MaxHP
+      IntDefaultValue: 100
+      Int64DefaultValue: 0
+      StringDefaultValue: 
+    bRepNotify: 1
+  - AttributeGroupName: MPGroup
+    AttributeType: 0
+    Attributes:
+    - AttributeName: CurrentMP
+      IntDefaultValue: 100
+      Int64DefaultValue: 0
+      StringDefaultValue: 
+    - AttributeName: MaxMP
+      IntDefaultValue: 100
+      Int64DefaultValue: 0
+      StringDefaultValue: 
+    bRepNotify: 1
+  ServerInitType: 0
+  ClientInitType: 0
+--- !u!114 &3836440883460758519
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6650950174036469960}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 64533a518d657d748bea84e24762d653, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  LuaPath: _Character.@DemoCharacter.DemoCharacterAttribute
+  SelfTarget: {fileID: 8083178452258061320}
+  CustomLuaFunctionName: []
+  bInitCustomLuaFunctionInStart: 0
 --- !u!1 &8644905814343763888
 GameObject:
   m_ObjectHideFlags: 0
@@ -25,8 +114,6 @@ GameObject:
   - component: {fileID: 3697691001208229604}
   - component: {fileID: 2386575299747843254}
   - component: {fileID: 8198224171642900697}
-  - component: {fileID: 8381357180493599931}
-  - component: {fileID: 4644909909071189553}
   m_Layer: 0
   m_HasEditorInfo: 1
   m_Name: Character
@@ -49,6 +136,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 3157194284791076726}
+  - {fileID: 4465823825400726333}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &7048151790945982399
@@ -521,61 +609,6 @@ NavMeshAgent:
   m_BaseOffset: 0
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
---- !u!114 &8381357180493599931
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8644905814343763888}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 92c22af35999acb43a81bbd171a2d9db, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  AttributeGroupMeta:
-  - AttributeGroupName: HPGroup
-    AttributeType: 0
-    Attributes:
-    - AttributeName: CurrentHP
-      IntDefaultValue: 100
-      Int64DefaultValue: 0
-      StringDefaultValue: 
-    - AttributeName: MaxHP
-      IntDefaultValue: 100
-      Int64DefaultValue: 0
-      StringDefaultValue: 
-    bRepNotify: 1
-  - AttributeGroupName: MPGroup
-    AttributeType: 0
-    Attributes:
-    - AttributeName: CurrentMP
-      IntDefaultValue: 100
-      Int64DefaultValue: 0
-      StringDefaultValue: 
-    - AttributeName: MaxMP
-      IntDefaultValue: 100
-      Int64DefaultValue: 0
-      StringDefaultValue: 
-    bRepNotify: 1
-  ServerInitType: 0
-  ClientInitType: 0
---- !u!114 &4644909909071189553
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8644905814343763888}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 64533a518d657d748bea84e24762d653, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  LuaPath: _Character.@DemoCharacter.DemoCharacterAttribute
-  SelfTarget: {fileID: 8381357180493599931}
-  CustomLuaFunctionName: []
-  bInitCustomLuaFunctionInStart: 0
 --- !u!1001 &3195904286305349789
 PrefabInstance:
   m_ObjectHideFlags: 0
