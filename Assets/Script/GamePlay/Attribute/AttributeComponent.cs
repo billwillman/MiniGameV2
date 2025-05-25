@@ -88,7 +88,7 @@ namespace SOC.GamePlay.Attribute
             return true;
         }
 
-        public bool GetNetworkStringGroupVars(int index, ushort key, out string ret)
+        public bool GetNetworkStringGroupVarsToStr(int index, ushort key, out string ret)
         {
             ret = default(string);
             StringAttributeGroup group;
@@ -97,7 +97,7 @@ namespace SOC.GamePlay.Attribute
             return group.AttributeMap.TryGetValue(key, out ret);
         }
 
-        public bool GetNetworkIntGroupVars(int index, ushort key, out int ret)
+        public bool GetNetworkIntGroupVarsToInt(int index, ushort key, out int ret)
         {
             ret = default(int);
             IntAttributeGroup group;
@@ -106,7 +106,7 @@ namespace SOC.GamePlay.Attribute
             return group.AttributeMap.TryGetValue(key, out ret);
         }
 
-        public bool GetNetworkInt64GroupVars(int index, ushort key, out long ret)
+        public bool GetNetworkInt64GroupVarsToInt64(int index, ushort key, out long ret)
         {
             ret = default(long);
             Int64AttributeGroup group;
