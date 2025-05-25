@@ -20,6 +20,27 @@ namespace SOC.GamePlay.Attribute
             }
         }
 
+        public static bool CompareAttributeGroup(AttributeGroup<T> a, AttributeGroup<T> b)
+        {
+            if (a == b)
+                return true;
+            if ((a == null && b != null) || (a != null && b == null))
+                return false;
+            var aAttr = a.AttributeMap;
+            var bAttr = b.AttributeMap;
+            if (aAttr.Count != bAttr.Count)
+                return false;
+            foreach (var iter in aAttr)
+            {
+                T bValue;
+                if (!bAttr.TryGetValue(iter.Key, out bValue))
+                    return false;
+                if (!iter.Value.Equals(bValue))
+                    return false;
+            }
+            return true;
+        }
+
         public void NetworkWrite(FastBufferWriter writer)
         {
             ushort Count = (ushort)m_AttributeMap.Count;
@@ -77,6 +98,12 @@ namespace SOC.GamePlay.Attribute
             UserNetworkVariableSerialization<Int64AttributeGroup>.DuplicateValue = OnDuplicateValue;
             UserNetworkVariableSerialization<Int64AttributeGroup>.ReadValue = OnReadValue;
             UserNetworkVariableSerialization<Int64AttributeGroup>.WriteValue = OnWriteValue;
+            NetworkVariableSerialization<Int64AttributeGroup>.AreEqual = OnAreEqual;
+        }
+
+        private static bool OnAreEqual(ref Int64AttributeGroup a, ref Int64AttributeGroup b)
+        {
+            return CompareAttributeGroup(a, b);
         }
 
         private static void OnDuplicateValue(in Int64AttributeGroup value, ref Int64AttributeGroup duplicatedValue)
@@ -127,11 +154,17 @@ namespace SOC.GamePlay.Attribute
             UserNetworkVariableSerialization<StringAttributeGroup>.DuplicateValue = OnDuplicateValue;
             UserNetworkVariableSerialization<StringAttributeGroup>.ReadValue = OnReadValue;
             UserNetworkVariableSerialization<StringAttributeGroup>.WriteValue = OnWriteValue;
+            NetworkVariableSerialization<StringAttributeGroup>.AreEqual = OnAreEqual;
+        }
+
+        private static bool OnAreEqual(ref StringAttributeGroup a, ref StringAttributeGroup b)
+        {
+            return CompareAttributeGroup(a, b);
         }
 
         private static void OnDuplicateValue(in StringAttributeGroup value, ref StringAttributeGroup duplicatedValue)
         {
-            if (duplicatedValue == null)
+             if (duplicatedValue == null)
                 duplicatedValue = new StringAttributeGroup();
             value.NetworkDuplicateTo(duplicatedValue);
         }
@@ -178,6 +211,12 @@ namespace SOC.GamePlay.Attribute
             UserNetworkVariableSerialization<IntAttributeGroup>.DuplicateValue = OnDuplicateValue;
             UserNetworkVariableSerialization<IntAttributeGroup>.WriteValue = OnWriteValue;
             UserNetworkVariableSerialization<IntAttributeGroup>.ReadValue = OnReadValue;
+            NetworkVariableSerialization<IntAttributeGroup>.AreEqual = OnAreEqual;
+        }
+
+        private static bool OnAreEqual(ref IntAttributeGroup a, ref IntAttributeGroup b)
+        {
+            return CompareAttributeGroup(a, b);
         }
 
         private static void OnDuplicateValue(in IntAttributeGroup value, ref IntAttributeGroup duplicatedValue)
