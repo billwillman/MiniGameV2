@@ -201,6 +201,7 @@ namespace SOC.GamePlay.Attribute
                                 if (NetworkIntGroupVars == null)
                                     NetworkIntGroupVars = new List<NetworkIntAttributeGroup>();
                                 var Group1 = new NetworkIntAttributeGroup();
+                                Group1.Initialize(this);
                                 Group1.bRepNotify = iter.bRepNotify;
                                 Group1.OnValueChanged = iter.OnIntGroupValueChanged;
                                 ushort currentKey = 0;
@@ -218,6 +219,7 @@ namespace SOC.GamePlay.Attribute
                                 if (NetworkInt64GroupVars == null)
                                     NetworkInt64GroupVars = new List<NetworkInt64AttributeGroup>();
                                 var Group2 = new NetworkInt64AttributeGroup();
+                                Group2.Initialize(this);
                                 Group2.bRepNotify = iter.bRepNotify;
                                 Group2.OnValueChanged = iter.OnInt64GroupValueChanged;
                                 ushort currentKey = 0;
@@ -235,6 +237,7 @@ namespace SOC.GamePlay.Attribute
                                 if (NetworkStringGroupVars == null)
                                     NetworkStringGroupVars = new List<NetworkStringAttributeGroup>();
                                 var Group3 = new NetworkStringAttributeGroup();
+                                Group3.Initialize(this);
                                 Group3.bRepNotify = iter.bRepNotify;
                                 ushort currentKey = 0;
                                 foreach (var stringIter in iter.Attributes)
