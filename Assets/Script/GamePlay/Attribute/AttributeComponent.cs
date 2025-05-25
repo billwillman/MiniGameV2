@@ -211,7 +211,6 @@ namespace SOC.GamePlay.Attribute
             {
                 if (OnPreInitAttributeEvent != null)
                     OnPreInitAttributeEvent();
-
                 foreach (var iter in AttributeGroupMeta)
                 {
                     switch (iter.AttributeType)
@@ -225,6 +224,7 @@ namespace SOC.GamePlay.Attribute
                                 Group1.Initialize(this);
                                 Group1.bRepNotify = iter.bRepNotify;
                                 Group1.OnValueChanged = iter.OnIntGroupValueChanged;
+                                NetworkVariableFields.Add(Group1);
                                 ushort currentKey = 0;
                                 foreach (var intIter in iter.Attributes)
                                 {
@@ -243,6 +243,7 @@ namespace SOC.GamePlay.Attribute
                                 Group2.Initialize(this);
                                 Group2.bRepNotify = iter.bRepNotify;
                                 Group2.OnValueChanged = iter.OnInt64GroupValueChanged;
+                                NetworkVariableFields.Add(Group2);
                                 ushort currentKey = 0;
                                 foreach (var int64Iter in iter.Attributes)
                                 {
@@ -260,6 +261,7 @@ namespace SOC.GamePlay.Attribute
                                 var Group3 = new NetworkStringAttributeGroup();
                                 Group3.Initialize(this);
                                 Group3.bRepNotify = iter.bRepNotify;
+                                NetworkVariableFields.Add(Group3);
                                 ushort currentKey = 0;
                                 foreach (var stringIter in iter.Attributes)
                                 {
