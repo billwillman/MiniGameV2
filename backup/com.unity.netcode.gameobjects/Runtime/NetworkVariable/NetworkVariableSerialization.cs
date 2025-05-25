@@ -544,7 +544,7 @@ namespace Unity.Netcode
         /// </summary>
         /// <param name="reader">The <see cref="FastBufferReader"/> to read the value of type `T`</param>
         /// <param name="value">The value of type `T` to be read</param>
-        public delegate void ReadValueDelegate(FastBufferReader reader, out T value);
+        public delegate void ReadValueDelegate(FastBufferReader reader, ref T value);
 
         /// <summary>
         /// The read value delegate handler definition
@@ -599,7 +599,7 @@ namespace Unity.Netcode
             {
                 ThrowArgumentError();
             }
-            UserNetworkVariableSerialization<T>.ReadValue(reader, out value);
+            UserNetworkVariableSerialization<T>.ReadValue(reader, ref value);
         }
 
         void INetworkVariableSerializer<T>.ReadWithAllocator(FastBufferReader reader, out T value, Allocator allocator)
@@ -863,7 +863,7 @@ namespace Unity.Netcode
         /// initialize the serialization mechanisms correctly. If your class is NOT
         /// generic, it is better to check their equality yourself.
         /// </summary>
-        public static EqualsDelegate AreEqual { get; internal set; }
+        public static EqualsDelegate AreEqual { get; set; }
 
         /// <summary>
         /// Serialize a value using the best-known serialization method for a generic value.

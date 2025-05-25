@@ -716,7 +716,7 @@ namespace Unity.Netcode
         private readonly List<NetworkDelivery> m_DeliveryTypesForNetworkVariableGroups = new List<NetworkDelivery>();
 
         // RuntimeAccessModifiersILPP will make this `protected`
-        internal readonly List<NetworkVariableBase> NetworkVariableFields = new List<NetworkVariableBase>();
+        public readonly List<NetworkVariableBase> NetworkVariableFields = new List<NetworkVariableBase>();
 
 #pragma warning disable IDE1006 // disable naming rule violation check
         // RuntimeAccessModifiersILPP will make this `protected`

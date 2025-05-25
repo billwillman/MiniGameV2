@@ -66,7 +66,7 @@ namespace Unity.Netcode
         /// Gets or sets the name of the network variable's instance
         /// (MemberInfo) where it was declared.
         /// </summary>
-        public string Name { get; internal set; }
+        public string Name { get; set; }
 
         /// <summary>
         /// The read permission for this var
