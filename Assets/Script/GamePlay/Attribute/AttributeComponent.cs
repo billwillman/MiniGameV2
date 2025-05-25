@@ -236,7 +236,9 @@ namespace SOC.GamePlay.Attribute
                             {
                                 if (NetworkIntGroupVars == null)
                                     NetworkIntGroupVars = new List<NetworkIntAttributeGroup>();
-                                NetworkIntAttributeGroup Group1 = FindNetVarsToAttribute<NetworkIntAttributeGroup>(iter.AttributeGroupName);
+                                NetworkIntAttributeGroup Group1 = null;
+                                if (!this.IsHost && this.IsClient)
+                                    Group1 = FindNetVarsToAttribute<NetworkIntAttributeGroup>(iter.AttributeGroupName);
                                 bool isHasNetVar = Group1 != null;
                                 if (Group1 == null)
                                     Group1 = new NetworkIntAttributeGroup();
@@ -262,7 +264,9 @@ namespace SOC.GamePlay.Attribute
                             {
                                 if (NetworkInt64GroupVars == null)
                                     NetworkInt64GroupVars = new List<NetworkInt64AttributeGroup>();
-                                NetworkInt64AttributeGroup Group2 = FindNetVarsToAttribute<NetworkInt64AttributeGroup>(iter.AttributeGroupName);
+                                NetworkInt64AttributeGroup Group2 = null;
+                                if (!this.IsHost && this.IsClient)
+                                    Group2 = FindNetVarsToAttribute<NetworkInt64AttributeGroup>(iter.AttributeGroupName);
                                 bool isHasNetVar = Group2 != null;
                                 if (Group2 == null)
                                     Group2 = new NetworkInt64AttributeGroup();
@@ -288,7 +292,9 @@ namespace SOC.GamePlay.Attribute
                             {
                                 if (NetworkStringGroupVars == null)
                                     NetworkStringGroupVars = new List<NetworkStringAttributeGroup>();
-                                NetworkStringAttributeGroup Group3 = FindNetVarsToAttribute<NetworkStringAttributeGroup>(iter.AttributeGroupName);
+                                NetworkStringAttributeGroup Group3 = null;
+                                if (!this.IsHost && this.IsClient)
+                                    Group3 = FindNetVarsToAttribute<NetworkStringAttributeGroup>(iter.AttributeGroupName);
                                 bool isHasNetVar = Group3 != null;
                                 if (Group3 == null)
                                     Group3 = new NetworkStringAttributeGroup();
