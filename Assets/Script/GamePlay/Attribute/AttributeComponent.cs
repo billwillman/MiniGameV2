@@ -205,7 +205,7 @@ namespace SOC.GamePlay.Attribute
         {
             if (!this.IsSpawned || string.IsNullOrEmpty(AttributeGroupName))
                 return null;
-            if (this.IsClient && this.NetworkVariableFields != null)
+            if (!this.IsHost && this.IsClient && this.NetworkVariableFields != null)
             {
                 for (int i = 0; i < this.NetworkVariableFields.Count; ++i)
                 {
