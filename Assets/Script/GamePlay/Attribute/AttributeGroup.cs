@@ -332,26 +332,65 @@ namespace SOC.GamePlay.Attribute
         }
     }
 
+    public enum NetworkAttributeGroupType
+    {
+        IntGroup = 0,
+        StringGroup = 1,
+        Int64Group = 2,
+    }
+
+    public interface INetworkAttributeGroup
+    {
+        NetworkAttributeGroupType GroupType
+        {
+            get;
+        }
+    }
+
     [System.Serializable]
-    public class NetworkIntAttributeGroup: NetworkVariable<IntAttributeGroup>
+    public class NetworkIntAttributeGroup: NetworkVariable<IntAttributeGroup>, INetworkAttributeGroup
     {
         // new IntAttributeGroup()
         public NetworkIntAttributeGroup(): base(new IntAttributeGroup(), NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server)
         {}
+
+        public NetworkAttributeGroupType GroupType
+        {
+            get
+            {
+                return NetworkAttributeGroupType.IntGroup;
+            }
+        }
     }
 
     [System.Serializable]
-    public class NetworkInt64AttributeGroup: NetworkVariable<Int64AttributeGroup>
+    public class NetworkInt64AttributeGroup: NetworkVariable<Int64AttributeGroup>, INetworkAttributeGroup
     {
         public NetworkInt64AttributeGroup(): base(new Int64AttributeGroup(), NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server)
         {}
+
+        public NetworkAttributeGroupType GroupType
+        {
+            get
+            {
+                return NetworkAttributeGroupType.Int64Group;
+            }
+        }
     }
 
     [System.Serializable]
-    public class NetworkStringAttributeGroup: NetworkVariable<StringAttributeGroup>
+    public class NetworkStringAttributeGroup: NetworkVariable<StringAttributeGroup>, INetworkAttributeGroup
     {
         public NetworkStringAttributeGroup(): base(new StringAttributeGroup(), NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server)
         {}
+
+        public NetworkAttributeGroupType GroupType
+        {
+            get
+            {
+                return NetworkAttributeGroupType.StringGroup;
+            }
+        }
     }
 
     [System.Serializable]

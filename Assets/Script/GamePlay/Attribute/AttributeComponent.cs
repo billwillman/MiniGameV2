@@ -227,6 +227,7 @@ namespace SOC.GamePlay.Attribute
             {
                 if (OnPreInitAttributeEvent != null)
                     OnPreInitAttributeEvent();
+                Dictionary<string, INetworkAttributeGroup> NetworkAttributeGroupMap = null;
                 foreach (var iter in AttributeGroupMeta)
                 {
                     switch (iter.AttributeType)
@@ -239,7 +240,12 @@ namespace SOC.GamePlay.Attribute
                                 NetworkIntAttributeGroup Group1 = FindNetVarsToAttribute<NetworkIntAttributeGroup>(iter.AttributeGroupName);
                                 bool isHasNetVar = Group1 != null;
                                 if (Group1 == null)
+                                {
                                     Group1 = new NetworkIntAttributeGroup();
+                                    if (NetworkAttributeGroupMap == null)
+                                        NetworkAttributeGroupMap = new Dictionary<string, INetworkAttributeGroup>();
+                                    NetworkAttributeGroupMap[iter.AttributeGroupName] = Group1;
+                                }
                                 Group1.Initialize(this);
                                 Group1.Name = iter.AttributeGroupName;
                                 Group1.bRepNotify = iter.bRepNotify;
@@ -265,7 +271,12 @@ namespace SOC.GamePlay.Attribute
                                 NetworkInt64AttributeGroup Group2 = FindNetVarsToAttribute<NetworkInt64AttributeGroup>(iter.AttributeGroupName);
                                 bool isHasNetVar = Group2 != null;
                                 if (Group2 == null)
+                                {
                                     Group2 = new NetworkInt64AttributeGroup();
+                                    if (NetworkAttributeGroupMap == null)
+                                        NetworkAttributeGroupMap = new Dictionary<string, INetworkAttributeGroup>();
+                                    NetworkAttributeGroupMap[iter.AttributeGroupName] = Group2;
+                                }
                                 Group2.Initialize(this);
                                 Group2.Name = iter.AttributeGroupName;
                                 Group2.bRepNotify = iter.bRepNotify;
@@ -291,7 +302,12 @@ namespace SOC.GamePlay.Attribute
                                 NetworkStringAttributeGroup Group3 = FindNetVarsToAttribute<NetworkStringAttributeGroup>(iter.AttributeGroupName);
                                 bool isHasNetVar = Group3 != null;
                                 if (Group3 == null)
+                                {
                                     Group3 = new NetworkStringAttributeGroup();
+                                    if(NetworkAttributeGroupMap == null)
+                                        NetworkAttributeGroupMap = new Dictionary<string, INetworkAttributeGroup>();
+                                    NetworkAttributeGroupMap[iter.AttributeGroupName] = Group3;
+                                }
                                 Group3.Initialize(this);
                                 Group3.Name = iter.AttributeGroupName;
                                 Group3.bRepNotify = iter.bRepNotify;
@@ -308,6 +324,35 @@ namespace SOC.GamePlay.Attribute
                                 NetworkStringGroupVars.Add(Group3);
                             }
                             break;
+                    }
+                }
+                if (NetworkAttributeGroupMap != null)
+                {
+                    for (int i = 0; i < NetworkVariableFields.Count; ++i)
+                    {
+                        var NetworkVar = NetworkVariableFields[i];
+                        INetworkAttributeGroup g;
+                        if (NetworkAttributeGroupMap.TryGetValue(NetworkVar.Name, out g) && g != null)
+                        {
+                            switch (g.GroupType)
+                            {
+                                case NetworkAttributeGroupType.IntGroup:
+                                    var g1 = g as NetworkIntAttributeGroup;
+                                    var s1 = NetworkVar as NetworkIntAttributeGroup;
+                                    g1.Value = s1.Value;
+                                    break;
+                                case NetworkAttributeGroupType.StringGroup:
+                                    var g2 = g as NetworkStringAttributeGroup;
+                                    var s2 = NetworkVar as NetworkStringAttributeGroup;
+                                    g2.Value = s2.Value;
+                                    break;
+                                case NetworkAttributeGroupType.Int64Group:
+                                    var g3 = g as NetworkInt64AttributeGroup;
+                                    var s3 = NetworkVar as NetworkInt64AttributeGroup;
+                                    g3.Value = s3.Value;
+                                    break;
+                            }
+                        }
                     }
                 }
                 if (OnPostInitAttributeEvent != null)
