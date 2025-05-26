@@ -3,13 +3,14 @@ local AttributeDefine = require("_Attribute.CharacterAttribute_AttributeDefine")
 
 local _M = _MOE.class("DemoCharacterAttribute", BaseAttribute)
 
+_M[".superctor"] = true -- 会调用父类方法
+
 function _M:Ctor(AttributeComponent, binder)
     self.AttributeComponent = AttributeComponent
     self.Binder = binder
 
     local EventType = _MOE.LuaEvent_MonoEventType
-    self.Binder:RegisterLuaEvent(EventType.Destroyed:GetHashCode(), self.OnDestroy)
-    self.Binder:RegisterLuaEvent(EventType.Start:GetHashCode(), self.OnStart)
+    binder:RegisterLuaEvent(EventType.Start:GetHashCode(), self.OnStart)
     self:RegsterCSharpEvent(self.AttributeComponent, "onNetworkSpawn", self.OnNetworkSpawn)
 end
 
@@ -31,11 +32,9 @@ function _M:OnDestroy()
     if _MOE.IsClient then
         self:ClearAllAttributeChangeEvents()
     end
-
-    _MOE.EventManager:UnRegisterEvents(self)
-    self:UnRegsterAllCsharpEvents()
-    self.Binder = nil
     self.AttributeComponent = nil
+
+    _M.CallSuper("OnDestroy", self)
 end
 
 function _M:RegisterAttributeChangeEvents()

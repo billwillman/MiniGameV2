@@ -2,4 +2,17 @@ local CSharpEventContainer = require("_Common.CSharpEventContainer")
 
 local _M = _MOE.class("BaseAttribute", CSharpEventContainer)
 
+function _M:Ctor(_, binder)
+    self.Binder = binder
+
+    local EventType = _MOE.LuaEvent_MonoEventType
+    self.Binder:RegisterLuaEvent(EventType.Destroyed:GetHashCode(), self.OnDestroy)
+end
+
+function _M:OnDestroy()
+    _MOE.EventManager:UnRegisterEvents(self)
+    self:UnRegsterAllCsharpEvents()
+    self.Binder = nil
+end
+
 return _M
