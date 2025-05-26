@@ -3,6 +3,19 @@ local AttributeDefine = require("_Attribute.CharacterAttribute_AttributeDefine")
 
 local _M = _MOE.class("DemoCharacterAttribute", BaseAttribute)
 
+function _M:ClearAllAttributeChangeEvents()
+    self.AttributeComponent:SetAttributeChangeEvent(AttributeDefine.HPGroup._Index, nil)
+end
+
+function _M:RegisterAttributeChangeEvents()
+    self.AttributeComponent:SetAttributeChangeEvent(AttributeDefine.HPGroup._Index, function()
+        local isOk, maxHP = self.AttributeComponent:GetNetworkIntGroupVarsToInt(AttributeDefine.HPGroup._Index, AttributeDefine.HPGroup.MaxHP)
+        _MOE.Logger.LogFormat("[AttributeComponent] isOk: {0}, maxHp: {1:D}", tostring(isOk), maxHP)
+    end)
+end
+
+---------------------------------------------------- 继承 ------------------------------------------------------------------------
+
 function _M:ReceiveBeginPlay()
     if _MOE.IsServer then
         self.AttributeComponent:SetNetworkIntGroupVars(AttributeDefine.HPGroup._Index, AttributeDefine.HPGroup.MaxHP, 500)
@@ -13,24 +26,13 @@ function _M:ReceiveBeginPlay()
     end
 end
 
-function _M:ClearAllAttributeChangeEvents()
-    self.AttributeComponent:SetAttributeChangeEvent(AttributeDefine.HPGroup._Index, nil)
-end
-
-function _M:ReceiveEndPlay()
+function _M:AttributesUnInited()
     if _MOE.IsClient then
         self:ClearAllAttributeChangeEvents()
     end
 end
 
 function _M:AttributesInited()
-    self.AttributeComponent:SetAttributeChangeEvent(AttributeDefine.HPGroup._Index, function()
-        local isOk, maxHP = self.AttributeComponent:GetNetworkIntGroupVarsToInt(AttributeDefine.HPGroup._Index, AttributeDefine.HPGroup.MaxHP)
-        _MOE.Logger.LogFormat("[AttributeComponent] isOk: {0}, maxHp: {1:D}", tostring(isOk), maxHP)
-    end)
-end
-
-function _M:OnStart()
     if _MOE.IsClient then
         self:RegisterAttributeChangeEvents()
     end

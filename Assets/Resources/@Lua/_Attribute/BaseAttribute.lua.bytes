@@ -26,6 +26,7 @@ function _M:OnPostInitAttributeEvent()
 end
 
 function _M:OnDestroy()
+    self:AttributesUnInited()
     _MOE.EventManager:UnRegisterEvents(self)
     self:UnRegsterAllCsharpEvents()
     self.Binder = nil
@@ -41,6 +42,9 @@ function _M:ReceiveEndPlay()
 end
 
 function _M:AttributesInited()
+end
+
+function _M:AttributesUnInited()
 end
 
 return _M
