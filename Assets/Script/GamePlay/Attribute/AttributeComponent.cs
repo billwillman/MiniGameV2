@@ -344,16 +344,22 @@ namespace SOC.GamePlay.Attribute
                                     var g1 = g as NetworkIntAttributeGroup;
                                     var s1 = NetworkVar as NetworkIntAttributeGroup;
                                     g1.Value = s1.Value;
+                                    if (g1.OnValueChanged != null)
+                                        g1.OnValueChanged(g1.Value, s1.Value);
                                     break;
                                 case NetworkAttributeGroupType.StringGroup:
                                     var g2 = g as NetworkStringAttributeGroup;
                                     var s2 = NetworkVar as NetworkStringAttributeGroup;
                                     g2.Value = s2.Value;
+                                    if (g2.OnValueChanged != null)
+                                        g2.OnValueChanged(g2.Value, s2.Value);
                                     break;
                                 case NetworkAttributeGroupType.Int64Group:
                                     var g3 = g as NetworkInt64AttributeGroup;
                                     var s3 = NetworkVar as NetworkInt64AttributeGroup;
                                     g3.Value = s3.Value;
+                                    if (g3.OnValueChanged != null)
+                                        g3.OnValueChanged(g3.Value, s3.Value);
                                     break;
                             }
                         }
