@@ -14,8 +14,13 @@ function _M:Ctor(AttributeComponent, binder)
 end
 
 function _M:OnNetworkSpawn()
-    local isOk, maxHP = self.AttributeComponent:GetNetworkIntGroupVarsToInt(AttributeDefine.HPGroup._Index, AttributeDefine.HPGroup.MaxHP)
-        _MOE.Logger.LogFormat("[AttributeComponent] isOk: {0}, maxHp: {1:D}", tostring(isOk), maxHP)
+    if _MOE.IsServer then
+        self.AttributeComponent:SetNetworkIntGroupVars(AttributeDefine.HPGroup._Index, AttributeDefine.HPGroup.MaxHP, 500)
+    end
+    if _MOE.IsClient then
+        local isOk, maxHP = self.AttributeComponent:GetNetworkIntGroupVarsToInt(AttributeDefine.HPGroup._Index, AttributeDefine.HPGroup.MaxHP)
+            _MOE.Logger.LogFormat("[AttributeComponent] isOk: {0}, maxHp: {1:D}", tostring(isOk), maxHP)
+    end
 end
 
 function _M:ClearAllAttributeChangeEvents()
@@ -43,9 +48,6 @@ end
 function _M:OnStart()
     if _MOE.IsClient then
         self:RegisterAttributeChangeEvents()
-    end
-    if _MOE.IsServer then
-        self.AttributeComponent:SetNetworkIntGroupVars(AttributeDefine.HPGroup._Index, AttributeDefine.HPGroup.MaxHP, 500)
     end
 end
 
