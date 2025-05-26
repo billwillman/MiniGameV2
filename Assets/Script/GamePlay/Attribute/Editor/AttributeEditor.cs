@@ -20,7 +20,27 @@ namespace SOC.GamePlay.Attribute
             AttributeComponent target = this.target as AttributeComponent;
             if (target != null)
             {
+                var GroupMetas = target.AttributeGroupMeta;
                 // »æÖÆÊý¾Ý
+                if (target.NetworkIntGroupVars != null)
+                {
+                    for (int i = 0; i < target.NetworkIntGroupVars.Count; ++i)
+                    {
+                        var GroupMeta = GroupMetas[i];
+                        var GroupItem = target.NetworkIntGroupVars[i];
+                        EditorGUILayout.BeginFoldoutHeaderGroup(true, GroupItem.Name);
+                        if (GroupItem.Value != null)
+                        {
+                            int j = 0;
+                            foreach (var item in GroupItem.Value.AttributeMap)
+                            {
+                                var itemMeta = GroupMeta.Attributes[j++];
+                                EditorGUILayout.LabelField(itemMeta.AttributeName, item.Value.ToString());
+                            }
+                        }
+                        EditorGUILayout.EndFoldoutHeaderGroup();
+                    }
+                }
             }
         }
 
