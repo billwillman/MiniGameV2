@@ -2,17 +2,45 @@ local CSharpEventContainer = require("_Common.CSharpEventContainer")
 
 local _M = _MOE.class("BaseAttribute", CSharpEventContainer)
 
-function _M:Ctor(_, binder)
+function _M:Ctor(AttributeComponent, binder)
+    self.AttributeComponent = AttributeComponent
     self.Binder = binder
 
     local EventType = _MOE.LuaEvent_MonoEventType
     self.Binder:RegisterLuaEvent(EventType.Destroyed:GetHashCode(), self.OnDestroy)
+    self:RegsterCSharpEvent(self.AttributeComponent, "onNetworkSpawn", self.OnNetworkSpawn)
+    self:RegsterCSharpEvent(self.AttributeComponent, "onNetworkDespawn", self.OnNetworkDespawn)
+    self:RegsterCSharpEvent(self.AttributeComponent, "OnPostInitAttributeEvent", self.OnPostInitAttributeEvent)
+end
+
+function _M:OnNetworkSpawn()
+    self:ReceiveBeginPlay()
+end
+
+function _M:OnNetworkDespawn()
+    self:ReceiveEndPlay()
+end
+
+function _M:OnPostInitAttributeEvent()
+    self:AttributesInited()
 end
 
 function _M:OnDestroy()
     _MOE.EventManager:UnRegisterEvents(self)
     self:UnRegsterAllCsharpEvents()
     self.Binder = nil
+    self.AttributeComponent = nil
+end
+
+------------------------------------------------------------ 虚函数 -----------------------------------------
+
+function _M:ReceiveBeginPlay()
+end
+
+function _M:ReceiveEndPlay()
+end
+
+function _M:AttributesInited()
 end
 
 return _M

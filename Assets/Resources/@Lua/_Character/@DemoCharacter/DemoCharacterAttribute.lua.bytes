@@ -3,18 +3,7 @@ local AttributeDefine = require("_Attribute.CharacterAttribute_AttributeDefine")
 
 local _M = _MOE.class("DemoCharacterAttribute", BaseAttribute)
 
-_M[".superctor"] = true -- 会调用父类方法
-
-function _M:Ctor(AttributeComponent, binder)
-    self.AttributeComponent = AttributeComponent
-    self.Binder = binder
-
-    local EventType = _MOE.LuaEvent_MonoEventType
-    binder:RegisterLuaEvent(EventType.Start:GetHashCode(), self.OnStart)
-    self:RegsterCSharpEvent(self.AttributeComponent, "onNetworkSpawn", self.OnNetworkSpawn)
-end
-
-function _M:OnNetworkSpawn()
+function _M:ReceiveBeginPlay()
     if _MOE.IsServer then
         self.AttributeComponent:SetNetworkIntGroupVars(AttributeDefine.HPGroup._Index, AttributeDefine.HPGroup.MaxHP, 500)
     end
@@ -28,16 +17,13 @@ function _M:ClearAllAttributeChangeEvents()
     self.AttributeComponent:SetAttributeChangeEvent(AttributeDefine.HPGroup._Index, nil)
 end
 
-function _M:OnDestroy()
+function _M:ReceiveEndPlay()
     if _MOE.IsClient then
         self:ClearAllAttributeChangeEvents()
     end
-    self.AttributeComponent = nil
-
-    _M.CallSuper("OnDestroy", self)
 end
 
-function _M:RegisterAttributeChangeEvents()
+function _M:AttributesInited()
     self.AttributeComponent:SetAttributeChangeEvent(AttributeDefine.HPGroup._Index, function()
         local isOk, maxHP = self.AttributeComponent:GetNetworkIntGroupVarsToInt(AttributeDefine.HPGroup._Index, AttributeDefine.HPGroup.MaxHP)
         _MOE.Logger.LogFormat("[AttributeComponent] isOk: {0}, maxHp: {1:D}", tostring(isOk), maxHP)
