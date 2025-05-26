@@ -252,7 +252,8 @@ namespace SOC.GamePlay.Attribute
                                 Group1.OnValueChanged = iter.OnIntGroupValueChanged;
                                 if (!isHasNetVar)
                                 {
-                                    NetworkVariableFields.Add(Group1);
+                                    if (this.IsHost || GameStart.IsDS)
+                                        NetworkVariableFields.Add(Group1);
                                     ushort currentKey = 0;
                                     foreach (var intIter in iter.Attributes)
                                     {
@@ -260,8 +261,7 @@ namespace SOC.GamePlay.Attribute
                                     }
                                 }
                                 Group1.SetDirty(false); // 默认值不认为是
-                                if (this.IsHost || GameStart.IsDS)
-                                    NetworkIntGroupVars.Add(Group1);
+                                NetworkIntGroupVars.Add(Group1);
                             }
                             break;
                         case NetworkAttributeType.Int64:
@@ -284,7 +284,8 @@ namespace SOC.GamePlay.Attribute
                                 Group2.OnValueChanged = iter.OnInt64GroupValueChanged;
                                 if (!isHasNetVar)
                                 {
-                                    NetworkVariableFields.Add(Group2);
+                                    if (this.IsHost || GameStart.IsDS)
+                                        NetworkVariableFields.Add(Group2);
                                     ushort currentKey = 0;
                                     foreach (var int64Iter in iter.Attributes)
                                     {
@@ -292,8 +293,7 @@ namespace SOC.GamePlay.Attribute
                                     }
                                 }
                                 Group2.SetDirty(false);
-                                if (this.IsHost || GameStart.IsDS)
-                                    NetworkInt64GroupVars.Add(Group2);
+                                NetworkInt64GroupVars.Add(Group2);
                             }
                             break;
                         case NetworkAttributeType.String:
@@ -315,7 +315,8 @@ namespace SOC.GamePlay.Attribute
                                 Group3.bRepNotify = iter.bRepNotify;
                                 if (!isHasNetVar)
                                 {
-                                    NetworkVariableFields.Add(Group3);
+                                    if (this.IsHost || GameStart.IsDS)
+                                        NetworkVariableFields.Add(Group3);
                                     ushort currentKey = 0;
                                     foreach (var stringIter in iter.Attributes)
                                     {
