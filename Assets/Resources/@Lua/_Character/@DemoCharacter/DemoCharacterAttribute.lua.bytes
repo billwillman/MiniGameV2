@@ -1,7 +1,7 @@
-local CSharpEventContainer = require("_Common.CSharpEventContainer")
+local BaseAttribute = require("_Attribute.BaseAttribute")
 local AttributeDefine = require("_Attribute.CharacterAttribute_AttributeDefine")
 
-local _M = _MOE.class("DemoCharacterAttribute", CSharpEventContainer)
+local _M = _MOE.class("DemoCharacterAttribute", BaseAttribute)
 
 function _M:Ctor(AttributeComponent, binder)
     self.AttributeComponent = AttributeComponent

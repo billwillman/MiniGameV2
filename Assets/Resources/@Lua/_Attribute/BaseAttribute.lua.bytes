@@ -1,0 +1,5 @@
+local CSharpEventContainer = require("_Common.CSharpEventContainer")
+
+local _M = _MOE.class("BaseAttribute", CSharpEventContainer)
+
+return _M
