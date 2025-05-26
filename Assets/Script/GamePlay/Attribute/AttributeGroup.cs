@@ -361,6 +361,13 @@ namespace SOC.GamePlay.Attribute
                 return NetworkAttributeGroupType.IntGroup;
             }
         }
+#if UNITY_EDITOR
+        public NetworkAttributeGroupMeta Meta
+        {
+            get;
+            set;
+        }
+#endif
     }
 
     [System.Serializable]
@@ -376,6 +383,13 @@ namespace SOC.GamePlay.Attribute
                 return NetworkAttributeGroupType.Int64Group;
             }
         }
+#if UNITY_EDITOR
+        public NetworkAttributeGroupMeta Meta
+        {
+            get;
+            set;
+        }
+#endif
     }
 
     [System.Serializable]
@@ -391,6 +405,13 @@ namespace SOC.GamePlay.Attribute
                 return NetworkAttributeGroupType.StringGroup;
             }
         }
+#if UNITY_EDITOR
+        public NetworkAttributeGroupMeta Meta
+        {
+            get;
+            set;
+        }
+#endif
     }
 
     [System.Serializable]

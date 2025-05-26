@@ -20,14 +20,13 @@ namespace SOC.GamePlay.Attribute
             AttributeComponent target = this.target as AttributeComponent;
             if (target != null)
             {
-                var GroupMetas = target.AttributeGroupMeta;
                 // »æÖÆÊý¾Ý
                 if (target.NetworkIntGroupVars != null)
                 {
                     for (int i = 0; i < target.NetworkIntGroupVars.Count; ++i)
                     {
-                        var GroupMeta = GroupMetas[i];
                         var GroupItem = target.NetworkIntGroupVars[i];
+                        var GroupMeta = GroupItem.Meta;
                         EditorGUILayout.BeginFoldoutHeaderGroup(true, GroupItem.Name);
                         if (GroupItem.Value != null)
                         {
@@ -42,6 +41,49 @@ namespace SOC.GamePlay.Attribute
                         EditorGUILayout.EndFoldoutHeaderGroup();
                     }
                 }
+
+                if (target.NetworkInt64GroupVars != null)
+                {
+                    for (int i = 0; i < target.NetworkInt64GroupVars.Count; ++i)
+                    {
+                        var GroupItem = target.NetworkInt64GroupVars[i];
+                        var GroupMeta = GroupItem.Meta;
+                        EditorGUILayout.BeginFoldoutHeaderGroup(true, GroupItem.Name);
+                        if (GroupItem.Value != null)
+                        {
+                            int j = 0;
+                            foreach (var item in GroupItem.Value.AttributeMap)
+                            {
+                                var itemMeta = GroupMeta.Attributes[j++];
+                                EditorGUILayout.LabelField(itemMeta.AttributeName, item.Value.ToString());
+                            }
+                            EditorGUILayout.Space();
+                        }
+                        EditorGUILayout.EndFoldoutHeaderGroup();
+                    }
+                }
+
+                if (target.NetworkStringGroupVars != null)
+                {
+                    for (int i = 0; i < target.NetworkStringGroupVars.Count; ++i)
+                    {
+                        var GroupItem = target.NetworkStringGroupVars[i];
+                        var GroupMeta = GroupItem.Meta;
+                        EditorGUILayout.BeginFoldoutHeaderGroup(true, GroupItem.Name);
+                        if (GroupItem.Value != null)
+                        {
+                            int j = 0;
+                            foreach (var item in GroupItem.Value.AttributeMap)
+                            {
+                                var itemMeta = GroupMeta.Attributes[j++];
+                                EditorGUILayout.LabelField(itemMeta.AttributeName, item.Value);
+                            }
+                            EditorGUILayout.Space();
+                        }
+                        EditorGUILayout.EndFoldoutHeaderGroup();
+                    }
+                }
+
             }
         }
 

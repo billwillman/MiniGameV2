@@ -259,6 +259,9 @@ namespace SOC.GamePlay.Attribute
                                 Group1.Name = iter.AttributeGroupName;
                                 Group1.bRepNotify = iter.bRepNotify;
                                 Group1.OnValueChanged = iter.OnIntGroupValueChanged;
+#if UNITY_EDITOR
+                                Group1.Meta = iter;
+#endif
                                 if (!isHasNetVar)
                                 {
                                     //if (this.IsHost || GameStart.IsDS)
@@ -294,6 +297,9 @@ namespace SOC.GamePlay.Attribute
                                 Group2.Name = iter.AttributeGroupName;
                                 Group2.bRepNotify = iter.bRepNotify;
                                 Group2.OnValueChanged = iter.OnInt64GroupValueChanged;
+#if UNITY_EDITOR
+                                Group2.Meta = iter;
+#endif
                                 if (!isHasNetVar)
                                 {
                                    // if (this.IsHost || GameStart.IsDS)
@@ -328,6 +334,9 @@ namespace SOC.GamePlay.Attribute
                                 Group3.Initialize(this);
                                 Group3.Name = iter.AttributeGroupName;
                                 Group3.bRepNotify = iter.bRepNotify;
+#if UNITY_EDITOR
+                                Group3.Meta = iter;
+#endif
                                 if (!isHasNetVar)
                                 {
                                    // if (this.IsHost || GameStart.IsDS)
