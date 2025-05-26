@@ -252,7 +252,7 @@ namespace SOC.GamePlay.Attribute
                                 Group1.OnValueChanged = iter.OnIntGroupValueChanged;
                                 if (!isHasNetVar)
                                 {
-                                    if (this.IsHost || GameStart.IsDS)
+                                    //if (this.IsHost || GameStart.IsDS)
                                         NetworkVariableFields.Add(Group1);
                                     ushort currentKey = 0;
                                     foreach (var intIter in iter.Attributes)
@@ -284,7 +284,7 @@ namespace SOC.GamePlay.Attribute
                                 Group2.OnValueChanged = iter.OnInt64GroupValueChanged;
                                 if (!isHasNetVar)
                                 {
-                                    if (this.IsHost || GameStart.IsDS)
+                                   // if (this.IsHost || GameStart.IsDS)
                                         NetworkVariableFields.Add(Group2);
                                     ushort currentKey = 0;
                                     foreach (var int64Iter in iter.Attributes)
@@ -315,7 +315,7 @@ namespace SOC.GamePlay.Attribute
                                 Group3.bRepNotify = iter.bRepNotify;
                                 if (!isHasNetVar)
                                 {
-                                    if (this.IsHost || GameStart.IsDS)
+                                   // if (this.IsHost || GameStart.IsDS)
                                         NetworkVariableFields.Add(Group3);
                                     ushort currentKey = 0;
                                     foreach (var stringIter in iter.Attributes)
