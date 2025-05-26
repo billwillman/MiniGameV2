@@ -37,6 +37,7 @@ namespace SOC.GamePlay.Attribute
                                 var itemMeta = GroupMeta.Attributes[j++];
                                 EditorGUILayout.LabelField(itemMeta.AttributeName, item.Value.ToString());
                             }
+                            EditorGUILayout.Space();
                         }
                         EditorGUILayout.EndFoldoutHeaderGroup();
                     }
