@@ -260,7 +260,8 @@ namespace SOC.GamePlay.Attribute
                                     }
                                 }
                                 Group1.SetDirty(false); // 默认值不认为是
-                                NetworkIntGroupVars.Add(Group1);
+                                if (this.IsHost || GameStart.IsDS)
+                                    NetworkIntGroupVars.Add(Group1);
                             }
                             break;
                         case NetworkAttributeType.Int64:
@@ -291,7 +292,8 @@ namespace SOC.GamePlay.Attribute
                                     }
                                 }
                                 Group2.SetDirty(false);
-                                NetworkInt64GroupVars.Add(Group2);
+                                if (this.IsHost || GameStart.IsDS)
+                                    NetworkInt64GroupVars.Add(Group2);
                             }
                             break;
                         case NetworkAttributeType.String:
@@ -321,7 +323,8 @@ namespace SOC.GamePlay.Attribute
                                     }
                                 }
                                 Group3.SetDirty(false);
-                                NetworkStringGroupVars.Add(Group3);
+                                if (this.IsHost || GameStart.IsDS)
+                                    NetworkStringGroupVars.Add(Group3);
                             }
                             break;
                     }
