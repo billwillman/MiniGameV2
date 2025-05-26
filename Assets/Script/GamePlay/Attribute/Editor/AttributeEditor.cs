@@ -14,10 +14,21 @@ namespace SOC.GamePlay.Attribute
     public class AttributeComponentEditor : Editor
     {
         static string _rootDir = "Assets/Resources/@Lua/_Attribute/";
+
+        void DrawRuntime()
+        {
+            AttributeComponent target = this.target as AttributeComponent;
+            if (target != null)
+            {
+                // »æÖÆÊý¾Ý
+            }
+        }
+
         public override void OnInspectorGUI()
         {
             if (EditorApplication.isPlayingOrWillChangePlaymode)
             {
+                DrawRuntime();
                 return;
             }
             base.OnInspectorGUI();
