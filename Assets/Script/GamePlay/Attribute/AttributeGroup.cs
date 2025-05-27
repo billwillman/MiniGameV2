@@ -438,8 +438,8 @@ namespace SOC.GamePlay.Attribute
         public NetworkAttributeType AttributeType = NetworkAttributeType.Int;
         public NetworkAttributeMeta[] Attributes = null;
         public bool bRepNotify = false;
-        public NetworkVariable<IntAttributeGroup>.OnValueChangedDelegate OnIntGroupValueChanged;
-        public NetworkVariable<Int64AttributeGroup>.OnValueChangedDelegate OnInt64GroupValueChanged;
-        public NetworkVariable<StringAttributeGroup>.OnValueChangedDelegate OnStringGroupValueChanged;
+        //public NetworkVariable<IntAttributeGroup>.OnValueChangedDelegate OnIntGroupValueChanged;
+        //public NetworkVariable<Int64AttributeGroup>.OnValueChangedDelegate OnInt64GroupValueChanged;
+        //public NetworkVariable<StringAttributeGroup>.OnValueChangedDelegate OnStringGroupValueChanged;
     }
 }

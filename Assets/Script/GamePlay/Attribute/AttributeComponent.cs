@@ -258,7 +258,7 @@ namespace SOC.GamePlay.Attribute
                                 Group1.Initialize(this);
                                 Group1.Name = iter.AttributeGroupName;
                                 Group1.bRepNotify = iter.bRepNotify;
-                                Group1.OnValueChanged = iter.OnIntGroupValueChanged;
+                                //Group1.OnValueChanged = iter.OnIntGroupValueChanged;
 #if UNITY_EDITOR
                                 Group1.Meta = iter;
 #endif
@@ -296,7 +296,7 @@ namespace SOC.GamePlay.Attribute
                                 Group2.Initialize(this);
                                 Group2.Name = iter.AttributeGroupName;
                                 Group2.bRepNotify = iter.bRepNotify;
-                                Group2.OnValueChanged = iter.OnInt64GroupValueChanged;
+                                //Group2.OnValueChanged = iter.OnInt64GroupValueChanged;
 #if UNITY_EDITOR
                                 Group2.Meta = iter;
 #endif
