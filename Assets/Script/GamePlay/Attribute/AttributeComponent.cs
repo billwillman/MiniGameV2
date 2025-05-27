@@ -226,9 +226,23 @@ namespace SOC.GamePlay.Attribute
             return null;
         }
 
+        public Func<NetworkAttributeGroupMeta[]> OnGetAttributeBindGroupMetasEvent
+        {
+            get;
+            set;
+        }
+
         [XLua.BlackList]
         public void InitAttributeGroup()
         {
+            // 外部绑定Meta方法
+            if (OnGetAttributeBindGroupMetasEvent != null)
+            {
+                var CustomMetas = OnGetAttributeBindGroupMetasEvent();
+                if (CustomMetas != null)
+                    AttributeGroupMeta = CustomMetas;
+            }
+            // ----------------------
             if (AttributeGroupMeta != null)
             {
                 if (OnPreInitAttributeEvent != null)
