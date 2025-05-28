@@ -589,6 +589,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Animancer: []
+  CinemachineCameraClass: {fileID: 4637290479216553722, guid: 5e9c314a7e8e9fb4eb4c1571f569b00c,
+    type: 3}
   m_Head: {fileID: 0}
   m_Body: {fileID: 0}
   m_Weapon: {fileID: 0}
