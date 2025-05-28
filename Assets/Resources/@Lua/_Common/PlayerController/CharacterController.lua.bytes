@@ -5,7 +5,7 @@ local BaseCharacterController = _MOE.class("BaseCharacterController", CSharpEven
 function BaseCharacterController:Ctor(CharacterController, binder)
     self.CharacterController = CharacterController
     self.Binder = binder
-    self.UseRPGCamera = true
+    self.UseRPGCamera = false
 
     local EventType = _MOE.LuaEvent_MonoEventType
     self.Binder:RegisterLuaEvent(EventType.Destroyed:GetHashCode(), self.OnDestroy)
