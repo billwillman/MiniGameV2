@@ -54,6 +54,12 @@ function BaseCharacterController:OnNetworkSpawn()
                     cam.ActivateControl = true
                 end
                 self.RPGCamera = cam
+            else
+                local cam = self.CharacterController:GetComponentInChildren(typeof(CS.Cinemachine.CinemachineVirtualCameraBase))
+                if cam then
+                    cam.enabled = true
+                end
+                self.CinemachineVirtualCamera = cam
             end
             --- 事件通知CharacterController
             _MOE.EventManager:DispatchEvent("On_Local_Character_ReceiveBegin", self:GetInstanceID())
@@ -73,6 +79,8 @@ function BaseCharacterController:SetEnableCameraControl(isEnabled)
         if self.RPGCamera then
             self.RPGCamera.ActivateControl = isEnabled
         end
+    elseif self.CinemachineVirtualCamera then
+        self.CinemachineVirtualCamera.enabled = isEnabled
     end
 end
 
