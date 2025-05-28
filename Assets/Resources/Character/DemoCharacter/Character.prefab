@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 4589733799191487809}
   - component: {fileID: 2668162324554519427}
   - component: {fileID: 4475952402142496960}
-  - component: {fileID: 6230178818104141872}
+  - component: {fileID: 2431178667958626239}
   m_Layer: 0
   m_HasEditorInfo: 1
   m_Name: cm
@@ -60,18 +60,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Damping: {x: 0.1, y: 0.5, z: 0.3}
-  ShoulderOffset: {x: 0.5, y: -0.4, z: 0}
-  VerticalArmLength: 0.4
+  ShoulderOffset: {x: 0, y: 0.5, z: 0}
+  VerticalArmLength: 0.5
   CameraSide: 1
   CameraDistance: 2
   CameraCollisionFilter:
     serializedVersion: 2
-    m_Bits: 0
-  IgnoreTag: 
+    m_Bits: 1
+  IgnoreTag: Player
   CameraRadius: 0.2
   DampingIntoCollision: 0
   DampingFromCollision: 2
---- !u!114 &6230178818104141872
+--- !u!114 &2431178667958626239
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -80,9 +80,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 2672128356824099727}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1e8b78ac948f05a46a6d8339a503172b, type: 3}
+  m_Script: {fileID: 11500000, guid: a4c41ac9245b87c4192012080077d830, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_Damping: 0
 --- !u!1 &3027534426199242467
 GameObject:
   m_ObjectHideFlags: 0
@@ -110,7 +111,7 @@ Transform:
   m_GameObject: {fileID: 3027534426199242467}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 2.5, z: -3}
+  m_LocalPosition: {x: 0, y: 1, z: -2}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -124,7 +125,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3027534426199242467}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 45e653bab7fb20e499bda25e1b646fea, type: 3}
   m_Name: 
@@ -138,10 +139,10 @@ MonoBehaviour:
   m_LookAt: {fileID: 7615819231659201534}
   m_Follow: {fileID: 129501311174106110}
   m_Lens:
-    FieldOfView: 40
-    OrthographicSize: 10
-    NearClipPlane: 0.1
-    FarClipPlane: 5000
+    FieldOfView: 60
+    OrthographicSize: 5
+    NearClipPlane: 0.3
+    FarClipPlane: 1000
     Dutch: 0
     ModeOverride: 0
     LensShift: {x: 0, y: 0}
@@ -305,7 +306,7 @@ GameObject:
   m_Layer: 0
   m_HasEditorInfo: 1
   m_Name: Character
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
