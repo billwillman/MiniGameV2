@@ -5,7 +5,7 @@ local BaseCharacterController = _MOE.class("BaseCharacterController", CSharpEven
 function BaseCharacterController:Ctor(CharacterController, binder)
     self.CharacterController = CharacterController
     self.Binder = binder
-    self.UseRPGCamera = true
+    self.UseRPGCamera = false
 
     local EventType = _MOE.LuaEvent_MonoEventType
     self.Binder:RegisterLuaEvent(EventType.Destroyed:GetHashCode(), self.OnDestroy)
@@ -55,11 +55,12 @@ function BaseCharacterController:OnNetworkSpawn()
                 end
                 self.RPGCamera = cam
             else
-                local cam = self.CharacterController:GetComponentInChildren(typeof(CS.Cinemachine.CinemachineVirtualCameraBase))
-                if cam then
-                    cam.enabled = true
+                local cam = self.CharacterController.RuntimeCinemachineCamera
+                if cam == nil and self.CharacterController:SpawnCinemachineCamera() then
+                    self.CinemachineVirtualCamera = self.CharacterController.RuntimeCinemachineCamera
+                else
+                    self.CinemachineVirtualCamera = cam
                 end
-                self.CinemachineVirtualCamera = cam
             end
             --- 事件通知CharacterController
             _MOE.EventManager:DispatchEvent("On_Local_Character_ReceiveBegin", self:GetInstanceID())

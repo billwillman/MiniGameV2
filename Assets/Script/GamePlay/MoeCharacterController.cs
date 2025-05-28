@@ -4,9 +4,9 @@ using UnityEngine;
 //using Unity.Netcode;
 using KinematicCharacterController;
 using Animancer;
-using System.Collections.Generic;
 using System;
 using XLua;
+using Cinemachine;
 
 namespace SOC.GamePlay
 {
@@ -18,12 +18,37 @@ namespace SOC.GamePlay
         private KinematicCharacterMotor m_CharacterMotor = null;
         public AnimancerComponent[] m_Animancer = null; // 从Body上获取
 
+        public CinemachineVirtualCameraBase CinemachineCameraClass = null;
+
         public SkinnedMeshRenderer m_Head = null;
         public SkinnedMeshRenderer m_Body = null;
         public SkinnedMeshRenderer m_Weapon = null;
         public SkinnedMeshRenderer m_Hair = null;
 
         private PawnNetworkObject m_PawnObj = null;
+
+        public CinemachineVirtualCameraBase RuntimeCinemachineCamera
+        {
+            get;
+            set;
+        }
+
+        public bool SpawnCinemachineCamera()
+        {
+            if (RuntimeCinemachineCamera != null)
+                return true;
+            if (CinemachineCameraClass != null)
+            {
+                var instGameObj = ResourceMgr.Instance.InstantiateGameObj(CinemachineCameraClass.gameObject);
+                if (instGameObj != null)
+                {
+                    RuntimeCinemachineCamera = instGameObj.GetComponent<CinemachineVirtualCameraBase>();
+                    RuntimeCinemachineCamera.Follow = this.transform;
+                    return true;
+                }
+            }
+            return false;
+        }
 
         public PawnNetworkObject PawnObj
         {
