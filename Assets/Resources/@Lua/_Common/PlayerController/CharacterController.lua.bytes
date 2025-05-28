@@ -5,6 +5,7 @@ local BaseCharacterController = _MOE.class("BaseCharacterController", CSharpEven
 function BaseCharacterController:Ctor(CharacterController, binder)
     self.CharacterController = CharacterController
     self.Binder = binder
+    self.UseRPGCamera = true
 
     local EventType = _MOE.LuaEvent_MonoEventType
     self.Binder:RegisterLuaEvent(EventType.Destroyed:GetHashCode(), self.OnDestroy)
@@ -41,17 +42,19 @@ function BaseCharacterController:OnNetworkSpawn()
                 kccController.enabled = true
             end
             self.KCCController = kccController
-            --- 相机激活
-            local view = self.CharacterController:GetComponent(typeof(CS.JohnStairs.RCC.Character.Cam.RPGViewFrustum))
-            if view then
-                view.enabled = true
+            if self.UseRPGCamera then
+                --- 相机激活
+                local view = self.CharacterController:GetComponent(typeof(CS.JohnStairs.RCC.Character.Cam.RPGViewFrustum))
+                if view then
+                    view.enabled = true
+                end
+                local cam = self.CharacterController:GetComponent(typeof(CS.JohnStairs.RCC.Character.Cam.RPGCamera))
+                if cam then
+                    cam.enabled = true
+                    cam.ActivateControl = true
+                end
+                self.RPGCamera = cam
             end
-            local cam = self.CharacterController:GetComponent(typeof(CS.JohnStairs.RCC.Character.Cam.RPGCamera))
-            if cam then
-                cam.enabled = true
-                cam.ActivateControl = true
-            end
-            self.RPGCamera = cam
             --- 事件通知CharacterController
             _MOE.EventManager:DispatchEvent("On_Local_Character_ReceiveBegin", self:GetInstanceID())
         else
@@ -66,8 +69,10 @@ function BaseCharacterController:SetEnableCameraControl(isEnabled)
     if isEnabled == nil then
         isEnabled = true
     end
-    if self.RPGCamera then
-        self.RPGCamera.ActivateControl = isEnabled
+    if self.UseRPGCamera then
+        if self.RPGCamera then
+            self.RPGCamera.ActivateControl = isEnabled
+        end
     end
 end
 
