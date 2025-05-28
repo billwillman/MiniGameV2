@@ -50,6 +50,15 @@ namespace SOC.GamePlay
             return false;
         }
 
+        public void DestroyCinemachineCamera()
+        {
+            if (RuntimeCinemachineCamera != null)
+            {
+                ResourceMgr.Instance.DestroyInstGameObj(RuntimeCinemachineCamera.gameObject);
+                RuntimeCinemachineCamera = null;
+            }
+        }
+
         public PawnNetworkObject PawnObj
         {
             get
