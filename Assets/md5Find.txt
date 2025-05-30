@@ -2,6 +2,7 @@ a31bbbeecf07e65c6f94281f03b7d54a=assets$resources$@input.assets
 24dc9236b029288491c483880713291b=assets$resources$@lua.assets
 01c5009df423f420f0b9718f7e8e9372=assets$resources$@shader$@character.assets
 388626f00b80387167b59d08ca2703c3=assets$resources$character$@hero_kof_mai.assets
+0131bc03b89b6f20d53acb86f738f706=assets$resources$character$democharacter$cameraactor.prefab.assets
 b7b265a1a89d96e8158a0476ecae6621=assets$resources$character$democharacter$character.prefab.assets
 8a7d19a7f775a9706669fc8fc4687336=assets$resources$character$democharacter$multiscene.scene.assets
 f11bd065fd3af0c84cac195994b9f3c5=assets$resources$character$@hero_kof_mai$@anim.assets
