@@ -1,0 +1,20 @@
+local CSharpEventContainer = require("_Common.CSharpEventContainer")
+local BaseCameraSetting = _MOE.class("BaseCameraSetting", CSharpEventContainer)
+
+function BaseCameraSetting:Ctor(virtualCamera, binder)
+    self.VirtualCamera = virtualCamera
+    self.Binder = binder
+
+    local EventType = _MOE.LuaEvent_MonoEventType
+    self.Binder:RegisterLuaEvent(EventType.Destroyed:GetHashCode(), self.OnDestroy)
+end
+
+function BaseCameraSetting:OnDestroy()
+    _MOE.EventManager:UnRegisterEvents(self)
+    self:UnRegsterAllCsharpEvents()
+
+    self.VirtualCamera = nil
+    self.Binder = nil
+end
+
+return BaseCameraSetting
