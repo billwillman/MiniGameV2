@@ -86,7 +86,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 64533a518d657d748bea84e24762d653, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  LuaPath: 
+  LuaPath: _Client.CameraSetting.CameraSetting.lua
   SelfTarget: {fileID: 4637290479216553722}
   CustomLuaFunctionName: []
   bInitCustomLuaFunctionInStart: 0
