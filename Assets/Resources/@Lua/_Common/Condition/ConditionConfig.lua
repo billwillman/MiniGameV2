@@ -107,7 +107,14 @@ function ConditionConfig:GetActionStack()
     return self.DoActionStack
 end
 
+function ConditionConfig:CanTick()
+    return true
+end
+
 function ConditionConfig:_OnTick()
+    if not self:CanTick() then
+        return
+    end
     -- 暂时需要TICK的条件比较少，暂时一次TICK执行全部，后续如果过多可以优化，一帧执行多少个
     TickCondition(self.TickConditionInstanceMap, "OnTick")
     local removeActions = nil
