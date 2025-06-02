@@ -137,7 +137,7 @@ function ConditionConfig:_OnTick()
     end
     if removeActions then
         for _, action in ipairs(removeActions) do
-            self.ActionMap[action:GetID()] = nil
+            self:RemoveAction(action)
         end
     end
     TickCondition(self.TickEndOnceConditionInstanecMap, "OnTickEndOnce")
@@ -231,6 +231,10 @@ end
 function ConditionConfig:RemoveActionByID(ID)
     if ID == nil or self.ActionMap == nil then
         return
+    end
+    local action = self.ActionMap[ID]
+    if action and action.DoRemove then
+        action:DoRemove()
     end
     self.ActionMap[ID] = nil
 end

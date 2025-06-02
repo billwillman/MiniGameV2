@@ -120,6 +120,9 @@ end
 function _M:DoAction()
 end
 
+function _M:DoRemove()
+end
+
 -- 自身条件，例如，一天触发了3次不让触发了，优先级最高
 function _M:CanRegister()
     return true
