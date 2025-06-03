@@ -226,21 +226,22 @@ end
 
 function ConditionConfig:RemoveAction(action)
     if not action then
-        return
+        return false
     end
     local ID = action:GetID()
-    self:RemoveActionByID(ID)
+    return self:RemoveActionByID(ID)
 end
 
 function ConditionConfig:RemoveActionByID(ID)
     if ID == nil or self.ActionMap == nil then
-        return
+        return false
     end
     local action = self.ActionMap[ID]
     if action and action.DoRemove then
         action:DoRemove()
     end
     self.ActionMap[ID] = nil
+    return action ~= nil
 end
 
 function ConditionConfig:GetConditionNameClassMap()
