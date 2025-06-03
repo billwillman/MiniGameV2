@@ -76,6 +76,11 @@ function _M:_ResetStopStatus()
     end
 end
 
+--- 手动设置为Remove状态
+function _M:CustomMarkRemove()
+    self.Status = _M.StateType.Remove
+end
+
 -- 返回：如果执行了DoAction返回true
 function _M:OnTick()
     if not self:CanRegister() then
