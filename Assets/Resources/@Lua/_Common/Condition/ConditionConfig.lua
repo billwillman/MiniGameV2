@@ -115,6 +115,8 @@ function ConditionConfig:_OnTick()
     if not self:CanTick() then
         return
     end
+    self:OnPreTick()
+
     -- 暂时需要TICK的条件比较少，暂时一次TICK执行全部，后续如果过多可以优化，一帧执行多少个
     TickCondition(self.TickConditionInstanceMap, "OnTick")
     local removeActions = nil
@@ -142,6 +144,8 @@ function ConditionConfig:_OnTick()
     end
     TickCondition(self.TickEndOnceConditionInstanecMap, "OnTickEndOnce")
     self:_ClearTickEndOnceConditionInstanecMap()
+
+    self:OnPostTick()
 end
 
 function ConditionConfig:_OnRegisterConditionTickEndCallOnce(condition)
@@ -315,6 +319,12 @@ function ConditionConfig:Start()
         self.Timer = _MOE.TimerManager:AddLoopTimer(0.3, self, self._OnTick)
         _MOE.EventManager:RegisterEvent(ConditionClass.RegisterConditionTickEndCallOnce_EvetName, self, self._OnRegisterConditionTickEndCallOnce)
     end
+end
+
+function ConditionConfig:OnPreTick()
+end
+
+function ConditionConfig:OnPostTick()
 end
 
 return ConditionConfig
