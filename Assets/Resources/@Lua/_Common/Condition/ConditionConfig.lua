@@ -175,6 +175,20 @@ local function CreateHashKey(className, ...)
     return className
 end
 
+local function GetParamUnpack(paramValue)
+    if paramValue == nil then
+        return
+    end
+    local ret = table.unpack(paramValue)
+    if ret then
+        return ret
+    end
+    if type(paramValue) == "table" then
+        ret = _MOE.Utils.TableUtils.Serialize(paramValue)
+        return ret
+    end
+end
+
 function ConditionConfig:_RegisterConditionInstance(className, paramValue)
     if not className then
         _MOE.Logger.LogWarning("[ConditionConfig] RegisterCondition: className is nil")
@@ -187,7 +201,7 @@ function ConditionConfig:_RegisterConditionInstance(className, paramValue)
     end
     local ret = nil
     local isNewCreate = false
-    local key = CreateHashKey(className, table.unpack(paramValue))
+    local key = CreateHashKey(className, GetParamUnpack(paramValue))
     if key then
         ret = self.ConditionInstanceKeyMap[key]
         if not ret then
