@@ -179,13 +179,16 @@ local function GetParamUnpack(paramValue)
     if paramValue == nil then
         return
     end
-    local ret = table.unpack(paramValue)
-    if ret then
-        return ret
-    end
-    if type(paramValue) == "table" then
+    local typeStr = type(paramValue)
+    if typeStr == "table" then
+        local ret = table.unpack(paramValue)
+        if ret then
+            return ret
+        end
         ret = _MOE.Utils.TableUtils.Serialize(paramValue)
         return ret
+    else
+        return tostring(paramValue)
     end
 end
 
