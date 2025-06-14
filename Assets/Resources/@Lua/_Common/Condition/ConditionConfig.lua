@@ -298,11 +298,8 @@ function ConditionConfig:Dispose()
     CallActionAndConditonFunc(self, "OnClear")
     self:OnClear()
     InitVars(self)
+    self:Stop()
     _MOE.EventManager:UnRegisterEventsOfRef(self)
-    if self.Timer then
-        _MOE.TimerManager:RemoveTimer(self.Timer)
-        self.Timer = nil
-    end
 end
 
 function ConditionConfig:RegisterStartConditions(StartConditions)
@@ -336,6 +333,14 @@ function ConditionConfig:Start()
     if self.Timer == nil then
         self.Timer = _MOE.TimerManager:AddLoopTimer(0.3, self, self._OnTick)
         _MOE.EventManager:RegisterEvent(ConditionClass.RegisterConditionTickEndCallOnce_EvetName, self, self._OnRegisterConditionTickEndCallOnce)
+    end
+end
+
+function ConditionConfig:Stop()
+    if self.Timer ~= nil then
+        _MOE.TimerManager:RemoveTimer(self.Timer)
+        self.Timer = nil
+        _MOE.EventManager:UnRegisterEvent(ConditionClass.RegisterConditionTickEndCallOnce_EvetName, self)
     end
 end
 
