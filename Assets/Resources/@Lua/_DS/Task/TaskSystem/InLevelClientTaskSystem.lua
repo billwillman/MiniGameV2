@@ -51,16 +51,19 @@ function InLevelClientTaskSystem:ClientUpdateTaskInfos(DSTaskInfos)
     end
     self.TaskList = self.TaskList or {}
     self.TaskMap = self.TaskMap or {}
+    local MCGGameConfig = _MCG.MCGGameConfig
     for idx = 1, len do
         local DStask = DSTaskInfos.Tasks:GetRef(idx)
         if DStask and DStask.TaskID then
             local taskID = DStask.TaskID
+            local isNew = false
             if not self.TaskMap[taskID] then
                 local config = _MOE.Config.Chase_ChaseInLevelTaskInfo_Chase:GetDataByKey(taskID)
                 if config then
                     local task = TaskClass.New(MyPlayerInfo, config)
                     self.TaskMap[taskID] = task
                     table.insert(self.TaskList, task)
+                    isNew = true
                 end
             end
             local task = self.TaskMap[taskID]
@@ -68,6 +71,10 @@ function InLevelClientTaskSystem:ClientUpdateTaskInfos(DSTaskInfos)
                 if task:ClientSetTaskCurrentValue(DStask.CurrentValue) then
                     task:CheckComplete()
                     _MOE.Logger.Log("[InTaskSystem] Update id:", taskID, "CurrentValue:", task:GetCurrentValue())
+                    _MOE.EventManager:DispatchEvent(MCGGameConfig.Events.ON_CLIENT_INLEVEL_TASKUPDATE, taskID, task) -- 任务数据更新
+                elseif isNew then
+                    _MOE.Logger.Log("[InTaskSystem] Update id:", taskID, "CurrentValue:", task:GetCurrentValue())
+                    _MOE.EventManager:DispatchEvent(MCGGameConfig.Events.ON_CLIENT_INLEVEL_TASKUPDATE, taskID, task) -- 任务数据更新
                 end
             end
         end

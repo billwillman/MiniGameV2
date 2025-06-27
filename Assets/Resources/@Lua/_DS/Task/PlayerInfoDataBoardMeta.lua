@@ -6,17 +6,41 @@ local AccessType = {
     Both = 1, -- Client 和 DS都可访问
 }
 
+-- 法宝枚举
+local ChangeMagicEnum = {
+    WuKong = 0, -- 悟空 OK
+    ShaSeng = 1, -- 沙僧 OK
+    ZhuBaJie = 2, -- 猪八戒 OK
+    TangSeng = 3, -- 唐僧/安琪儿 OK
+    LangRen = 4, -- 狼人 OK
+    SuanNiHen = 5, -- 蒜你恨 OK
+    ShiZijia = 6, -- 驱魔十字架
+}
+
 local DataName = {
     TaskInfos = "TaskInfos", -- 数据面板数据定义
-    UseMainSkill = "UseMainSkillNum", -- 使用主技能次数
+    UseSkillNum = "UseSkillNum", -- 使用主技能次数
+    HitSkillNum = "HitSkillNum", -- 使用主技能击中次数
     Boss = {
+        ------------------Boss身份通用--------------------
         HitDownPlayerCount = "HitDownPlayerCount", -- 击倒星宝次数
         HitPlayerCount = "HitPlayerCount", -- 击中星宝次数
         DestroyTrapCount = "DestroyTrapCount", -- 摧毁机关次数
         KillCount = "KillCount", -- 击杀次数
         DamageValue = "DamageValue", -- 伤害量
         ExilePlayerSuccessCount = "ExilePlayerSuccessCount", -- 放逐星宝次数
-        
+        EnterAngryTime = "EnterAngryTime", --进入觉醒状态距离DS开局的时间(-1：从未进入觉醒状态)
+        ------------------Boss身份特性----------------------
+        [1014] = {
+            LizaFullnessCount = "LizaFullnessCount",--伊丽莎白饱食度上升记录
+        },
+        [1012] = {
+            LamiaSlowDownTangsengOrAngel = "LamiaSlowDownTangsengOrAngel",--拉弥娅魔核是否减速过唐僧/安琪儿
+            BossLamiaExecutionCount = "BossLamiaExecutionCount", -- 拉米亚处决
+        },
+        [1013] = {
+            DraculaEndSkillNearPlayer = "DraculaEndSkillNearPlayer",--德古拉在星宝附近变回原样
+        }
     },
     Player = {
         RescueTeammateCount = "RescueTeammateCount", -- 解救数目
@@ -33,7 +57,7 @@ local DataName = {
         OpenEscapeGateCount = "OpenEscapeGateCount", -- 传送门开启次数
         BeDamageValue = "BeDamageValue", -- 承受伤害量
         CureTeammateValue = "CureTeammateValue", -- 治疗伤害量
-        ChangeMagicCount = "ChangeMagicCount", -- 法宝变身次数
+        GetMagicEnumArray = "GetMagicEnumArray", -- 获得过法宝获取枚举数组
         BoardStubBossCount = "BoardStubBossCount", -- 机关砸晕BOSS次数
     }
 }
@@ -70,6 +94,14 @@ local CommonDefine = {
                 end
             end
         end,
+    },
+    [DataName.UseSkillNum] = { -- 使用主技能次数
+        AccessType = AccessType.Server, -- 只允许DS调用
+        DSUpdateEvent = "CHASE_UseSkillNum_Update",
+    },
+    [DataName.HitSkillNum] = { -- 使用主技能击中次数
+        AccessType = AccessType.Server, -- 只允许DS调用
+        DSUpdateEvent = "CHASE_HitSkillNum_Update",
     }
 }
 
@@ -108,7 +140,18 @@ local BossDefine = {
         Access = AccessType.Both,
         DSUpdateEvent = "CHASE_KillCount_Update",
         GetFunc = function (PlayerInfo, name, dataBoard)
-            return (PlayerInfo.ExilePlayerSuccessCount + PlayerInfo.BossLamiaExecutionCount) or 0
+            local ExilePlayerSuccessCount = PlayerInfo.ExilePlayerSuccessCount or 0
+            local BossLamiaExecutionCount = PlayerInfo.BossLamiaExecutionCount or 0
+            return ExilePlayerSuccessCount + BossLamiaExecutionCount
+        end
+    },
+    -- 拉米亚处决
+    [DataName.Boss[1012].BossLamiaExecutionCount] = {
+        ReadOnly = true, -- 只读属性
+        Access = AccessType.Both,
+        DSUpdateEvent = {"CHASE_BossLamiaExecutionCount_Update", "CHASE_KillCount_Update"},
+        GetFunc = function (PlayerInfo, name, dataBoard)
+            return PlayerInfo.BossLamiaExecutionCount or 0
         end
     },
     -- 伤害量
@@ -124,10 +167,78 @@ local BossDefine = {
     [DataName.Boss.ExilePlayerSuccessCount] = {
         ReadOnly = true, -- 只读属性
         Access = AccessType.Both,
-        DSUpdateEvent = "CHASE_ExilePlayerSuccessCount_Update",
+        DSUpdateEvent = {"CHASE_ExilePlayerSuccessCount_Update", "CHASE_KillCount_Update"},
         GetFunc = function (PlayerInfo, name, dataBoard)
             return PlayerInfo.ExilePlayerSuccessCount or 0
         end
+    },
+    -- 伊丽莎白饱食度
+    [DataName.Boss[1014].LizaFullnessCount] = {
+        Access = AccessType.Both,
+        DSUpdateEvent = "CHASE_Liza_FullnessCount_Update",
+        GetFunc = function (PlayerInfo, name, dataBoard)
+            dataBoard[name] = dataBoard[name] or {
+                MidFullnessCount = 0,
+                HighFullnessCount = 0,
+                LowFullnessCount = 0
+            }
+            local ret = dataBoard[name]
+            return ret
+        end,
+        SetFunc = function (PlayerInfo, name, value, dataBoard)
+            local MidFullnessCount = value.MidFullnessCount or 0
+            local HighFullnessCount = value.HighFullnessCount or 0
+            local LowFullnessCount = value.LowFullnessCount or 0
+            local NewFullnessCountList = {
+                MidFullnessCount = MidFullnessCount,
+                HighFullnessCount = HighFullnessCount,
+                LowFullnessCount = LowFullnessCount
+            }
+            dataBoard[name] = NewFullnessCountList
+            return true
+        end,
+    },
+    -- Boss进入觉醒状态距离开局的时间(-1：从未进入觉醒状态)
+    [DataName.Boss.EnterAngryTime] = {
+        Access = AccessType.Both,
+        DSUpdateEvent = "CHASE_EnterAngryTime_Update",
+        GetFunc = function (PlayerInfo, name, dataBoard)
+            dataBoard[name] = dataBoard[name] or -1
+            local ret = dataBoard[name]
+            return ret
+        end,
+        SetFunc = function (PlayerInfo, name, value, dataBoard)
+            dataBoard[name] = value or -1
+            return true
+        end,
+    },
+    -- 拉弥娅魔核是否减速过唐僧
+    [DataName.Boss[1012].LamiaSlowDownTangsengOrAngel] = {
+        Access = AccessType.Both,
+        DSUpdateEvent = "CHASE_Lamia_SlowDownTangsengOrAngel_Update",
+        GetFunc = function (PlayerInfo, name, dataBoard)
+            dataBoard[name] = dataBoard[name] or false
+            local ret = dataBoard[name]
+            return ret
+        end,
+        SetFunc = function (PlayerInfo, name, value, dataBoard)
+            dataBoard[name] = value or false
+            return true
+        end,
+    },
+    --德古拉在星宝附近变回原样
+    [DataName.Boss[1013].DraculaEndSkillNearPlayer] = {
+        Access = AccessType.Both,
+        DSUpdateEvent = "CHASE_Dracula_EndSkillNearPlayer_Update",
+        GetFunc = function (PlayerInfo, name, dataBoard)
+            dataBoard[name] = dataBoard[name] or 0
+            local ret = dataBoard[name]
+            return ret
+        end,
+        SetFunc = function (PlayerInfo, name, value, dataBoard)
+            dataBoard[name] = value or dataBoard[name]
+            return true
+        end,
     },
 }
 setmetatable(BossDefine, {__index = CommonDefine})
@@ -138,7 +249,7 @@ local PlayerDefine = {
         Access = AccessType.Both,
         DSUpdateEvent = "CHASE_RescueTeammateCount_Update",
         GetFunc = function (PlayerInfo, name, dataBoard)
-            return PlayerInfo.GetTotalRescueTeammateCount() or 0
+            return PlayerInfo:GetTotalRescueTeammateCount() or 0
         end
     },
     [DataName.Player.TotalAssistantCount] = { -- 辅助次数
@@ -146,7 +257,7 @@ local PlayerDefine = {
         Access = AccessType.Both,
         DSUpdateEvent = "CHASE_TotalAssistantCount_Update",
         GetFunc = function (PlayerInfo, name, dataBoard)
-            return PlayerInfo.GetTotalAssistantCount() or 0
+            return PlayerInfo:GetTotalAssistantCount() or 0
         end
     },
     [DataName.Player.TotalAssistantScore] = { -- 辅助分数
@@ -154,7 +265,7 @@ local PlayerDefine = {
         Access = AccessType.Both,
         DSUpdateEvent = "CHASE_TotalAssistantScore_Update",
         GetFunc = function (PlayerInfo, name, dataBoard)
-            return PlayerInfo.GetTotalAssistantScore() or 0
+            return PlayerInfo:GetTotalAssistantScore() or 0
         end
     },
     [DataName.Player.DecodeStarChartProgress] = { -- 星路仪检索进度
@@ -251,16 +362,16 @@ local PlayerDefine = {
             return ret
         end
     },
-    [DataName.Player.ChangeMagicCount] = { -- 法宝变身次数
+    [DataName.Player.GetMagicEnumArray] = { -- 获取法宝变身数组
         AccessType = AccessType.Server, -- 只允许DS访问
-        DSUpdateEvent = "CHASE_ChangeMagicCount_Update",
+        DSUpdateEvent = "CHASE_GetMagicEnumArray_Update",
         GetFunc = function (PlayerInfo, name, dataBoard)
-            dataBoard[name] = dataBoard[name] or 0
+            dataBoard[name] = dataBoard[name] or {}
             local ret = dataBoard[name]
             return ret
         end,
         SetFunc = function (PlayerInfo, name, value, dataBoard)
-            dataBoard[name] = value or 0
+            dataBoard[name] = value or {}
         end
     },
     [DataName.Player.BoardStubBossCount] = { -- 机关砸晕BOSS次数
@@ -287,5 +398,6 @@ local _M = {
 
 _M.DataName = DataName
 _M.AccessType = AccessType
+_M.ChangeMagicEnum = ChangeMagicEnum
 
 return _M

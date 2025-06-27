@@ -3,6 +3,14 @@ local InLevelTaskSystem = _MOE.class("CHASE_InLevelTaskSystem")
 
 local TaskClass = require("Feature.CHASE.Script.Modplay.Core.GameMode.Games.MCG.Task.TaskSystem.InLevelTask")
 
+local function IsVaildTaskCfg(cfgItem)
+    if cfgItem and cfgItem.TaskParamType1 and cfgItem.TaskParam1 and string.len(cfgItem.TaskParam1) > 0 
+        and cfgItem.TaskParamType2 and cfgItem.TaskParam2 and string.len(cfgItem.TaskParam2) > 0 then
+        return true
+    end
+    return false
+end
+
 ---- 加载配置(DS全局就一个)
 function InLevelTaskSystem:_LoadConfig()
     --- 从配置表建立关联
@@ -19,18 +27,20 @@ function InLevelTaskSystem:_LoadConfig()
     local matchType = MCGGameConfig:MCGGetMatchType()
     for _, cfgItem in pairs(AllConfig) do
         if cfgItem and (cfgItem.MatchType == 0 or cfgItem.MatchType == matchType) then
-            local UnitID = cfgItem.UnitID or 0
-            local UnitTasks
-            if UnitID == 0 then
-                self.Config.CommonTasks = self.Config.CommonTasks or {}
-                UnitTasks = self.Config.CommonTasks
-            else
-                self.Config[UnitID] = self.Config[UnitID] or {}
-                UnitTasks = self.Config[UnitID]
-            end
-            if cfgItem.SideId == MCGGameConfig.ConstValue.PlayerSideId or cfgItem.SideId == MCGGameConfig.ConstValue.BossSideId then
-                UnitTasks[cfgItem.SideId] = UnitTasks[cfgItem.SideId] or {}
-                table.insert(UnitTasks[cfgItem.SideId], cfgItem)
+            if IsVaildTaskCfg(cfgItem) then -- 有效配置
+                local UnitID = cfgItem.UnitID or 0
+                local UnitTasks
+                if UnitID == 0 then
+                    self.Config.CommonTasks = self.Config.CommonTasks or {}
+                    UnitTasks = self.Config.CommonTasks
+                else
+                    self.Config[UnitID] = self.Config[UnitID] or {}
+                    UnitTasks = self.Config[UnitID]
+                end
+                if cfgItem.SideId == MCGGameConfig.ConstValue.PlayerSideId or cfgItem.SideId == MCGGameConfig.ConstValue.BossSideId then
+                    UnitTasks[cfgItem.SideId] = UnitTasks[cfgItem.SideId] or {}
+                    table.insert(UnitTasks[cfgItem.SideId], cfgItem)
+                end
             end
         end
     end
