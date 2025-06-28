@@ -23,7 +23,7 @@ local DataName = {
     HitSkillNum = "HitSkillNum", -- 使用主技能击中次数
     Boss = {
         ------------------Boss身份通用--------------------
-        HitDownPlayerCount = "HitDownPlayerCount", -- 击倒星宝次数
+        HitDownCount = "HitDownCount", -- 击倒星宝次数
         HitPlayerCount = "HitPlayerCount", -- 击中星宝次数
         DestroyTrapCount = "DestroyTrapCount", -- 摧毁机关次数
         KillCount = "KillCount", -- 击杀次数
@@ -108,10 +108,10 @@ local CommonDefine = {
 ---------------------------------------------- BOSS专用定义 ---------------------------------------------------------------------------------
 local BossDefine = {
     -- 击倒星宝次数
-    [DataName.Boss.HitDownPlayerCount] = {
+    [DataName.Boss.HitDownCount] = {
         ReadOnly = true, -- 只读属性
         Access = AccessType.Both,
-        DSUpdateEvent = "CHASE_HitDownPlayerCount_Update",
+        DSUpdateEvent = "CHASE_HitDownCount_Update",
         GetFunc = function (PlayerInfo, name, dataBoard)
             return PlayerInfo.HitDownCount or 0
         end

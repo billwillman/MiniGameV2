@@ -257,6 +257,18 @@ function InLevelTask:GetDisplayText()
     return ""
 end
 
+--- 局内显示任务文本
+function InLevelTask:GetInLevelTaskText()
+    if self.Config then
+        local ret = self.Config.TaskContentFormat
+        local currStr = tostring(self:GetCurrentValueOne() or 0)
+        local targetStr = tostring(self:GetTargetValueOne() or 0)
+        ret = string.gsub(ret, "{TaskParam1}/{TaskParam2}", "<ChaseTaskList>" .. currStr .. "/" .. targetStr .. "</>")
+        return ret
+    end
+    return ""
+end
+
 --- 目标值
 function InLevelTask:GetTargetValue()
     if self.Config and self.Config.TaskParamType2 then

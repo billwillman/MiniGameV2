@@ -231,9 +231,9 @@ function InLevelTaskSystem:UpdateTaskInfoCurrentValue(InLevelTask)
     local DataBoard = _MCG.PlayerDataBoardEntityManager:GetPlayerDataBoard(PlayerUID)
     if DataBoard then
         local TaskInfos = DataBoard:GetDataValue(_MCG.PlayerDataBoardDefine.DataName.TaskInfos)
-        if TaskInfos then
-            for idx = 1, TaskInfos:Length() do
-                local DStaskInfo = TaskInfos:GetRef(idx)
+        if TaskInfos and TaskInfos.Tasks then
+            for idx = 1, TaskInfos.Tasks:Length() do
+                local DStaskInfo = TaskInfos.Tasks:GetRef(idx)
                 if DStaskInfo and DStaskInfo.TaskID == InLevelTask:GetTaskID() then
                     DStaskInfo.CurrentValue = InLevelTask:GetCurrentValue()
                     break
