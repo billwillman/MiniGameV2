@@ -162,16 +162,16 @@ function InLevelTaskSystem:FillPlayerInLevelTasks(PlayerInfo)
             if not SkillComponent then
                 return false
             end
-            local SkillPropArray = SkillComponent:GetSkillPropArray()
-            if not SkillPropArray or SkillPropArray:Length() <= 0 then
-                return false
-            end
-            local Skill = SkillPropArray:GetRef(1)
-            if not Skill then
-                return false
-            end
-            UnitID = Skill.SkillID -- 星宝技能
         end
+        local SkillPropArray = SkillComponent:GetSkillPropArray()
+        if not SkillPropArray or SkillPropArray:Length() <= 0 then
+            return false
+        end
+        local Skill = SkillPropArray:GetRef(1)
+        if not Skill then
+            return false
+        end
+        UnitID = Skill.SkillID -- 星宝技能
     end
     if UnitID == nil then
         return false

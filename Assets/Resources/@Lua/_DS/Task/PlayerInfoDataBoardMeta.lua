@@ -25,6 +25,7 @@ local DataName = {
         ------------------Boss身份通用--------------------
         HitDownCount = "HitDownCount", -- 击倒星宝次数
         HitPlayerCount = "HitPlayerCount", -- 击中星宝次数
+        HitPlayerCountPercent = "HitPlayerCountPercent", -- 击中星宝次数在所有击中的百分比（整型）
         DestroyTrapCount = "DestroyTrapCount", -- 摧毁机关次数
         KillCount = "KillCount", -- 击杀次数
         DamageValue = "DamageValue", -- 伤害量
@@ -47,6 +48,7 @@ local DataName = {
         TotalAssistantCount = "TotalAssistantCount", -- 辅助次数
         TotalAssistantScore = "TotalAssistantScore", -- 辅助分数
         DecodeStarChartProgress = "DecodeStarChartProgress", -- 星路仪检索进度
+        DecodeStarChartProgressPercent = "DecodeStarChartProgressPercent", -- 星路仪搜索进度百分比
         BeingHuntedCount = "BeingHuntedCount", -- 牵制时长
         DecodeStarChartCount = "DecodeStarChartCount", -- 成功搜索星路仪台数
         SearchStarChartIDArray = "SearchStarChartIDArray", -- 搜索过的星路仪唯一ID数组（只要搜过就算）
@@ -105,6 +107,72 @@ local CommonDefine = {
     }
 }
 
+local function GetAllPlayerDataBoards(exIncludePlayerUID)
+    if not _MCG or not _MCG.GameEntityManager then
+        return
+    end
+    local GameInfo = _MCG.GameEntityManager:GetGameInfo()
+    if not GameInfo or not GameInfo:IsValid() then
+        return
+    end
+    local PlayerUIDs = GameInfo:GetAllPlayerUIDs()
+    if not PlayerUIDs then
+        return
+    end
+    local len = PlayerUIDs:Length()
+    if len <= 0 then
+        return
+    end
+    local ret = nil
+    for idx = 1, len do
+        local PlayerUID = PlayerUIDs:Get(idx)
+        if PlayerUID and PlayerUID ~= exIncludePlayerUID then
+            local DataBoard = _MCG.PlayerDataBoardEntityManager:GetPlayerDataBoard(PlayerUID)
+            if DataBoard then
+                ret = ret or {}
+                table.insert(ret, DataBoard)
+            end
+        end
+    end
+    return ret
+end
+
+local function GetPlayerDataPercent(FieldName, MyPlayerUID)
+    if not FieldName or not MyPlayerUID then
+        return 0
+    end
+    if not _MCG or not _MCG.PlayerDataBoardEntityManager then
+        return 0
+    end
+    local MyDataBoard = _MCG.PlayerDataBoardEntityManager:GetPlayerDataBoard(MyPlayerUID)
+    if not MyDataBoard then
+        return 0
+    end
+    local MyValue = MyDataBoard:GetDataValue(FieldName)
+    if MyValue == nil or type(MyValue) ~= "number" then
+        return 0
+    end
+    local OhterDataBoards = GetAllPlayerDataBoards(MyPlayerUID)
+    if not OhterDataBoards or #OhterDataBoards <= 0 then
+        return MyValue > 0 and 100 or 0
+    end
+    local SumValue = MyValue
+    for _, board in ipairs(OhterDataBoards) do
+        local count = board:GetDataValue(FieldName) or 0
+        SumValue = SumValue + count
+    end
+    local ret = math.floor((MyValue/SumValue) * 100)
+    return ret
+end
+
+local function GetPlayerInfoDataPercent(FieldName, PlayerInfo)
+    if not FieldName or not PlayerInfo then
+        return 0
+    end
+    local MyPlayerUID = PlayerInfo:GetPlayerUID()
+    return GetPlayerDataPercent(FieldName, MyPlayerUID)
+end
+
 ---------------------------------------------- BOSS专用定义 ---------------------------------------------------------------------------------
 local BossDefine = {
     -- 击倒星宝次数
@@ -120,9 +188,19 @@ local BossDefine = {
     [DataName.Boss.HitPlayerCount] = {
         ReadOnly = true, -- 只读属性
         Access = AccessType.Both,
-        DSUpdateEvent = "CHASE_HitPlayerCount_Update",
+        DSUpdateEvent = {"CHASE_HitPlayerCount_Update", "CHASE_HitPlayerCountPercent_Update"},
         GetFunc = function (PlayerInfo, name, dataBoard)
             return PlayerInfo.HitPlayerCount or 0
+        end
+    },
+    -- 击中星宝次数百分比
+    [DataName.Boss.HitPlayerCountPercent] = {
+        ReadOnly = true, -- 只读属性
+        AccessType = AccessType.Server,
+        DSUpdateEvent = "CHASE_HitPlayerCountPercent_Update",
+        GetFunc = function (PlayerInfo, name, dataBoard)
+            local ret = GetPlayerInfoDataPercent(DataName.Boss.HitPlayerCount, PlayerInfo)
+            return ret
         end
     },
     -- 摧毁机关次数
@@ -271,9 +349,18 @@ local PlayerDefine = {
     [DataName.Player.DecodeStarChartProgress] = { -- 星路仪检索进度
         ReadOnly = true, -- 只读属性
         Access = AccessType.Both,
-        DSUpdateEvent = "CHASE_DecodeStarChartProgress_Update",
+        DSUpdateEvent = {"CHASE_DecodeStarChartProgress_Update", "CHASE_DecodeStarChartProgressPercent_Update"},
         GetFunc = function (PlayerInfo, name, dataBoard)
             return PlayerInfo.DecodeStarChartProgress or 0
+        end
+    },
+    [DataName.Player.DecodeStarChartProgressPercent] = {
+        ReadOnly = true, -- 只读属性
+        Access = AccessType.Server,
+        DSUpdateEvent = "CHASE_DecodeStarChartProgressPercent_Update",
+        GetFunc = function (PlayerInfo, name, dataBoard)
+            local ret = GetPlayerInfoDataPercent(DataName.Boss.DecodeStarChartProgress, PlayerInfo)
+            return ret
         end
     },
     [DataName.Player.BeingHuntedCount] = { -- 牵制BOSS次数
