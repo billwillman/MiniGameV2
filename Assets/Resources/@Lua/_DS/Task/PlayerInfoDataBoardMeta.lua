@@ -50,6 +50,7 @@ local DataName = {
         DecodeStarChartProgress = "DecodeStarChartProgress", -- 星路仪检索进度
         DecodeStarChartProgressPercent = "DecodeStarChartProgressPercent", -- 星路仪搜索进度百分比
         BeingHuntedCount = "BeingHuntedCount", -- 牵制时长
+        BeingHuntedCountPercent = "BeingHuntedCountPercent", -- 牵制时长百分比
         DecodeStarChartCount = "DecodeStarChartCount", -- 成功搜索星路仪台数
         SearchStarChartIDArray = "SearchStarChartIDArray", -- 搜索过的星路仪唯一ID数组（只要搜过就算）
         SearchStarChartIDNum = "SearchStarChartIDNum", -- 搜索过的星路仪的数量，来自：SearchStarChartIDArray
@@ -199,7 +200,7 @@ local BossDefine = {
         AccessType = AccessType.Server,
         DSUpdateEvent = "CHASE_HitPlayerCountPercent_Update",
         GetFunc = function (PlayerInfo, name, dataBoard)
-            local ret = GetPlayerInfoDataPercent(DataName.Boss.HitPlayerCount, PlayerInfo)
+            local ret = GetPlayerInfoDataPercent(DataName.Boss.HitPlayerCount, PlayerInfo) or 0
             return ret
         end
     },
@@ -359,16 +360,25 @@ local PlayerDefine = {
         Access = AccessType.Server,
         DSUpdateEvent = "CHASE_DecodeStarChartProgressPercent_Update",
         GetFunc = function (PlayerInfo, name, dataBoard)
-            local ret = GetPlayerInfoDataPercent(DataName.Boss.DecodeStarChartProgress, PlayerInfo)
+            local ret = GetPlayerInfoDataPercent(DataName.Boss.DecodeStarChartProgress, PlayerInfo) or 0
             return ret
         end
     },
     [DataName.Player.BeingHuntedCount] = { -- 牵制BOSS次数
         ReadOnly = true, -- 只读属性
         Access = AccessType.Both,
-        DSUpdateEvent = "CHASE_BeingHuntedCount_Update",
+        DSUpdateEvent = {"CHASE_BeingHuntedCount_Update", "CHASE_BeingHuntedCountPercent_Update"},
         GetFunc = function (PlayerInfo, name, dataBoard)
             return PlayerInfo.BeingHuntedCount or 0
+        end
+    },
+    [DataName.Player.BeingHuntedCountPercent] = {
+        ReadOnly = true, -- 只读属性
+        Access = AccessType.Server,
+        DSUpdateEvent = "CHASE_BeingHuntedCountPercent_Update",
+        GetFunc = function (PlayerInfo, name, dataBoard)
+            local ret = GetPlayerInfoDataPercent(DataName.Player.BeingHuntedCount, PlayerInfo) or 0
+            return ret
         end
     },
     [DataName.Player.DecodeStarChartCount] = { -- 成功搜索星路仪台数
