@@ -108,7 +108,7 @@ local CommonDefine = {
     }
 }
 
-local function GetAllPlayerDataBoards(exIncludePlayerUID)
+local function GetAllPlayerDataBoards(exIncludePlayerUID, SideId)
     if not _MCG or not _MCG.GameEntityManager then
         return
     end
@@ -128,17 +128,24 @@ local function GetAllPlayerDataBoards(exIncludePlayerUID)
     for idx = 1, len do
         local PlayerUID = PlayerUIDs:Get(idx)
         if PlayerUID and PlayerUID ~= exIncludePlayerUID then
+            if SideId ~= nil then
+                local Info = GameInfo:GetPlayerInfoByPlayerUID(PlayerUID)
+                if Info == nil or Info:GetSideId() ~= SideId then
+                    goto continue
+                end
+            end
             local DataBoard = _MCG.PlayerDataBoardEntityManager:GetPlayerDataBoard(PlayerUID)
             if DataBoard then
                 ret = ret or {}
                 table.insert(ret, DataBoard)
             end
         end
+        ::continue::
     end
     return ret
 end
 
-local function GetPlayerDataPercent(FieldName, MyPlayerUID)
+local function GetPlayerDataPercent(FieldName, MyPlayerUID, SideId)
     if not FieldName or not MyPlayerUID then
         return 0
     end
@@ -153,7 +160,7 @@ local function GetPlayerDataPercent(FieldName, MyPlayerUID)
     if MyValue == nil or type(MyValue) ~= "number" then
         return 0
     end
-    local OhterDataBoards = GetAllPlayerDataBoards(MyPlayerUID)
+    local OhterDataBoards = GetAllPlayerDataBoards(MyPlayerUID, SideId)
     if not OhterDataBoards or #OhterDataBoards <= 0 then
         return MyValue > 0 and 100 or 0
     end
@@ -166,12 +173,19 @@ local function GetPlayerDataPercent(FieldName, MyPlayerUID)
     return ret
 end
 
-local function GetPlayerInfoDataPercent(FieldName, PlayerInfo)
+local function GetPlayerInfoDataPercent(FieldName, PlayerInfo, useSideId)
     if not FieldName or not PlayerInfo then
         return 0
     end
+    if useSideId == nil then
+        useSideId = true
+    end
     local MyPlayerUID = PlayerInfo:GetPlayerUID()
-    return GetPlayerDataPercent(FieldName, MyPlayerUID)
+    local SideId = nil
+    if useSideId then
+        SideId = PlayerInfo:GetSideId()
+    end
+    return GetPlayerDataPercent(FieldName, MyPlayerUID, SideId)
 end
 
 ---------------------------------------------- BOSS专用定义 ---------------------------------------------------------------------------------

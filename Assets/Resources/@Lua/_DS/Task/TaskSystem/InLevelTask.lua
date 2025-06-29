@@ -29,15 +29,35 @@ function InLevelTask:Ctor(PlayerInfo, config)
                 if MetaGroup then
                     if self:IsTaskPram1IsFromDataBoard() then
                         local MetaInfo = MetaGroup[config.TaskParam1]
-                        if MetaInfo and MetaInfo.DSUpdateEvent and string.len(MetaInfo.DSUpdateEvent) then
-                            _MOE.EventManager:RegisterEvent(MetaInfo.DSUpdateEvent, self, self._OnTaskParam1Update)
+                        if MetaInfo and MetaInfo.DSUpdateEvent then
+                            local eventName = nil
+                            if type(MetaInfo.DSUpdateEvent) == "table" then
+                                if #MetaInfo.DSUpdateEvent > 0 then
+                                    eventName = MetaInfo.DSUpdateEvent[1]
+                                end
+                            elseif string.len(MetaInfo.DSUpdateEvent) > 0 then
+                                eventName = MetaInfo.DSUpdateEvent
+                            end
+                            if eventName and string.len(eventName) > 0 then
+                                _MOE.EventManager:RegisterEvent(MetaInfo.DSUpdateEvent, self, self._OnTaskParam1Update)
+                            end
                         end
                     end
                     if self:IsTaskParam2FromDataBoard() then
                         local MetaInfo = MetaGroup[config.TaskParam2]
-                        if MetaInfo and MetaInfo.DSUpdateEvent and string.len(MetaInfo.DSUpdateEvent) then
-                            _MOE.EventManager:RegisterEvent(MetaInfo.DSUpdateEvent, self, self._OnTaskParam2Update)
-                        end 
+                        if MetaInfo and MetaInfo.DSUpdateEvent then
+                            local eventName = nil
+                            if type(MetaInfo.DSUpdateEvent) == "table" then
+                                if #MetaInfo.DSUpdateEvent > 0 then
+                                    eventName = MetaInfo.DSUpdateEvent[1]
+                                end
+                            elseif string.len(MetaInfo.DSUpdateEvent) > 0 then
+                                eventName = MetaInfo.DSUpdateEvent
+                            end
+                            if eventName and string.len(eventName) > 0 then
+                                _MOE.EventManager:RegisterEvent(MetaInfo.DSUpdateEvent, self, self._OnTaskParam2Update)
+                            end
+                        end
                     end
                 end
             end
