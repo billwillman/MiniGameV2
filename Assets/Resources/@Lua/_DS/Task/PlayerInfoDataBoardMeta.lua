@@ -193,6 +193,9 @@ local function GetPlayerDataPercent(FieldName, MyPlayerUID, SideId)
         local count = board:GetDataValue(FieldName) or 0
         SumValue = SumValue + count
     end
+    if SumValue <= 0 then
+        return 0
+    end
     local ret = math.floor((MyValue/SumValue) * 100)
     return ret
 end
