@@ -105,10 +105,34 @@ function InLevelTaskSystem:_DisposePlayerTasks()
     end
 end
 
+function InLevelTaskSystem:_OnReceiveUseProp(Character)
+    if not Character or type(Character) == "string" then
+        return
+    end
+    local UID = Character:GetUID()
+    if not UID then
+        return
+    end
+    --[[
+    local PlayerInfo = Character:GetBasePlayerInfo()
+    if not PlayerInfo then
+        return
+    end
+    ]]
+    local DataBoard = _MCG.PlayerDataBoardEntityManager:GetPlayerDataBoard(UID)
+    if not DataBoard then
+        return
+    end
+    local count = DataBoard:GetDataValue(_MCG.PlayerDataBoardDefine.DataName.UseSkillNum) or 0
+    count = count + 1 -- 技能使用增加
+    DataBoard:SetDataFromServer(_MCG.PlayerDataBoardDefine.DataName.UseSkillNum, count)
+end
+
 ------------------------------------------------ 对外调用 ------------------------------------------------
 
 function InLevelTaskSystem:Dispose()
     self:_DisposePlayerTasks()
+    _MOE.EventManager:UnRegisterEventsOfRef(self)
     self.Config = nil
     self.Game = nil
     self.PlayerTasksMap = nil 
@@ -116,6 +140,7 @@ end
 
 function InLevelTaskSystem:Ctor(Game)
     self.Game = Game
+    _MOE.EventManager:RegisterEvent(_MOE.EventEnum.ON_USE_PROP, self, self._OnReceiveUseProp)
 end
 
 function InLevelTaskSystem:GetTaskList(PlayerInfo)
@@ -232,12 +257,17 @@ function InLevelTaskSystem:UpdateTaskInfoCurrentValue(InLevelTask)
     if DataBoard then
         local TaskInfos = DataBoard:GetDataValue(_MCG.PlayerDataBoardDefine.DataName.TaskInfos)
         if TaskInfos and TaskInfos.Tasks then
+            local isDirty = false
             for idx = 1, TaskInfos.Tasks:Length() do
                 local DStaskInfo = TaskInfos.Tasks:GetRef(idx)
                 if DStaskInfo and DStaskInfo.TaskID == InLevelTask:GetTaskID() then
                     DStaskInfo.CurrentValue = InLevelTask:GetCurrentValue()
+                    isDirty = true
                     break
                 end
+            end
+            if isDirty then
+                DataBoard:SetDataFromServer(_MCG.PlayerDataBoardDefine.DataName.TaskInfos, TaskInfos)
             end
         end
     end
@@ -259,27 +289,30 @@ function InLevelTaskSystem:FillInLevelTasks()
 end
 
 ----------- DS上报局内任务
-function InLevelTaskSystem:ReportInLevelTasks(PlayerInfo, InlevelTask)
+function InLevelTaskSystem:ReportInLevelTasks(PlayerInfo, InlevelTasks)
     if PlayerInfo and PlayerInfo:IsRealPlayer() then
         --- 真人才填充局内任务数据
         local taskList = self:GetTaskList(PlayerInfo)
         if taskList and next(taskList) ~= nil then
-            InlevelTask = InlevelTask or {}
+            InlevelTasks = InlevelTasks or {}
             for _, task in ipairs(taskList) do
                 task:CheckComplete() -- 这个主动调用一下
                 if task and task:IsComplete() then
                     local taskID = task:GetTaskID()
                     local score = task:ServerGetScore()
+                    local currentValue = task:GetCurrentValue() or 0
                     if taskID and score then
-                        InlevelTask[taskID] = score -- 积分上报
-                        _MOE.Logger.Log("[InLevelTask] Report: taskId=", taskID, "score=", score)
+                        -- InlevelTask[taskID] = score -- 积分上报
+                        local InlevelTask = {id = taskID, current = currentValue, score = score}
+                        table.insert(InlevelTasks, InlevelTask)
+                        _MOE.Logger.Log("[InLevelTask] Report: taskId=", taskID, "score=", score, "currentValue=", currentValue)
                     end
                 end
             end
         end
         ------------------------
     end
-    return InlevelTask
+    return InlevelTasks
 end
 
 return InLevelTaskSystem

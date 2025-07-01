@@ -330,4 +330,32 @@ function helper:IncDraculaEndSkillNearPlayerCount(Character)
     return false
 end
 
+
+--- 更新玩家进入记录区域的次数
+function helper:IncPlayerEnterRecorderAreaCount(Character,RecordKeys)
+    if not Character or not RecordKeys then
+        return false
+    end
+    local PlayerUID = Character:GetUID()
+    if not PlayerUID then
+        return false
+    end
+    local PlayerInfo = Character:GetBasePlayerInfo()
+    if not PlayerInfo then
+        return false
+    end
+    local DataBoard = _MCG.PlayerDataBoardEntityManager:GetPlayerDataBoard(PlayerUID)
+    if not DataBoard then
+        return false
+    end
+    local Record = DataBoard:GetDataValue(_MCG.PlayerDataBoardDefine.DataName.GetInRecorderArea)
+
+    --RecordKeys:{Key1,Key2,Kye3...}
+    for _,AreaKey in ipairs(RecordKeys) do
+        Record[AreaKey] = Record[AreaKey] and Record[AreaKey]+1 or 1
+    end
+
+    return DataBoard:SetDataFromServer(_MCG.PlayerDataBoardDefine.DataName.GetInRecorderArea,Record)
+end
+
 return helper

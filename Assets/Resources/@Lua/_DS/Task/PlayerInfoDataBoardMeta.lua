@@ -21,6 +21,8 @@ local DataName = {
     TaskInfos = "TaskInfos", -- 数据面板数据定义
     UseSkillNum = "UseSkillNum", -- 使用主技能次数
     HitSkillNum = "HitSkillNum", -- 使用主技能击中次数
+    SideMeetingTaskCount = "SideMeetingTaskCount", -- 阵营Meeting任务统计次数
+    GetInRecorderArea = "GetInRecorderArea",--进入BP_PlayerGetInRecorderBase框出的区域
     Boss = {
         ------------------Boss身份通用--------------------
         HitDownCount = "HitDownCount", -- 击倒星宝次数
@@ -105,7 +107,29 @@ local CommonDefine = {
     [DataName.HitSkillNum] = { -- 使用主技能击中次数
         AccessType = AccessType.Server, -- 只允许DS调用
         DSUpdateEvent = "CHASE_HitSkillNum_Update",
-    }
+    },
+    [DataName.GetInRecorderArea] = {
+        ---数据格式：
+        ---{
+        ---     RecordKey1 = GetInNum1,
+        ---     RecordKey2 = GetInNum2,
+        ---}
+        Access = AccessType.Server,
+        DSUpdateEvent = "CHASE_GetInRecorderArea_Update",
+        GetFunc = function (PlayerInfo, name, dataBoard)
+            dataBoard[name] = dataBoard[name] or { }
+            local ret = dataBoard[name]
+            return ret
+        end,
+        SetFunc = function (PlayerInfo, name, value, dataBoard)
+            dataBoard[name] = value or { }
+            return true
+        end,
+    },
+    [DataName.SideMeetingTaskCount] = {
+        Access = AccessType.Server,
+        DSUpdateEvent = "CHASE_SideMeetingTaskCount_Update",
+    },
 }
 
 local function GetAllPlayerDataBoards(exIncludePlayerUID, SideId)
@@ -267,7 +291,7 @@ local BossDefine = {
     },
     -- 伊丽莎白饱食度
     [DataName.Boss[1014].LizaFullnessCount] = {
-        Access = AccessType.Both,
+        Access = AccessType.Server,
         DSUpdateEvent = "CHASE_Liza_FullnessCount_Update",
         GetFunc = function (PlayerInfo, name, dataBoard)
             dataBoard[name] = dataBoard[name] or {
@@ -293,7 +317,7 @@ local BossDefine = {
     },
     -- Boss进入觉醒状态距离开局的时间(-1：从未进入觉醒状态)
     [DataName.Boss.EnterAngryTime] = {
-        Access = AccessType.Both,
+        Access = AccessType.Server,
         DSUpdateEvent = "CHASE_EnterAngryTime_Update",
         GetFunc = function (PlayerInfo, name, dataBoard)
             dataBoard[name] = dataBoard[name] or -1
@@ -307,7 +331,7 @@ local BossDefine = {
     },
     -- 拉弥娅魔核是否减速过唐僧
     [DataName.Boss[1012].LamiaSlowDownTangsengOrAngel] = {
-        Access = AccessType.Both,
+        Access = AccessType.Server,
         DSUpdateEvent = "CHASE_Lamia_SlowDownTangsengOrAngel_Update",
         GetFunc = function (PlayerInfo, name, dataBoard)
             dataBoard[name] = dataBoard[name] or false
@@ -321,7 +345,7 @@ local BossDefine = {
     },
     --德古拉在星宝附近变回原样
     [DataName.Boss[1013].DraculaEndSkillNearPlayer] = {
-        Access = AccessType.Both,
+        Access = AccessType.Server,
         DSUpdateEvent = "CHASE_Dracula_EndSkillNearPlayer_Update",
         GetFunc = function (PlayerInfo, name, dataBoard)
             dataBoard[name] = dataBoard[name] or 0

@@ -39,7 +39,7 @@ function InLevelTask:Ctor(PlayerInfo, config)
                                 eventName = MetaInfo.DSUpdateEvent
                             end
                             if eventName and string.len(eventName) > 0 then
-                                _MOE.EventManager:RegisterEvent(MetaInfo.DSUpdateEvent, self, self._OnTaskParam1Update)
+                                _MOE.EventManager:RegisterEvent(eventName, self, self._OnTaskParam1Update)
                             end
                         end
                     end
@@ -55,7 +55,7 @@ function InLevelTask:Ctor(PlayerInfo, config)
                                 eventName = MetaInfo.DSUpdateEvent
                             end
                             if eventName and string.len(eventName) > 0 then
-                                _MOE.EventManager:RegisterEvent(MetaInfo.DSUpdateEvent, self, self._OnTaskParam2Update)
+                                _MOE.EventManager:RegisterEvent(eventName, self, self._OnTaskParam2Update)
                             end
                         end
                     end
@@ -219,7 +219,7 @@ function InLevelTask:GetCurrentValue()
 end
 
 function InLevelTask:ClientSetTaskCurrentValue(value)
-    if _MOE.Utils.WorldUtils:IsServer() then
+    if (not _MCG.IsSinglePlay) and _MOE.Utils.WorldUtils:IsServer() then
         return false
     end
     if self.CurrentValue == value then
