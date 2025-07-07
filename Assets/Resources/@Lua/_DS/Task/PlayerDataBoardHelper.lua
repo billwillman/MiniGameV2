@@ -45,6 +45,110 @@ function helper:RecordSearchStarChartID(Character, StarChart)
     return DataBoard:SetDataFromServer(_MCG.PlayerDataBoardDefine.DataName.Player.SearchStarChartIDArray, StarChartIDArray)
 end
 
+--- 记录击倒星宝的手持物类型(当前手持物，非初始化手持物)
+function helper:RecordHitDownPlayerCurrentPropTypeArray(BossCharacter, PlayerCharacter)
+    if not BossCharacter or not PlayerCharacter then
+        return false
+    end
+    local PlayerUID = BossCharacter:GetUID()
+    if not PlayerUID then
+        return false
+    end
+    local PlayerInfo = BossCharacter:GetBasePlayerInfo()
+    if not PlayerInfo then
+        return false
+    end
+    local SideId = PlayerInfo:GetSideId()
+    if not SideId or SideId ~= _MCG.MCGGameConfig.ConstValue.BossSideId then
+        return false
+    end
+    local CharPropComponent = PlayerCharacter:GetCharPropComponent()
+    if not CharPropComponent then
+        return false
+    end
+    local CurrentProp = CharPropComponent:GetCurrentProp()
+    if not CurrentProp then
+        return false
+    end
+    local SkillID = CurrentProp.SkillID
+    if not SkillID then
+        return false
+    end
+    local DataBoard = _MCG.PlayerDataBoardEntityManager:GetPlayerDataBoard(PlayerUID)
+    if not DataBoard then
+        return false
+    end
+    local arr = DataBoard:GetDataValue(_MCG.PlayerDataBoardDefine.DataName.Boss.HitDownPlayerCurrentPropArray)
+    if arr == nil then
+        return false
+    end
+    local isFound = false
+    for _, e in ipairs(arr) do
+        if e == SkillID then
+            isFound = true
+            break
+        end
+    end
+    if isFound then
+        return true
+    end
+    table.insert(arr, SkillID)
+    DataBoard:SetDataFromServer(_MCG.PlayerDataBoardDefine.DataName.Boss.HitDownPlayerCurrentPropArray, arr)
+    return true
+end
+
+--- 记录击中星宝的手持物类型(当前手持物，非初始化手持物)
+function helper:RecordHitPlayerCurrentPropTypeArray(BossCharacter, PlayerCharacter)
+    if not BossCharacter or not PlayerCharacter then
+        return false
+    end
+    local PlayerUID = BossCharacter:GetUID()
+    if not PlayerUID then
+        return false
+    end
+    local PlayerInfo = BossCharacter:GetBasePlayerInfo()
+    if not PlayerInfo then
+        return false
+    end
+    local SideId = PlayerInfo:GetSideId()
+    if not SideId or SideId ~= _MCG.MCGGameConfig.ConstValue.BossSideId then
+        return false
+    end
+    local CharPropComponent = PlayerCharacter:GetCharPropComponent()
+    if not CharPropComponent then
+        return false
+    end
+    local CurrentProp = CharPropComponent:GetCurrentProp()
+    if not CurrentProp then
+        return false
+    end
+    local SkillID = CurrentProp.SkillID
+    if not SkillID then
+        return false
+    end
+    local DataBoard = _MCG.PlayerDataBoardEntityManager:GetPlayerDataBoard(PlayerUID)
+    if not DataBoard then
+        return false
+    end
+    local arr = DataBoard:GetDataValue(_MCG.PlayerDataBoardDefine.DataName.Boss.HitPlayerCurrentPropArray)
+    if arr == nil then
+        return false
+    end
+    local isFound = false
+    for _, e in ipairs(arr) do
+        if e == SkillID then
+            isFound = true
+            break
+        end
+    end
+    if isFound then
+        return true
+    end
+    table.insert(arr, SkillID)
+    DataBoard:SetDataFromServer(_MCG.PlayerDataBoardDefine.DataName.Boss.HitPlayerCurrentPropArray, arr)
+    return true
+end
+
 --- 星宝获取某个法宝
 function helper:RecordPlayerGetMagicEnum(Character, magicEnum)
     if not Character or not magicEnum then

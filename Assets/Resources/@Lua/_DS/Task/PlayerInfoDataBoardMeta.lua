@@ -23,6 +23,7 @@ local DataName = {
     HitSkillNum = "HitSkillNum", -- 使用主技能击中次数
     SideMeetingTaskCount = "SideMeetingTaskCount", -- 阵营Meeting任务统计次数
     GetInRecorderArea = "GetInRecorderArea",--进入BP_PlayerGetInRecorderBase框出的区域
+    UsePlayerSoundItemCount = "UsePlayerSoundItemCount", -- 使用语音道具次数
     Boss = {
         ------------------Boss身份通用--------------------
         HitDownCount = "HitDownCount", -- 击倒星宝次数
@@ -33,6 +34,11 @@ local DataName = {
         DamageValue = "DamageValue", -- 伤害量
         ExilePlayerSuccessCount = "ExilePlayerSuccessCount", -- 放逐星宝次数
         EnterAngryTime = "EnterAngryTime", --进入觉醒状态距离DS开局的时间(-1：从未进入觉醒状态)
+        InterceptScore = "InterceptScore", -- 拦截分
+        HitPlayerCurrentPropArray = "HitPlayerCurrentPropArray", -- 记录：击中过的星宝类型数组
+        HitDownPlayerCurrentPropArray = "HitDownPlayerCurrentPropArray", -- 记录：击倒过得星宝类型数组
+        BossPublicSkillUseCount = "BossPublicSkillUseCount", -- 暗星通用技能使用次数
+        BossUniqueSkillUseCount = "BossUniqueSkillUseCount", -- 暗星专属技能使用次数
         ------------------Boss身份特性----------------------
         [1014] = {
             LizaFullnessCount = "LizaFullnessCount",--伊丽莎白饱食度上升记录
@@ -64,6 +70,8 @@ local DataName = {
         CureTeammateValue = "CureTeammateValue", -- 治疗伤害量
         GetMagicEnumArray = "GetMagicEnumArray", -- 获得过法宝获取枚举数组
         BoardStubBossCount = "BoardStubBossCount", -- 机关砸晕BOSS次数
+        EscortScore = "EscortScore", -- 护送分
+        PlayerPropSkillUseCount = "PlayerPropSkillUseCount", -- 星宝手持物技能释放次数
     }
 }
 
@@ -129,6 +137,10 @@ local CommonDefine = {
     [DataName.SideMeetingTaskCount] = {
         Access = AccessType.Server,
         DSUpdateEvent = "CHASE_SideMeetingTaskCount_Update",
+    },
+    [DataName.UsePlayerSoundItemCount] = {
+        Access = AccessType.Server,
+        DSUpdateEvent = "CHASE_UsePlayerSoundItemCount_Update",
     },
 }
 
@@ -292,6 +304,7 @@ local BossDefine = {
             return PlayerInfo.ExilePlayerSuccessCount or 0
         end
     },
+    --- 击中过某个类型的玩家
     -- 伊丽莎白饱食度
     [DataName.Boss[1014].LizaFullnessCount] = {
         Access = AccessType.Server,
@@ -332,6 +345,30 @@ local BossDefine = {
             return true
         end,
     },
+    [DataName.Boss.HitPlayerCurrentPropArray] = {
+        Access = AccessType.Server,
+        DSUpdateEvent = "CHASE_HitPlayerCurrentPropArray_Update",
+        GetFunc = function (PlayerInfo, name, dataBoard)
+            local ret = dataBoard[name] or {}
+            return ret
+        end,
+        SetFunc = function (PlayerInfo, name, value, dataBoard)
+            dataBoard[name] = value or {}
+            return true
+        end,
+    },
+    [DataName.Boss.HitDownPlayerCurrentPropArray] = {
+        Access = AccessType.Server,
+        DSUpdateEvent = "CHASE_HitDownPlayerCurrentPropArray_Update",
+        GetFunc = function (PlayerInfo, name, dataBoard)
+            local ret = dataBoard[name] or {}
+            return ret
+        end,
+        SetFunc = function (PlayerInfo, name, value, dataBoard)
+            dataBoard[name] = value or {}
+            return true
+        end,
+    },
     -- 拉弥娅魔核是否减速过唐僧
     [DataName.Boss[1012].LamiaSlowDownTangsengOrAngel] = {
         Access = AccessType.Server,
@@ -360,6 +397,27 @@ local BossDefine = {
             return true
         end,
     },
+    -- 拦截分
+    [DataName.Boss.InterceptScore] = {
+        Access = AccessType.Server,
+        DSUpdateEvent = "CHASE_Dracula_InterceptScore_Update",
+    },
+    -- BOSS专属技能使用次数
+    [DataName.Boss.BossUniqueSkillUseCount] = {
+        Access = AccessType.Server,
+        ReadOnly = true,
+        GetFunc = function (PlayerInfo, name, dataBoard)
+            return PlayerInfo.BossUniqueSkillUseCount or 0
+        end
+    },
+    -- BOSS通用技能使用次数
+    [DataName.Boss.BossPublicSkillUseCount] = {
+        Access = AccessType.Server,
+        ReadOnly = true,
+        GetFunc = function (PlayerInfo, name, dataBoard)
+            return PlayerInfo.BossPublicSkillUseCount or 0
+        end
+    }
 }
 setmetatable(BossDefine, {__index = CommonDefine})
 -------------------------------------------------- 星宝专用定义 --------------------------------------------------------------------------------
@@ -522,6 +580,20 @@ local PlayerDefine = {
         end,
         SetFunc = function (PlayerInfo, name, value, dataBoard)
             dataBoard[name] = value or 0
+        end
+    },
+    -- 护送分
+    [DataName.Player.EscortScore] = {
+        AccessType = AccessType.Server, -- 只允许DS访问
+        DSUpdateEvent = "CHASE_EscortScore_Update",
+    },
+    -- 星宝道具技能使用次数
+    [DataName.Player.PlayerPropSkillUseCount] = {
+        AccessType = AccessType.Server, -- 只允许DS访问
+        DSUpdateEvent = "CHASE_PlayerPropSkillUseCount_Update",
+        ReadOnly = true,
+        GetFunc = function (PlayerInfo, name, dataBoard)
+            return PlayerInfo.PlayerPropSkillUseCount or 0
         end
     }
 }

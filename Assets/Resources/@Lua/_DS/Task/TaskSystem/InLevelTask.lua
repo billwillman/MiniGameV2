@@ -108,7 +108,7 @@ function InLevelTask:ServerGetScore()
     if currentValue <= 0 then
         return 0
     end
-    local targetValue = self:GetCurrentValue() or 0
+    local targetValue = self:GetTargetValue() or 0
     if type(targetValue) == "table" then
         if next(targetValue) == nil then
             return 0
@@ -281,12 +281,19 @@ end
 function InLevelTask:GetInLevelTaskText()
     if self.Config then
         local ret = self.Config.TaskContentFormat
-        local currStr = tostring(self:GetCurrentValueOne() or 0)
-        local targetStr = tostring(self:GetTargetValueOne() or 0)
-        ret = string.gsub(ret, "{TaskParam1}/{TaskParam2}", "<ChaseTaskList>" .. currStr .. "/" .. targetStr .. "</>")
+        local currCount = self:GetCurrentValueOne() or 0
+        local targetCount = self:GetTargetValueOne() or 0
+        currCount = math.min(currCount, targetCount)
+        ret = string.gsub(ret, "{TaskParam1}/{TaskParam2}", "<ChaseTaskList>" .. tostring(currCount) .. "/" .. tostring(targetCount) .. "</>")
         return ret
     end
     return ""
+end
+
+function InLevelTask:IsTaskOver()
+    local currCount = self:GetCurrentValueOne() or 0
+    local targetCount = self:GetTargetValueOne() or 0
+    return currCount > targetCount
 end
 
 --- 目标值

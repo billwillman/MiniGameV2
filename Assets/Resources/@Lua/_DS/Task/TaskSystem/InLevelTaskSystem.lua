@@ -80,7 +80,7 @@ function InLevelTaskSystem:GetTasksByUnitID(PlayerInfo, UnitID)
     --- 2.然后添加特定角色
     local config = self.Config[UnitID]
     if config then
-        taskList = config[SideId]
+        local taskList = config[SideId]
         if taskList then
             for _, cfg in ipairs(taskList) do
                 local task = TaskClass.New(PlayerInfo, cfg)
@@ -149,6 +149,14 @@ function InLevelTaskSystem:GetTaskList(PlayerInfo)
     end
     local PlayerUID = PlayerInfo:GetPlayerUID()
     if not PlayerUID then
+        return
+    end
+    local ret = self.PlayerTasksMap[PlayerUID]
+    return ret
+end
+
+function InLevelTaskSystem:GetTaskListByUID(PlayerUID)
+    if not self.PlayerTasksMap or not PlayerUID then
         return
     end
     local ret = self.PlayerTasksMap[PlayerUID]
@@ -280,7 +288,7 @@ function InLevelTaskSystem:FillInLevelTasks()
         if PlayerInfos then
             for idx = 1, PlayerInfos:Length() do
                 local PlayerInfo = PlayerInfos:GetRef(idx)
-                if PlayerInfo and PlayerInfo:IsRealPlayer() then -- 必须是真人
+                if PlayerInfo then
                     self:FillPlayerInLevelTasks(PlayerInfo) -- 填充PlayerInfo任务
                 end
             end
@@ -290,9 +298,10 @@ end
 
 ----------- DS上报局内任务
 function InLevelTaskSystem:ReportInLevelTasks(PlayerInfo, InlevelTasks)
-    if PlayerInfo and PlayerInfo:IsRealPlayer() then
+    if PlayerInfo then
         --- 真人才填充局内任务数据
         local taskList = self:GetTaskList(PlayerInfo)
+        local PlayerUID = PlayerInfo:GetPlayerUID()
         if taskList and next(taskList) ~= nil then
             InlevelTasks = InlevelTasks or {}
             for _, task in ipairs(taskList) do
@@ -305,12 +314,20 @@ function InLevelTaskSystem:ReportInLevelTasks(PlayerInfo, InlevelTasks)
                         -- InlevelTask[taskID] = score -- 积分上报
                         local InlevelTask = {id = taskID, current = currentValue, score = score}
                         table.insert(InlevelTasks, InlevelTask)
-                        _MOE.Logger.Log("[InLevelTask] Report: taskId=", taskID, "score=", score, "currentValue=", currentValue)
+                        _MOE.Logger.Log("[InLevelTask] Report: taskId=", taskID, "score=", score, "currentValue=", currentValue, "PlayerUID=", PlayerUID)
                     end
                 end
             end
         end
         ------------------------
+    end
+    --- 任务排序上报
+    if InlevelTasks ~= nil and next(InlevelTasks) ~= nil then
+        local TaskSortFunc = function (a, b)
+            local ret = a.id < b.id
+            return ret
+        end
+        table.sort(InlevelTasks, TaskSortFunc)
     end
     return InlevelTasks
 end
