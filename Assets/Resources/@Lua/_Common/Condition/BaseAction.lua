@@ -92,7 +92,7 @@ function _M:OnTick()
         -- 走一次TICK条件
         if self:_CheckCanStart() and self:CustomCanStart() then
             self.Status = _M.StateType.Runing
-            self:DoAction()
+            self:DoAction(false) -- 是否是TickCall
             ret = true
         end
     elseif self.Status == _M.StateType.Runing then
@@ -101,7 +101,7 @@ function _M:OnTick()
             return false
         end
         if self:IsTickAction() then
-            self:DoAction()
+            self:DoAction(true)
             ret = true
         end
     elseif self.Status == _M.StateType.Stoped then
@@ -122,7 +122,8 @@ end
 
 ---------------------------------------------------------- 可以覆写的方法
 ---例如打开教程
-function _M:DoAction()
+-- isTickCall 是否是从TICK调过来的
+function _M:DoAction(isTickCall)
 end
 
 function _M:DoRemove()
