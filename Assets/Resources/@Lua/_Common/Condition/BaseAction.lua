@@ -70,8 +70,8 @@ function _M:GetStatus()
     return self.Status
 end
 
-function _M:_ResetStopStatus()
-    if self.Status == _M.StateType.Stoped then
+function _M:_ResetStopStatus(isForce)
+    if self.Status == _M.StateType.Stoped or isForce then
         self.Status = _M.StateType.None
     end
 end
