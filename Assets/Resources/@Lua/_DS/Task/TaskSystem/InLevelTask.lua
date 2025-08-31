@@ -187,14 +187,14 @@ function InLevelTask:GetCurrentValue()
             if self:IsTaskPram1IsFromDataBoard() then
                 local DataBoard = _MCG.PlayerDataBoardEntityManager:GetPlayerDataBoard(self:GetOwnerPlayerUID())
                 if DataBoard then
-                    local ret = DataBoard:GetDataValue(self.Config.TaskParam1) or 0
+                    local ret = math.floor(tonumber(DataBoard:GetDataValue(self.Config.TaskParam1)) or 0)
                     return ret
                 end
             elseif self.Config.TaskParamType1 == TaskParamType.ConstValue then
                 if self.CurrentConstValue ~= nil then
                     return self.CurrentConstValue
                 end
-                self.CurrentConstValue = tonumber(self.Config.TaskParam1) or 0
+                self.CurrentConstValue = math.floor(tonumber(self.Config.TaskParam1) or 0)
                 return self.CurrentConstValue
             elseif self.Config.TaskParamType1 == TaskParamType.ConstIntArray then
                 if self.CurrentConstValues ~= nil then
@@ -206,7 +206,7 @@ function InLevelTask:GetCurrentValue()
                 else
                     self.CurrentConstValues = {}
                     for _, str in ipairs(strs) do
-                        local n = tonumber(str) or 0
+                        local n = math.floor(tonumber(str) or 0)
                         table.insert(self.CurrentConstValues, n)
                     end
                 end
@@ -214,7 +214,7 @@ function InLevelTask:GetCurrentValue()
             end
         end
     else
-        return self.CurrentValue or 0 -- Client端读取
+        return math.floor(tonumber(self.CurrentValue) or 0) -- Client端读取
     end
 end
 
@@ -303,14 +303,14 @@ function InLevelTask:GetTargetValue()
         if self:IsTaskParam2FromDataBoard() then
             local DataBoard = _MCG.PlayerDataBoardEntityManager:GetPlayerDataBoard(self:GetOwnerPlayerUID())
             if DataBoard then
-                local ret = DataBoard:GetDataValue(self.Config.TaskParam2) or 0
+                local ret = math.floor(tonumber(DataBoard:GetDataValue(self.Config.TaskParam2)) or 0)
                 return ret
             end
         elseif self.Config.TaskParamType2 == TaskParamType.ConstValue then
             if self.TargetConstValue ~= nil then
                 return self.TargetConstValue
             end
-            self.TargetConstValue = tonumber(self.Config.TaskParam2) or 0
+            self.TargetConstValue = math.floor(tonumber(self.Config.TaskParam2) or 0)
             return self.TargetConstValue
         elseif self.Config.TaskParamType2 == TaskParamType.ConstIntArray then
             if self.TargetConstValues ~= nil then
@@ -322,7 +322,7 @@ function InLevelTask:GetTargetValue()
             else
                 self.TargetConstValues = {}
                 for _, str in ipairs(strs) do
-                    local n = tonumber(str) or 0
+                    local n = math.floor(tonumber(str)) or 0
                     table.insert(self.TargetConstValues, n)
                 end
             end

@@ -316,6 +316,8 @@ function ConditionConfig:RegisterStartConditions(StartConditions)
                     end
                 end
             end
+        else
+            _MOE.Logger.LogWarning("[NewGuideSystem] StartConditions Error:", StartConditions)
         end
     end
     return conditions

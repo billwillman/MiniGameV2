@@ -309,7 +309,7 @@ function InLevelTaskSystem:ReportInLevelTasks(PlayerInfo, InlevelTasks)
                 if task and task:IsComplete() then
                     local taskID = task:GetTaskID()
                     local score = task:ServerGetScore()
-                    local currentValue = task:GetCurrentValue() or 0
+                    local currentValue = task:GetCurrentValueOne() or 0
                     if taskID and score then
                         -- InlevelTask[taskID] = score -- 积分上报
                         local InlevelTask = {id = taskID, current = currentValue, score = score}

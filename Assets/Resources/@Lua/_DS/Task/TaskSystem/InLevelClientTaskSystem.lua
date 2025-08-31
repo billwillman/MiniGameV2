@@ -2,7 +2,7 @@
 local InLevelClientTaskSystem = _MOE.class("CHASE_InLevelClientTaskSystem")
 
 local TaskClass = require("Feature.CHASE.Script.Modplay.Core.GameMode.Games.MCG.Task.TaskSystem.InLevelTask")
-
+local ChaseGameLocalDataUtil = require("Feature.CHASE.Script.Utils.ChaseGameLocalDataUtil")
 --------------------------------------- 外部可以调用 -----------------------------------------
 
 local function ResetVar(self)
@@ -16,6 +16,22 @@ end
 
 function InLevelClientTaskSystem:Dispose()
     ResetVar(self)
+end
+
+function InLevelClientTaskSystem:IsShow()
+    local SaveData = ChaseGameLocalDataUtil.GetLocalData(ChaseGameLocalDataUtil.SaveKey.HUDShowTask)
+    if SaveData then
+        return SaveData == "1"
+    end
+    return true
+end
+
+function InLevelClientTaskSystem:SaveLocalHUDShowMap(IsShow)
+    local SaveStr = "0"
+    if IsShow then
+        SaveStr = "1"
+    end
+    ChaseGameLocalDataUtil.SaveLocalData(ChaseGameLocalDataUtil.SaveKey.HUDShowTask, SaveStr)
 end
 
 function InLevelClientTaskSystem:GetTaskList()
