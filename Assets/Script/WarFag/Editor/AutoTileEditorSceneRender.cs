@@ -9,6 +9,9 @@ namespace AutoMap
     [CustomEditor(typeof(AutoTileMap))]
     public class AutoTileEditorSceneRender : Editor
     {
-
+        private void OnSceneGUI()
+        {
+            
+        }
     }
 }
