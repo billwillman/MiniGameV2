@@ -7,8 +7,8 @@ namespace AutoMap
 {
     public class AutoTileMap : MonoBehaviour
     {
-        public Vector2Int m_AutoTileSize;
-        public Vector2Int m_PerTileSize;
+        public Vector2 m_AutoTileSize;
+        public Vector2 m_PerTileSize;
         public Sprite m_TileAsset;
     }
 }

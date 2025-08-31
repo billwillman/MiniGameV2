@@ -414,7 +414,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b6672e06e5d1db34fac63cef41e4138d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_AutoTileSize: {x: 0, y: 0}
+  m_AutoTileSize: {x: 1024, y: 1024}
   m_PerTileSize: {x: 0, y: 0}
   m_TileAsset: {fileID: 134599510, guid: c71324f9f67b7194bbd9fec2eb3190a3, type: 3}
 --- !u!4 &1512146078
@@ -426,7 +426,7 @@ Transform:
   m_GameObject: {fileID: 1512146076}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 34.081818, y: -63.069115, z: 4.3441424}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
