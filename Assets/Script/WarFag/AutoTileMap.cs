@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace AutoMap
 {
@@ -8,5 +9,6 @@ namespace AutoMap
     {
         public Vector2Int m_AutoTileSize;
         public Vector2Int m_PerTileSize;
+        public Sprite m_TileAsset;
     }
 }
