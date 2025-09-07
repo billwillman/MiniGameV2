@@ -119,7 +119,16 @@ namespace AutoMap
                     DrawSpriteData(1, texture, 2, 0, lastRect);
                     DrawSpriteData(3, texture, 2, 1, lastRect);
                     DrawSpriteData(2, texture, 2, 2, lastRect);
-                    EditorGUILayout.GetControlRect(GUILayout.Height(30 * 9));
+
+                    DrawSpriteData(6, texture, 0, 4, lastRect);
+                    DrawSpriteData(9, texture, 0, 5, lastRect);
+
+                    DrawSpriteData(11, texture, 0, 7, lastRect);
+                    DrawSpriteData(7, texture, 0, 8, lastRect);
+                    DrawSpriteData(14, texture, 1, 7, lastRect);
+                    DrawSpriteData(13, texture, 1, 8, lastRect);
+
+                    EditorGUILayout.GetControlRect(GUILayout.Height(64 * 3));
                 }
             }
         }
