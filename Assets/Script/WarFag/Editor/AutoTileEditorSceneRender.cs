@@ -32,6 +32,14 @@ namespace AutoMap
             DrawTileWire(tileMap);
         }
 
+        Vector3 GetLeftTop(AutoTileMap tileMap)
+        {
+            Vector3 ret = tileMap.transform.position;
+            ret.x -= tileMap.m_AutoTileSize.x / 2.0f;
+            ret.z -= tileMap.m_AutoTileSize.y / 2.0f;
+            return ret;
+        }
+
         void DrawTileWire(AutoTileMap tileMap)
         {
 
