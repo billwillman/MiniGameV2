@@ -415,7 +415,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_AutoTileSize: {x: 1024, y: 1024}
-  m_PerTileSize: {x: 0, y: 0}
+  m_PerTileSize: {x: 64, y: 64}
   m_TileAsset: {fileID: 134599510, guid: c71324f9f67b7194bbd9fec2eb3190a3, type: 3}
 --- !u!4 &1512146078
 Transform:
