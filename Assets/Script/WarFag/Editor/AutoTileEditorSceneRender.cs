@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.TextCore.Text;
@@ -30,6 +31,7 @@ namespace AutoMap
                 return;
             DrawTileMapArea(tileMap);
             DrawTileWire(tileMap);
+            DrawTileMouse(tileMap);
         }
 
         Vector3 GetLeftTop(AutoTileMap tileMap)
@@ -42,7 +44,37 @@ namespace AutoMap
 
         void DrawTileWire(AutoTileMap tileMap)
         {
+            if (tileMap == null || Mathf.Abs(tileMap.m_PerTileSize.x) <= float.Epsilon || Mathf.Abs(tileMap.m_PerTileSize.y) <= float.Epsilon)
+                return;
 
+        }
+
+        private void OnEnable()
+        {
+            SceneView.duringSceneGui += OnMouseInputUpdate;
+        }
+
+        private void OnDisable()
+        {
+            SceneView.duringSceneGui -= OnMouseInputUpdate;
+        }
+
+        private static Vector2 m_CurrentMousePosition;
+
+        void OnMouseInputUpdate(SceneView sceneView)
+        {
+            m_CurrentMousePosition = Event.current.mousePosition;
+        }
+
+        void DrawTileMouse(AutoTileMap tileMap)
+        {
+            var sceneView = SceneView.lastActiveSceneView;
+            if (sceneView == null)
+                return;
+            var cam = sceneView.camera;
+            if (cam == null)
+                return;
+            
         }
 
         private Rect[] m_SpriteDatas = null;
@@ -139,6 +171,11 @@ namespace AutoMap
                     EditorGUILayout.GetControlRect(GUILayout.Height(64 * 3));
                 }
             }
+        }
+
+        private void OnDestroy()
+        {
+            
         }
     }
 }
