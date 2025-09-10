@@ -60,10 +60,17 @@ namespace AutoMap
         }
 
         private static Vector2 m_CurrentMousePosition;
+        private static Ray m_CurrentMouseRay;
+        private static Vector3 m_CurrentCameraPosition;
 
         void OnMouseInputUpdate(SceneView sceneView)
         {
             m_CurrentMousePosition = Event.current.mousePosition;
+            var cam = sceneView.camera;
+            if (cam == null)
+                return;
+            m_CurrentCameraPosition = cam.transform.position;
+            m_CurrentMouseRay = cam.ScreenPointToRay(m_CurrentMousePosition);
         }
 
         void DrawTileMouse(AutoTileMap tileMap)
