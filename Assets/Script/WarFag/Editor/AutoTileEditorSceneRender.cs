@@ -66,6 +66,34 @@ namespace AutoMap
         private static Vector3 m_TileMousePos;
         private Mesh m_MouseMesh = null;
 
+        private Mesh GetMouseMesh(AutoTileMap tileMap)
+        {
+            if (tileMap == null || Mathf.Abs(tileMap.m_PerTileSize.x) <= float.Epsilon || Mathf.Abs(tileMap.m_PerTileSize.y) <= float.Epsilon)
+                return null;
+
+            if (m_MouseMesh == null)
+            {
+                Vector3[] vecs = new Vector3[4];
+                vecs[0] = new Vector3(-tileMap.m_PerTileSize.x, 0, -tileMap.m_PerTileSize.y);
+                vecs[1] = new Vector3(0, 0, -tileMap.m_PerTileSize.y);
+                vecs[2] = m_TileMousePos;
+                vecs[3] = new Vector3(-tileMap.m_PerTileSize.x, 0, 0);
+                int[] indexs = new int[6];
+                indexs[0] = 0;
+                indexs[1] = 1;
+                indexs[2] = 2;
+                indexs[3] = 0;
+                indexs[4] = 3;
+                indexs[5] = 2;
+
+                m_MouseMesh = new Mesh();
+                m_MouseMesh.vertices = vecs;
+                m_MouseMesh.triangles = indexs;
+                m_MouseMesh.UploadMeshData(true);
+            }
+            return m_MouseMesh;
+        }
+
         void OnMouseInputUpdate(SceneView sceneView)
         {
             m_CurrentMousePosition = Event.current.mousePosition;
@@ -85,6 +113,7 @@ namespace AutoMap
             float t = (targetPos.y - y) / dir.y;
             float x = m_CurrentCameraPosition.x + dir.x * t;
             float z = m_CurrentCameraPosition.z + dir.z * t;
+            x = 0; z = 0;
             m_TileMousePos = new Vector3(x, y, z);
         }
 
@@ -92,7 +121,8 @@ namespace AutoMap
         {
             if (tileMap == null || Mathf.Abs(tileMap.m_PerTileSize.x) <= float.Epsilon || Mathf.Abs(tileMap.m_PerTileSize.y) <= float.Epsilon)
                 return;
-            
+            Mesh mouseTile = GetMouseMesh(tileMap);
+            Graphics.DrawMeshNow(mouseTile, m_TileMousePos, Quaternion.identity);
         }
 
         private Rect[] m_SpriteDatas = null;
