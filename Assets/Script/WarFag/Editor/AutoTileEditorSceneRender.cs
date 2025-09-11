@@ -105,6 +105,7 @@ namespace AutoMap
                 return;
             Vector3 targetPos = autoTileMap.transform.position;
             m_CurrentCameraPosition = cam.transform.position;
+            m_CurrentMousePosition.y = Screen.height - m_CurrentMousePosition.y - 50;
             m_CurrentMouseRay = cam.ScreenPointToRay(m_CurrentMousePosition);
             Vector3 dir = m_CurrentMouseRay.direction;
             if (Mathf.Abs(dir.y) <= float.Epsilon)
@@ -124,7 +125,7 @@ namespace AutoMap
         {
             if (tileMap == null || Mathf.Abs(tileMap.m_PerTileSize.x) <= float.Epsilon || Mathf.Abs(tileMap.m_PerTileSize.y) <= float.Epsilon)
                 return;
-            Debug.Log(m_TileMousePos);
+           // Debug.Log(m_TileMousePos);
             Handles.DrawWireCube(m_TileMousePos, new Vector3(tileMap.m_PerTileSize.x, 1.0f, tileMap.m_PerTileSize.y));
             Mesh mouseTile = GetMouseMesh(tileMap);
             Graphics.DrawMeshNow(mouseTile, m_TileMousePos, Quaternion.identity);
