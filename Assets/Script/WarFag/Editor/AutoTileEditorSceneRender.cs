@@ -120,7 +120,7 @@ namespace AutoMap
         {
             if (tileMap == null || Mathf.Abs(tileMap.m_PerTileSize.x) <= float.Epsilon || Mathf.Abs(tileMap.m_PerTileSize.y) <= float.Epsilon)
                 return;
-            Handles.DrawWireCube(m_TileMousePos, Vector3.one);
+            Handles.DrawWireCube(m_TileMousePos, new Vector3(tileMap.m_PerTileSize.x, 1.0f, tileMap.m_PerTileSize.y));
             Mesh mouseTile = GetMouseMesh(tileMap);
             Graphics.DrawMeshNow(mouseTile, m_TileMousePos, Quaternion.identity);
         }
