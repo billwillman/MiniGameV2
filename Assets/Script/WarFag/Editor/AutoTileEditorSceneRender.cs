@@ -110,7 +110,7 @@ namespace AutoMap
             if (Mathf.Abs(dir.y) <= float.Epsilon)
                 return;
             float y = targetPos.y;
-            float t = (targetPos.y - y) / dir.y;
+            float t = (targetPos.y - m_CurrentCameraPosition.y) / dir.y;
             float x = m_CurrentCameraPosition.x + dir.x * t;
             float z = m_CurrentCameraPosition.z + dir.z * t;
             m_TileMousePos = new Vector3(x, y, z);
