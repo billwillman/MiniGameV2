@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityEngine.TextCore.Text;
 using UnityEngine.Tilemaps;
 using UnityEngine.U2D;
+using NsLib.ResMgr;
 
 namespace AutoMap
 {
@@ -62,6 +63,8 @@ namespace AutoMap
         private static Vector2 m_CurrentMousePosition;
         private static Ray m_CurrentMouseRay;
         private static Vector3 m_CurrentCameraPosition;
+        private static Vector3 m_TileMousePos;
+        private Mesh m_MouseMesh = null;
 
         void OnMouseInputUpdate(SceneView sceneView)
         {
@@ -69,17 +72,25 @@ namespace AutoMap
             var cam = sceneView.camera;
             if (cam == null)
                 return;
+            var autoTileMap = this.target as AutoTileMap;
+            if (autoTileMap == null)
+                return;
+            Vector3 targetPos = autoTileMap.transform.position;
             m_CurrentCameraPosition = cam.transform.position;
             m_CurrentMouseRay = cam.ScreenPointToRay(m_CurrentMousePosition);
+            Vector3 dir = m_CurrentMouseRay.direction;
+            if (Mathf.Abs(dir.y) <= float.Epsilon)
+                return;
+            float y = m_CurrentCameraPosition.y;
+            float t = (targetPos.y - y) / dir.y;
+            float x = m_CurrentCameraPosition.x + dir.x * t;
+            float z = m_CurrentCameraPosition.z + dir.z * t;
+            m_TileMousePos = new Vector3(x, y, z);
         }
 
         void DrawTileMouse(AutoTileMap tileMap)
         {
-            var sceneView = SceneView.lastActiveSceneView;
-            if (sceneView == null)
-                return;
-            var cam = sceneView.camera;
-            if (cam == null)
+            if (tileMap == null || Mathf.Abs(tileMap.m_PerTileSize.x) <= float.Epsilon || Mathf.Abs(tileMap.m_PerTileSize.y) <= float.Epsilon)
                 return;
             
         }
@@ -182,7 +193,11 @@ namespace AutoMap
 
         private void OnDestroy()
         {
-            
+            if (m_MouseMesh != null)
+            {
+                ResourceMgr.Instance.DestroyObject(m_MouseMesh);
+                m_MouseMesh = null;
+            }
         }
     }
 }
