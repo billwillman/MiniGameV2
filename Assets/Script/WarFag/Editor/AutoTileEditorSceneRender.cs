@@ -109,11 +109,10 @@ namespace AutoMap
             Vector3 dir = m_CurrentMouseRay.direction;
             if (Mathf.Abs(dir.y) <= float.Epsilon)
                 return;
-            float y = m_CurrentCameraPosition.y;
+            float y = targetPos.y;
             float t = (targetPos.y - y) / dir.y;
             float x = m_CurrentCameraPosition.x + dir.x * t;
             float z = m_CurrentCameraPosition.z + dir.z * t;
-            x = 0; z = 0;
             m_TileMousePos = new Vector3(x, y, z);
         }
 
@@ -121,6 +120,7 @@ namespace AutoMap
         {
             if (tileMap == null || Mathf.Abs(tileMap.m_PerTileSize.x) <= float.Epsilon || Mathf.Abs(tileMap.m_PerTileSize.y) <= float.Epsilon)
                 return;
+            Handles.DrawWireCube(m_TileMousePos, Vector3.one);
             Mesh mouseTile = GetMouseMesh(tileMap);
             Graphics.DrawMeshNow(mouseTile, m_TileMousePos, Quaternion.identity);
         }
