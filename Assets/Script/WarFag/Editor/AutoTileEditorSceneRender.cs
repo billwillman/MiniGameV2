@@ -113,13 +113,18 @@ namespace AutoMap
             float t = (targetPos.y - m_CurrentCameraPosition.y) / dir.y;
             float x = m_CurrentCameraPosition.x + dir.x * t;
             float z = m_CurrentCameraPosition.z + dir.z * t;
-            m_TileMousePos = new Vector3(x, y, z);
+            var newMousePt = new Vector3(x, y, z);
+            if ((m_TileMousePos - newMousePt).sqrMagnitude <= float.Epsilon)
+                return;
+            m_TileMousePos = newMousePt;
+            sceneView.Repaint();
         }
 
         void DrawTileMouse(AutoTileMap tileMap)
         {
             if (tileMap == null || Mathf.Abs(tileMap.m_PerTileSize.x) <= float.Epsilon || Mathf.Abs(tileMap.m_PerTileSize.y) <= float.Epsilon)
                 return;
+            Debug.Log(m_TileMousePos);
             Handles.DrawWireCube(m_TileMousePos, new Vector3(tileMap.m_PerTileSize.x, 1.0f, tileMap.m_PerTileSize.y));
             Mesh mouseTile = GetMouseMesh(tileMap);
             Graphics.DrawMeshNow(mouseTile, m_TileMousePos, Quaternion.identity);
