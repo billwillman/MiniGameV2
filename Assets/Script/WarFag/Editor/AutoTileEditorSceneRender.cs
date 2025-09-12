@@ -164,6 +164,9 @@ namespace AutoMap
             sceneView.Repaint();
         }
 
+
+        private Vector3 m_CurrentTileMousePos;
+
         void DrawTileMouse(AutoTileMap tileMap)
         {
             if (tileMap == null || Mathf.Abs(tileMap.m_PerTileSize.x) <= float.Epsilon || Mathf.Abs(tileMap.m_PerTileSize.y) <= float.Epsilon)
