@@ -178,7 +178,10 @@ namespace AutoMap
             if (tileMap.m_EditorMaterial == null)
                 Graphics.DrawMeshNow(mouseTile, m_TileMousePos, Quaternion.identity);
             else
+            {
                 Graphics.DrawMesh(mouseTile, m_TileMousePos, Quaternion.identity, tileMap.m_EditorMaterial, 0);
+              //  Graphics.DrawMeshNow(mouseTile, m_TileMousePos, Quaternion.identity);
+            }
         }
 
         private Rect[] m_SpriteDatas = null;
