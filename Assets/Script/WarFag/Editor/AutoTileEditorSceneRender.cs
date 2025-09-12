@@ -77,8 +77,21 @@ namespace AutoMap
             allVertexs[startVertIndex + 1] = new Vector3(x + tileMap.m_PerTileSize.x, 0, z) + startPos;
             allVertexs[startVertIndex + 2] = new Vector3(x + tileMap.m_PerTileSize.x, 0, z + tileMap.m_PerTileSize.y) + startPos;
             allVertexs[startVertIndex + 3] = new Vector3(x, 0, z + tileMap.m_PerTileSize.y) + startPos;
-
-
+            
+            if (tileMap.m_TileAsset != null)
+            {
+                Texture2D tex = tileMap.m_TileAsset.texture;
+                if (tex != null)
+                {
+                    int spriteIndex = spriteNames[row, col];
+                    Rect[] spriteRects = GetSpriteDatas(tileMap);
+                    Rect spirteRect = spriteRects[spriteIndex];
+                    allTexcoords[startVertIndex + 0] = new Vector2(spirteRect.xMin / tex.width, spirteRect.yMin / tex.height);
+                    allTexcoords[startVertIndex + 1] = new Vector2(spirteRect.xMax / tex.width, spirteRect.yMin / tex.height);
+                    allTexcoords[startVertIndex + 2] = new Vector2(spirteRect.xMax / tex.width, spirteRect.yMax / tex.height);
+                    allTexcoords[startVertIndex + 3] = new Vector2(spirteRect.xMin / tex.width, spirteRect.yMax / tex.height);
+                }
+            }
 
             allIndexs[startIndexIndex++] = startVertIndex;
             allIndexs[startIndexIndex++] = startVertIndex + 1;
@@ -159,6 +172,7 @@ namespace AutoMap
             Handles.DrawWireCube(m_TileMousePos, new Vector3(tileMap.m_PerTileSize.x * 2, 1.0f, tileMap.m_PerTileSize.y * 2));
             Mesh mouseTile = GetMouseMesh(tileMap);
             Graphics.DrawMeshNow(mouseTile, m_TileMousePos, Quaternion.identity);
+            //Graphics.DrawMesh()
         }
 
         private Rect[] m_SpriteDatas = null;
