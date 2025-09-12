@@ -31,6 +31,7 @@ namespace AutoMap
             if (tileMap.m_AutoTileSize.x < 0 || Mathf.Abs(tileMap.m_AutoTileSize.x) <= float.Epsilon || tileMap.m_AutoTileSize.y < 0 || Mathf.Abs(tileMap.m_AutoTileSize.y) <= float.Epsilon)
                 return;
             // Graphics.ClearRandomWriteTargets();
+            //GL.Clear(true, true, Color.black);
             DrawTileMapArea(tileMap);
             DrawTileWire(tileMap);
             DrawTileMouse(tileMap);
@@ -179,8 +180,9 @@ namespace AutoMap
                 Graphics.DrawMeshNow(mouseTile, m_TileMousePos, Quaternion.identity);
             else
             {
-                Graphics.DrawMesh(mouseTile, m_TileMousePos, Quaternion.identity, tileMap.m_EditorMaterial, 0);
-              //  Graphics.DrawMeshNow(mouseTile, m_TileMousePos, Quaternion.identity);
+                //Graphics.DrawMesh(mouseTile, m_TileMousePos, Quaternion.identity, tileMap.m_EditorMaterial, 0);
+                tileMap.m_EditorMaterial.SetPass(0);
+                Graphics.DrawMeshNow(mouseTile, m_TileMousePos, Quaternion.identity);
             }
         }
 
