@@ -30,6 +30,7 @@ namespace AutoMap
                 return;
             if (tileMap.m_AutoTileSize.x < 0 || Mathf.Abs(tileMap.m_AutoTileSize.x) <= float.Epsilon || tileMap.m_AutoTileSize.y < 0 || Mathf.Abs(tileMap.m_AutoTileSize.y) <= float.Epsilon)
                 return;
+            // Graphics.ClearRandomWriteTargets();
             DrawTileMapArea(tileMap);
             DrawTileWire(tileMap);
             DrawTileMouse(tileMap);
