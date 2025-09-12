@@ -76,7 +76,7 @@ namespace AutoMap
                 Vector3[] vecs = new Vector3[4];
                 vecs[0] = new Vector3(-tileMap.m_PerTileSize.x, 0, -tileMap.m_PerTileSize.y);
                 vecs[1] = new Vector3(0, 0, -tileMap.m_PerTileSize.y);
-                vecs[2] = m_TileMousePos;
+                vecs[2] = Vector3.zero;
                 vecs[3] = new Vector3(-tileMap.m_PerTileSize.x, 0, 0);
                 int[] indexs = new int[6];
                 indexs[0] = 0;
