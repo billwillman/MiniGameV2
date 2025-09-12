@@ -66,18 +66,20 @@ namespace AutoMap
         private static Vector3 m_TileMousePos;
         private Mesh m_MouseMesh = null;
 
-        void AddSubTileMesh(int row, int col, AutoTileMap tileMap, Vector3[] allVertexs, int[] allIndexs, int startVertIndex = 0, int startIndexIndex = 0)
+        void AddSubTileMesh(int row, int col, AutoTileMap tileMap, Vector3[] allVertexs, Vector2[] allTexcoords, int[] allIndexs, int startVertIndex = 0, int startIndexIndex = 0)
         {
             if (tileMap == null || Mathf.Abs(tileMap.m_PerTileSize.x) <= float.Epsilon || Mathf.Abs(tileMap.m_PerTileSize.y) <= float.Epsilon)
                 return;
             Vector3 startPos = new Vector3(-tileMap.m_PerTileSize.x, 0, -tileMap.m_PerTileSize.y);
             float x = tileMap.m_PerTileSize.x * col;
             float z = tileMap.m_PerTileSize.y * row;
-            int vertIndex = startVertIndex;
-            allVertexs[vertIndex++] = new Vector3(x, 0, z) + startPos;
-            allVertexs[vertIndex++] = new Vector3(x + tileMap.m_PerTileSize.x, 0, z) + startPos;
-            allVertexs[vertIndex++] = new Vector3(x + tileMap.m_PerTileSize.x, 0, z + tileMap.m_PerTileSize.y) + startPos;
-            allVertexs[vertIndex++] = new Vector3(x, 0, z + tileMap.m_PerTileSize.y) + startPos;
+            allVertexs[startVertIndex + 0] = new Vector3(x, 0, z) + startPos;
+            allVertexs[startVertIndex + 1] = new Vector3(x + tileMap.m_PerTileSize.x, 0, z) + startPos;
+            allVertexs[startVertIndex + 2] = new Vector3(x + tileMap.m_PerTileSize.x, 0, z + tileMap.m_PerTileSize.y) + startPos;
+            allVertexs[startVertIndex + 3] = new Vector3(x, 0, z + tileMap.m_PerTileSize.y) + startPos;
+
+
+
             allIndexs[startIndexIndex++] = startVertIndex;
             allIndexs[startIndexIndex++] = startVertIndex + 1;
             allIndexs[startIndexIndex++] = startVertIndex + 2;
@@ -85,6 +87,12 @@ namespace AutoMap
             allIndexs[startIndexIndex++] = startVertIndex + 3;
             allIndexs[startIndexIndex++] = startVertIndex + 2;
         }
+
+        private static readonly int[,] spriteNames = new int[2, 2]
+                {
+                    {4, 8},
+                    {1, 2}
+                };
 
         private Mesh GetMouseMesh(AutoTileMap tileMap)
         {
@@ -94,6 +102,8 @@ namespace AutoMap
             if (m_MouseMesh == null)
             {
                 Vector3[] vecs = new Vector3[4 * 4];
+                Vector2[] texcoords = new Vector2[2 * 4];
+                
                 int[] indexs = new int[6 * 4];
                 for (int r = 0; r <= 1; ++r)
                 {
@@ -101,13 +111,14 @@ namespace AutoMap
                     {
                         int vertIndex = r * 4 * 2 + c * 4;
                         int indexIndex = r * 6 * 2 + c * 6;
-                        AddSubTileMesh(r, c, tileMap, vecs, indexs, vertIndex, indexIndex);
+                        AddSubTileMesh(r, c, tileMap, vecs, texcoords, indexs, vertIndex, indexIndex);
                     }
                 }
 
                 m_MouseMesh = new Mesh();
                 m_MouseMesh.vertices = vecs;
                 m_MouseMesh.triangles = indexs;
+                m_MouseMesh.uv = texcoords;
                 m_MouseMesh.UploadMeshData(true);
             }
             return m_MouseMesh;
