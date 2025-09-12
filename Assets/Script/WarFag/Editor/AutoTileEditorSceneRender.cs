@@ -86,10 +86,10 @@ namespace AutoMap
                     int spriteIndex = spriteNames[row, col];
                     Rect[] spriteRects = GetSpriteDatas(tileMap);
                     Rect spirteRect = spriteRects[spriteIndex];
-                    allTexcoords[startVertIndex + 0] = new Vector2(spirteRect.xMin / tex.width, spirteRect.yMin / tex.height);
-                    allTexcoords[startVertIndex + 1] = new Vector2(spirteRect.xMax / tex.width, spirteRect.yMin / tex.height);
-                    allTexcoords[startVertIndex + 2] = new Vector2(spirteRect.xMax / tex.width, spirteRect.yMax / tex.height);
-                    allTexcoords[startVertIndex + 3] = new Vector2(spirteRect.xMin / tex.width, spirteRect.yMax / tex.height);
+                    allTexcoords[startVertIndex + 0] = new Vector2(spirteRect.xMin / tex.width, spirteRect.yMax / tex.height);
+                    allTexcoords[startVertIndex + 1] = new Vector2(spirteRect.xMax / tex.width, spirteRect.yMax / tex.height);
+                    allTexcoords[startVertIndex + 2] = new Vector2(spirteRect.xMax / tex.width, spirteRect.yMin / tex.height);
+                    allTexcoords[startVertIndex + 3] = new Vector2(spirteRect.xMin / tex.width, spirteRect.yMin / tex.height);
                 }
             }
 
