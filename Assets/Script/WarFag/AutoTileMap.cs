@@ -10,5 +10,6 @@ namespace AutoMap
         public Vector2 m_AutoTileSize;
         public Vector2 m_PerTileSize;
         public Sprite m_TileAsset;
+        public Material m_EditorMaterial;
     }
 }
