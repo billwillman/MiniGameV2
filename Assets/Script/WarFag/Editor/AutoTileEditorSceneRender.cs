@@ -115,7 +115,7 @@ namespace AutoMap
             if (m_MouseMesh == null)
             {
                 Vector3[] vecs = new Vector3[4 * 4];
-                Vector2[] texcoords = new Vector2[2 * 4];
+                Vector2[] texcoords = new Vector2[4 * 4];
                 
                 int[] indexs = new int[6 * 4];
                 for (int r = 0; r <= 1; ++r)
@@ -171,8 +171,10 @@ namespace AutoMap
            // Debug.Log(m_TileMousePos);
             Handles.DrawWireCube(m_TileMousePos, new Vector3(tileMap.m_PerTileSize.x * 2, 1.0f, tileMap.m_PerTileSize.y * 2));
             Mesh mouseTile = GetMouseMesh(tileMap);
-            Graphics.DrawMeshNow(mouseTile, m_TileMousePos, Quaternion.identity);
-            //Graphics.DrawMesh()
+            if (tileMap.m_EditorMaterial == null)
+                Graphics.DrawMeshNow(mouseTile, m_TileMousePos, Quaternion.identity);
+            else
+                Graphics.DrawMesh(mouseTile, m_TileMousePos, Quaternion.identity, tileMap.m_EditorMaterial, 0);
         }
 
         private Rect[] m_SpriteDatas = null;
