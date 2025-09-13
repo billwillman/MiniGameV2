@@ -110,6 +110,24 @@ namespace AutoMap
         private Mesh m_MouseMesh = null;
         private Material m_MouseMaterial = null;
         private Rect m_MouseBrushRect;
+        private byte[,] m_TileMapCells = null; // 格子数据
+
+        byte[,] GetTileMapCells(AutoTileMap tileMap)
+        {
+            if (m_TileMapCells != null)
+                return m_TileMapCells;
+            if (!IsVaildPerTileSize(tileMap))
+            {
+                m_TileMapCells = null;
+                return m_TileMapCells;
+            }
+            var colAndrowCnt = GetTileCellCount(tileMap);
+            if (colAndrowCnt.x > 0 && colAndrowCnt.y > 0)
+            {
+                m_TileMapCells = new byte[colAndrowCnt.y, colAndrowCnt.x];
+            }
+            return m_TileMapCells;
+        }
 
         void AddSubTileMesh(int row, int col, AutoTileMap tileMap, Vector3[] allVertexs, Vector2[] allTexcoords, int[] allIndexs, int startVertIndex = 0, int startIndexIndex = 0)
         {
