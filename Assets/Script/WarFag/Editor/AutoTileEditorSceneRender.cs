@@ -67,6 +67,7 @@ namespace AutoMap
         private static Vector3 m_CurrentCameraPosition;
         private static Vector3 m_TileMousePos;
         private Mesh m_MouseMesh = null;
+        private Material m_MouseMaterial = null;
 
         void AddSubTileMesh(int row, int col, AutoTileMap tileMap, Vector3[] allVertexs, Vector2[] allTexcoords, int[] allIndexs, int startVertIndex = 0, int startIndexIndex = 0)
         {
@@ -176,12 +177,13 @@ namespace AutoMap
            // Debug.Log(m_TileMousePos);
             Handles.DrawWireCube(m_TileMousePos, new Vector3(tileMap.m_PerTileSize.x * 2, 1.0f, tileMap.m_PerTileSize.y * 2));
             Mesh mouseTile = GetMouseMesh(tileMap);
-            if (tileMap.m_EditorMaterial == null)
+            var mat = GetMouseMeshMaterial(tileMap);
+            if (mat == null)
                 Graphics.DrawMeshNow(mouseTile, m_TileMousePos, Quaternion.identity);
             else
             {
                 //Graphics.DrawMesh(mouseTile, m_TileMousePos, Quaternion.identity, tileMap.m_EditorMaterial, 0);
-                tileMap.m_EditorMaterial.SetPass(0);
+                mat.SetPass(0);
                 Graphics.DrawMeshNow(mouseTile, m_TileMousePos, Quaternion.identity);
             }
         }
@@ -283,12 +285,27 @@ namespace AutoMap
             }
         }
 
+        Material GetMouseMeshMaterial(AutoTileMap tileMap)
+        {
+            if (m_MouseMaterial == null && tileMap != null && tileMap.m_EditorMaterial != null)
+            {
+                m_MouseMaterial = GameObject.Instantiate<Material>(tileMap.m_EditorMaterial);
+            }
+            return m_MouseMaterial;
+        }
+
         private void OnDestroy()
         {
             if (m_MouseMesh != null)
             {
                 ResourceMgr.Instance.DestroyObject(m_MouseMesh);
                 m_MouseMesh = null;
+            }
+
+            if (m_MouseMaterial != null)
+            {
+                ResourceMgr.Instance.DestroyObject(m_MouseMaterial);
+                m_MouseMaterial = null;
             }
         }
     }
