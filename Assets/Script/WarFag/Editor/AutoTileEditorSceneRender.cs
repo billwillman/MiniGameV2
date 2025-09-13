@@ -203,6 +203,12 @@ namespace AutoMap
             return true;
         }
 
+        Bounds GetMousePosBounds(AutoTileMap tileMap)
+        {
+            Bounds ret = new Bounds(m_TileMousePos, new Vector3(tileMap.m_PerTileSize.x * 2, 1.0f, tileMap.m_PerTileSize.y * 2));
+            return ret;
+        }
+
         void DrawTileMouse(AutoTileMap tileMap)
         {
             if (!IsVaildPerTileSize(tileMap))
