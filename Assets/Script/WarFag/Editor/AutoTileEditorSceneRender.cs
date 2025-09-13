@@ -45,11 +45,37 @@ namespace AutoMap
             return ret;
         }
 
+        Vector2Int GetTileCellCount(AutoTileMap tileMap)
+        {
+            if (!IsVaildPerTileSize(tileMap))
+                return new Vector2Int();
+            int colCnt = Mathf.CeilToInt(tileMap.m_AutoTileSize.x / tileMap.m_PerTileSize.x);
+            int rowCnt = Mathf.CeilToInt(tileMap.m_AutoTileSize.y / tileMap.m_PerTileSize.y);
+            return new Vector2Int(colCnt, rowCnt);
+        }
+
         void DrawTileWire(AutoTileMap tileMap)
         {
-            if (tileMap == null || Mathf.Abs(tileMap.m_PerTileSize.x) <= float.Epsilon || Mathf.Abs(tileMap.m_PerTileSize.y) <= float.Epsilon)
+            if (!IsVaildPerTileSize(tileMap))
                 return;
-
+            Vector2Int colAndrows = GetTileCellCount(tileMap);
+            Vector3 leftTop = GetLeftTop(tileMap);
+            var oldColor = Handles.color;
+            try
+            {
+                Handles.color = Color.yellow;
+                for (int r = 0; r < colAndrows.y; ++r)
+                {
+                    for (int c = 0; c < colAndrows.x; ++c)
+                    {
+                        Vector3 drawPos = leftTop + new Vector3(c * tileMap.m_PerTileSize.x + tileMap.m_PerTileSize.x / 2.0f, 0, r * tileMap.m_PerTileSize.y + tileMap.m_PerTileSize.y / 2.0f);
+                        Handles.DrawWireCube(drawPos, new Vector3(tileMap.m_PerTileSize.x, 1.0f, tileMap.m_PerTileSize.y));
+                    }
+                }
+            } finally
+            {
+                Handles.color = oldColor;
+            }
         }
 
         private void OnEnable()
@@ -71,7 +97,7 @@ namespace AutoMap
 
         void AddSubTileMesh(int row, int col, AutoTileMap tileMap, Vector3[] allVertexs, Vector2[] allTexcoords, int[] allIndexs, int startVertIndex = 0, int startIndexIndex = 0)
         {
-            if (tileMap == null || Mathf.Abs(tileMap.m_PerTileSize.x) <= float.Epsilon || Mathf.Abs(tileMap.m_PerTileSize.y) <= float.Epsilon)
+            if (!IsVaildPerTileSize(tileMap))
                 return;
             Vector3 startPos = new Vector3(-tileMap.m_PerTileSize.x, 0, -tileMap.m_PerTileSize.y);
             float x = tileMap.m_PerTileSize.x * col;
@@ -112,7 +138,7 @@ namespace AutoMap
 
         private Mesh GetMouseMesh(AutoTileMap tileMap)
         {
-            if (tileMap == null || Mathf.Abs(tileMap.m_PerTileSize.x) <= float.Epsilon || Mathf.Abs(tileMap.m_PerTileSize.y) <= float.Epsilon)
+            if (!IsVaildPerTileSize(tileMap))
                 return null;
 
             if (m_MouseMesh == null)
@@ -170,9 +196,16 @@ namespace AutoMap
 
         private Vector3 m_CurrentTileMousePos;
 
-        void DrawTileMouse(AutoTileMap tileMap)
+        bool IsVaildPerTileSize(AutoTileMap tileMap)
         {
             if (tileMap == null || Mathf.Abs(tileMap.m_PerTileSize.x) <= float.Epsilon || Mathf.Abs(tileMap.m_PerTileSize.y) <= float.Epsilon)
+                return false;
+            return true;
+        }
+
+        void DrawTileMouse(AutoTileMap tileMap)
+        {
+            if (!IsVaildPerTileSize(tileMap))
                 return;
            // Debug.Log(m_TileMousePos);
             Handles.DrawWireCube(m_TileMousePos, new Vector3(tileMap.m_PerTileSize.x * 2, 1.0f, tileMap.m_PerTileSize.y * 2));
