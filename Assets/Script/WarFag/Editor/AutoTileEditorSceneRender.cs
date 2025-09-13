@@ -132,14 +132,15 @@ namespace AutoMap
 
         void DrawTileMapCellsTex(AutoTileMap tileMap)
         {
-            if (m_TileMapCells == null || !IsVaildPerTileSize(tileMap))
+            if (!IsVaildPerTileSize(tileMap))
                 return;
+            var tileMapCells = GetTileMapCells(tileMap);
             Vector3 startPos = GetLeftTop(tileMap);
-            for (int r = 0; r < m_TileMapCells.Length; ++r)
+            for (int r = 0; r < tileMapCells.Length; ++r)
             {
-                for (int c = 0; c < m_TileMapCells.Length; ++c)
+                for (int c = 0; c < tileMapCells.Length; ++c)
                 {
-                    byte id = m_TileMapCells[r, c];
+                    byte id = tileMapCells[r, c];
                     Vector3 drawPos = startPos + new Vector3(c * tileMap.m_PerTileSize.x + tileMap.m_PerTileSize.x / 2.0f, r * tileMap.m_PerTileSize.y + tileMap.m_PerTileSize.y / 2.0f);
                     Handles.Label(drawPos + startPos, id.ToString());
                 }
