@@ -63,15 +63,30 @@ namespace AutoMap
             var oldColor = Handles.color;
             try
             {
-                Handles.color = Color.yellow;
+                m_MouseBrushRect.xMin = float.MaxValue;
+                m_MouseBrushRect.yMin = float.MaxValue;
+                m_MouseBrushRect.xMax = float.MinValue;
+                m_MouseBrushRect.yMax = float.MinValue;
+                var mouseBounds = GetMousePosBounds(tileMap);
                 for (int r = 0; r < colAndrows.y; ++r)
                 {
                     for (int c = 0; c < colAndrows.x; ++c)
                     {
                         Vector3 drawPos = leftTop + new Vector3(c * tileMap.m_PerTileSize.x + tileMap.m_PerTileSize.x / 2.0f, 0, r * tileMap.m_PerTileSize.y + tileMap.m_PerTileSize.y / 2.0f);
-                        Handles.DrawWireCube(drawPos, new Vector3(tileMap.m_PerTileSize.x, 1.0f, tileMap.m_PerTileSize.y));
+                        Vector3 drawSize = new Vector3(tileMap.m_PerTileSize.x, 1.0f, tileMap.m_PerTileSize.y);
+                        Bounds drawBounds = new Bounds(drawPos, drawSize);
+                        if (drawBounds.Intersects(mouseBounds))
+                        {
+                            Handles.color = Color.red;
+                            Handles.DrawWireCube(drawPos, drawSize);
+                            float halfW = drawSize.x / 2.0f;
+                            float halfH = drawSize.z / 2.0f;
+                            m_MouseBrushRect.min = Vector2.Min(m_MouseBrushRect.min, new Vector2(drawPos.x - halfW, drawPos.z - halfH));
+                            m_MouseBrushRect.max = Vector2.Max(m_MouseBrushRect.max, new Vector2(drawPos.x + halfW, drawPos.z + halfH));
+                        }
                     }
                 }
+               // Debug.Log(m_MouseBrushRect);
             } finally
             {
                 Handles.color = oldColor;
@@ -94,6 +109,7 @@ namespace AutoMap
         private static Vector3 m_TileMousePos;
         private Mesh m_MouseMesh = null;
         private Material m_MouseMaterial = null;
+        private Rect m_MouseBrushRect;
 
         void AddSubTileMesh(int row, int col, AutoTileMap tileMap, Vector3[] allVertexs, Vector2[] allTexcoords, int[] allIndexs, int startVertIndex = 0, int startIndexIndex = 0)
         {
