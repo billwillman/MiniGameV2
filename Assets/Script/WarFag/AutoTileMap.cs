@@ -86,6 +86,14 @@ namespace AutoMap
                 return;
             Debug.Log(brush);
             Debug.LogFormat("min£º{0}, max£º{1}", brush.min.ToString(), brush.max.ToString());
+            for (int r = 0; r < brush.height/2.0f; ++r)
+            {
+                int startR = brush.min.y;
+                for (int c = 0; c < brush.width/2.0f; ++c)
+                {
+
+                }
+            }
         }
 
         public static readonly int[,] spriteNames = new int[2, 2]
