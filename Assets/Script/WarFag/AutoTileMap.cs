@@ -84,14 +84,22 @@ namespace AutoMap
             Vector2Int wh = new Vector2Int(brush.max.x - brush.min.x, brush.max.y - brush.min.y);
             if (wh.x < 2 || wh.y < 2)
                 return;
+            var cells = GetTileMapCells();
+            if (cells == null)
+                return;
             Debug.Log(brush);
             Debug.LogFormat("min£º{0}, max£º{1}", brush.min.ToString(), brush.max.ToString());
+            
             for (int r = 0; r < brush.height/2.0f; ++r)
             {
+                if (r >= cells.GetLength(0))
+                    break;
                 int startR = brush.min.y;
                 for (int c = 0; c < brush.width/2.0f; ++c)
                 {
-
+                    if (c >= cells.GetLength(1))
+                        break;
+                   
                 }
             }
         }
