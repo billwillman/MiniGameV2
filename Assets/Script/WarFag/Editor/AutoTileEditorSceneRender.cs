@@ -34,6 +34,18 @@ namespace AutoMap
             DrawTileWire(tileMap);
             DrawTileMapCellsTex(tileMap);
             DrawTileMouse(tileMap);
+            DoBurshTile(tileMap);
+        }
+
+        void DoBurshTile(AutoTileMap tileMap)
+        {
+            if (tileMap != null && m_IsWaitBrushTile)
+            {
+                m_IsWaitBrushTile = false;
+                if (m_MouseBrushColAndRolRect.IsUnityNull() || !tileMap.IsVaildPerTileSize())
+                    return;
+                tileMap.BrushTile(m_MouseBrushColAndRolRect);
+            }
         }
 
         void DrawTileWire(AutoTileMap tileMap)
@@ -49,6 +61,10 @@ namespace AutoMap
                 m_MouseBrushRect.yMin = float.MaxValue;
                 m_MouseBrushRect.xMax = float.MinValue;
                 m_MouseBrushRect.yMax = float.MinValue;
+                m_MouseBrushColAndRolRect.xMax = int.MaxValue;
+                m_MouseBrushColAndRolRect.yMin = int.MaxValue;
+                m_MouseBrushColAndRolRect.yMax = int.MinValue;
+                m_MouseBrushColAndRolRect.xMax = int.MinValue;
                 var mouseBounds = GetMousePosBounds(tileMap);
                 for (int r = 0; r < colAndrows.y; ++r)
                 {
@@ -65,6 +81,9 @@ namespace AutoMap
                             float halfH = drawSize.z / 2.0f;
                             m_MouseBrushRect.min = Vector2.Min(m_MouseBrushRect.min, new Vector2(drawPos.x - halfW, drawPos.z - halfH));
                             m_MouseBrushRect.max = Vector2.Max(m_MouseBrushRect.max, new Vector2(drawPos.x + halfW, drawPos.z + halfH));
+
+                            m_MouseBrushColAndRolRect.min = Vector2Int.Min(m_MouseBrushColAndRolRect.min, new Vector2Int(c, r));
+                            m_MouseBrushColAndRolRect.max = Vector2Int.Max(m_MouseBrushColAndRolRect.max, new Vector2Int(c, r));
                         }
                     }
                 }
@@ -92,6 +111,7 @@ namespace AutoMap
         private Mesh m_MouseMesh = null;
         private Material m_MouseMaterial = null;
         private Rect m_MouseBrushRect;
+        private RectInt m_MouseBrushColAndRolRect;
         
 
         void DrawTileMapCellsTex(AutoTileMap tileMap)
@@ -178,6 +198,8 @@ namespace AutoMap
             return m_MouseMesh;
         }
 
+        private bool m_IsWaitBrushTile = false;
+
         void OnMouseInputUpdate(SceneView sceneView)
         {
             m_CurrentMousePosition = Event.current.mousePosition;
@@ -199,6 +221,12 @@ namespace AutoMap
             float x = m_CurrentCameraPosition.x + dir.x * t;
             float z = m_CurrentCameraPosition.z + dir.z * t;
             var newMousePt = new Vector3(x, y, z);
+
+            if (Event.current.IsRightMouseButton())
+            {
+                m_IsWaitBrushTile = true;
+            }
+
             if ((m_TileMousePos - newMousePt).sqrMagnitude <= float.Epsilon)
                 return;
             m_TileMousePos = newMousePt;

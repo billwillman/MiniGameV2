@@ -79,7 +79,7 @@ namespace AutoMap
         }
 
         // к╒вс
-        public void BrushTile(BoundsInt brush)
+        public void BrushTile(RectInt brush)
         {
             Vector2Int wh = new Vector2Int(brush.max.x - brush.min.x, brush.max.y - brush.min.y);
             if (wh.x < 2 || wh.y < 2)
