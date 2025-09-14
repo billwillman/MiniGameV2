@@ -84,7 +84,8 @@ namespace AutoMap
             Vector2Int wh = new Vector2Int(brush.max.x - brush.min.x, brush.max.y - brush.min.y);
             if (wh.x < 2 || wh.y < 2)
                 return;
-
+            Debug.Log(brush);
+            Debug.LogFormat("min£º{0}, max£º{1}", brush.min.ToString(), brush.max.ToString());
         }
 
         public static readonly int[,] spriteNames = new int[2, 2]
