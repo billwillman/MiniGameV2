@@ -60,7 +60,7 @@ namespace AutoMap
                 m_MouseBrushRect.yMin = float.MaxValue;
                 m_MouseBrushRect.xMax = float.MinValue;
                 m_MouseBrushRect.yMax = float.MinValue;
-                m_MouseBrushColAndRolRect.xMax = int.MaxValue;
+                m_MouseBrushColAndRolRect.xMin = int.MaxValue;
                 m_MouseBrushColAndRolRect.yMin = int.MaxValue;
                 m_MouseBrushColAndRolRect.yMax = int.MinValue;
                 m_MouseBrushColAndRolRect.xMax = int.MinValue;
