@@ -107,7 +107,7 @@ namespace AutoMap
                 for (int c = 0; c < tileMapCells.GetLength(1); ++c)
                 {
                     byte id = tileMapCells[r, c];
-                    Vector3 drawPos = startPos + new Vector3(c * tileMap.m_PerTileSize.x + tileMap.m_PerTileSize.x / 2.0f, r * tileMap.m_PerTileSize.y + tileMap.m_PerTileSize.y / 2.0f);
+                    Vector3 drawPos = new Vector3(c * tileMap.m_PerTileSize.x + tileMap.m_PerTileSize.x / 2.0f, 0, r * tileMap.m_PerTileSize.y + tileMap.m_PerTileSize.y / 2.0f);
                     Handles.Label(drawPos + startPos, id.ToString());
                 }
             }
