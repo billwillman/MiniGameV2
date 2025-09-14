@@ -34,7 +34,6 @@ namespace AutoMap
             DrawTileWire(tileMap);
             DrawTileMapCellsTex(tileMap);
             DrawTileMouse(tileMap);
-            DoBurshTile(tileMap);
         }
 
         void DoBurshTile(AutoTileMap tileMap)
@@ -42,7 +41,7 @@ namespace AutoMap
             if (tileMap != null && m_IsWaitBrushTile)
             {
                 m_IsWaitBrushTile = false;
-                if (m_MouseBrushColAndRolRect.IsUnityNull() || !tileMap.IsVaildPerTileSize())
+                if (!tileMap.IsVaildPerTileSize())
                     return;
                 tileMap.BrushTile(m_MouseBrushColAndRolRect);
             }
@@ -87,7 +86,8 @@ namespace AutoMap
                         }
                     }
                 }
-               // Debug.Log(m_MouseBrushRect);
+                // Debug.Log(m_MouseBrushRect);
+                DoBurshTile(tileMap);
             } finally
             {
                 Handles.color = oldColor;
