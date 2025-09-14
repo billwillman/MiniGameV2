@@ -17,7 +17,7 @@ namespace AutoMap
 
         void DrawTileMapArea(AutoTileMap tileMap)
         {
-            if (tileMap.m_AutoTileSize.x < 0 || Mathf.Abs(tileMap.m_AutoTileSize.x) <= float.Epsilon || tileMap.m_AutoTileSize.y < 0 || Mathf.Abs(tileMap.m_AutoTileSize.y) <= float.Epsilon)
+            if (!tileMap.IsVaildAutoTileSize())
                 return;
             var worldPos = tileMap.transform.position;
             Handles.DrawWireCube(worldPos, new Vector3(tileMap.m_AutoTileSize.x, 1f, tileMap.m_AutoTileSize.y));
@@ -26,9 +26,7 @@ namespace AutoMap
         private void OnSceneGUI()
         {
             var tileMap = this.target as AutoTileMap;
-            if (tileMap == null)
-                return;
-            if (tileMap.m_AutoTileSize.x < 0 || Mathf.Abs(tileMap.m_AutoTileSize.x) <= float.Epsilon || tileMap.m_AutoTileSize.y < 0 || Mathf.Abs(tileMap.m_AutoTileSize.y) <= float.Epsilon)
+            if (tileMap == null || !tileMap.IsVaildAutoTileSize())
                 return;
             // Graphics.ClearRandomWriteTargets();
             //GL.Clear(true, true, Color.black);
@@ -38,29 +36,12 @@ namespace AutoMap
             DrawTileMouse(tileMap);
         }
 
-        Vector3 GetLeftTop(AutoTileMap tileMap)
-        {
-            Vector3 ret = tileMap.transform.position;
-            ret.x -= tileMap.m_AutoTileSize.x / 2.0f;
-            ret.z -= tileMap.m_AutoTileSize.y / 2.0f;
-            return ret;
-        }
-
-        Vector2Int GetTileCellCount(AutoTileMap tileMap)
-        {
-            if (!IsVaildPerTileSize(tileMap))
-                return new Vector2Int();
-            int colCnt = Mathf.CeilToInt(tileMap.m_AutoTileSize.x / tileMap.m_PerTileSize.x);
-            int rowCnt = Mathf.CeilToInt(tileMap.m_AutoTileSize.y / tileMap.m_PerTileSize.y);
-            return new Vector2Int(colCnt, rowCnt);
-        }
-
         void DrawTileWire(AutoTileMap tileMap)
         {
-            if (!IsVaildPerTileSize(tileMap))
+            if (!tileMap.IsVaildPerTileSize())
                 return;
-            Vector2Int colAndrows = GetTileCellCount(tileMap);
-            Vector3 leftTop = GetLeftTop(tileMap);
+            Vector2Int colAndrows = tileMap.GetTileCellCount();
+            Vector3 leftTop = tileMap.GetLeftTop();
             var oldColor = Handles.color;
             try
             {
@@ -111,34 +92,19 @@ namespace AutoMap
         private Mesh m_MouseMesh = null;
         private Material m_MouseMaterial = null;
         private Rect m_MouseBrushRect;
-        private byte[,] m_TileMapCells = null; // 格子数据
-
-        byte[,] GetTileMapCells(AutoTileMap tileMap)
-        {
-            if (m_TileMapCells != null)
-                return m_TileMapCells;
-            if (!IsVaildPerTileSize(tileMap))
-            {
-                m_TileMapCells = null;
-                return m_TileMapCells;
-            }
-            var colAndrowCnt = GetTileCellCount(tileMap);
-            if (colAndrowCnt.x > 0 && colAndrowCnt.y > 0)
-            {
-                m_TileMapCells = new byte[colAndrowCnt.y, colAndrowCnt.x];
-            }
-            return m_TileMapCells;
-        }
+        
 
         void DrawTileMapCellsTex(AutoTileMap tileMap)
         {
-            if (!IsVaildPerTileSize(tileMap))
+            if (!tileMap.IsVaildPerTileSize())
                 return;
-            var tileMapCells = GetTileMapCells(tileMap);
-            Vector3 startPos = GetLeftTop(tileMap);
-            for (int r = 0; r < tileMapCells.Length; ++r)
+            var tileMapCells = tileMap.GetTileMapCells();
+            if (tileMapCells == null)
+                return;
+            Vector3 startPos = tileMap.GetLeftTop();
+            for (int r = 0; r < tileMapCells.GetLength(0); ++r)
             {
-                for (int c = 0; c < tileMapCells.Length; ++c)
+                for (int c = 0; c < tileMapCells.GetLength(1); ++c)
                 {
                     byte id = tileMapCells[r, c];
                     Vector3 drawPos = startPos + new Vector3(c * tileMap.m_PerTileSize.x + tileMap.m_PerTileSize.x / 2.0f, r * tileMap.m_PerTileSize.y + tileMap.m_PerTileSize.y / 2.0f);
@@ -149,7 +115,7 @@ namespace AutoMap
 
         void AddSubTileMesh(int row, int col, AutoTileMap tileMap, Vector3[] allVertexs, Vector2[] allTexcoords, int[] allIndexs, int startVertIndex = 0, int startIndexIndex = 0)
         {
-            if (!IsVaildPerTileSize(tileMap))
+            if (!tileMap.IsVaildPerTileSize())
                 return;
             Vector3 startPos = new Vector3(-tileMap.m_PerTileSize.x, 0, -tileMap.m_PerTileSize.y);
             float x = tileMap.m_PerTileSize.x * col;
@@ -190,7 +156,7 @@ namespace AutoMap
 
         private Mesh GetMouseMesh(AutoTileMap tileMap)
         {
-            if (!IsVaildPerTileSize(tileMap))
+            if (!tileMap.IsVaildPerTileSize())
                 return null;
 
             if (m_MouseMesh == null)
@@ -248,13 +214,6 @@ namespace AutoMap
 
         private Vector3 m_CurrentTileMousePos;
 
-        bool IsVaildPerTileSize(AutoTileMap tileMap)
-        {
-            if (tileMap == null || Mathf.Abs(tileMap.m_PerTileSize.x) <= float.Epsilon || Mathf.Abs(tileMap.m_PerTileSize.y) <= float.Epsilon)
-                return false;
-            return true;
-        }
-
         Bounds GetMousePosBounds(AutoTileMap tileMap)
         {
             Bounds ret = new Bounds(m_TileMousePos, new Vector3(tileMap.m_PerTileSize.x * 2, 1.0f, tileMap.m_PerTileSize.y * 2));
@@ -263,7 +222,7 @@ namespace AutoMap
 
         void DrawTileMouse(AutoTileMap tileMap)
         {
-            if (!IsVaildPerTileSize(tileMap))
+            if (!tileMap.IsVaildPerTileSize())
                 return;
            // Debug.Log(m_TileMousePos);
             Handles.DrawWireCube(m_TileMousePos, new Vector3(tileMap.m_PerTileSize.x * 2, 1.0f, tileMap.m_PerTileSize.y * 2));
