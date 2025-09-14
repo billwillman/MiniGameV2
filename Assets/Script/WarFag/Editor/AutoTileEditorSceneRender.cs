@@ -130,7 +130,7 @@ namespace AutoMap
                 Texture2D tex = tileMap.m_TileAsset.texture;
                 if (tex != null)
                 {
-                    int spriteIndex = spriteNames[row, col];
+                    int spriteIndex = AutoTileMap.spriteNames[row, col];
                     Rect[] spriteRects = GetSpriteDatas(tileMap);
                     Rect spirteRect = spriteRects[spriteIndex];
                     allTexcoords[startVertIndex + 0] = new Vector2(spirteRect.xMin / tex.width, spirteRect.yMax / tex.height);
@@ -147,12 +147,6 @@ namespace AutoMap
             allIndexs[startIndexIndex++] = startVertIndex + 3;
             allIndexs[startIndexIndex++] = startVertIndex + 2;
         }
-
-        private static readonly int[,] spriteNames = new int[2, 2]
-                {
-                    {4, 8},
-                    {1, 2}
-                };
 
         private Mesh GetMouseMesh(AutoTileMap tileMap)
         {

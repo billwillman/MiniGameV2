@@ -87,5 +87,11 @@ namespace AutoMap
 
         }
 
+        public static readonly int[,] spriteNames = new int[2, 2]
+                {
+                    {4, 8},
+                    {1, 2}
+                };
+
     }
 }
