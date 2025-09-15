@@ -90,12 +90,22 @@ namespace AutoMap
             Debug.Log(brush);
             Debug.LogFormat("min£º{0}, max£º{1}", brush.min.ToString(), brush.max.ToString());
 
-            
+
+            byte[,] tempCells = new byte[brush.height, brush.width];
+
+            for (int r = 0; r < brush.height; ++r)
+            {
+                for (int c = 0; c < brush.width; ++c)
+                {
+                    tempCells[r, c] = cells[brush.min.y + r, brush.min.x + c];
+                }
+            }
+
+            bool isChanged = false;
             for (int r = 0; r <= brush.height/2.0f; ++r)
             {
                 if (r >= cells.GetLength(0))
                     break;
-                int startR = brush.min.y;
                 for (int c = 0; c <= brush.width/2.0f; ++c)
                 {
                     if (c >= cells.GetLength(1))
@@ -118,11 +128,23 @@ namespace AutoMap
                         {
                             for (int j = 0; j < 2; ++j)
                             {
-                                int curValue = spriteNames[i, j] + cells[r + i + brush.min.y, c + j + brush.min.x];
+                                int curValue = spriteNames[i, j] + tempCells[i + r, j + c];
                                 curValue = Math.Min(15, curValue);
-                                cells[r + i + brush.min.y, c + j + brush.min.x] = (byte)curValue;
+                                tempCells[i + r, j + c] = (byte)curValue;
+                                isChanged = true;
                             }
                         }
+                    }
+                }
+            }
+
+            if (isChanged)
+            {
+                for (int r = 0; r < brush.height; ++r)
+                {
+                    for (int c = 0; c < brush.width; ++c)
+                    {
+                        cells[brush.min.y + r, brush.min.x + c] = tempCells[r, c];
                     }
                 }
             }
