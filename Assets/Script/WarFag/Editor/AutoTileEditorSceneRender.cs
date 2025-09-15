@@ -8,6 +8,7 @@ using UnityEngine.Tilemaps;
 using UnityEngine.U2D;
 using NsLib.ResMgr;
 using System;
+using Unity.VisualScripting.Dependencies.NCalc;
 
 namespace AutoMap
 {
@@ -279,10 +280,38 @@ namespace AutoMap
             Rect uvRect = new Rect(r.xMin / tex.width, r.yMin / tex.height, r.width / tex.width, r.height / tex.height);
             GUI.DrawTextureWithTexCoords(drawRect, tex, uvRect);
 
-            var oldColor = GUI.contentColor;
-            GUI.contentColor = Color.black;
+            var oldColor = GUI.color;
+            switch (index)
+            {
+                case 4:
+                case 8:
+                case 1:
+                case 2:
+                    {
+                        GUI.color = Color.yellow;
+                        break;
+                    }
+                case 6:
+                case 9:
+                    {
+                        GUI.color = Color.green;
+                        break;
+                    }
+                case 7:
+                case 11:
+                case 13:
+                case 14:
+                    {
+                        GUI.color = Color.blue;
+                        break;
+                    }
+                default:
+                    GUI.color = Color.black;
+                    break;
+            }
+            
             GUI.Label(drawRect, index.ToString());
-            GUI.contentColor = oldColor;
+            GUI.color = oldColor;
         }
 
         Rect[] GetSpriteDatas(AutoTileMap tileMap)
