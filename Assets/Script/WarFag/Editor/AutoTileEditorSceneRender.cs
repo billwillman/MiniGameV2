@@ -363,9 +363,6 @@ namespace AutoMap
             if (GUILayout.Button("清理Cell数据"))
             {
                 tileMap.ClearTileCells();
-                var sceneView = SceneView.currentDrawingSceneView;
-                if (sceneView != null)
-                    sceneView.Repaint();
             }
         }
 
