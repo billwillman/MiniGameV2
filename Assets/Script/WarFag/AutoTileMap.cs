@@ -99,9 +99,37 @@ namespace AutoMap
                 {
                     if (c >= cells.GetLength(1))
                         break;
-                   
+                    bool isCanBrush = false;
+                    for (int i = 0; i < 2; ++i)
+                    {
+                        for (int j = 0; j < 2; ++j)
+                        {
+                            if (cells[r + i + brush.min.y, c + j + brush.min.x] == 0)
+                            {
+                                isCanBrush = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (isCanBrush)
+                    {
+                        for (int i = 0; i < 2; ++i)
+                        {
+                            for (int j = 0; j < 2; ++j)
+                            {
+                                int curValue = spriteNames[i, j] + cells[r + i + brush.min.y, c + j + brush.min.x];
+                                curValue = Math.Min(15, curValue);
+                                cells[r + i + brush.min.y, c + j + brush.min.x] = (byte)curValue;
+                            }
+                        }
+                    }
                 }
             }
+        }
+
+        public void ClearTileCells()
+        {
+            m_TileMapCells = null;
         }
 
         public static readonly int[,] spriteNames = new int[2, 2]

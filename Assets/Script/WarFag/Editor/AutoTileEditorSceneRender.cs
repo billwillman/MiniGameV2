@@ -359,6 +359,11 @@ namespace AutoMap
                     EditorGUILayout.GetControlRect(GUILayout.Height(64 * 3));
                 }
             }
+
+            if (GUILayout.Button("清理Cell数据"))
+            {
+                tileMap.ClearTileCells();
+            }
         }
 
         Material GetMouseMeshMaterial(AutoTileMap tileMap)
