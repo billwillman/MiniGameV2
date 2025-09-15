@@ -91,11 +91,11 @@ namespace AutoMap
             Debug.LogFormat("min£º{0}, max£º{1}", brush.min.ToString(), brush.max.ToString());
 
 
-            byte[,] tempCells = new byte[brush.height, brush.width];
+            byte[,] tempCells = new byte[brush.height + 1, brush.width + 1];
 
-            for (int r = 0; r < brush.height; ++r)
+            for (int r = 0; r <= brush.height; ++r)
             {
-                for (int c = 0; c < brush.width; ++c)
+                for (int c = 0; c <= brush.width; ++c)
                 {
                     tempCells[r, c] = cells[brush.min.y + r, brush.min.x + c];
                 }
@@ -140,9 +140,9 @@ namespace AutoMap
 
             if (isChanged)
             {
-                for (int r = 0; r < brush.height; ++r)
+                for (int r = 0; r <= brush.height; ++r)
                 {
-                    for (int c = 0; c < brush.width; ++c)
+                    for (int c = 0; c <= brush.width; ++c)
                     {
                         cells[brush.min.y + r, brush.min.x + c] = tempCells[r, c];
                     }
@@ -157,8 +157,8 @@ namespace AutoMap
 
         public static readonly int[,] spriteNames = new int[2, 2]
                 {
-                    {4, 8},
-                    {1, 2}
+                    {1, 2},
+                    {4, 8}
                 };
 
     }
