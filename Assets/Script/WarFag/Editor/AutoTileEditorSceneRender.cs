@@ -132,15 +132,45 @@ namespace AutoMap
             if (tileMapCells == null)
                 return;
             Vector3 startPos = tileMap.GetLeftTop();
+            var oldColor = Handles.color;
             for (int r = 0; r < tileMapCells.GetLength(0); ++r)
             {
                 for (int c = 0; c < tileMapCells.GetLength(1); ++c)
                 {
                     byte id = tileMapCells[r, c];
                     Vector3 drawPos = new Vector3(c * tileMap.m_PerTileSize.x + tileMap.m_PerTileSize.x / 2.0f, 0, r * tileMap.m_PerTileSize.y + tileMap.m_PerTileSize.y / 2.0f);
+                    switch (id)
+                    {
+                        case 4:
+                        case 8:
+                        case 1:
+                        case 2:
+                            {
+                                Handles.color = Color.yellow;
+                                break;
+                            }
+                        case 6:
+                        case 9:
+                            {
+                                Handles.color = Color.green;
+                                break;
+                            }
+                        case 7:
+                        case 11:
+                        case 13:
+                        case 14:
+                            {
+                                Handles.color = Color.blue;
+                                break;
+                            }
+                        default:
+                            Handles.color = Color.black;
+                            break;
+                    }
                     Handles.Label(drawPos + startPos, id.ToString());
                 }
             }
+            Handles.color = oldColor;
         }
 
         void AddSubTileMesh(int row, int col, AutoTileMap tileMap, Vector3[] allVertexs, Vector2[] allTexcoords, int[] allIndexs, int startVertIndex = 0, int startIndexIndex = 0)
@@ -281,35 +311,7 @@ namespace AutoMap
             GUI.DrawTextureWithTexCoords(drawRect, tex, uvRect);
 
             var oldColor = GUI.color;
-            switch (index)
-            {
-                case 4:
-                case 8:
-                case 1:
-                case 2:
-                    {
-                        GUI.color = Color.yellow;
-                        break;
-                    }
-                case 6:
-                case 9:
-                    {
-                        GUI.color = Color.green;
-                        break;
-                    }
-                case 7:
-                case 11:
-                case 13:
-                case 14:
-                    {
-                        GUI.color = Color.blue;
-                        break;
-                    }
-                default:
-                    GUI.color = Color.black;
-                    break;
-            }
-            
+            GUI.color = Color.black;
             GUI.Label(drawRect, index.ToString());
             GUI.color = oldColor;
         }
