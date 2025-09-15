@@ -90,12 +90,12 @@ namespace AutoMap
             Debug.Log(brush);
             Debug.LogFormat("min£º{0}, max£º{1}", brush.min.ToString(), brush.max.ToString());
             
-            for (int r = 0; r < brush.height/2.0f; ++r)
+            for (int r = 0; r <= brush.height/2.0f; ++r)
             {
                 if (r >= cells.GetLength(0))
                     break;
                 int startR = brush.min.y;
-                for (int c = 0; c < brush.width/2.0f; ++c)
+                for (int c = 0; c <= brush.width/2.0f; ++c)
                 {
                     if (c >= cells.GetLength(1))
                         break;
