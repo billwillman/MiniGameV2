@@ -90,7 +90,7 @@ namespace AutoMap
             Debug.Log(brush);
             Debug.LogFormat("min：{0}, max：{1}", brush.min.ToString(), brush.max.ToString());
 
-
+            /*
             byte[,] tempCells = new byte[brush.height + 1, brush.width + 1];
 
             for (int r = 0; r <= brush.height; ++r)
@@ -100,8 +100,8 @@ namespace AutoMap
                     tempCells[r, c] = cells[brush.min.y + r, brush.min.x + c];
                 }
             }
-
-            bool isChanged = false;
+            */
+            //bool isChanged = false;
             for (int r = 0; r <= brush.height/2.0f; ++r)
             {
                 if (r >= cells.GetLength(0))
@@ -122,22 +122,53 @@ namespace AutoMap
                             }
                         }
                     }
+                    //---------------------------------------- 新的处理 ----------------------------------
+                    if (!isCanBrush)
+                    {
+                        for (int i = 0; i < 2; ++i)
+                        {
+                            for (int j = 0; j < 2; ++j)
+                            {
+                                int targetValue = cells[r + i + brush.min.y, c + j + brush.min.x];
+                                if (targetValue == 4 || targetValue == 8 || targetValue == 1 || targetValue == 2)
+                                {
+                                    int curValue = spriteNames[i, j];
+                                    if (targetValue != curValue)
+                                    {
+                                        isCanBrush = true;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    // ----------------------------------------------------------------
                     if (isCanBrush)
                     {
                         for (int i = 0; i < 2; ++i)
                         {
                             for (int j = 0; j < 2; ++j)
                             {
+                                /*
                                 int curValue = spriteNames[i, j] + tempCells[i + r, j + c];
                                 curValue = Math.Min(15, curValue);
                                 tempCells[i + r, j + c] = (byte)curValue;
-                                isChanged = true;
+                                */
+                                // -------------------- 新的计算
+                                int targetValue = cells[r + i + brush.min.y, c + j + brush.min.x];
+                                int curValue = spriteNames[i, j];
+                                targetValue += curValue;
+                                targetValue = Math.Min(15, targetValue);
+                                cells[r + i + brush.min.y, c + j + brush.min.x] = (byte)targetValue;
+                                // ---------------------------
+                               // isChanged = true;
                             }
                         }
                     }
                 }
             }
 
+            /*
             if (isChanged)
             {
                 for (int r = 0; r <= brush.height; ++r)
@@ -148,6 +179,7 @@ namespace AutoMap
                     }
                 }
             }
+            */
         }
 
         public void ClearTileCells()
