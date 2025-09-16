@@ -173,6 +173,12 @@ namespace AutoMap
             Handles.color = oldColor;
         }
 
+        public static readonly int[,] spriteNames = new int[2, 2]
+               {
+                    {4, 8},
+                    {1, 2},
+               };
+
         void AddSubTileMesh(int row, int col, AutoTileMap tileMap, Vector3[] allVertexs, Vector2[] allTexcoords, int[] allIndexs, int startVertIndex = 0, int startIndexIndex = 0)
         {
             if (!tileMap.IsVaildPerTileSize())
@@ -190,7 +196,7 @@ namespace AutoMap
                 Texture2D tex = tileMap.m_TileAsset.texture;
                 if (tex != null)
                 {
-                    int spriteIndex = AutoTileMap.spriteNames[row, col];
+                    int spriteIndex = spriteNames[row, col];
                     Rect[] spriteRects = GetSpriteDatas(tileMap);
                     Rect spirteRect = spriteRects[spriteIndex];
                     allTexcoords[startVertIndex + 0] = new Vector2(spirteRect.xMin / tex.width, spirteRect.yMax / tex.height);
