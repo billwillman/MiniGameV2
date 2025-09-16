@@ -78,6 +78,90 @@ namespace AutoMap
             return ret;
         }
 
+        byte GetCellValue(int r, int c)
+        {
+            var cells = GetTileMapCells();
+            if (cells == null)
+                return 0;
+            if (r < 0 || c < 0 || r >= cells.GetLength(0) || c >= cells.GetLength(0))
+                return 0;
+            return cells[r, c];
+        }
+
+        public void BrushTile2(RectInt brush)
+        {
+            Vector2Int wh = new Vector2Int(brush.max.x - brush.min.x, brush.max.y - brush.min.y);
+            if (wh.x < 2 || wh.y < 2)
+                return;
+            var cells = GetTileMapCells();
+            if (cells == null)
+                return;
+            Debug.Log(brush);
+            Debug.LogFormat("min£º{0}, max£º{1}", brush.min.ToString(), brush.max.ToString());
+
+            for (int r = 0; r <= brush.height / 2.0f; ++r)
+            {
+                if (r >= cells.GetLength(0))
+                    break;
+                for (int c = 0; c <= brush.width / 2.0f; ++c)
+                {
+                    if (c >= cells.GetLength(1))
+                        break;
+                    for (int i = 0; i < 2; ++i)
+                    {
+                        for (int j = 0; j < 2; ++j)
+                        {
+                            bool isCanBrush = false;
+                            int globalR = r + i + brush.min.y;
+                            int globalC = c + j + brush.min.x;
+                            int targetValue = cells[globalR, globalC];
+                            
+                            int curValue = spriteNames[i, j];
+                            targetValue += curValue;
+                            targetValue = Math.Min(15, targetValue);
+                            if (targetValue == 0)
+                            {
+                                isCanBrush = true;
+                            } else if (targetValue == 4)
+                            {
+                                isCanBrush = (GetCellValue(globalR + 1, globalC) == 0 && GetCellValue(globalR, globalC - 1) == 0);
+                            } else if (targetValue == 8)
+                            {
+                                isCanBrush = (GetCellValue(globalR + 1, globalC) == 0 && GetCellValue(globalR, globalC + 1) == 0);
+                            } else if (targetValue == 1)
+                            {
+                                isCanBrush = (GetCellValue(globalR - 1, globalC) == 0 && GetCellValue(globalR, globalC - 1) == 0);
+                            } else if (targetValue == 2)
+                            {
+                                isCanBrush = (GetCellValue(globalR - 1, globalC) == 0 && GetCellValue(globalR, globalC + 1) == 0);
+                            } else if (targetValue == 3)
+                            {
+                                int downValue = GetCellValue(globalR - 1, globalC);
+                                isCanBrush = (downValue == 0 || downValue == 4 || downValue == 12 || downValue == 8) && (GetCellValue(globalR, globalC + 1) != 0) 
+                                        && GetCellValue(globalR, globalC - 1) != 0;
+                            } else if (targetValue == 12)
+                            {
+                                int upValue = GetCellValue(globalR - 1, globalC);
+                                isCanBrush = (upValue == 0 || upValue == 1 || upValue == 3 || upValue == 2) && (GetCellValue(globalR, globalC + 1) != 0)
+                                        && GetCellValue(globalR, globalC - 1) != 0;
+                            } else if (targetValue == 6)
+                            {
+
+                            }
+                            
+
+                            if (isCanBrush)
+                            {
+                                
+                                cells[r + i + brush.min.y, c + j + brush.min.x] = (byte)targetValue;
+                            }
+                        }
+                    }
+                
+                }
+            }
+        }
+
         // Ë¢×Ó
         public void BrushTile(RectInt brush)
         {
