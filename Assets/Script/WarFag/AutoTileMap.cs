@@ -1,3 +1,4 @@
+using Autodesk.Fbx;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -78,14 +79,28 @@ namespace AutoMap
             return ret;
         }
 
-        byte GetCellValue(int r, int c)
+        byte GetCellValue(int r, int c, byte[,] customCells = null)
         {
-            var cells = GetTileMapCells();
-            if (cells == null)
+            if (customCells == null)
+                customCells = GetTileMapCells();
+            if (customCells == null)
                 return 0;
-            if (r < 0 || c < 0 || r >= cells.GetLength(0) || c >= cells.GetLength(0))
+            if (r < 0 || c < 0 || r >= customCells.GetLength(0) || c >= customCells.GetLength(0))
                 return 0;
-            return cells[r, c];
+            return customCells[r, c];
+        }
+
+        bool CompareCellValue(int r, int c, byte[,] customCells, params int[] values)
+        {
+            if (values == null)
+                return false;
+            byte value = GetCellValue(r, c, customCells);
+            foreach (var v in values)
+            {
+                if (v == value)
+                    return true;
+            }
+            return false;
         }
 
         public void BrushTile2(RectInt brush)
@@ -99,6 +114,8 @@ namespace AutoMap
             Debug.Log(brush);
             Debug.LogFormat("min：{0}, max：{1}", brush.min.ToString(), brush.max.ToString());
 
+            byte[,] tempCells = new byte[brush.height + 1, brush.width + 1];
+
             for (int r = 0; r <= brush.height / 2.0f; ++r)
             {
                 if (r >= cells.GetLength(0))
@@ -107,57 +124,112 @@ namespace AutoMap
                 {
                     if (c >= cells.GetLength(1))
                         break;
+                    // 1. 缓存之前的值
                     for (int i = 0; i < 2; ++i)
                     {
                         for (int j = 0; j < 2; ++j)
                         {
-                            bool isCanBrush = false;
+                            int globalR = r + i + brush.min.y;
+                            int globalC = c + j + brush.min.x;
+
+                            tempCells[i, j] = cells[globalR, globalC]; ;
+
+
+                        }
+                    }
+
+                    // 设置值
+                    for (int i = 0; i < 2; ++i)
+                    {
+                        for (int j = 0; j < 2; ++j)
+                        {
                             int globalR = r + i + brush.min.y;
                             int globalC = c + j + brush.min.x;
                             int targetValue = cells[globalR, globalC];
-                            
+
                             int curValue = spriteNames[i, j];
                             targetValue += curValue;
                             targetValue = Math.Min(15, targetValue);
-                            if (targetValue == 0)
-                            {
-                                isCanBrush = true;
-                            } else if (targetValue == 4)
-                            {
-                                isCanBrush = (GetCellValue(globalR + 1, globalC) == 0 && GetCellValue(globalR, globalC - 1) == 0);
-                            } else if (targetValue == 8)
-                            {
-                                isCanBrush = (GetCellValue(globalR + 1, globalC) == 0 && GetCellValue(globalR, globalC + 1) == 0);
-                            } else if (targetValue == 1)
-                            {
-                                isCanBrush = (GetCellValue(globalR - 1, globalC) == 0 && GetCellValue(globalR, globalC - 1) == 0);
-                            } else if (targetValue == 2)
-                            {
-                                isCanBrush = (GetCellValue(globalR - 1, globalC) == 0 && GetCellValue(globalR, globalC + 1) == 0);
-                            } else if (targetValue == 3)
-                            {
-                                int downValue = GetCellValue(globalR - 1, globalC);
-                                isCanBrush = (downValue == 0 || downValue == 4 || downValue == 12 || downValue == 8) && (GetCellValue(globalR, globalC + 1) != 0) 
-                                        && GetCellValue(globalR, globalC - 1) != 0;
-                            } else if (targetValue == 12)
-                            {
-                                int upValue = GetCellValue(globalR - 1, globalC);
-                                isCanBrush = (upValue == 0 || upValue == 1 || upValue == 3 || upValue == 2) && (GetCellValue(globalR, globalC + 1) != 0)
-                                        && GetCellValue(globalR, globalC - 1) != 0;
-                            } else if (targetValue == 6)
-                            {
-
-                            }
-                            
-
-                            if (isCanBrush)
-                            {
-                                
-                                cells[r + i + brush.min.y, c + j + brush.min.x] = (byte)targetValue;
-                            }
+                            cells[r + i + brush.min.y, c + j + brush.min.x] = (byte)targetValue;
                         }
                     }
-                
+
+                    // 3.检查值有效性
+                    for (int i = 0; i < 2; ++i)
+                    {
+                        for (int j = 0; j < 2; ++j)
+                        {
+                            int globalR = r + i + brush.min.y;
+                            int globalC = c + j + brush.min.x;
+                            int targetValue = cells[globalR, globalC];
+                            bool isVaild = false;
+                            if (targetValue == 4)
+                            {
+                                if (CompareCellValue(globalR, globalC - 1, null, 0, 8, 2, 10) && CompareCellValue(globalR + 1, globalC, null, 0, 1, 2, 3))
+                                    isVaild = true;
+                            } else if (targetValue == 8)
+                            {
+                                if (CompareCellValue(globalR + 1, globalC, null, 0, 1, 2, 3) && CompareCellValue(globalR, globalC + 1, null, 0, 1, 4, 5))
+                                    isVaild = true;
+                            } else if (targetValue == 1)
+                            {
+                                if (CompareCellValue(globalR, globalC - 1, null, 0, 8, 2, 10) && CompareCellValue(globalR - 1, globalC, null, 0, 4, 8, 12))
+                                    isVaild = true;
+                            } else if (targetValue == 2)
+                            {
+                                if (CompareCellValue(globalR, globalC + 1, null, 0, 4, 1, 5) && CompareCellValue(globalR - 1, globalC, null, 0, 4, 8, 12))
+                                    isVaild = true;
+                            } else if (targetValue == 12)
+                            {
+                                if (CompareCellValue(globalR + 1, globalC, null, 0, 1, 2, 3))
+                                    isVaild = true;
+                            } else if (targetValue == 3)
+                            {
+                                if (CompareCellValue(globalR - 1, globalC, null, 0, 4, 8, 12))
+                                    isVaild = true;
+                            } else if (targetValue == 5)
+                            {
+                                if (CompareCellValue(globalR - 1, globalC, null, 0, 2, 8, 10))
+                                    isVaild = true;
+                            } else if (targetValue == 10)
+                            {
+                                if (CompareCellValue(globalR - 1, globalC, null, 0, 1, 4, 5))
+                                    isVaild = true;
+                            } else if (targetValue == 15)
+                            {
+                                if (GetCellValue(globalR, globalC - 1) != 0 && GetCellValue(globalR + 1, globalC) != 0 &&
+                                    GetCellValue(globalR, globalC + 1) != 0 && GetCellValue(globalR - 1, globalC) != 0)
+                                    isVaild = true;
+                            } else if (targetValue == 6)
+                            {
+                                if (CompareCellValue(globalR - 1, globalC - 1, null, 0, 8) && CompareCellValue(globalR + 1, globalC + 1, null, 0, 1))
+                                    isVaild = true;
+                            } else if (targetValue == 9)
+                            {
+                                if (CompareCellValue(globalR + 1, globalC - 1, null, 0, 2) && CompareCellValue(globalR - 1, globalC + 1, null, 0, 4))
+                                    isVaild = true;
+                            } else if (targetValue == 11)
+                            {
+                                if (CompareCellValue(globalR - 1, globalC + 1, null, 0, 4))
+                                    isVaild = true;
+                            } else if (targetValue == 7)
+                            {
+                                if (CompareCellValue(globalR - 1, globalC - 1, null, 0, 8))
+                                    isVaild = true;
+                            } else if (targetValue == 14)
+                            {
+                                if (CompareCellValue(globalR + 1, globalC + 1, null, 0, 1))
+                                    isVaild = true;
+                            } else if (targetValue == 13)
+                            {
+                                if (CompareCellValue(globalR + 1, globalC - 1, null, 0, 2))
+                                    isVaild = true;
+                            }
+
+                            if (!isVaild)
+                                cells[globalR, globalC] = tempCells[i, j];
+                        }
+                    }
                 }
             }
         }

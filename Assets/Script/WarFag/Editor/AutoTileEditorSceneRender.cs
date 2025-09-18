@@ -45,7 +45,7 @@ namespace AutoMap
                 m_IsWaitBrushTile = false;
                 if (!tileMap.IsVaildPerTileSize())
                     return;
-                tileMap.BrushTile(m_MouseBrushColAndRolRect);
+                tileMap.BrushTile2(m_MouseBrushColAndRolRect);
             }
         }
 
