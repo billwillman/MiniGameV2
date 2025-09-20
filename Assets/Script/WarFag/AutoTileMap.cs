@@ -185,7 +185,7 @@ namespace AutoMap
                             } else if (targetValue == 1)
                             {
                                 if (CompareCellValue(globalR, globalC - 1, null, 0, 8, 2, 10) && CompareCellValue(globalR - 1, globalC, null, 0, 4, 8, 12) &&
-                                    CompareCellValue(globalR, globalC + 1, null, 2, 3) && CompareCellValue(globalR + 1, globalC, null, 4, 5) &&
+                                    CompareCellValue(globalR, globalC + 1, null, 2, 3, 6, 7) && CompareCellValue(globalR + 1, globalC, null, 4, 5, 6, 7) &&
                                     CompareCellValue(globalR + 1, globalC + 1, null, 8, 9, 10, 12, 13, 15))
                                     isVaild = true;
                             } else if (targetValue == 2)
