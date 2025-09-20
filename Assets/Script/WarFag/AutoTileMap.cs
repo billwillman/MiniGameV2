@@ -163,7 +163,14 @@ namespace AutoMap
                             int globalC = c + j + brush.min.x;
                             int targetValue = cells[globalR, globalC];
                             bool isVaild = false;
-                            if (targetValue == 4)
+
+                            if (GetCellValue(globalR, globalC - 1) != 0 && GetCellValue(globalR + 1, globalC) != 0 &&
+                                    GetCellValue(globalR, globalC + 1) != 0 && GetCellValue(globalR - 1, globalC) != 0 &&
+                                    GetCellValue(globalR - 1, globalC - 1) != 0 && GetCellValue(globalR + 1, globalC - 1) != 0 &&
+                                    GetCellValue(globalR - 1, globalC + 1) != 0 && GetCellValue(globalR + 1, globalC + 1) != 0)
+                                targetValue = 15;
+
+                                if (targetValue == 4)
                             {
                                 if (CompareCellValue(globalR, globalC - 1, null, 0, 8, 2, 10) && CompareCellValue(globalR + 1, globalC, null, 0, 1, 2, 3) && 
                                     GetCellValue(globalR, globalC + 1) != 0 && GetCellValue(globalR - 1, globalC, null) != 0 &&
