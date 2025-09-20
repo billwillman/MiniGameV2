@@ -174,25 +174,25 @@ namespace AutoMap
                             {
                                 if (CompareCellValue(globalR, globalC - 1, null, 0, 8, 2, 10) && CompareCellValue(globalR + 1, globalC, null, 0, 1, 2, 3) &&
                                     CompareCellValue(globalR, globalC + 1, null, 8, 12) && CompareCellValue(globalR - 1, globalC, null, 1, 5) &&
-                                    CompareCellValue(globalR - 1, globalC + 1, null, 2, 15))
+                                    CompareCellValue(globalR - 1, globalC + 1, null, 2, 6, 3, 10, 14, 15))
                                     isVaild = true;
                             } else if (targetValue == 8)
                             {
                                 if (CompareCellValue(globalR + 1, globalC, null, 0, 1, 2, 3) && CompareCellValue(globalR, globalC + 1, null, 0, 1, 4, 5) &&
                                     CompareCellValue(globalR, globalC - 1, null, 4, 12) && CompareCellValue(globalR - 1, globalC, null, 2, 10) &&
-                                    CompareCellValue(globalR - 1, globalC - 1, null, 1, 15))
+                                    CompareCellValue(globalR - 1, globalC - 1, null, 1, 3, 5, 7, 9, 15))
                                     isVaild = true;
                             } else if (targetValue == 1)
                             {
                                 if (CompareCellValue(globalR, globalC - 1, null, 0, 8, 2, 10) && CompareCellValue(globalR - 1, globalC, null, 0, 4, 8, 12) &&
                                     CompareCellValue(globalR, globalC + 1, null, 2, 3) && CompareCellValue(globalR + 1, globalC, null, 4, 5) &&
-                                    CompareCellValue(globalR + 1, globalC + 1, null, 8, 15))
+                                    CompareCellValue(globalR + 1, globalC + 1, null, 8, 9, 10, 12, 13, 15))
                                     isVaild = true;
                             } else if (targetValue == 2)
                             {
                                 if (CompareCellValue(globalR, globalC + 1, null, 0, 4, 1, 5) && CompareCellValue(globalR - 1, globalC, null, 0, 4, 8, 12) &&
                                     CompareCellValue(globalR, globalC - 1, null, 1, 3) && CompareCellValue(globalR + 1, globalC, null, 8, 10) &&
-                                    CompareCellValue(globalR + 1, globalC - 1, null, 4, 15))
+                                    CompareCellValue(globalR + 1, globalC - 1, null, 4, 5, 6, 12, 14, 15))
                                     isVaild = true;
                             } else if (targetValue == 12)
                             {
