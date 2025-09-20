@@ -166,22 +166,26 @@ namespace AutoMap
                             if (targetValue == 4)
                             {
                                 if (CompareCellValue(globalR, globalC - 1, null, 0, 8, 2, 10) && CompareCellValue(globalR + 1, globalC, null, 0, 1, 2, 3) && 
-                                    GetCellValue(globalR, globalC + 1) != 0 && GetCellValue(globalR - 1, globalC, null) != 0)
+                                    GetCellValue(globalR, globalC + 1) != 0 && GetCellValue(globalR - 1, globalC, null) != 0 &&
+                                    GetCellValue(globalR - 1, globalC + 1) != 0)
                                     isVaild = true;
                             } else if (targetValue == 8)
                             {
                                 if (CompareCellValue(globalR + 1, globalC, null, 0, 1, 2, 3) && CompareCellValue(globalR, globalC + 1, null, 0, 1, 4, 5) &&
-                                    GetCellValue(globalR, globalC - 1) != 0 && GetCellValue(globalR - 1, globalC, null) != 0)
+                                    GetCellValue(globalR, globalC - 1) != 0 && GetCellValue(globalR - 1, globalC, null) != 0 &&
+                                    GetCellValue(globalR - 1, globalC - 1) != 0)
                                     isVaild = true;
                             } else if (targetValue == 1)
                             {
                                 if (CompareCellValue(globalR, globalC - 1, null, 0, 8, 2, 10) && CompareCellValue(globalR - 1, globalC, null, 0, 4, 8, 12) &&
-                                    GetCellValue(globalR, globalC + 1) != 0 && GetCellValue(globalR + 1, globalC) != 0)
+                                    GetCellValue(globalR, globalC + 1) != 0 && GetCellValue(globalR + 1, globalC) != 0 &&
+                                    GetCellValue(globalR + 1, globalC + 1) != 0)
                                     isVaild = true;
                             } else if (targetValue == 2)
                             {
                                 if (CompareCellValue(globalR, globalC + 1, null, 0, 4, 1, 5) && CompareCellValue(globalR - 1, globalC, null, 0, 4, 8, 12) &&
-                                    GetCellValue(globalR, globalC - 1) != 0 && GetCellValue(globalR + 1, globalC) != 0)
+                                    GetCellValue(globalR, globalC - 1) != 0 && GetCellValue(globalR + 1, globalC) != 0 &&
+                                    GetCellValue(globalR + 1, globalC - 1) != 0)
                                     isVaild = true;
                             } else if (targetValue == 12)
                             {
@@ -195,13 +199,13 @@ namespace AutoMap
                                     isVaild = true;
                             } else if (targetValue == 5)
                             {
-                                if (CompareCellValue(globalR - 1, globalC, null, 0, 2, 8, 10) && GetCellValue(globalR - 1, globalC) != 0 && GetCellValue(globalR + 1, globalC) != 0 &&
+                                if (CompareCellValue(globalR, globalC - 1, null, 0, 2, 8, 10) && GetCellValue(globalR - 1, globalC) != 0 && GetCellValue(globalR + 1, globalC) != 0 &&
                                     GetCellValue(globalR, globalC + 1) != 0)
                                     isVaild = true;
                             } else if (targetValue == 10)
                             {
-                                if (CompareCellValue(globalR - 1, globalC, null, 0, 1, 4, 5) && GetCellValue(globalR - 1, globalC) != 0 && GetCellValue(globalR + 1, globalC) != 0 &&
-                                    GetCellValue(globalR, globalC - 1) != 0)
+                                if (CompareCellValue(globalR, globalC + 1, null, 0, 1, 4, 5) && GetCellValue(globalR - 1, globalC) != 0 && GetCellValue(globalR + 1, globalC) != 0 &&
+                                    GetCellValue(globalR, globalC - 1) != 0 && GetCellValue(globalR - 1, globalC - 1) != 0)
                                     isVaild = true;
                             } else if (targetValue == 15)
                             {
@@ -224,25 +228,25 @@ namespace AutoMap
                             {
                                 if (CompareCellValue(globalR - 1, globalC + 1, null, 0, 4) &&
                                     GetCellValue(globalR + 1, globalC) != 0 && GetCellValue(globalR, globalC - 1) != 0 &&
-                                    GetCellValue(globalR - 1, globalC) != 0)
+                                    GetCellValue(globalR - 1, globalC) != 0 && GetCellValue(globalR + 1, globalC - 1) != 0)
                                     isVaild = true;
                             } else if (targetValue == 7)
                             {
                                 if (CompareCellValue(globalR - 1, globalC - 1, null, 0, 8) &&
                                     GetCellValue(globalR + 1, globalC) != 0 && GetCellValue(globalR, globalC + 1) != 0 &&
-                                    GetCellValue(globalR - 1, globalC) != 0)
+                                    GetCellValue(globalR - 1, globalC) != 0 && GetCellValue(globalR + 1, globalC + 1) != 0)
                                     isVaild = true;
                             } else if (targetValue == 14)
                             {
                                 if (CompareCellValue(globalR + 1, globalC + 1, null, 0, 1) &&
                                     GetCellValue(globalR + 1, globalC) != 0 && GetCellValue(globalR, globalC - 1) != 0 &&
-                                    GetCellValue(globalR - 1, globalC) != 0)
+                                    GetCellValue(globalR - 1, globalC) != 0 && GetCellValue(globalR - 1, globalC - 1) != 0)
                                     isVaild = true;
                             } else if (targetValue == 13)
                             {
                                 if (CompareCellValue(globalR + 1, globalC - 1, null, 0, 2) &&
                                     GetCellValue(globalR + 1, globalC) != 0 && GetCellValue(globalR, globalC + 1) != 0 &&
-                                    GetCellValue(globalR - 1, globalC) != 0)
+                                    GetCellValue(globalR - 1, globalC) != 0 && GetCellValue(globalR - 1, globalC + 1) != 0)
                                     isVaild = true;
                             }
 
