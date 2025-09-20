@@ -243,12 +243,12 @@ namespace AutoMap
                                         isVaild = true;
                                 } else if (targetValue == 6)
                                 {
-                                    if (CompareCellValue(globalR - 1, globalC - 1, null, 0, 8) && CompareCellValue(globalR + 1, globalC + 1, null, 0, 1) &&
+                                    if (CompareCellValue(globalR - 1, globalC - 1, null, 0, 2, 4, 8) && CompareCellValue(globalR + 1, globalC + 1, null, 0, 1, 2, 4) &&
                                         GetCellValue(globalR + 1, globalC - 1) != 0 && GetCellValue(globalR - 1, globalC + 1) != 0)
                                         isVaild = true;
                                 } else if (targetValue == 9)
                                 {
-                                    if (CompareCellValue(globalR + 1, globalC - 1, null, 0, 2) && CompareCellValue(globalR - 1, globalC + 1, null, 0, 4) &&
+                                    if (CompareCellValue(globalR + 1, globalC - 1, null, 0, 1, 2, 8) && CompareCellValue(globalR - 1, globalC + 1, null, 0, 4) &&
                                         GetCellValue(globalR + 1, globalC + 1) != 0 && GetCellValue(globalR - 1, globalC - 1) != 0)
                                         isVaild = true;
                                 } else if (targetValue == 11)
