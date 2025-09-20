@@ -207,12 +207,12 @@ namespace AutoMap
                             } else if (targetValue == 5)
                             {
                                 if (CompareCellValue(globalR, globalC - 1, null, 0, 2, 8, 10) && GetCellValue(globalR - 1, globalC) != 0 && GetCellValue(globalR + 1, globalC) != 0 &&
-                                    GetCellValue(globalR, globalC + 1) != 0)
+                                    GetCellValue(globalR, globalC + 1) != 0 && GetCellValue(globalR + 1, globalC + 1) != 0 && GetCellValue(globalR - 1, globalC + 1) != 0)
                                     isVaild = true;
                             } else if (targetValue == 10)
                             {
                                 if (CompareCellValue(globalR, globalC + 1, null, 0, 1, 4, 5) && GetCellValue(globalR - 1, globalC) != 0 && GetCellValue(globalR + 1, globalC) != 0 &&
-                                    GetCellValue(globalR, globalC - 1) != 0 && GetCellValue(globalR - 1, globalC - 1) != 0)
+                                    GetCellValue(globalR, globalC - 1) != 0 && GetCellValue(globalR - 1, globalC - 1) != 0 && GetCellValue(globalR + 1, globalC - 1) != 0)
                                     isVaild = true;
                             } else if (targetValue == 15)
                             {
