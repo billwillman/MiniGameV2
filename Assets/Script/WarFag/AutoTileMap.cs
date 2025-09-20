@@ -116,6 +116,15 @@ namespace AutoMap
 
             byte[,] tempCells = new byte[brush.height + 1, brush.width + 1];
 
+            Func<int, int, bool> isVaild_15 = (globalR, globalC) =>
+            {
+                bool ret = CompareCellValue(globalR, globalC - 1, null, 5, 7, 13, 15) && CompareCellValue(globalR + 1, globalC, null, 12, 13, 14, 15) &&
+                    CompareCellValue(globalR, globalC + 1, null, 10, 11, 14, 15) && CompareCellValue(globalR - 1, globalC, null, 3, 7, 11, 15) &&
+                    CompareCellValue(globalR - 1, globalC - 1, null, 1, 3, 5, 7, 9, 11, 13, 15) && CompareCellValue(globalR + 1, globalC - 1, null, 4, 5, 6, 7, 12, 13, 14, 15) &&
+                    CompareCellValue(globalR - 1, globalC + 1, null, 2, 3, 6, 7, 10, 11, 14, 15) && CompareCellValue(globalR + 1, globalC + 1, null, 8, 9, 10, 11, 12, 13, 14, 15);
+                return ret;
+            };
+
             for (int r = 0; r <= brush.height / 2.0f; ++r)
             {
                 if (r >= cells.GetLength(0))
@@ -153,15 +162,6 @@ namespace AutoMap
                             cells[r + i + brush.min.y, c + j + brush.min.x] = (byte)targetValue;
                         }
                     }
-
-                    Func<int, int, bool> isVaild_15 = (globalR, globalC) =>
-                    {
-                        bool ret = CompareCellValue(globalR, globalC - 1, null, 5, 7, 13, 15) && CompareCellValue(globalR + 1, globalC, null, 12, 13, 14, 15) &&
-                            CompareCellValue(globalR, globalC + 1, null, 10, 11, 14, 15) && CompareCellValue(globalR - 1, globalC, null, 3, 7, 11, 15) &&
-                            CompareCellValue(globalR - 1, globalC - 1, null, 1, 3, 5, 7, 9, 11, 13, 15) && CompareCellValue(globalR + 1, globalC - 1, null, 4, 5, 6, 7, 12, 13, 14, 15) &&
-                            CompareCellValue(globalR - 1, globalC + 1, null, 2, 3, 6, 7, 10, 11, 14, 15) && CompareCellValue(globalR + 1, globalC + 1, null, 8, 9, 10, 11, 12, 13, 14, 15);
-                        return ret;
-                    };
 
                     // 3.检查值有效性
                     for (int i = 0; i < 2; ++i)
@@ -274,6 +274,17 @@ namespace AutoMap
                                 cells[globalR, globalC] = tempCells[i, j];
                         }
                     }
+                }
+            }
+
+            for (int r = 0; r <= brush.height / 2.0f; ++r)
+            {
+                if (r >= cells.GetLength(0))
+                    break;
+                for (int c = 0; c <= brush.width / 2.0f; ++c)
+                {
+                    if (c >= cells.GetLength(1))
+                        break;
                     // 如果有0则填充对应的值
                     for (int i = 0; i < 2; ++i)
                     {
