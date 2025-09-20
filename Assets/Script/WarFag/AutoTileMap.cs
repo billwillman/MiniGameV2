@@ -154,6 +154,15 @@ namespace AutoMap
                         }
                     }
 
+                    Func<int, int, bool> isVaild_15 = (globalR, globalC) =>
+                    {
+                        bool ret = CompareCellValue(globalR, globalC - 1, null, 5, 7, 13, 15) && CompareCellValue(globalR + 1, globalC, null, 12, 13, 14, 15) &&
+                            CompareCellValue(globalR, globalC + 1, null, 10, 11, 14, 15) && CompareCellValue(globalR - 1, globalC, null, 3, 7, 11, 15) &&
+                            CompareCellValue(globalR - 1, globalC - 1, null, 1, 3, 5, 9, 11, 15) && CompareCellValue(globalR + 1, globalC - 1, null, 4, 5, 6, 12, 15) &&
+                            CompareCellValue(globalR - 1, globalC + 1, null, 2, 15) && CompareCellValue(globalR + 1, globalC + 1, null, 8, 15);
+                        return ret;
+                    };
+
                     // 3.检查值有效性
                     for (int i = 0; i < 2; ++i)
                     {
@@ -168,11 +177,13 @@ namespace AutoMap
                                 isVaild = true;
                             else
                             {
+                                /*
                                 if (GetCellValue(globalR, globalC - 1) != 0 && GetCellValue(globalR + 1, globalC) != 0 &&
                                         GetCellValue(globalR, globalC + 1) != 0 && GetCellValue(globalR - 1, globalC) != 0 &&
                                         GetCellValue(globalR - 1, globalC - 1) != 0 && GetCellValue(globalR + 1, globalC - 1) != 0 &&
                                         GetCellValue(globalR - 1, globalC + 1) != 0 && GetCellValue(globalR + 1, globalC + 1) != 0)
                                     targetValue = 15;
+                                */
 
                                 if (targetValue == 4)
                                 {
@@ -220,10 +231,7 @@ namespace AutoMap
                                         isVaild = true;
                                 } else if (targetValue == 15)
                                 {
-                                    if (GetCellValue(globalR, globalC - 1) != 0 && GetCellValue(globalR + 1, globalC) != 0 &&
-                                        GetCellValue(globalR, globalC + 1) != 0 && GetCellValue(globalR - 1, globalC) != 0 &&
-                                        GetCellValue(globalR - 1, globalC - 1) != 0 && GetCellValue(globalR + 1, globalC - 1) != 0 &&
-                                        GetCellValue(globalR - 1, globalC + 1) != 0 && GetCellValue(globalR + 1, globalC + 1) != 0)
+                                    if (isVaild_15(globalR, globalC))
                                         isVaild = true;
                                 } else if (targetValue == 6)
                                 {
@@ -278,6 +286,9 @@ namespace AutoMap
                             {
                                 int curValue = spriteNames[i, j];
                                 cells[globalR, globalC] = (byte)curValue;
+                            } else if (isVaild_15(globalR, globalC))
+                            {
+                                cells[globalR, globalC] = 15;
                             }
                         }
                     }
