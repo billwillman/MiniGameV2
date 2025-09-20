@@ -266,6 +266,22 @@ namespace AutoMap
                                 cells[globalR, globalC] = tempCells[i, j];
                         }
                     }
+                    // 如果有0则填充对应的值
+                    for (int i = 0; i < 2; ++i)
+                    {
+                        for (int j = 0; j < 2; ++j)
+                        {
+                            int globalR = r + i + brush.min.y;
+                            int globalC = c + j + brush.min.x;
+                            int targetValue = cells[globalR, globalC];
+                            if (targetValue == 0)
+                            {
+                                int curValue = spriteNames[i, j];
+                                cells[globalR, globalC] = (byte)curValue;
+                            }
+                        }
+                    }
+                    //---
                 }
             }
         }
