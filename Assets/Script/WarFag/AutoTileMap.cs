@@ -158,8 +158,8 @@ namespace AutoMap
                     {
                         bool ret = CompareCellValue(globalR, globalC - 1, null, 5, 7, 13, 15) && CompareCellValue(globalR + 1, globalC, null, 12, 13, 14, 15) &&
                             CompareCellValue(globalR, globalC + 1, null, 10, 11, 14, 15) && CompareCellValue(globalR - 1, globalC, null, 3, 7, 11, 15) &&
-                            CompareCellValue(globalR - 1, globalC - 1, null, 1, 3, 5, 9, 11, 15) && CompareCellValue(globalR + 1, globalC - 1, null, 4, 5, 6, 12, 15) &&
-                            CompareCellValue(globalR - 1, globalC + 1, null, 2, 15) && CompareCellValue(globalR + 1, globalC + 1, null, 8, 15);
+                            CompareCellValue(globalR - 1, globalC - 1, null, 1, 3, 5, 7, 9, 11, 13, 15) && CompareCellValue(globalR + 1, globalC - 1, null, 4, 5, 6, 7, 12, 13, 14, 15) &&
+                            CompareCellValue(globalR - 1, globalC + 1, null, 2, 3, 6, 7, 10, 11, 14, 15) && CompareCellValue(globalR + 1, globalC + 1, null, 8, 9, 10, 11, 12, 13, 14, 15);
                         return ret;
                     };
 
