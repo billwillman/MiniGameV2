@@ -160,8 +160,6 @@ namespace AutoMap
                             if (curValue == targetValue)
                                 continue;
                             targetValue += curValue;
-                            if (targetValue > 15)
-                                continue;
                             targetValue = Math.Min(15, targetValue);
                             cells[globalR, globalC] = (byte)targetValue;
                         }
@@ -211,7 +209,7 @@ namespace AutoMap
                                 {
                                     if (/*CompareCellValue(globalR, globalC + 1, null, 0, 4, 1, 5) && CompareCellValue(globalR - 1, globalC, null, 0, 4, 8, 12) &&*/
                                         CompareCellValue(globalR, globalC - 1, null, 1, 3, 9, 11) && CompareCellValue(globalR + 1, globalC, null, 8, 9, 10, 11) &&
-                                        CompareCellValue(globalR + 1, globalC - 1, null, 4, 5, 6, 12, 14, 15))
+                                        CompareCellValue(globalR + 1, globalC - 1, null, 4, 5, 6, 12, 13, 14, 15))
                                         isVaild = true;
                                 } else if (targetValue == 12)
                                 {
