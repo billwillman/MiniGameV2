@@ -137,13 +137,16 @@ namespace AutoMap
             Mesh tileMesh = GetTileMesh(tileMap);
             var mat = GetMouseMeshMaterial(tileMap);
             var spriteDatas = GetSpriteDatas(tileMap);
+            float halfW = tileMap.m_PerTileSize.x / 2.0f;
+            float halfH = tileMap.m_PerTileSize.y / 2.0f;
             var tex = tileMap.m_TileAsset != null ? tileMap.m_TileAsset.texture : null;
             for (int r = 0; r < tileMapCells.GetLength(0); ++r)
             {
                 for (int c = 0; c < tileMapCells.GetLength(1); ++c)
                 {
                     byte id = tileMapCells[r, c];
-                    Vector3 drawPos = new Vector3(c * tileMap.m_PerTileSize.x + tileMap.m_PerTileSize.x / 2.0f, 0, r * tileMap.m_PerTileSize.y + tileMap.m_PerTileSize.y / 2.0f) + startPos;
+                    
+                    Vector3 drawPos = new Vector3(c * tileMap.m_PerTileSize.x + halfW, 0, r * tileMap.m_PerTileSize.y + halfH) + startPos;
 
                     if (id > 0 && tex != null && tileMesh != null && tileMap != null && mat != null && spriteDatas != null && spriteDatas.Length > 0)
                     {
@@ -152,7 +155,7 @@ namespace AutoMap
                         {
                             mat.mainTextureOffset = new Vector2(sprite.xMin / tex.width, sprite.yMin / tex.height);
                             mat.SetPass(0);
-                            Graphics.DrawMeshNow(tileMesh, drawPos, Quaternion.identity);
+                            Graphics.DrawMeshNow(tileMesh, drawPos , Quaternion.identity);
                         }
                     }
 
