@@ -119,6 +119,7 @@ namespace AutoMap
         private static Vector3 m_CurrentCameraPosition;
         private static Vector3 m_TileMousePos;
         private Mesh m_MouseMesh = null;
+        private Mesh m_TileMesh = null;
         private Material m_MouseMaterial = null;
         private Rect m_MouseBrushRect;
         private RectInt m_MouseBrushColAndRolRect;
@@ -212,6 +213,25 @@ namespace AutoMap
             allIndexs[startIndexIndex++] = startVertIndex;
             allIndexs[startIndexIndex++] = startVertIndex + 3;
             allIndexs[startIndexIndex++] = startVertIndex + 2;
+        }
+
+        private Mesh GetTileMesh(AutoTileMap tileMap)
+        {
+            if (!tileMap.IsVaildPerTileSize())
+                return null;
+            if (m_TileMesh == null)
+            {
+                Vector3[] vecs = new Vector3[4];
+                Vector2[] texcoords = new Vector2[4];
+                int[] indexs = new int[6];
+                AddSubTileMesh(0, 0, tileMap, vecs, texcoords, indexs);
+                m_TileMesh = new Mesh();
+                m_TileMesh.vertices = vecs;
+                m_TileMesh.triangles = indexs;
+                m_TileMesh.uv = texcoords;
+                m_TileMesh.UploadMeshData(true);
+            }
+            return m_TileMesh;
         }
 
         private Mesh GetMouseMesh(AutoTileMap tileMap)
