@@ -155,7 +155,7 @@ namespace AutoMap
                         {
                             mat.mainTextureOffset = new Vector2(sprite.xMin / tex.width, sprite.yMin / tex.height);
                             mat.SetPass(0);
-                            Graphics.DrawMeshNow(tileMesh, drawPos , Quaternion.identity);
+                            Graphics.DrawMeshNow(tileMesh, drawPos + new Vector3(halfW, 0, halfH), Quaternion.identity);
                         }
                     }
 
