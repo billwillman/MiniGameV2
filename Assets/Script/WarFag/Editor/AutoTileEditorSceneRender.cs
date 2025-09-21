@@ -134,12 +134,28 @@ namespace AutoMap
                 return;
             Vector3 startPos = tileMap.GetLeftTop();
             var oldColor = Handles.color;
+            Mesh tileMesh = GetTileMesh(tileMap);
+            var mat = GetMouseMeshMaterial(tileMap);
+            var spriteDatas = GetSpriteDatas(tileMap);
+            var tex = tileMap.m_TileAsset != null ? tileMap.m_TileAsset.texture : null;
             for (int r = 0; r < tileMapCells.GetLength(0); ++r)
             {
                 for (int c = 0; c < tileMapCells.GetLength(1); ++c)
                 {
                     byte id = tileMapCells[r, c];
-                    Vector3 drawPos = new Vector3(c * tileMap.m_PerTileSize.x + tileMap.m_PerTileSize.x / 2.0f, 0, r * tileMap.m_PerTileSize.y + tileMap.m_PerTileSize.y / 2.0f);
+                    Vector3 drawPos = new Vector3(c * tileMap.m_PerTileSize.x + tileMap.m_PerTileSize.x / 2.0f, 0, r * tileMap.m_PerTileSize.y + tileMap.m_PerTileSize.y / 2.0f) + startPos;
+
+                    if (id > 0 && tex != null && tileMesh != null && tileMap != null && mat != null && spriteDatas != null && spriteDatas.Length > 0)
+                    {
+                        var sprite = spriteDatas[id];
+                        if (sprite != null)
+                        {
+                            mat.mainTextureOffset = new Vector2(sprite.xMin / tex.width, sprite.yMin / tex.height);
+                            mat.SetPass(0);
+                            Graphics.DrawMeshNow(tileMesh, drawPos, Quaternion.identity);
+                        }
+                    }
+
                     switch (id)
                     {
                         case 4:
@@ -168,7 +184,7 @@ namespace AutoMap
                             Handles.color = Color.black;
                             break;
                     }
-                    Handles.Label(drawPos + startPos, id.ToString());
+                    Handles.Label(drawPos, id.ToString());
                 }
             }
             Handles.color = oldColor;
@@ -316,6 +332,7 @@ namespace AutoMap
             else
             {
                 //Graphics.DrawMesh(mouseTile, m_TileMousePos, Quaternion.identity, tileMap.m_EditorMaterial, 0);
+                mat.mainTextureOffset = Vector2.zero;
                 mat.SetPass(0);
                 Graphics.DrawMeshNow(mouseTile, m_TileMousePos, Quaternion.identity);
             }
