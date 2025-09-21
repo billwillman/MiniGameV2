@@ -157,6 +157,8 @@ namespace AutoMap
                             int targetValue = cells[globalR, globalC];
 
                             int curValue = spriteNames[i, j];
+                            if (curValue == targetValue)
+                                continue;
                             targetValue += curValue;
                             if (targetValue > 15)
                                 continue;
