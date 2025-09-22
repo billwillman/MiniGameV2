@@ -9,6 +9,7 @@ using UnityEngine.U2D;
 using NsLib.ResMgr;
 using System;
 using Unity.VisualScripting.Dependencies.NCalc;
+using System.Linq;
 
 namespace AutoMap
 {
@@ -199,7 +200,7 @@ namespace AutoMap
                     {1, 2},
                };
 
-        void AddSubTileMesh(int row, int col, AutoTileMap tileMap, Vector3[] allVertexs, Vector2[] allTexcoords, int[] allIndexs, int startVertIndex = 0, int startIndexIndex = 0, int customSpriteIndex = -1)
+        void AddSubTileMesh(int row, int col, AutoTileMap tileMap, Vector3[] allVertexs, Vector2[] allTexcoords, int[] allIndexs, int startVertIndex = 0, int startIndexIndex = 0, int customSpriteIndex = -1, bool isFlipY = true)
         {
             if (!tileMap.IsVaildPerTileSize())
                 return;
@@ -221,10 +222,12 @@ namespace AutoMap
                         spriteIndex = customSpriteIndex;
                     Rect[] spriteRects = GetSpriteDatas(tileMap);
                     Rect spirteRect = spriteRects[spriteIndex];
-                    allTexcoords[startVertIndex + 0] = new Vector2(spirteRect.xMin / tex.width, spirteRect.yMax / tex.height);
-                    allTexcoords[startVertIndex + 1] = new Vector2(spirteRect.xMax / tex.width, spirteRect.yMax / tex.height);
-                    allTexcoords[startVertIndex + 2] = new Vector2(spirteRect.xMax / tex.width, spirteRect.yMin / tex.height);
-                    allTexcoords[startVertIndex + 3] = new Vector2(spirteRect.xMin / tex.width, spirteRect.yMin / tex.height);
+                    float topY = isFlipY ? spirteRect.yMax : spirteRect.yMin;
+                    float bottomY = isFlipY ? spirteRect.yMin : spirteRect.yMax;
+                    allTexcoords[startVertIndex + 0] = new Vector2(spirteRect.xMin / tex.width, topY / tex.height);
+                    allTexcoords[startVertIndex + 1] = new Vector2(spirteRect.xMax / tex.width, topY / tex.height);
+                    allTexcoords[startVertIndex + 2] = new Vector2(spirteRect.xMax / tex.width, bottomY / tex.height);
+                    allTexcoords[startVertIndex + 3] = new Vector2(spirteRect.xMin / tex.width, bottomY / tex.height);
                 }
             }
 
@@ -245,7 +248,7 @@ namespace AutoMap
                 Vector3[] vecs = new Vector3[4];
                 Vector2[] texcoords = new Vector2[4];
                 int[] indexs = new int[6];
-                AddSubTileMesh(0, 0, tileMap, vecs, texcoords, indexs, 0, 0, 0);
+                AddSubTileMesh(0, 0, tileMap, vecs, texcoords, indexs, 0, 0, 0, false);
                 m_TileMesh = new Mesh();
                 m_TileMesh.vertices = vecs;
                 m_TileMesh.triangles = indexs;
