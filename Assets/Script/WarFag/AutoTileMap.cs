@@ -103,6 +103,19 @@ namespace AutoMap
             return false;
         }
 
+        bool NotCompareCellValue(int r, int c, byte[,] customCells, params int[] values)
+        {
+            if (values == null)
+                return false;
+            byte value = GetCellValue(r, c, customCells);
+            foreach (var v in values)
+            {
+                if (v == value)
+                    return false;
+            }
+            return true;
+        }
+
         public void BrushTile2(RectInt brush)
         {
             Vector2Int wh = new Vector2Int(brush.max.x - brush.min.x, brush.max.y - brush.min.y);
@@ -202,6 +215,7 @@ namespace AutoMap
                                 } else if (targetValue == 1)
                                 {
                                     if (/*CompareCellValue(globalR, globalC - 1, null, 0, 8, 2, 10) && CompareCellValue(globalR - 1, globalC, null, 0, 4, 8, 12) &&*/
+                                        //NotCompareCellValue(globalR + 1, globalC, null, 1) && NotCompareCellValue(globalR, globalC + 1, null, 1) &&
                                         CompareCellValue(globalR, globalC + 1, null, 2, 3, 6, 7) && CompareCellValue(globalR + 1, globalC, null, 4, 5, 6, 7) &&
                                         CompareCellValue(globalR + 1, globalC + 1, null, 8, 9, 10, 12, 13, 15))
                                         isVaild = true;
@@ -316,6 +330,7 @@ namespace AutoMap
                             {
                                 int curValue = spriteNames[i, j];
                                 cells[globalR, globalC] = (byte)curValue;
+                                Debug.Log(string.Format("[Warning] {0:D},{1:D} value:{2:D}", globalR, globalC, curValue));
                             } else if (isVaild_15(globalR, globalC))
                             {
                                 cells[globalR, globalC] = 15;
