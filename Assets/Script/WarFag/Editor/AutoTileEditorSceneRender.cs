@@ -93,10 +93,14 @@ namespace AutoMap
                     }
                 }
                 // Debug.Log(m_MouseBrushRect);
-                if (Event.current.alt && Event.current.type == EventType.KeyDown)
+                if (Event.current.alt)
                 {
-                    m_IsWaitBrushTile = true;
-                    m_MouseBrushColAndRolRect = new RectInt(new Vector2Int(minC, minR), new Vector2Int(maxC - minC, maxR - minR));
+                    if (Time.unscaledTime - m_BrushTileTime > 1f)
+                    {
+                        m_IsWaitBrushTile = true;
+                        m_MouseBrushColAndRolRect = new RectInt(new Vector2Int(minC, minR), new Vector2Int(maxC - minC, maxR - minR));
+                    }
+                    m_BrushTileTime = Time.unscaledTime;
                 }
                 DoBurshTile(tileMap);
             } finally
@@ -289,6 +293,7 @@ namespace AutoMap
         }
 
         private bool m_IsWaitBrushTile = false;
+        private float m_BrushTileTime = 0;
 
         void OnMouseInputUpdate(SceneView sceneView)
         {
