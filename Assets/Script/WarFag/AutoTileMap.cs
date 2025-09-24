@@ -131,7 +131,7 @@ namespace AutoMap
 
             Func<int, int, bool> isVaild_15 = (globalR, globalC) =>
             {
-                bool ret = CompareCellValue(globalR, globalC - 1, null, 5, 7, 13, 15) && CompareCellValue(globalR, globalC + 1, null, 2, 10, 11, 14, 15) &&
+                bool ret = CompareCellValue(globalR, globalC - 1, null, 5, 7, 13, 15) && CompareCellValue(globalR, globalC + 1, null, 10, 11, 14, 15) &&
                     CompareCellValue(globalR + 1, globalC, null, 3, 12, 13, 14, 15) && CompareCellValue(globalR - 1, globalC, null, 3, 7, 11, 15) &&
                     CompareCellValue(globalR - 1, globalC - 1, null, 1, 3, 5, 7, 9, 11, 13, 15) && CompareCellValue(globalR + 1, globalC - 1, null, 4, 5, 6, 7, 12, 13, 14, 15) &&
                     CompareCellValue(globalR - 1, globalC + 1, null, 2, 3, 6, 7, 10, 11, 14, 15) && CompareCellValue(globalR + 1, globalC + 1, null, 8, 9, 10, 11, 12, 13, 14, 15);
@@ -189,8 +189,10 @@ namespace AutoMap
                             bool isVaild = false;
 
                             if (targetValue == 0)
+                            {
+
                                 isVaild = true;
-                            else
+                            } else
                             {
                                 /*
                                 if (GetCellValue(globalR, globalC - 1) != 0 && GetCellValue(globalR + 1, globalC) != 0 &&
@@ -201,111 +203,110 @@ namespace AutoMap
                                 */
 
                                 if (targetValue == 4)
-                                {
-                                    if (/*CompareCellValue(globalR, globalC - 1, null, 0, 8, 2, 10) && CompareCellValue(globalR + 1, globalC, null, 0, 1, 2, 3) &&*/
-                                        CompareCellValue(globalR, globalC + 1, null, 8, 9, 12, 13) && CompareCellValue(globalR - 1, globalC, null, 1, 5, 9, 13) &&
-                                        CompareCellValue(globalR - 1, globalC + 1, null, 2, 3, 6, 7, 10, 14, 15))
-                                        isVaild = true;
-                                } else if (targetValue == 8)
-                                {
-                                    if (/*CompareCellValue(globalR + 1, globalC, null, 0, 1, 2, 3) && CompareCellValue(globalR, globalC + 1, null, 0, 1, 4, 5) &&*/
-                                        CompareCellValue(globalR, globalC - 1, null, 4, 6, 12, 14) && CompareCellValue(globalR - 1, globalC, null, 2, 6, 10, 14) &&
-                                        CompareCellValue(globalR - 1, globalC - 1, null, 1, 3, 5, 7, 9, 13, 15))
-                                        isVaild = true;
-                                } else if (targetValue == 1)
-                                {
-                                    if (/*CompareCellValue(globalR, globalC - 1, null, 0, 8, 2, 10) && CompareCellValue(globalR - 1, globalC, null, 0, 4, 8, 12) &&*/
-                                        //NotCompareCellValue(globalR + 1, globalC, null, 1) && NotCompareCellValue(globalR, globalC + 1, null, 1) &&
-                                        CompareCellValue(globalR, globalC + 1, null, 2, 3, 6, 7) && CompareCellValue(globalR + 1, globalC, null, 4, 5, 6, 7) &&
-                                        CompareCellValue(globalR + 1, globalC + 1, null, 8, 9, 10, 12, 13, 15))
-                                        isVaild = true;
-                                } else if (targetValue == 2)
-                                {
-                                    if (/*CompareCellValue(globalR, globalC + 1, null, 0, 4, 1, 5) && CompareCellValue(globalR - 1, globalC, null, 0, 4, 8, 12) &&*/
-                                        CompareCellValue(globalR, globalC - 1, null, 1, 3, 9, 11, 15) && CompareCellValue(globalR + 1, globalC, null, 8, 9, 10, 11) &&
-                                        CompareCellValue(globalR + 1, globalC - 1, null, 4, 5, 6, 12, 13, 14, 15))
-                                        isVaild = true;
-                                } else if (targetValue == 12)
-                                {
-                                    if (/*CompareCellValue(globalR + 1, globalC, null, 0, 1, 2, 3) &&*/
-                                        CompareCellValue(globalR, globalC - 1, null, 4, 6, 12, 14, 15) && CompareCellValue(globalR, globalC + 1, null, 8, 9, 12, 13) &&
-                                        CompareCellValue(globalR - 1, globalC, null, 3, 7, 11, 15) &&
-                                        CompareCellValue(globalR - 1, globalC - 1, null, 1, 3, 5, 7, 9, 11, 13, 15) && CompareCellValue(globalR - 1, globalC + 1, null, 2, 3, 6, 7, 10, 11, 14, 15))
-                                        isVaild = true;
-                                } else if (targetValue == 3)
-                                {
-                                    if (/*CompareCellValue(globalR - 1, globalC, null, 0, 4, 8, 12) &&*/
-                                        CompareCellValue(globalR, globalC - 1, null, 1, 3, 9, 11) && CompareCellValue(globalR, globalC + 1, null, 2, 3, 6, 7) &&
-                                        CompareCellValue(globalR + 1, globalC, null, 12, 13, 14, 15) &&
-                                        CompareCellValue(globalR + 1, globalC + 1, null, 8, 9, 10, 11, 12, 13, 14, 15) && CompareCellValue(globalR + 1, globalC - 1, null, 4, 5, 6, 7, 12, 13, 14, 15))
-                                        isVaild = true;
-                                } else if (targetValue == 5)
-                                {
-                                    if (/*CompareCellValue(globalR, globalC - 1, null, 0, 2, 8, 10) &&*/
-                                        CompareCellValue(globalR - 1, globalC, null, 1, 5, 9, 13) && CompareCellValue(globalR + 1, globalC, null, 4, 5, 6, 7) &&
-                                        CompareCellValue(globalR, globalC + 1, null, 10, 11, 14, 15) &&
-                                        CompareCellValue(globalR + 1, globalC + 1, null, 8, 9, 10, 11, 12, 13, 14, 15) && CompareCellValue(globalR - 1, globalC + 1, null, 2, 3, 6, 7, 10, 11, 14, 15))
-                                        isVaild = true;
-                                } else if (targetValue == 10)
-                                {
-                                    if (/*CompareCellValue(globalR, globalC + 1, null, 0, 1, 4, 5) &&*/
-                                        CompareCellValue(globalR - 1, globalC, null, 2, 6, 10, 14) && CompareCellValue(globalR + 1, globalC, null, 8, 9, 10, 11) &&
-                                        CompareCellValue(globalR, globalC - 1, null, 5, 7, 13, 15) &&
-                                        CompareCellValue(globalR - 1, globalC - 1, null, 1, 3, 5, 7, 9, 11, 13, 15) && CompareCellValue(globalR + 1, globalC - 1, null, 4, 5, 6, 7, 12, 13, 14, 15))
-                                        isVaild = true;
-                                } else if (targetValue == 15)
-                                {
-                                    if (isVaild_15(globalR, globalC))
-                                        isVaild = true;
-                                } else if (targetValue == 14)
-                                {
-                                    if (CompareCellValue(globalR + 1, globalC, null, 8, 9, 10, 11) && CompareCellValue(globalR - 1, globalC, null, 3, 7, 11, 15) && 
-                                        CompareCellValue(globalR, globalC - 1, null, 5, 7, 13, 15) && CompareCellValue(globalR, globalC + 1, null, 0, 8, 9, 12, 13) &&
-                                        CompareCellValue(globalR - 1, globalC - 1, null, 1, 3, 5, 7, 9, 11, 13, 15) && CompareCellValue(globalR + 1, globalC - 1, null, 4, 5, 6, 7, 12, 13, 14, 15) && CompareCellValue(globalR - 1, globalC + 1, null, 2, 3, 6, 7, 10, 11, 14, 15))
-                                        isVaild = true;
-                                } else if (targetValue == 13)
-                                {
-                                    if (CompareCellValue(globalR + 1, globalC, null, 4, 5, 6, 7) && CompareCellValue(globalR - 1, globalC, null, 3, 7, 11, 15) &&
-                                        CompareCellValue(globalR, globalC - 1, null, 0, 4, 6, 12, 14) && CompareCellValue(globalR, globalC + 1, null, 10, 11, 14, 15) &&
-                                        CompareCellValue(globalR - 1, globalC - 1, null, 1, 3, 5, 7, 9, 11, 13, 15) && CompareCellValue(globalR - 1, globalC + 1, null, 2, 3, 6, 7, 10, 11, 14, 15) && CompareCellValue(globalR + 1, globalC + 1, null, 8, 9, 10, 11, 12, 13, 14, 15)
-                                        )
-                                        isVaild = true;
-                                } else if (targetValue == 7)
-                                {
-                                    if (CompareCellValue(globalR + 1, globalC, null, 12, 13, 14, 15) && CompareCellValue(globalR - 1, globalC, null, 1, 5, 9, 13) &&
-                                        CompareCellValue(globalR, globalC - 1, null, 0, 1, 3, 9, 11) && CompareCellValue(globalR, globalC + 1, null, 10, 11, 14, 15) &&
-                                        CompareCellValue(globalR + 1, globalC - 1, null, 4, 5, 6, 7, 12, 13, 14, 15) && CompareCellValue(globalR + 1, globalC + 1, null, 8, 9, 10, 11, 12, 13, 14, 15) && CompareCellValue(globalR - 1, globalC + 1, null, 2, 3, 6, 7, 10, 11, 14, 15)
-                                        )
-                                        isVaild = true;
-                                } else if (targetValue == 11)
-                                {
-                                    if (CompareCellValue(globalR + 1, globalC, null, 12, 13, 14, 15) && CompareCellValue(globalR - 1, globalC, null, 2, 6, 10, 14) &&
-                                        CompareCellValue(globalR, globalC - 1, null, 5, 7, 13, 15) && CompareCellValue(globalR, globalC + 1, null, 0, 2, 3, 6, 7) &&
-                                        CompareCellValue(globalR - 1, globalC - 1, null, 1, 3, 5, 7, 9, 11, 13, 15) && CompareCellValue(globalR + 1, globalC - 1, null, 4, 5, 6, 7, 12, 13, 14, 15) && CompareCellValue(globalR + 1, globalC + 1, null, 8, 9, 10, 11, 12, 13, 14, 15)
-                                        )
-                                        isVaild = true;
-                                } else if (targetValue == 9)
-                                {
-                                    if (CompareCellValue(globalR + 1, globalC, null, 4, 5, 6, 7) && CompareCellValue(globalR - 1, globalC, null, 2, 6, 10, 14) &&
-                                        CompareCellValue(globalR, globalC - 1, null, 4, 6, 12, 14) && CompareCellValue(globalR, globalC + 1, null, 2, 3, 6, 7) &&
-                                        CompareCellValue(globalR - 1, globalC - 1, null, 1, 3, 5, 7, 9, 11, 13, 15) && CompareCellValue(globalR + 1, globalC + 1, null, 8, 9, 10, 11, 12, 13, 14, 15)
-                                        )
-                                        isVaild = true;
-                                } else if (targetValue == 6)
-                                {
-                                    if (CompareCellValue(globalR + 1, globalC, null, 8, 9, 10, 11) && CompareCellValue(globalR - 1, globalC, null, 1, 5, 9, 13) &&
-                                        CompareCellValue(globalR, globalC - 1, null, 1, 3, 9, 11) && CompareCellValue(globalR, globalC + 1, null, 8, 9, 12, 13) &&
-                                        CompareCellValue(globalR + 1, globalC - 1, null, 4, 5, 6, 7, 12, 13, 14, 15) && CompareCellValue(globalR - 1, globalC + 1, null, 2, 3, 6, 7, 10, 11, 14, 15)
-                                        )
+                                    {
+                                        if (/*CompareCellValue(globalR, globalC - 1, null, 0, 8, 2, 10) && CompareCellValue(globalR + 1, globalC, null, 0, 1, 2, 3) &&*/
+                                CompareCellValue(globalR, globalC + 1, null, 8, 9, 12, 13) && CompareCellValue(globalR - 1, globalC, null, 1, 5, 9, 13) &&
+                                            CompareCellValue(globalR - 1, globalC + 1, null, 2, 3, 6, 7, 10, 14, 15))
+                                            isVaild = true;
+                                    } else if (targetValue == 8)
+                                    {
+                                        if (/*CompareCellValue(globalR + 1, globalC, null, 0, 1, 2, 3) && CompareCellValue(globalR, globalC + 1, null, 0, 1, 4, 5) &&*/
+                                            CompareCellValue(globalR, globalC - 1, null, 4, 6, 12, 14) && CompareCellValue(globalR - 1, globalC, null, 2, 6, 10, 14) &&
+                                            CompareCellValue(globalR - 1, globalC - 1, null, 1, 3, 5, 7, 9, 11, 13, 15))
+                                            isVaild = true;
+                                    } else if (targetValue == 1)
+                                    {
+                                        if (/*CompareCellValue(globalR, globalC - 1, null, 0, 8, 2, 10) && CompareCellValue(globalR - 1, globalC, null, 0, 4, 8, 12) &&*/
+                                            //NotCompareCellValue(globalR + 1, globalC, null, 1) && NotCompareCellValue(globalR, globalC + 1, null, 1) &&
+                                            CompareCellValue(globalR, globalC + 1, null, 2, 3, 6, 7) && CompareCellValue(globalR + 1, globalC, null, 4, 5, 6, 7) &&
+                                            CompareCellValue(globalR + 1, globalC + 1, null, 8, 9, 10, 12, 13, 15))
+                                            isVaild = true;
+                                    } else if (targetValue == 2)
+                                    {
+                                        if (/*CompareCellValue(globalR, globalC + 1, null, 0, 4, 1, 5) && CompareCellValue(globalR - 1, globalC, null, 0, 4, 8, 12) &&*/
+                                            CompareCellValue(globalR, globalC - 1, null, 1, 3, 9, 11) && CompareCellValue(globalR + 1, globalC, null, 8, 9, 10, 11) &&
+                                            CompareCellValue(globalR + 1, globalC - 1, null, 4, 5, 6, 12, 13, 14, 15))
+                                            isVaild = true;
+                                    } else if (targetValue == 12)
+                                    {
+                                        if (/*CompareCellValue(globalR + 1, globalC, null, 0, 1, 2, 3) &&*/
+                                            CompareCellValue(globalR, globalC - 1, null, 4, 6, 12, 14, 15) && CompareCellValue(globalR, globalC + 1, null, 8, 9, 12, 13) &&
+                                            CompareCellValue(globalR - 1, globalC, null, 3, 7, 11, 15) &&
+                                            CompareCellValue(globalR - 1, globalC - 1, null, 1, 3, 5, 7, 9, 11, 13, 15) && CompareCellValue(globalR - 1, globalC + 1, null, 2, 3, 6, 7, 10, 11, 14, 15))
+                                            isVaild = true;
+                                    } else if (targetValue == 3)
+                                    {
+                                        if (/*CompareCellValue(globalR - 1, globalC, null, 0, 4, 8, 12) &&*/
+                                            CompareCellValue(globalR, globalC - 1, null, 1, 3, 9, 11) && CompareCellValue(globalR, globalC + 1, null, 2, 3, 6, 7) &&
+                                            CompareCellValue(globalR + 1, globalC, null, 12, 13, 14, 15) &&
+                                            CompareCellValue(globalR + 1, globalC + 1, null, 8, 9, 10, 11, 12, 13, 14, 15) && CompareCellValue(globalR + 1, globalC - 1, null, 4, 5, 6, 7, 12, 13, 14, 15))
+                                            isVaild = true;
+                                    } else if (targetValue == 5)
+                                    {
+                                        if (/*CompareCellValue(globalR, globalC - 1, null, 0, 2, 8, 10) &&*/
+                                            CompareCellValue(globalR - 1, globalC, null, 1, 5, 9, 13) && CompareCellValue(globalR + 1, globalC, null, 4, 5, 6, 7) &&
+                                            CompareCellValue(globalR, globalC + 1, null, 10, 11, 14, 15) &&
+                                            CompareCellValue(globalR + 1, globalC + 1, null, 8, 9, 10, 11, 12, 13, 14, 15) && CompareCellValue(globalR - 1, globalC + 1, null, 2, 3, 6, 7, 10, 11, 14, 15))
+                                            isVaild = true;
+                                    } else if (targetValue == 10)
+                                    {
+                                        if (/*CompareCellValue(globalR, globalC + 1, null, 0, 1, 4, 5) &&*/
+                                            CompareCellValue(globalR - 1, globalC, null, 2, 6, 10, 14) && CompareCellValue(globalR + 1, globalC, null, 8, 9, 10, 11) &&
+                                            CompareCellValue(globalR, globalC - 1, null, 5, 7, 13, 15) &&
+                                            CompareCellValue(globalR - 1, globalC - 1, null, 1, 3, 5, 7, 9, 11, 13, 15) && CompareCellValue(globalR + 1, globalC - 1, null, 4, 5, 6, 7, 12, 13, 14, 15))
+                                            isVaild = true;
+                                    } else if (targetValue == 15)
+                                    {
+                                        if (isVaild_15(globalR, globalC))
+                                            isVaild = true;
+                                    } else if (targetValue == 14)
+                                    {
+                                        if (CompareCellValue(globalR + 1, globalC, null, 8, 9, 10, 11) && CompareCellValue(globalR - 1, globalC, null, 3, 7, 11, 15) &&
+                                            CompareCellValue(globalR, globalC - 1, null, 5, 7, 13, 15) && CompareCellValue(globalR, globalC + 1, null, 0, 8, 9, 12, 13) &&
+                                            CompareCellValue(globalR - 1, globalC - 1, null, 1, 3, 5, 7, 9, 11, 13, 15) && CompareCellValue(globalR + 1, globalC - 1, null, 4, 5, 6, 7, 12, 13, 14, 15) && CompareCellValue(globalR - 1, globalC + 1, null, 2, 3, 6, 7, 10, 11, 14, 15))
+                                            isVaild = true;
+                                    } else if (targetValue == 13)
+                                    {
+                                        if (CompareCellValue(globalR + 1, globalC, null, 4, 5, 6, 7) && CompareCellValue(globalR - 1, globalC, null, 3, 7, 11, 15) &&
+                                            CompareCellValue(globalR, globalC - 1, null, 0, 4, 6, 12, 14) && CompareCellValue(globalR, globalC + 1, null, 10, 11, 14, 15) &&
+                                            CompareCellValue(globalR - 1, globalC - 1, null, 1, 3, 5, 7, 9, 11, 13, 15) && CompareCellValue(globalR - 1, globalC + 1, null, 2, 3, 6, 7, 10, 11, 14, 15) && CompareCellValue(globalR + 1, globalC + 1, null, 8, 9, 10, 11, 12, 13, 14, 15)
+                                            )
+                                            isVaild = true;
+                                    } else if (targetValue == 7)
+                                    {
+                                        if (CompareCellValue(globalR + 1, globalC, null, 12, 13, 14, 15) && CompareCellValue(globalR - 1, globalC, null, 1, 5, 9, 13) &&
+                                            CompareCellValue(globalR, globalC - 1, null, 0, 1, 3, 9, 11) && CompareCellValue(globalR, globalC + 1, null, 10, 11, 14, 15) &&
+                                            CompareCellValue(globalR + 1, globalC - 1, null, 4, 5, 6, 7, 12, 13, 14, 15) && CompareCellValue(globalR + 1, globalC + 1, null, 8, 9, 10, 11, 12, 13, 14, 15) && CompareCellValue(globalR - 1, globalC + 1, null, 2, 3, 6, 7, 10, 11, 14, 15)
+                                            )
+                                            isVaild = true;
+                                    } else if (targetValue == 11)
+                                    {
+                                        if (CompareCellValue(globalR + 1, globalC, null, 12, 13, 14, 15) && CompareCellValue(globalR - 1, globalC, null, 2, 6, 10, 14) &&
+                                            CompareCellValue(globalR, globalC - 1, null, 5, 7, 13, 15) && CompareCellValue(globalR, globalC + 1, null, 0, 2, 3, 6, 7) &&
+                                            CompareCellValue(globalR - 1, globalC - 1, null, 1, 3, 5, 7, 9, 11, 13, 15) && CompareCellValue(globalR + 1, globalC - 1, null, 4, 5, 6, 7, 12, 13, 14, 15) && CompareCellValue(globalR + 1, globalC + 1, null, 8, 9, 10, 11, 12, 13, 14, 15)
+                                            )
+                                            isVaild = true;
+                                    } else if (targetValue == 9)
+                                    {
+                                        if (CompareCellValue(globalR + 1, globalC, null, 4, 5, 6, 7) && CompareCellValue(globalR - 1, globalC, null, 2, 6, 10, 14) &&
+                                            CompareCellValue(globalR, globalC - 1, null, 4, 6, 12, 14) && CompareCellValue(globalR, globalC + 1, null, 2, 3, 6, 7) &&
+                                            CompareCellValue(globalR - 1, globalC - 1, null, 1, 3, 5, 7, 9, 11, 13, 15) && CompareCellValue(globalR + 1, globalC + 1, null, 8, 9, 10, 11, 12, 13, 14, 15)
+                                            )
+                                            isVaild = true;
+                                    } else if (targetValue == 6)
+                                    {
+                                        if (CompareCellValue(globalR + 1, globalC, null, 8, 9, 10, 11) && CompareCellValue(globalR - 1, globalC, null, 1, 5, 9, 13) &&
+                                            CompareCellValue(globalR, globalC - 1, null, 1, 3, 9, 11) && CompareCellValue(globalR, globalC + 1, null, 8, 9, 12, 13) &&
+                                            CompareCellValue(globalR + 1, globalC - 1, null, 4, 5, 6, 7, 12, 13, 14, 15) && CompareCellValue(globalR - 1, globalC + 1, null, 2, 3, 6, 7, 10, 11, 14, 15)
+                                            )
+                                            isVaild = true;
+                                    } else
                                         isVaild = true;
                                 }
-                                else
-                                    isVaild = true;
-                            }
 
-                            if (!isVaild)
-                                cells[globalR, globalC] = tempCells[i, j];
-                        }
+                                if (!isVaild)
+                                    cells[globalR, globalC] = tempCells[i, j];
+                            }
                     }
                 }
             }
