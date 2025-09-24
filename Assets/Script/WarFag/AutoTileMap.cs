@@ -131,7 +131,7 @@ namespace AutoMap
 
             Func<int, int, bool> isVaild_15 = (globalR, globalC) =>
             {
-                bool ret = CompareCellValue(globalR, globalC - 1, null, 5, 7, 13, 15) && CompareCellValue(globalR, globalC + 1, null, 10, 11, 14, 15) &&
+                bool ret = CompareCellValue(globalR, globalC - 1, null, 5, 7, 13, 15) && CompareCellValue(globalR, globalC + 1, null, 2, 10, 11, 14, 15) &&
                     CompareCellValue(globalR + 1, globalC, null, 3, 12, 13, 14, 15) && CompareCellValue(globalR - 1, globalC, null, 3, 7, 11, 15) &&
                     CompareCellValue(globalR - 1, globalC - 1, null, 1, 3, 5, 7, 9, 11, 13, 15) && CompareCellValue(globalR + 1, globalC - 1, null, 4, 5, 6, 7, 12, 13, 14, 15) &&
                     CompareCellValue(globalR - 1, globalC + 1, null, 2, 3, 6, 7, 10, 11, 14, 15) && CompareCellValue(globalR + 1, globalC + 1, null, 8, 9, 10, 11, 12, 13, 14, 15);
@@ -210,7 +210,7 @@ namespace AutoMap
                                 {
                                     if (/*CompareCellValue(globalR + 1, globalC, null, 0, 1, 2, 3) && CompareCellValue(globalR, globalC + 1, null, 0, 1, 4, 5) &&*/
                                         CompareCellValue(globalR, globalC - 1, null, 4, 6, 12, 14) && CompareCellValue(globalR - 1, globalC, null, 2, 6, 10, 14) &&
-                                        CompareCellValue(globalR - 1, globalC - 1, null, 1, 3, 5, 7, 9, 15))
+                                        CompareCellValue(globalR - 1, globalC - 1, null, 1, 3, 5, 7, 9, 13, 15))
                                         isVaild = true;
                                 } else if (targetValue == 1)
                                 {
