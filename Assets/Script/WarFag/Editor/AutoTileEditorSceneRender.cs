@@ -93,7 +93,7 @@ namespace AutoMap
                     }
                 }
                 // Debug.Log(m_MouseBrushRect);
-                if (Event.current.alt)
+                if (Event.current.alt && Event.current.type == EventType.KeyDown)
                 {
                     m_IsWaitBrushTile = true;
                     m_MouseBrushColAndRolRect = new RectInt(new Vector2Int(minC, minR), new Vector2Int(maxC - minC, maxR - minR));
