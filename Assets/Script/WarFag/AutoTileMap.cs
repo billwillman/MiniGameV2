@@ -219,13 +219,13 @@ namespace AutoMap
                                     if (/*CompareCellValue(globalR, globalC - 1, null, 0, 8, 2, 10) && CompareCellValue(globalR - 1, globalC, null, 0, 4, 8, 12) &&*/
                                         //NotCompareCellValue(globalR + 1, globalC, null, 1) && NotCompareCellValue(globalR, globalC + 1, null, 1) &&
                                         CompareCellValue(globalR, globalC + 1, null, 2, 3, 6, 7) && CompareCellValue(globalR + 1, globalC, null, 4, 5, 6, 7) &&
-                                        CompareCellValue(globalR + 1, globalC + 1, null, 8, 9, 10, 12, 13, 15))
+                                        CompareCellValue(globalR + 1, globalC + 1, null, 8, 9, 10, 11, 12, 13, 15))
                                         isVaild = true;
                                 } else if (targetValue == 2)
                                 {
                                     if (/*CompareCellValue(globalR, globalC + 1, null, 0, 4, 1, 5) && CompareCellValue(globalR - 1, globalC, null, 0, 4, 8, 12) &&*/
                                         CompareCellValue(globalR, globalC - 1, null, 1, 3, 9, 11) && CompareCellValue(globalR + 1, globalC, null, 8, 9, 10, 11) &&
-                                        CompareCellValue(globalR + 1, globalC - 1, null, 4, 5, 6, 12, 13, 14, 15))
+                                        CompareCellValue(globalR + 1, globalC - 1, null, 4, 5, 6, 7, 12, 13, 14, 15))
                                         isVaild = true;
                                 } else if (targetValue == 12)
                                 {

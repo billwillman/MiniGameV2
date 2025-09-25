@@ -95,15 +95,13 @@ namespace AutoMap
                 // Debug.Log(m_MouseBrushRect);
                 if (Event.current.alt)
                 {
-                    /*
-                    if (Time.unscaledTime - m_BrushTileTime > 1f)
+                    double currentTime = EditorApplication.timeSinceStartup;
+                    if (currentTime - m_BrushTileTime > 1f)
                     {
                         m_IsWaitBrushTile = true;
                         m_MouseBrushColAndRolRect = new RectInt(new Vector2Int(minC, minR), new Vector2Int(maxC - minC, maxR - minR));
                     }
-                    m_BrushTileTime = Time.unscaledTime;*/
-                    m_IsWaitBrushTile = true;
-                    m_MouseBrushColAndRolRect = new RectInt(new Vector2Int(minC, minR), new Vector2Int(maxC - minC, maxR - minR));
+                    m_BrushTileTime = currentTime;
                 }
                 DoBurshTile(tileMap);
             } finally
@@ -296,7 +294,7 @@ namespace AutoMap
         }
 
         private bool m_IsWaitBrushTile = false;
-        private float m_BrushTileTime = 0;
+        private double m_BrushTileTime = 0;
 
         void OnMouseInputUpdate(SceneView sceneView)
         {
