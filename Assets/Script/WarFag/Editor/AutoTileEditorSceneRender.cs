@@ -101,7 +101,7 @@ namespace AutoMap
                         m_IsWaitBrushTile = true;
                         m_MouseBrushColAndRolRect = new RectInt(new Vector2Int(minC, minR), new Vector2Int(maxC - minC, maxR - minR));
                     }
-                    m_BrushTileTime = currentTime;
+                    //m_BrushTileTime = currentTime;
                 }
                 DoBurshTile(tileMap);
             } finally
