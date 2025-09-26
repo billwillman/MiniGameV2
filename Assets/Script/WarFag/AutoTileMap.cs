@@ -27,32 +27,19 @@ namespace AutoMap
 
         public byte[,] GetTileMapCells()
         {
-#if UNITY_EDITOR
             var colAndrowCnt = GetTileCellCount();
-            if (m_TileMapCells != null)
+            // 统一校验：若矩阵为空或维度不匹配，重新初始化
+            if (m_TileMapCells == null ||
+                m_TileMapCells.GetLength(0) != colAndrowCnt.y ||
+                m_TileMapCells.GetLength(1) != colAndrowCnt.x)
             {
-                if (colAndrowCnt.y != m_TileMapCells.GetLength(0))
+                if (IsVaildPerTileSize() && colAndrowCnt.x > 0 && colAndrowCnt.y > 0)
                 {
-                    m_TileMapCells = null;
-                } else if (colAndrowCnt.x != m_TileMapCells.GetLength(1))
+                    m_TileMapCells = new byte[colAndrowCnt.y, colAndrowCnt.x];
+                } else
                 {
                     m_TileMapCells = null;
                 }
-            }
-#endif
-            if (m_TileMapCells != null)
-                return m_TileMapCells;
-            if (!this.IsVaildPerTileSize())
-            {
-                m_TileMapCells = null;
-                return m_TileMapCells;
-            }
-#if !UNITY_EDITOR
-            var colAndrowCnt = GetTileCellCount();
-#endif
-            if (colAndrowCnt.x > 0 && colAndrowCnt.y > 0)
-            {
-                m_TileMapCells = new byte[colAndrowCnt.y, colAndrowCnt.x];
             }
             return m_TileMapCells;
         }
