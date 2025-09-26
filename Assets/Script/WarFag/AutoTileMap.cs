@@ -72,7 +72,8 @@ namespace AutoMap
                 customCells = GetTileMapCells();
             if (customCells == null)
                 return 0;
-            if (r < 0 || c < 0 || r >= customCells.GetLength(0) || c >= customCells.GetLength(0))
+            // 修复：列坐标判断用 GetLength(1)（GetLength(0)=行数，GetLength(1)=列数）
+            if (r < 0 || c < 0 || r >= customCells.GetLength(0) || c >= customCells.GetLength(1))
                 return 0;
             return customCells[r, c];
         }
@@ -114,7 +115,7 @@ namespace AutoMap
             Debug.Log(brush);
             Debug.LogFormat("min：{0}, max：{1}", brush.min.ToString(), brush.max.ToString());
 
-            byte[,] tempCells = new byte[brush.height + 1, brush.width + 1];
+            byte[,] tempCells = new byte[2, 2];
 
             Func<int, int, bool> isVaild_15 = (globalR, globalC) =>
             {
