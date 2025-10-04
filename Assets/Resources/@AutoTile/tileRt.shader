@@ -48,8 +48,8 @@ Shader "Unlit/tileRt"
                 // sample the texture
                 fixed4 col = tex2D(_MainTex, i.uv);
                 fixed4 mask = tex2D(_RtTex, i.uv);
-                col.a = mask.r;
-                return mask;
+                col.a *= mask.r;
+                return col;
             }
             ENDCG
         }
