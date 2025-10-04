@@ -148,10 +148,10 @@ namespace AutoMap
             var tex = tileMap.m_TileAsset != null ? tileMap.m_TileAsset.texture : null;
            
             RenderTexture rtTex = tileMap.m_RtTexture;
+            bool hasRtTex = rtTex != null;
             var colorBuffer = Graphics.activeColorBuffer;
             var depthBuffer = Graphics.activeDepthBuffer;
-
-            bool hasRtTex = rtTex != null;
+            
             if (hasRtTex)
             {
                 for (int r = 0; r < tileMapCells.GetLength(0); ++r)
@@ -173,8 +173,8 @@ namespace AutoMap
                 }
             }
 
-
-            Graphics.SetRenderTarget(colorBuffer, depthBuffer);
+            if (hasRtTex)
+                Graphics.SetRenderTarget(colorBuffer, depthBuffer);
 
 
             for (int r = 0; r < tileMapCells.GetLength(0); ++r)
