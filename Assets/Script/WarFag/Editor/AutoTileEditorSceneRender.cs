@@ -205,6 +205,21 @@ namespace AutoMap
                     {1, 2},
                };
 
+        private int GetSpriteZeroIndex(AutoTileMap tileMap)
+        {
+            Rect[] spriteRects = GetSpriteDatas(tileMap);
+            if (spriteRects != null)
+            {
+                for (int i = 0; i < spriteRects.Length; ++i)
+                {
+                    var r = spriteRects[i];
+                    if (Mathf.Abs(r.xMin) <= float.Epsilon && Mathf.Abs(r.yMin) <= float.Epsilon)
+                        return i;
+                }
+            }
+            return -1;
+        }
+
         void AddSubTileMesh(int row, int col, AutoTileMap tileMap, Vector3[] allVertexs, Vector2[] allTexcoords, int[] allIndexs, int startVertIndex = 0, int startIndexIndex = 0, int customSpriteIndex = -1, bool isFlipY = true)
         {
             if (!tileMap.IsVaildPerTileSize())
@@ -253,7 +268,10 @@ namespace AutoMap
                 Vector3[] vecs = new Vector3[4];
                 Vector2[] texcoords = new Vector2[4];
                 int[] indexs = new int[6];
-                AddSubTileMesh(0, 0, tileMap, vecs, texcoords, indexs, 0, 0, 0, false);
+                int index = GetSpriteZeroIndex(tileMap);
+                if (index < 0)
+                    index = 0;
+                AddSubTileMesh(0, 0, tileMap, vecs, texcoords, indexs, 0, 0, index, false);
                 m_TileMesh = new Mesh();
                 m_TileMesh.vertices = vecs;
                 m_TileMesh.triangles = indexs;
