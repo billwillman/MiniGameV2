@@ -485,8 +485,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_AutoTileSize: {x: 1024, y: 1024}
   m_PerTileSize: {x: 64, y: 64}
-  m_TileAsset: {fileID: 134599510, guid: c71324f9f67b7194bbd9fec2eb3190a3, type: 3}
-  m_EditorMaterial: {fileID: 2100000, guid: bc93c2c180c6d35498d727c8a6a6bb14, type: 2}
+  m_TileAsset: {fileID: 1886181879, guid: d6b76dc19f044be4d95b91db14fbdb9f, type: 3}
+  m_EditorMaterial: {fileID: 2100000, guid: 6e88ec2d368106946ab5fc7e84956326, type: 2}
 --- !u!4 &1512146078
 Transform:
   m_ObjectHideFlags: 0
