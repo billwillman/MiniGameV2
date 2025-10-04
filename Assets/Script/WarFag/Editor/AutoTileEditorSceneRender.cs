@@ -432,6 +432,7 @@ namespace AutoMap
             tileMap.m_PerTileSize = EditorGUILayout.Vector2Field("瓦片大小", tileMap.m_PerTileSize);
             tileMap.m_EditorMaterial = EditorGUILayout.ObjectField("编辑器Tile材质", tileMap.m_EditorMaterial, typeof(Material), false) as Material;
             var newSprite = EditorGUILayout.ObjectField("瓦片资源", tileMap.m_TileAsset, typeof(Sprite), false) as Sprite;
+            tileMap.m_RtTexture = EditorGUILayout.ObjectField("RT输出图", tileMap.m_RtTexture, typeof(RenderTexture), false) as RenderTexture;
             if (tileMap.m_TileAsset != newSprite)
             {
                 tileMap.m_TileAsset = newSprite;

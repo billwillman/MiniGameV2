@@ -13,6 +13,7 @@ namespace AutoMap
         public Vector2 m_PerTileSize;
         public Sprite m_TileAsset;
         public Material m_EditorMaterial;
+        public RenderTexture m_RtTexture;
         private byte[,] m_TileMapCells = null; // 格子数据
 
         public Vector2Int GetTileCellCount()
