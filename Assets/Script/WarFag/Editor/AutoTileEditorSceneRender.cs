@@ -146,6 +146,15 @@ namespace AutoMap
             float halfW = tileMap.m_PerTileSize.x / 2.0f;
             float halfH = tileMap.m_PerTileSize.y / 2.0f;
             var tex = tileMap.m_TileAsset != null ? tileMap.m_TileAsset.texture : null;
+            /*
+            RenderTexture rtTex = tileMap.m_RtTexture;
+            bool hasRtTex = rtTex != null;
+            if (hasRtTex)
+            {
+                Graphics.SetRenderTarget(rtTex);
+                Graphics.ClearRandomWriteTargets();
+            }
+            */
             for (int r = 0; r < tileMapCells.GetLength(0); ++r)
             {
                 for (int c = 0; c < tileMapCells.GetLength(1); ++c)
@@ -197,6 +206,10 @@ namespace AutoMap
                 }
             }
             Handles.color = oldColor;
+            /*
+            if (hasRtTex)
+                Graphics.SetRenderTarget(null);
+            */
         }
 
         public static readonly int[,] spriteNames = new int[2, 2]
@@ -431,8 +444,8 @@ namespace AutoMap
             tileMap.m_AutoTileSize = EditorGUILayout.Vector2Field("地图大小", tileMap.m_AutoTileSize);
             tileMap.m_PerTileSize = EditorGUILayout.Vector2Field("瓦片大小", tileMap.m_PerTileSize);
             tileMap.m_EditorMaterial = EditorGUILayout.ObjectField("编辑器Tile材质", tileMap.m_EditorMaterial, typeof(Material), false) as Material;
-            var newSprite = EditorGUILayout.ObjectField("瓦片资源", tileMap.m_TileAsset, typeof(Sprite), false) as Sprite;
             tileMap.m_RtTexture = EditorGUILayout.ObjectField("RT输出图", tileMap.m_RtTexture, typeof(RenderTexture), false) as RenderTexture;
+            var newSprite = EditorGUILayout.ObjectField("瓦片资源", tileMap.m_TileAsset, typeof(Sprite), false) as Sprite;
             if (tileMap.m_TileAsset != newSprite)
             {
                 tileMap.m_TileAsset = newSprite;
