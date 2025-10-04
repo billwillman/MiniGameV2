@@ -10,6 +10,7 @@ using NsLib.ResMgr;
 using System;
 using Unity.VisualScripting.Dependencies.NCalc;
 using System.Linq;
+using UnityEngine.Rendering;
 
 namespace AutoMap
 {
@@ -159,18 +160,20 @@ namespace AutoMap
                     for (int c = 0; c < tileMapCells.GetLength(1); ++c)
                     {
                         byte id = tileMapCells[r, c];
-                        Vector3 drawPos = new Vector3(c * tileMap.m_PerTileSize.x + halfW, 0, r * tileMap.m_PerTileSize.y + halfH);
+                        Vector3 drawPos = new Vector3(c * tileMap.m_PerTileSize.x, 0, r * tileMap.m_PerTileSize.y);
                         if (id > 0 && tex != null && tileMesh != null && tileMap != null && mat != null && spriteDatas != null && spriteDatas.Length > 0)
                         {
                             var sprite = spriteDatas[id];
                             if (sprite != null)
                             {
                                 mat.mainTextureOffset = new Vector2(sprite.xMin / tex.width, sprite.yMin / tex.height);
-                                Graphics.Blit(tex, rtTex, mat, 0);
+                                Graphics.CopyTexture(tex, 0, 0, Mathf.FloorToInt(sprite.x), Mathf.FloorToInt(sprite.y), Mathf.FloorToInt(sprite.width), Mathf.FloorToInt(sprite.height),
+                                        rtTex, 0, 0, Mathf.FloorToInt(drawPos.x), Mathf.FloorToInt(drawPos.z));
                             }
                         }
                     }
                 }
+
             }
 
             if (hasRtTex)
