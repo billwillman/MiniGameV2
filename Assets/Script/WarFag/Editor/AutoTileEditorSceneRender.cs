@@ -146,15 +146,37 @@ namespace AutoMap
             float halfW = tileMap.m_PerTileSize.x / 2.0f;
             float halfH = tileMap.m_PerTileSize.y / 2.0f;
             var tex = tileMap.m_TileAsset != null ? tileMap.m_TileAsset.texture : null;
-            /*
+           
             RenderTexture rtTex = tileMap.m_RtTexture;
+            var colorBuffer = Graphics.activeColorBuffer;
+            var depthBuffer = Graphics.activeDepthBuffer;
+
             bool hasRtTex = rtTex != null;
             if (hasRtTex)
             {
-                Graphics.SetRenderTarget(rtTex);
-                Graphics.ClearRandomWriteTargets();
+                for (int r = 0; r < tileMapCells.GetLength(0); ++r)
+                {
+                    for (int c = 0; c < tileMapCells.GetLength(1); ++c)
+                    {
+                        byte id = tileMapCells[r, c];
+                        Vector3 drawPos = new Vector3(c * tileMap.m_PerTileSize.x + halfW, 0, r * tileMap.m_PerTileSize.y + halfH);
+                        if (id > 0 && tex != null && tileMesh != null && tileMap != null && mat != null && spriteDatas != null && spriteDatas.Length > 0)
+                        {
+                            var sprite = spriteDatas[id];
+                            if (sprite != null)
+                            {
+                                mat.mainTextureOffset = new Vector2(sprite.xMin / tex.width, sprite.yMin / tex.height);
+                                Graphics.Blit(tex, rtTex, mat, 0);
+                            }
+                        }
+                    }
+                }
             }
-            */
+
+
+            Graphics.SetRenderTarget(colorBuffer, depthBuffer);
+
+
             for (int r = 0; r < tileMapCells.GetLength(0); ++r)
             {
                 for (int c = 0; c < tileMapCells.GetLength(1); ++c)
@@ -206,10 +228,6 @@ namespace AutoMap
                 }
             }
             Handles.color = oldColor;
-            /*
-            if (hasRtTex)
-                Graphics.SetRenderTarget(null);
-            */
         }
 
         public static readonly int[,] spriteNames = new int[2, 2]
