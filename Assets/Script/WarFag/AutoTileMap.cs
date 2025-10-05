@@ -14,6 +14,7 @@ namespace AutoMap
         public Sprite m_TileAsset;
         public Material m_EditorMaterial;
         public RenderTexture m_RtTexture;
+        public Texture2D m_EdtClearTex;
         private byte[,] m_TileMapCells = null; // 格子数据
 
         public Vector2Int GetTileCellCount()

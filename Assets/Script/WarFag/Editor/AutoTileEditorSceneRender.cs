@@ -155,6 +155,10 @@ namespace AutoMap
             
             if (hasRtTex)
             {
+                if (tileMap.m_EdtClearTex != null)
+                {
+                    Graphics.Blit(tileMap.m_EdtClearTex, tileMap.m_RtTexture);
+                }
                 for (int r = 0; r < tileMapCells.GetLength(0); ++r)
                 {
                     for (int c = 0; c < tileMapCells.GetLength(1); ++c)
@@ -406,7 +410,9 @@ namespace AutoMap
 
         private Rect[] m_SpriteDatas = null;
 
-        private static readonly Vector2 _cDrawStartPt = new Vector2(20, 100);
+        private static readonly int _cStartLine = 3;
+
+        private static readonly Vector2 _cDrawStartPt = new Vector2(20, 100 * _cStartLine);
 
         void DrawSpriteData(int index, Texture tex, int row, int col, Rect lastDrawRect)
         {
@@ -465,6 +471,7 @@ namespace AutoMap
             tileMap.m_AutoTileSize = EditorGUILayout.Vector2Field("地图大小", tileMap.m_AutoTileSize);
             tileMap.m_PerTileSize = EditorGUILayout.Vector2Field("瓦片大小", tileMap.m_PerTileSize);
             tileMap.m_EditorMaterial = EditorGUILayout.ObjectField("编辑器Tile材质", tileMap.m_EditorMaterial, typeof(Material), false) as Material;
+            tileMap.m_EdtClearTex = EditorGUILayout.ObjectField("清理图(编辑模式)", tileMap.m_EdtClearTex, typeof(Texture2D), false) as Texture2D;
             tileMap.m_RtTexture = EditorGUILayout.ObjectField("RT输出图", tileMap.m_RtTexture, typeof(RenderTexture), false) as RenderTexture;
             var newSprite = EditorGUILayout.ObjectField("瓦片资源", tileMap.m_TileAsset, typeof(Sprite), false) as Sprite;
             if (tileMap.m_TileAsset != newSprite)
@@ -497,7 +504,7 @@ namespace AutoMap
                     DrawSpriteData(14, texture, 1, 7, lastRect);
                     DrawSpriteData(13, texture, 1, 8, lastRect);
 
-                    EditorGUILayout.GetControlRect(GUILayout.Height(64 * 3));
+                    EditorGUILayout.GetControlRect(GUILayout.Height(64 * (_cStartLine + 2)));
                 }
             }
 

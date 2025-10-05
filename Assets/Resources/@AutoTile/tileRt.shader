@@ -7,7 +7,7 @@ Shader "Unlit/tileRt"
     }
     SubShader
     {
-        Tags { "RenderType"="Transparent" "RenderQueue"="Transparent" }
+        Tags { "RenderType"="Transparent" "Queue"="Transparent" }
         
         Blend SrcAlpha OneMinusSrcAlpha
 
