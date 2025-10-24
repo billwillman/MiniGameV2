@@ -43,7 +43,7 @@ namespace Slate
             public Color motionPathsColor = Color.black;
             public Prefs.RenderSettings renderSettings = new Prefs.RenderSettings();
             public float trackListLeftMargin = 280f;
-            public bool autoCreateDirectorCamera = true;
+            public bool autoCreateDirectorCamera = false;
             public bool autoKey = true;
             public bool magnetSnapping = true;
             public bool rippleMode = false;
