@@ -6,6 +6,7 @@ using UnityEngine;
 
 namespace GAS
 {
+    [System.Serializable]
     public class TagNode
     {
         public string name;
@@ -13,6 +14,7 @@ namespace GAS
         public List<TagNode> childNode = null;
     }
 
+    [System.Serializable]
     public class TagRootNode : TagNode
     {
         public ulong tagValue;
