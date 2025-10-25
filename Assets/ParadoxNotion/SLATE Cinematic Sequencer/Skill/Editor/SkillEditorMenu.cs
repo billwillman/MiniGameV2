@@ -12,9 +12,12 @@ namespace GAS
         public static void OpenSkillEditorWindow()
         {
             var CutScene = Commands.CreateCutscene();
-            CutScene.ChangeToSkillMode();
-            // ´´½¨¹ìµÀ
-            //------------
+            List<System.Type> groupTypes = new List<System.Type> { 
+                typeof(CommonGroup),
+                typeof(DSGroup),
+                typeof(ClientGroup),
+            };
+            CutScene.ChangeToSkillMode(groupTypes);
         }
     }
 
