@@ -1531,12 +1531,16 @@ namespace Slate
 
 
             //Simple button to add empty group for convenience
-            var addButtonY = totalHeight + TOP_MARGIN + TOOLBAR_HEIGHT + 20;
-            var addRect = Rect.MinMaxRect(leftRect.xMin + 10, addButtonY, leftRect.xMax - 10, addButtonY + 20);
-            GUI.color = Color.white.WithAlpha(0.5f);
-            if ( GUI.Button(addRect, "Add Actor Group") ) {
-                var newGroup = cutscene.AddGroup<ActorGroup>(null).AddTrack<ActorActionTrack>();
-                CutsceneUtility.selectedObject = newGroup;
+            if (!cutscene.IsSkillMode)
+            {
+                var addButtonY = totalHeight + TOP_MARGIN + TOOLBAR_HEIGHT + 20;
+                var addRect = Rect.MinMaxRect(leftRect.xMin + 10, addButtonY, leftRect.xMax - 10, addButtonY + 20);
+                GUI.color = Color.white.WithAlpha(0.5f);
+                if (GUI.Button(addRect, "Add Actor Group"))
+                {
+                    var newGroup = cutscene.AddGroup<ActorGroup>(null).AddTrack<ActorActionTrack>();
+                    CutsceneUtility.selectedObject = newGroup;
+                }
             }
 
             //clear picks
