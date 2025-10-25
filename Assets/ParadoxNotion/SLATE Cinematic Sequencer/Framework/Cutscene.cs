@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEditor.SceneManagement;
 
 namespace Slate
 {
@@ -1159,14 +1160,47 @@ namespace Slate
             return newGroup;
         }
 
+        // 是否是技能编辑器
+        public bool IsSkillMode = false;
+
+        public void ChangeToSkillMode()
+        {
+            if (!IsSkillMode)
+                return;
+            IsSkillMode = true;
+            for (int i = groups.Count - 1; i >= 0; --i)
+            {
+                var item = groups[i];
+                if (item != null)
+                {
+                    var tracks = item.tracks;
+                    if (tracks != null)
+                    {
+                        for (int j = tracks.Count - 1; j >= 0; --j)
+                        {
+                            var track = tracks[j];
+                            DestroyImmediate(track);
+                            tracks.RemoveAt(j);
+                        }
+                    }
+                    DestroyImmediate(item);
+                }
+                groups.RemoveAt(i);
+            }
+            groups.Clear();
+        }
+        // ---------
+
         void TryReset() {
             if ( directorGroup == null ) {
-                var newDirectorGroup = AddGroup<DirectorGroup>();
-                /*
-                newDirectorGroup.AddTrack<DirectorActionTrack>();
-                newDirectorGroup.AddTrack<DirectorAudioTrack>();
-                newDirectorGroup.AddTrack<CameraTrack>();
-                */
+                if (!IsSkillMode) // 不是技能模式
+                {
+                    var newDirectorGroup = AddGroup<DirectorGroup>();
+                    newDirectorGroup.AddTrack<DirectorActionTrack>();
+                    newDirectorGroup.AddTrack<DirectorAudioTrack>();
+                    newDirectorGroup.AddTrack<CameraTrack>();
+                }
+
                 CutsceneUtility.selectedObject = null;
                 length = 20;
                 viewTimeMin = -1;
