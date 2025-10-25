@@ -21,6 +21,9 @@ namespace GAS
         public ulong tagValue;
     }
 
+    /// <summary>
+    ///  最好放到角色身上
+    /// </summary>
     public class TagManager : SingetonMono<TagManager>
     {
         public List<TagRootNode> m_TagRootNodes = null;
