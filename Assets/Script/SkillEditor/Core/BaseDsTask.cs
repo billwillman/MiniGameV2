@@ -5,6 +5,6 @@ using Slate;
 
 namespace GAS
 {
-    public class BaseDsTask : BaseTask
+    public abstract class BaseDsTask : BaseTask
     { }
 }
