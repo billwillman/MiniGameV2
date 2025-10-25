@@ -1593,8 +1593,11 @@ namespace Slate
                 group.isCollapsed = !EditorGUI.Foldout(foldRect, !group.isCollapsed, string.Format("<b>{0} {1}</b>", group.name, isVirtual ? "(Ref)" : string.Empty));
                 GUI.color = Color.white;
                 //Actor Object Field
-                if ( group.actor == null ) {
-                    var oRect = Rect.MinMaxRect(groupRect.xMin + 20, groupRect.yMin + 1, groupRect.xMax - 20, groupRect.yMax - 1);
+                var oRect = Rect.MinMaxRect(groupRect.xMin + 20, groupRect.yMin + 1, groupRect.xMax - 20, groupRect.yMax - 1);
+                if (cutscene.IsSkillMode)
+                {
+                    EditorGUI.LabelField(oRect, group.name);
+                } else if ( group.actor == null ) {
                     group.actor = (GameObject)UnityEditor.EditorGUI.ObjectField(oRect, group.actor, typeof(GameObject), true);
                 }
                 ///---
