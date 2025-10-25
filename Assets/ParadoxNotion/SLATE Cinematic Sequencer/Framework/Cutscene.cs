@@ -1163,9 +1163,9 @@ namespace Slate
         // 是否是技能编辑器
         public bool IsSkillMode = false;
 
-        public void ChangeToSkillMode()
+        public void ChangeToSkillMode(List<System.Type> GroupTypes = null, GameObject targetActor = null)
         {
-            if (!IsSkillMode)
+            if (IsSkillMode)
                 return;
             IsSkillMode = true;
             for (int i = groups.Count - 1; i >= 0; --i)
@@ -1188,6 +1188,14 @@ namespace Slate
                 groups.RemoveAt(i);
             }
             groups.Clear();
+
+            if (GroupTypes != null)
+            {
+                for (int i = 0; i < GroupTypes.Count; ++i)
+                {
+                    AddGroup(GroupTypes[i], targetActor);
+                }
+            }
         }
         // ---------
 
