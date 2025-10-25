@@ -1600,7 +1600,7 @@ namespace Slate
                 var oRect = Rect.MinMaxRect(groupRect.xMin + 20, groupRect.yMin + 1, groupRect.xMax - 20, groupRect.yMax - 1);
                 if (cutscene.IsSkillMode)
                 {
-                    EditorGUI.LabelField(oRect, group.name);
+                    //EditorGUI.LabelField(oRect, group.name);
                 } else if ( group.actor == null ) {
                     group.actor = (GameObject)UnityEditor.EditorGUI.ObjectField(oRect, group.actor, typeof(GameObject), true);
                 }
