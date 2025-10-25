@@ -1,3 +1,4 @@
+using Slate;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -5,7 +6,9 @@ using UnityEngine;
 namespace GAS
 {
     // »ù±¾Àà
-    public class BaseTask
+    //[Attachable(typeof(CommonGroup))]
+    //[Name("BaseTask")]
+    public class BaseTask: CutsceneTrack
     {
     }
 
