@@ -10,6 +10,7 @@ namespace GAS
     //[Name("BaseTask")]
     public class BaseTask: CutsceneTrack
     {
+        public bool CanTimeSkip = false; // 能否时间过了跳过，默认不可以
     }
 
 }
