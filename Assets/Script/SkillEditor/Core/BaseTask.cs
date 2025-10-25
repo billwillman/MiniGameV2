@@ -12,6 +12,8 @@ namespace GAS
     {
         public bool CanTimeSkip = false; // 能否时间过了跳过，默认不可以
 
+        public TagManager m_TagManager = null; // 标记
+
         public abstract void OnTaskBegin();
         public abstract void OnTaskEnd();
 

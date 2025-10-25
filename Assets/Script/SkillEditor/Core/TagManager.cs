@@ -18,7 +18,7 @@ namespace GAS
         public ulong tagValue;
     }
 
-    public class TagManager : ILuaBinder
+    public class TagManager : SingetonMono<TagManager>
     {
         public List<TagRootNode> m_TagRootNodes = null;
     }
