@@ -50,9 +50,12 @@ namespace GAS
         }
 
         // 最大4层TAG 4层, 每层16个子TAG
+        private static readonly int _cMaxTag = 16;
+        private static readonly int _cMaxLevel = 4;
+        
         private ulong GetLevelMask(int level, int subIndex = 0)
         {
-            if (level > 3 || level < 0 || subIndex >= 16 || subIndex < 0)
+            if (level >= _cMaxLevel || level < 0 || subIndex >= _cMaxTag || subIndex < 0)
             {
                 throw new Exception();
             }
@@ -60,23 +63,23 @@ namespace GAS
                 return ulong.MaxValue;
             else if (level == 1)
             {
-                if (subIndex >= 15)
+                if (subIndex >= _cMaxTag - 1)
                     throw new Exception();
                 // | 
                 ulong ret = (ulong)1 << (62 - subIndex);
-                ulong mask = (((ulong)1 << (16 * (4 - level))) - 1);
+                ulong mask = (((ulong)1 << (_cMaxTag * (_cMaxLevel - level))) - 1);
                 ret = ret | mask;
                 return ret;
-            } else if (level == 2)
+            } else if (level >= 2 && level < _cMaxLevel - 1)
             {
-                int shiftAmount = (16 * (4 - level) - 1 - subIndex);
+                int shiftAmount = (_cMaxTag * (_cMaxLevel - level) - 1 - subIndex);
                 ulong ret = (ulong)1 << shiftAmount;
-                ulong mask = (((ulong)1 << (16 * (4 - level - 1))) - 1);
+                ulong mask = (((ulong)1 << (_cMaxTag * (_cMaxLevel - level - 1))) - 1);
                 ret = ret | mask;
                 return ret;
-            } else // 3
+            } else // _cMaxLevel - 1
             {
-                ulong ret = (ulong)1 << (15 - subIndex);
+                ulong ret = (ulong)1 << ((_cMaxTag - 1) - subIndex);
                 return ret;
             }
         }
