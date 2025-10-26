@@ -12,18 +12,14 @@ namespace GAS
         public string name;
         public TagRootNode rootNode = null;
         public List<TagNode> childNode = null;
+        public ulong mask = 0;
     }
 
     [System.Serializable]
     public class TagRootNode : TagNode
-    {
-        [System.NonSerialized]
-        public ulong tagValue;
-    }
+    {}
 
-    /// <summary>
-    ///  最好放到角色身上
-    /// </summary>
+    [Tooltip("GameTag总定义")]
     public class TagManager : SingetonMono<TagManager>
     {
         public List<TagRootNode> m_TagRootNodes = null;
