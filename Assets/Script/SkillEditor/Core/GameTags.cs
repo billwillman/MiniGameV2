@@ -13,6 +13,16 @@ namespace GAS
         // ¶¯Ì¬µÄ
         private NetworkVariable<ulong> m_TagValue = new NetworkVariable<ulong>();
 
+        private void Awake()
+        {
+            m_TagValue.bRepNotify = true;
+            if (IsHost || IsClient)
+                m_TagValue.OnValueChanged = OnRep_TagValue;
+        }
+
+        void OnRep_TagValue(ulong previousValue, ulong newValue)
+        {}
+
         public ulong TagValue
         {
             get
