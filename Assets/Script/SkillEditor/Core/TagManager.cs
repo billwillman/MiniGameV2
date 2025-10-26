@@ -49,8 +49,36 @@ namespace GAS
             return ret;
         }
 
+        // 最大4层TAG 4层, 每层16个子TAG
+        private ulong GetLevelMask(int level, int subIndex = 0)
+        {
+            if (level >= 3 || level < 0 || subIndex >= 16 || subIndex < 0)
+            {
+                throw new Exception();
+            }
+            if (level == 0)
+                return ulong.MaxValue;
+            else if (level == 1)
+            {
+                if (subIndex >= 15)
+                    throw new Exception();
+                // | 
+                ulong ret = (ulong)1 << (62 - subIndex);
+                ulong mask = (((ulong)1 << (16 * (4 - level))) - 1);
+                ret = ret | mask;
+                return ret;
+            } else
+            {
+                int shiftAmount = (16 * (4 - level) - 1 - subIndex);
+                ulong ret = (ulong)1 << shiftAmount;
+                ulong mask = (((ulong)1 << (16 * (4 - level))) - 1);
+                ret = ret | mask;
+                return ret;
+            }
+        }
 
-        void AttachNode(TagNode parentNode, TagRootNode rootNode, string preName = "")
+
+        void AttachNode(TagNode parentNode, TagRootNode rootNode, uint level = 0, string preName = "")
         {
             if (parentNode == null)
                 return;
@@ -66,7 +94,8 @@ namespace GAS
                     {
                         var childNode = parentNode.childNode[i];
                         childNode.rootNode = rootNode;
-                        AttachNode(childNode, rootNode, newPreName);
+                        childNode.mask = GetLevelMask(level, i);
+                        AttachNode(childNode, rootNode, level + 1, newPreName);
                     }
                 }
             }
@@ -84,8 +113,10 @@ namespace GAS
                     if (rootNode != null)
                     {
                         rootNode.id = rootId++;
+                        rootNode.rootNode = null;
+                        rootNode.mask = GetLevelMask(0);
                         m_TagRootMap[rootNode.id] = rootNode;
-                        AttachNode(rootNode, rootNode);
+                        AttachNode(rootNode, rootNode, 1);
                     }
                 }
             }
