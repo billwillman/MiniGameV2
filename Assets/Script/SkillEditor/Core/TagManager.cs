@@ -23,5 +23,6 @@ namespace GAS
     public class TagManager : SingetonMono<TagManager>
     {
         public List<TagRootNode> m_TagRootNodes = null;
+        private Dictionary<string, TagRootNode> m_TagMap = new Dictionary<string, TagRootNode>();
     }
 }
