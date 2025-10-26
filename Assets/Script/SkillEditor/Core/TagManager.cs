@@ -10,8 +10,10 @@ namespace GAS
     public class TagNode
     {
         public string name;
+        [System.NonSerialized]
         public TagRootNode rootNode = null;
         public List<TagNode> childNode = null;
+        [System.NonSerialized]
         public ulong mask = 0;
     }
 
@@ -48,22 +50,23 @@ namespace GAS
         }
 
 
-        void AttachNode(TagNode rootNode, string preName = "")
+        void AttachNode(TagNode parentNode, TagRootNode rootNode, string preName = "")
         {
-            if (rootNode == null)
+            if (parentNode == null)
                 return;
             
-            if (!string.IsNullOrEmpty(rootNode.name))
+            if (!string.IsNullOrEmpty(parentNode.name))
             {
-                string name = preName + rootNode.name;
-                m_TagMap[name] = rootNode;
-                if (rootNode.childNode != null && rootNode.childNode.Count > 0)
+                string name = preName + parentNode.name;
+                m_TagMap[name] = parentNode;
+                if (parentNode.childNode != null && parentNode.childNode.Count > 0)
                 {
                     string newPreName = name + ".";
-                    for (int i = 0; i < rootNode.childNode.Count; ++i)
+                    for (int i = 0; i < parentNode.childNode.Count; ++i)
                     {
-                        var childNode = rootNode.childNode[i];
-                        AttachNode(childNode, newPreName);
+                        var childNode = parentNode.childNode[i];
+                        childNode.rootNode = rootNode;
+                        AttachNode(childNode, rootNode, newPreName);
                     }
                 }
             }
@@ -82,7 +85,7 @@ namespace GAS
                     {
                         rootNode.id = rootId++;
                         m_TagRootMap[rootNode.id] = rootNode;
-                        AttachNode(rootNode);
+                        AttachNode(rootNode, rootNode);
                     }
                 }
             }
