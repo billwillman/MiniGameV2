@@ -154,7 +154,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 85c1a672acb205f46bbab367095521d3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_TagRootNodes: []
+  m_TagRootNodes:
+  - name: Player
+    childNode:
+    - name: Normal
+      childNode:
+      - name: Idle
+        childNode: []
+      - name: Walk
+        childNode: []
+      - name: Jump
+        childNode: []
+      - name: Fall
+        childNode: []
+    - name: Attack
+      childNode: []
+    - name: Hit
+      childNode: []
 --- !u!4 &151669147
 Transform:
   m_ObjectHideFlags: 0
