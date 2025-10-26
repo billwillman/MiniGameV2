@@ -78,7 +78,7 @@ namespace GAS
         }
 
 
-        void AttachNode(TagNode parentNode, TagRootNode rootNode, uint level = 0, string preName = "")
+        void AttachNode(TagNode parentNode, TagRootNode rootNode, int level = 0, string preName = "")
         {
             if (parentNode == null)
                 return;
