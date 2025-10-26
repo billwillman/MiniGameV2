@@ -71,7 +71,7 @@ namespace GAS
             {
                 int shiftAmount = (16 * (4 - level) - 1 - subIndex);
                 ulong ret = (ulong)1 << shiftAmount;
-                ulong mask = (((ulong)1 << (16 * (4 - level))) - 1);
+                ulong mask = (((ulong)1 << (16 * (4 - level - 1))) - 1);
                 ret = ret | mask;
                 return ret;
             }
