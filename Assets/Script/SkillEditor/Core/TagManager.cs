@@ -18,6 +18,7 @@ namespace GAS
     [System.Serializable]
     public class TagRootNode : TagNode
     {
+        [System.NonSerialized]
         public ulong id; // Ã¶¾Ù
     }
 
