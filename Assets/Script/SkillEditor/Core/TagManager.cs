@@ -21,7 +21,7 @@ namespace GAS
     public class TagRootNode : TagNode
     {
         [System.NonSerialized]
-        public ulong id; // 枚举
+        public ushort id; // 枚举
     }
 
     [Tooltip("GameTag总定义")]
@@ -29,9 +29,9 @@ namespace GAS
     {
         public List<TagRootNode> m_TagRootNodes = null;
         private Dictionary<string, TagNode> m_TagMap = new Dictionary<string, TagNode>();
-        private Dictionary<ulong, TagRootNode> m_TagRootMap = new Dictionary<ulong, TagRootNode>(); // 枚举对应的TagRootNode
+        private Dictionary<ushort, TagRootNode> m_TagRootMap = new Dictionary<ushort, TagRootNode>(); // 枚举对应的TagRootNode
 
-        public TagRootNode GetRootNode(ulong enumId)
+        public TagRootNode GetRootNode(ushort enumId)
         {
             TagRootNode ret;
             if (!m_TagRootMap.TryGetValue(enumId, out ret))
@@ -119,7 +119,7 @@ namespace GAS
             base.Awake();
             if (m_TagRootNodes != null)
             {
-                ulong rootId = 1;
+                ushort rootId = 1;
                 for (int i = 0; i < m_TagRootNodes.Count; ++i)
                 {
                     var rootNode = m_TagRootNodes[i];
