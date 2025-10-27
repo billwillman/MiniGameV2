@@ -32,6 +32,27 @@ namespace GAS
             return m_TagValues.Value.AttributeMap.TryGetValue(enumId, out tagValue);
         }
 
+        public bool AddTag(ushort enumId, string tagPath)
+        {
+            if (string.IsNullOrEmpty(tagPath))
+                return false;
+            var instance = TagManager.GetInstance();
+            if (instance == null)
+                return false;
+            var tagNode = instance.GetTagNode(tagPath);
+            if (tagNode == null)
+                return false;
+            long tagValue;
+            if (m_TagValues.Value.AttributeMap.TryGetValue(enumId, out tagValue))
+            {
+                tagValue = tagValue | (long)tagNode.mask;
+            } else
+                tagValue = (long)tagNode.mask;
+            m_TagValues.Value.AttributeMap[enumId] = tagValue;
+            m_TagValues.SetDirty(true);
+            return true;
+        }
+
         // 是否有这个TAG
         public bool HasTag(ushort enumId, string tagPath)
         {
