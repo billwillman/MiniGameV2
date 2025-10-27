@@ -53,20 +53,23 @@ namespace GAS
         private static readonly int _cMaxTag = 16;
         private static readonly int _cMaxLevel = 4;
         
-        private ulong GetLevelMask(int level, int subIndex = 0)
+        private ulong GetLevelMask(int level, out ulong parentMask, int subIndex = 0)
         {
             if (level >= _cMaxLevel || level < 0 || subIndex >= _cMaxTag || subIndex < 0)
             {
                 throw new Exception();
             }
             if (level == 0)
+            {
+                parentMask = (ulong)1 << 63;
                 return ulong.MaxValue;
-            else if (level == 1)
+            } else if (level == 1)
             {
                 if (subIndex >= _cMaxTag - 1)
                     throw new Exception();
                 // | 
                 ulong ret = (ulong)1 << (62 - subIndex);
+                parentMask = ret;
                 ulong mask = (((ulong)1 << (_cMaxTag * (_cMaxLevel - level))) - 1);
                 ret = ret | mask;
                 return ret;
@@ -74,18 +77,20 @@ namespace GAS
             {
                 int shiftAmount = (_cMaxTag * (_cMaxLevel - level) - 1 - subIndex);
                 ulong ret = (ulong)1 << shiftAmount;
+                parentMask = ret;
                 ulong mask = (((ulong)1 << (_cMaxTag * (_cMaxLevel - level - 1))) - 1);
                 ret = ret | mask;
                 return ret;
             } else // _cMaxLevel - 1
             {
                 ulong ret = (ulong)1 << ((_cMaxTag - 1) - subIndex);
+                parentMask = 0;
                 return ret;
             }
         }
 
 
-        void AttachNode(TagNode parentNode, TagRootNode rootNode, int level = 0, string preName = "")
+        void AttachNode(TagNode parentNode, TagRootNode rootNode, int level = 0, ulong parentMask = 0, string preName = "")
         {
             if (parentNode == null)
                 return;
@@ -101,8 +106,9 @@ namespace GAS
                     {
                         var childNode = parentNode.childNode[i];
                         childNode.rootNode = rootNode;
-                        childNode.mask = GetLevelMask(level, i);
-                        AttachNode(childNode, rootNode, level + 1, newPreName);
+                        ulong childParentMask;
+                        childNode.mask = GetLevelMask(level, out childParentMask, i) | parentMask;
+                        AttachNode(childNode, rootNode, level + 1, childParentMask, newPreName);
                     }
                 }
             }
@@ -121,9 +127,10 @@ namespace GAS
                     {
                         rootNode.id = rootId++;
                         rootNode.rootNode = null;
-                        rootNode.mask = GetLevelMask(0);
+                        ulong parentMask;
+                        rootNode.mask = GetLevelMask(0, out parentMask);
                         m_TagRootMap[rootNode.id] = rootNode;
-                        AttachNode(rootNode, rootNode, 1);
+                        AttachNode(rootNode, rootNode, 1, parentMask);
                     }
                 }
             }
