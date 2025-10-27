@@ -108,7 +108,7 @@ namespace GAS
                         childNode.rootNode = rootNode;
                         ulong childParentMask;
                         childNode.mask = GetLevelMask(level, out childParentMask, i) | parentMask;
-                        AttachNode(childNode, rootNode, level + 1, childParentMask, newPreName);
+                        AttachNode(childNode, rootNode, level + 1, childParentMask | parentMask, newPreName);
                     }
                 }
             }
