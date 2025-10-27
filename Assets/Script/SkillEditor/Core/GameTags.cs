@@ -4,6 +4,7 @@ using UnityEngine;
 using Utils;
 using Netcode;
 using Unity.Netcode;
+using SOC.GamePlay;
 
 namespace GAS
 {
@@ -11,24 +12,17 @@ namespace GAS
     public class GameTags : NetworkBehaviour
     {
         // ¶¯Ì¬µÄ
-        private NetworkVariable<ulong> m_TagValue = new NetworkVariable<ulong>();
+        private NetworkList<ulong> m_TagValues = new NetworkList<ulong>();
 
         private void Awake()
         {
-            m_TagValue.bRepNotify = true;
-            if (IsHost || IsClient)
-                m_TagValue.OnValueChanged = OnRep_TagValue;
+            if (!GameStart.IsDS)
+                m_TagValues.OnListChanged += OnRep_TagValues;
         }
 
-        void OnRep_TagValue(ulong previousValue, ulong newValue)
+        void OnRep_TagValues(NetworkListEvent<ulong> evt)
         {}
 
-        public ulong TagValue
-        {
-            get
-            {
-                return m_TagValue.Value;
-            }
-        }
+        
     }
 }
