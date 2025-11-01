@@ -75,8 +75,9 @@ namespace GAS
             return true;
         }
 
-        public abstract void OnTaskBegin();
-        public abstract void OnTaskEnd();
+        public virtual void OnTaskBegin() { }
+        public virtual void OnTaskEnd() { }
+        public virtual void OnCheckConditionFail() { }
 
         protected override void OnEnter()
         {
@@ -84,12 +85,16 @@ namespace GAS
             float currenTime = this.CurrentTime;
             if (currenTime >= 0 && (!this.CanTimeSkip || currenTime < this.endTime))
             {
-                if (IsTaskTimesNoCanRun() && IsOKByPreConditions())
+                if (IsTaskTimesNoCanRun())
                 {
-                    IsStartRuning = true;
-                    ++RunedTimes;
-                    OnTaskBegin();
-                }
+                    if (IsOKByPreConditions())
+                    {
+                        IsStartRuning = true;
+                        ++RunedTimes;
+                        OnTaskBegin();
+                    }
+                } else
+                    OnCheckConditionFail();
             }
         }
 
