@@ -92,9 +92,9 @@ namespace GAS
                         IsStartRuning = true;
                         ++RunedTimes;
                         OnTaskBegin();
-                    }
-                } else
-                    OnCheckConditionFail();
+                    } else
+                        OnCheckConditionFail();
+                }
             }
         }
 
