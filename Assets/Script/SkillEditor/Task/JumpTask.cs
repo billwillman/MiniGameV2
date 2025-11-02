@@ -5,7 +5,8 @@ using Slate;
 
 namespace GAS
 {
-    [Attachable(typeof(CommonGroup), typeof(ClientGroup), typeof(DSGroup))]
+    [Attachable(typeof(CommonTaskTrack))]
+    [Description("Ìø×ªTask")]
     [Name("JumpTask")]
     public class JumpTask : BaseTask
     {
