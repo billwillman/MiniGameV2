@@ -20,10 +20,7 @@ namespace GAS
         {
             if (this.root == null || ConditionOKJumpToFrom < 0)
                 return;
-            if (ConditionOKJumpEndTime)
-                this.RootCurrentTime = this.RootTimeLength - ConditionOKJumpToFrom;
-            else
-                this.RootCurrentTime = ConditionOKJumpToFrom;
+            GotoTime(ConditionOKJumpToFrom, ConditionOKJumpEndTime);
             this.ResultState = TaskResultState.Success;
         }
 
@@ -31,11 +28,7 @@ namespace GAS
         {
             if (this.root == null || ConditionFailJumpToFrom < 0)
                 return;
-            if (ConditionFailJumpEndTime)
-                this.RootCurrentTime = this.RootTimeLength - ConditionFailJumpToFrom;
-            else
-                this.RootCurrentTime = ConditionFailJumpToFrom;
-        }
+            GotoTime(ConditionFailJumpToFrom, ConditionFailJumpEndTime);        }
 
         [SerializeField, HideInInspector]
         private float m_TimeLen = 0.1f;

@@ -65,6 +65,17 @@ namespace GAS
             return true;
         }
 
+        public bool GotoTime(float offsetTime = 0, bool isStartEndFrame = false)
+        {
+            if (offsetTime < 0)
+                return false;
+            if (isStartEndFrame)
+                this.RootCurrentTime = this.RootTimeLength - offsetTime;
+            else
+                this.RootCurrentTime = offsetTime;
+            return true;
+        }
+
         public bool IsTaskTimesNoCanRun()
         {
             if (IsRunOnce)
