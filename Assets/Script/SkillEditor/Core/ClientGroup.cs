@@ -17,6 +17,14 @@ namespace GAS
             set
             { }
         }
+
+        public override GameObject actor
+        {
+            get
+            {
+                return this.gameObject;
+            }
+        }
     }
 
 }

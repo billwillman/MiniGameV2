@@ -8,6 +8,7 @@ namespace GAS
     [Attachable(typeof(CommonGroup), typeof(ClientGroup), typeof(DSGroup))]
     [Name("CommonTaskTrack")]
     public class CommonActionTaskTrack : CutsceneTrack
-    {}
+    {
+    }
 
 }
