@@ -79,15 +79,25 @@ namespace GAS
         public virtual void OnTaskEnd() { }
         public virtual void OnCheckConditionFail() { }
 
-        public float GetRootTime()
+        public float RootCurrentTime
         {
-            return this.root.currentTime;
+            get
+            {
+                return this.root.currentTime;
+            }
+
+            set
+            {
+                if (value < 0)
+                    value = 0;
+                this.root.currentTime = value;
+            }
         }
 
         protected override void OnEnter()
         {
             base.OnEnter();
-            float currenTime = this.GetRootTime();
+            float currenTime = this.RootCurrentTime;
             if (currenTime >= 0 && (!this.CanTimeSkip || currenTime < this.endTime))
             {
                 if (IsTaskTimesNoCanRun())

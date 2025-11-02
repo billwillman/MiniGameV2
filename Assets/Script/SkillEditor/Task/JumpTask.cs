@@ -18,7 +18,7 @@ namespace GAS
         {
             if (this.root == null || ConditionOKJumpToFromStartTime < 0)
                 return;
-            this.root.currentTime = ConditionOKJumpToFromStartTime;
+            this.RootCurrentTime = ConditionOKJumpToFromStartTime;
             this.ResultState = TaskResultState.Success;
         }
 
