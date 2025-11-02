@@ -31,7 +31,7 @@ namespace GAS
         {
             if (this.root == null || ConditionFailJumpToFrom < 0)
                 return;
-            if (ConditionOKJumpEndTime)
+            if (ConditionFailJumpEndTime)
                 this.RootCurrentTime = this.RootTimeLength - ConditionFailJumpToFrom;
             else
                 this.RootCurrentTime = ConditionFailJumpToFrom;
