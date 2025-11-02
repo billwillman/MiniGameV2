@@ -15,7 +15,7 @@ namespace GAS
     // 基本类
     //[Attachable(typeof(CommonGroup))]
     //[Name("BaseTask")]
-    public abstract class BaseTask: CutsceneTrack
+    public abstract class BaseTask: ActionClip
     {
         public bool CanTimeSkip = false; // 能否时间过了跳过，默认不可以
         public bool IsRunOnce; // 是否只执行一次

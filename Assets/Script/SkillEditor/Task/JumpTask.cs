@@ -1,22 +1,35 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Slate;
 
 namespace GAS
 {
+    [Attachable(typeof(CommonGroup), typeof(ClientGroup), typeof(DSGroup))]
+    [Name("JumpTask")]
     public class JumpTask : BaseTask
     {
-        // 跳转到开头
-        public float ToJumpTimeFromStart = 0f;
+        // 条件失败跳转到时间
+        public float ConditionFailJumpToFromStartTime = -1f;
+        public float ConditionOKJumpToFromStartTime = -1;
 
         public override void OnTaskBegin()
         {
-            throw new System.NotImplementedException();
+            if (this.root == null || ConditionOKJumpToFromStartTime < 0)
+                return;
+            this.root.currentTime = ConditionOKJumpToFromStartTime;
+            this.ResultState = TaskResultState.Success;
         }
 
         public override void OnTaskEnd()
         {
-            throw new System.NotImplementedException();
+        }
+
+        public override void OnCheckConditionFail()
+        {
+            if (this.root == null || ConditionFailJumpToFromStartTime < 0)
+                return;
+            this.root.currentTime = ConditionFailJumpToFromStartTime;
         }
     }
 }
