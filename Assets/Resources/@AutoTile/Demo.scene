@@ -245,7 +245,7 @@ MonoBehaviour:
   IsRunOnce: 0
   RunedTimes: 1
   ConditionFailJumpToFromStartTime: -1
-  ConditionOKJumpToFromStartTime: -1
+  ConditionOKJumpToFromStartTime: 0
   m_TimeLen: 10.059
 --- !u!4 &171003204
 Transform:

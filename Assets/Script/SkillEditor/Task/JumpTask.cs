@@ -11,22 +11,30 @@ namespace GAS
     public class JumpTask : BaseTask
     {
         // 条件失败跳转到时间
-        public float ConditionFailJumpToFromStartTime = -1f;
-        public float ConditionOKJumpToFromStartTime = -1;
+        public float ConditionFailJumpToFrom = -1f;
+        public bool ConditionFailJumpEndTime = false;
+        public float ConditionOKJumpToFrom = -1;
+        public bool ConditionOKJumpEndTime = false;
 
         public override void OnTaskBegin()
         {
-            if (this.root == null || ConditionOKJumpToFromStartTime < 0)
+            if (this.root == null || ConditionOKJumpToFrom < 0)
                 return;
-            this.RootCurrentTime = ConditionOKJumpToFromStartTime;
+            if (ConditionOKJumpEndTime)
+                this.RootCurrentTime = this.RootTimeLength - ConditionOKJumpToFrom;
+            else
+                this.RootCurrentTime = ConditionOKJumpToFrom;
             this.ResultState = TaskResultState.Success;
         }
 
         public override void OnCheckConditionFail()
         {
-            if (this.root == null || ConditionFailJumpToFromStartTime < 0)
+            if (this.root == null || ConditionFailJumpToFrom < 0)
                 return;
-            this.root.currentTime = ConditionFailJumpToFromStartTime;
+            if (ConditionOKJumpEndTime)
+                this.RootCurrentTime = this.RootTimeLength - ConditionFailJumpToFrom;
+            else
+                this.RootCurrentTime = ConditionFailJumpToFrom;
         }
 
         [SerializeField, HideInInspector]

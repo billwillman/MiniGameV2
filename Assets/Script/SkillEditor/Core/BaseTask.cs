@@ -94,6 +94,14 @@ namespace GAS
             }
         }
 
+        public float RootTimeLength
+        {
+            get
+            {
+                return this.root.length;
+            }
+        }
+
         protected override void OnEnter()
         {
             base.OnEnter();
