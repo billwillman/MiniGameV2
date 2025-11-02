@@ -19,7 +19,7 @@ namespace GAS
     {
         public bool CanTimeSkip = false; // 能否时间过了跳过，默认不可以
         public bool IsRunOnce; // 是否只执行一次
-        public uint RunedTimes = 0; // 执行了几次
+        protected uint RunedTimes = 0; // 执行了几次
 
         public TaskResultState ResultState
         {
