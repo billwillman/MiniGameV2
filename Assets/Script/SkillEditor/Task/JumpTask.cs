@@ -29,15 +29,20 @@ namespace GAS
             this.root.currentTime = ConditionFailJumpToFromStartTime;
         }
 
+        [SerializeField, HideInInspector]
+        private float m_TimeLen = 0.1f;
+
         public override float length
         {
             get
             {
-                return 0.1f;          
+                return m_TimeLen;
             }
             set
             {
-
+                m_TimeLen = value;
+                if (m_TimeLen < 0.1f)
+                    m_TimeLen = 0.1f;
             }
         }
     }
