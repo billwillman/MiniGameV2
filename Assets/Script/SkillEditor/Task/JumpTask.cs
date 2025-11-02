@@ -22,15 +22,23 @@ namespace GAS
             this.ResultState = TaskResultState.Success;
         }
 
-        public override void OnTaskEnd()
-        {
-        }
-
         public override void OnCheckConditionFail()
         {
             if (this.root == null || ConditionFailJumpToFromStartTime < 0)
                 return;
             this.root.currentTime = ConditionFailJumpToFromStartTime;
+        }
+
+        public override float length
+        {
+            get
+            {
+                return 0.1f;          
+            }
+            set
+            {
+
+            }
         }
     }
 }
