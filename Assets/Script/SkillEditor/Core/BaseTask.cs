@@ -90,6 +90,8 @@ namespace GAS
         public virtual void OnTaskEnd() { }
         public virtual void OnCheckConditionFail() { }
 
+        public virtual void OnTaskUpdate(float time) { }
+
         public float RootCurrentTime
         {
             get
@@ -110,6 +112,15 @@ namespace GAS
             get
             {
                 return this.root.length;
+            }
+        }
+
+        protected override void OnUpdate(float time)
+        {
+            base.OnUpdate(time);
+            if (IsStartRuning)
+            {
+                OnTaskUpdate(time);
             }
         }
 
