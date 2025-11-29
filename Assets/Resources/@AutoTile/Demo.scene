@@ -415,6 +415,85 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
+--- !u!1 &277809735
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 7
+  m_Component:
+  - component: {fileID: 277809736}
+  - component: {fileID: 277809737}
+  - component: {fileID: 277809738}
+  m_Layer: 0
+  m_HasEditorInfo: 1
+  m_Name: Common Action Task Track
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &277809736
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 277809735}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 764269225}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &277809737
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 277809735}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fd50be5f1faa06943b618396452350f8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _name: 
+  _color: {r: 1, g: 1, b: 1, a: 1}
+  _active: 1
+  _isLocked: 0
+  _actionClips:
+  - {fileID: 277809738}
+  _customHeight: 300
+--- !u!114 &277809738
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 277809735}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 26dc36a49b6f41f449d6a5c7e0e01a04, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _startTime: 2.7570002
+  _animationData:
+    _animatedParameters: []
+  CanTimeSkip: 0
+  IsRunOnce: 0
+  TransitionAsset:
+    _FadeDuration: 0.25
+    _Events:
+      _NormalizedTimes: []
+      _Callbacks: []
+      _Names: []
+    _Clip: {fileID: 7400000, guid: ab79e4baeb911014badb1a1d79e36881, type: 2}
+    _Speed: 1
+    _NormalizedStartTime: NaN
 --- !u!1 &278666340
 GameObject:
   m_ObjectHideFlags: 1
@@ -617,7 +696,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _tracks:
   - {fileID: 171003202}
-  - {fileID: 1143987182}
   _sections: []
   _isCollapsed: 0
   _active: 1
@@ -637,7 +715,6 @@ Transform:
   m_Children:
   - {fileID: 171003204}
   - {fileID: 1813061012}
-  - {fileID: 1143987184}
   m_Father: {fileID: 278666341}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &525508248
@@ -687,7 +764,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _tracks: []
   _sections: []
-  _isCollapsed: 0
+  _isCollapsed: 1
   _active: 1
   _isLocked: 0
 --- !u!1 &564523274
@@ -968,7 +1045,8 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 277809736}
   m_Father: {fileID: 278666341}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &764269226
@@ -983,7 +1061,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5386b2a244e7c804fb5942bce6d571bf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _tracks: []
+  _tracks:
+  - {fileID: 277809737}
   _sections: []
   _isCollapsed: 0
   _active: 1
@@ -1163,85 +1242,6 @@ Transform:
   - {fileID: 169874232}
   - {fileID: 175840381}
   m_Father: {fileID: 278666341}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1143987181
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 7
-  m_Component:
-  - component: {fileID: 1143987184}
-  - component: {fileID: 1143987182}
-  - component: {fileID: 1143987183}
-  m_Layer: 0
-  m_HasEditorInfo: 1
-  m_Name: Common Action Task Track
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1143987182
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1143987181}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fd50be5f1faa06943b618396452350f8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _name: 
-  _color: {r: 1, g: 1, b: 1, a: 1}
-  _active: 1
-  _isLocked: 0
-  _actionClips:
-  - {fileID: 1143987183}
-  _customHeight: 300
---- !u!114 &1143987183
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1143987181}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 26dc36a49b6f41f449d6a5c7e0e01a04, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _startTime: 3.4250002
-  _animationData:
-    _animatedParameters: []
-  CanTimeSkip: 0
-  IsRunOnce: 0
-  TransitionAsset:
-    _FadeDuration: 0.25
-    _Events:
-      _NormalizedTimes: []
-      _Callbacks: []
-      _Names: []
-    _Clip: {fileID: 7400000, guid: ab79e4baeb911014badb1a1d79e36881, type: 2}
-    _Speed: 1
-    _NormalizedStartTime: NaN
---- !u!4 &1143987184
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1143987181}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 447679725}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1385780060
 GameObject:

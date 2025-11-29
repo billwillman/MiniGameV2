@@ -21,6 +21,41 @@ namespace GAS
                 return TransitionAsset.Length;
             }
         }
+
+        private AnimancerState m_State;
+
+        public override void OnTaskBegin()
+        {
+            m_State = null;
+            var ctl = this.PlayerController;
+            if (ctl)
+            {
+                m_State = ctl.Play(TransitionAsset);
+            }
+        }
+
+        public override void OnTaskEnd()
+        {
+            if (m_State != null)
+            {
+                m_State.Stop();
+                m_State = null;
+            }
+        }
+
+        protected AnimancerComponent m_Animancer = null;
+        protected AnimancerComponent PlayerController
+        {
+            get
+            {
+                if (m_Animancer == null)
+                {
+                    if (actor)
+                        m_Animancer = actor.GetComponent<AnimancerComponent>();
+                }
+                return m_Animancer;
+            }
+        }
     }
 
 }
