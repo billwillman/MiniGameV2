@@ -274,6 +274,7 @@ function UIManager:OpenWindow(wndName, ...)
     if view then
         self:BringToFront(wndName)
         view:ReOpen(...)
+        return
     end
     self:_CreateUIWindow(wndName, true, ...)
 end
