@@ -3,34 +3,34 @@
 --- !u!162 &1
 EditorUserSettings:
   m_ObjectHideFlags: 0
-  serializedVersion: 4
+  serializedVersion: 6
   m_ConfigSettings:
     RecentlyUsedSceneGuid-0:
-      value: 5555555e5c570f0d0c0d5b7146730f444716487d7a7b2533292d1e62b0e66d39
+      value: 5353040507075d5f0c560a73157b084440154d7d7e797f36742a1f60e6b76d6c
       flags: 0
     RecentlyUsedSceneGuid-1:
-      value: 5208025051070a0c0808547212275d44124e497e787f22617c791c63b4b8603c
+      value: 0704555052025d0b5c5f5d2046720b44124f4f7e797f71607a7a4c64b4e2676d
       flags: 0
     RecentlyUsedSceneGuid-2:
-      value: 5b570d5157560d0a595b582612770f44144f1a2b7a2c23617b2d1863b1b1626e
+      value: 5505015052010c5d0f5c5a7b45200f4413154d7b752b77662e2c1837b3b46c68
       flags: 0
     RecentlyUsedSceneGuid-3:
-      value: 0553065503030f0c5c5b0f23127a064441164f78792c73667d2b4962e4b16269
+      value: 0707035056005a020c580d2646770b44104e4b7c7b2a72667f2f1c36e1b36639
       flags: 0
     RecentlyUsedSceneGuid-4:
-      value: 56035007000c590f095b097a45225d444216487d287c2334297a4f64b6e46268
+      value: 070405055357500a5b560d7146220d4410164d727d7f2267742c4c61b5b73268
       flags: 0
     RecentlyUsedSceneGuid-5:
-      value: 0608045752515c5d54580e7b167306444e4e1a7e2e7b71357c2d4b36e0b9656c
+      value: 5555555e5c570f0d0c0d5b7146730f444716487d7a7b2533292d1e62b0e66d39
       flags: 0
     RecentlyUsedSceneGuid-6:
-      value: 5354055f515158030e5d0f214720074446154d7e287b24637e2b4d64b6b46661
+      value: 5208025051070a0c0808547212275d44124e497e787f22617c791c63b4b8603c
       flags: 0
     RecentlyUsedSceneGuid-7:
-      value: 00010c5300040c035e0d5e7b14200a4444164d2878787031787e4e6ab5b63669
+      value: 5354055f515158030e5d0f214720074446154d7e287b24637e2b4d64b6b46661
       flags: 0
     RecentlyUsedSceneGuid-8:
-      value: 5102045401020b0f5b570e2413710a44404e4d2c282b70327c7e4c30e1e13269
+      value: 0608045752515c5d54580e7b167306444e4e1a7e2e7b71357c2d4b36e0b9656c
       flags: 0
     RecentlyUsedSceneGuid-9:
       value: 5a555505040c0802085d5e2115200a444e4e4c2e7a70226175784a65b5b1323a
@@ -46,6 +46,7 @@ EditorUserSettings:
   m_DesiredImportWorkerCount: 4
   m_StandbyImportWorkerCount: 2
   m_IdleImportWorkerShutdownDelay: 60000
+  m_DesiredBuildWorkerCount: 2
   m_VCShowFailedCheckout: 1
   m_VCOverwriteFailedCheckoutAssets: 1
   m_VCProjectOverlayIcons: 1
@@ -54,3 +55,4 @@ EditorUserSettings:
   m_VCAllowAsyncUpdate: 1
   m_VCScanLocalPackagesOnConnect: 1
   m_ArtifactGarbageCollection: 1
+  m_RemoveUnusedReferencesFromMaterial: 0
