@@ -204,32 +204,61 @@ namespace PuertsMcp
         }
 
         /// <summary>
-        /// Resolve the physical path of a resource file inside the com.puerts.mcp package.
-        /// Supports all UPM installation methods: local (file:), Git URL, embedded, and tarball.
-        /// In the Editor, uses PackageInfo API for reliable resolution.
-        /// At runtime, falls back to the simple Packages/ virtual path.
+        /// Resolve the physical path of a resource file inside the com.tencent.puerts.mcp package.
+        /// Supports UPM (Packages/) and Assets installs such as Assets/Purts/Mcp/mcp.
         /// </summary>
         private static string ResolvePackageResourcePath(string relativeResourcePath)
         {
             const string packageName = "com.tencent.puerts.mcp";
             const string resourceFolder = "Resources";
 
-#if UNITY_EDITOR
-            // PackageInfo.FindForAssetPath resolves the virtual "Packages/..." path
-            // to the actual physical location (works for Git URL, local, embedded, etc.)
-            var packageInfo = UnityEditor.PackageManager.PackageInfo.FindForAssetPath($"Packages/{packageName}");
-            if (packageInfo != null)
+            foreach (var root in EnumeratePackageRoots(packageName))
             {
-                var resolvedPath = System.IO.Path.Combine(packageInfo.resolvedPath, resourceFolder, relativeResourcePath);
+                var resolvedPath = System.IO.Path.Combine(root, resourceFolder, relativeResourcePath);
                 if (System.IO.File.Exists(resolvedPath))
                 {
                     return resolvedPath;
                 }
-                Debug.LogWarning($"[McpScriptManager] File not found at resolved path: {resolvedPath}, falling back to virtual path.");
             }
+
+            var fallback = System.IO.Path.GetFullPath($"Packages/{packageName}/{resourceFolder}/{relativeResourcePath}");
+            throw new System.IO.FileNotFoundException(
+                $"[McpScriptManager] Missing {relativeResourcePath}. MCP is not under Packages/{packageName}; " +
+                $"expected Assets/Purts/Mcp/mcp/Resources/{relativeResourcePath}. Tried: {fallback}");
+        }
+
+        private static System.Collections.Generic.IEnumerable<string> EnumeratePackageRoots(string packageName)
+        {
+#if UNITY_EDITOR
+            var packageInfo = UnityEditor.PackageManager.PackageInfo.FindForAssetPath($"Packages/{packageName}");
+            if (packageInfo != null && !string.IsNullOrEmpty(packageInfo.resolvedPath))
+            {
+                yield return packageInfo.resolvedPath;
+            }
+
+            var scriptGuids = UnityEditor.AssetDatabase.FindAssets("McpScriptManager t:MonoScript");
+            var projectRoot = System.IO.Path.GetDirectoryName(Application.dataPath);
+            for (int i = 0; i < scriptGuids.Length; i++)
+            {
+                var csPath = UnityEditor.AssetDatabase.GUIDToAssetPath(scriptGuids[i]);
+                if (string.IsNullOrEmpty(csPath) || !csPath.EndsWith("McpScriptManager.cs"))
+                {
+                    continue;
+                }
+
+                // .../Runtime/McpScriptManager.cs → package root is parent of Runtime
+                var absCsPath = System.IO.Path.GetFullPath(System.IO.Path.Combine(projectRoot, csPath));
+                var runtimeDir = System.IO.Path.GetDirectoryName(absCsPath);
+                var packageRoot = System.IO.Path.GetDirectoryName(runtimeDir);
+                if (!string.IsNullOrEmpty(packageRoot))
+                {
+                    yield return packageRoot;
+                }
+            }
+
+            yield return System.IO.Path.Combine(Application.dataPath, "Purts", "Mcp", "mcp");
 #endif
-            // Fallback: use the virtual Packages/ path (works for local/embedded packages)
-            return System.IO.Path.GetFullPath($"Packages/{packageName}/{resourceFolder}/{relativeResourcePath}");
+            yield return System.IO.Path.GetFullPath($"Packages/{packageName}");
         }
 
 #if !UNITY_EDITOR
