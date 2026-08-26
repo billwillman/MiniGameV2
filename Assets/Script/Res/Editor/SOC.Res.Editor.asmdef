@@ -1,0 +1,18 @@
+{
+    "name": "SOC.Res.Editor",
+    "rootNamespace": "",
+    "references": [
+        "GUID:9a4c5324c4752124c94f341bb0ae9fb2"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
