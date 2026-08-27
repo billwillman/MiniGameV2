@@ -5,6 +5,7 @@ using UnityEngine.EventSystems;
 
 namespace SOC.GamePlay
 {
+    [RequireComponent(typeof(ITSBinder))]
     [DefaultExecutionOrder(-50)]
     public sealed class TSUIBinder : BaseMonoBehaviour
     {
@@ -69,20 +70,21 @@ namespace SOC.GamePlay
 
         void ReleaseJsCache()
         {
-            if (JsGameStart.JsEnv != null)
-            {
-                try
-                {
-                    if (m_Bp != null)
-                        WriteBindControls(m_Bp, true);
-                    if (m_JsSelf != null)
-                        JsBinderHelper.SetJsProperty(m_JsSelf, "bp", null);
-                }
-                catch (Exception e)
-                {
-                    Debug.LogException(e);
-                }
-            }
+            // Dispose 已丢掉 C# 侧 ScriptObject 句柄。JS 上 this.bp / 控件键与 Lua UIBinder 一样留给脚本自己失效。
+            // if (JsGameStart.JsEnv != null)
+            // {
+            //     try
+            //     {
+            //         if (m_Bp != null)
+            //             WriteBindControls(m_Bp, true);
+            //         if (m_JsSelf != null)
+            //             JsBinderHelper.SetJsProperty(m_JsSelf, "bp", null);
+            //     }
+            //     catch (Exception e)
+            //     {
+            //         Debug.LogException(e);
+            //     }
+            // }
 
             JsBinderHelper.DisposeScriptObject(ref m_Bp);
             JsBinderHelper.DisposeScriptObject(ref m_JsSelf);
