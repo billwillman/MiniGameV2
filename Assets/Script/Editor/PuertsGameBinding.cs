@@ -14,6 +14,7 @@ public class PuertsGameBinding
             return new List<Type>()
             {
                 typeof(JsGameStart),
+                typeof(JsLoader),
                 typeof(ITSBinder),
                 typeof(TSUIBinder),
             };

@@ -8,7 +8,7 @@ namespace SOC.GamePlay
     public class JsGameStart : MonoBehaviour
     {
         public static JsGameStart Instance = null;
-        public static JsEnv JsEnv = null;
+        public static ScriptEnv JsEnv = null;
 
         void Awake()
         {
@@ -24,12 +24,12 @@ namespace SOC.GamePlay
 
             try
             {
-                JsEnv = new JsEnv(new DefaultLoader(), -1, BackendType.V8, IntPtr.Zero, IntPtr.Zero);
+                JsEnv = new ScriptEnv(new BackendV8(new JsLoader()), -1);
             }
             catch (Exception e)
             {
                 JsEnv = null;
-                Debug.LogError("[JsGameStart] Failed to create V8 JsEnv: " + e);
+                Debug.LogError("[JsGameStart] Failed to create V8 ScriptEnv: " + e);
             }
         }
 
