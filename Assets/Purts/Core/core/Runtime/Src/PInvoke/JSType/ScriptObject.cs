@@ -63,14 +63,55 @@ namespace Puerts
             {
                 var env = PuertsNative.pesapi_get_env_from_ref(apis, envRef);
                 var obj = PuertsNative.pesapi_get_value_from_ref(apis, env, objRef);
-                var jsVal = ExpressionsWrap.Helpper.NativeToScript_Object(apis, env, value);
-                PuertsNative.pesapi_set_property(apis, env, obj, key, jsVal);
+                SetProperty(apis, env, obj, key, value);
                 ExpressionsWrap.Helpper.CheckException(apis, scope);
             }
             finally
             {
                 PuertsNative.pesapi_close_scope(apis, scope);
             }
+        }
+
+        public void Set(string[] keys, object[] values)
+        {
+            if (keys == null)
+                throw new ArgumentNullException("keys");
+            if (values == null)
+                throw new ArgumentNullException("values");
+            if (keys.Length != values.Length)
+                throw new ArgumentException("keys and values length mismatch");
+            if (keys.Length == 0)
+                return;
+
+            this.scripEnv.CheckLiveness();
+            var envRef = PuertsNative.pesapi_get_ref_associated_env(apis, objRef);
+            if (!PuertsNative.pesapi_env_ref_is_valid(apis, envRef))
+            {
+                throw new InvalidOperationException("associated script env has disposed!");
+            }
+            var scope = PuertsNative.pesapi_open_scope(apis, envRef);
+            try
+            {
+                var env = PuertsNative.pesapi_get_env_from_ref(apis, envRef);
+                var obj = PuertsNative.pesapi_get_value_from_ref(apis, env, objRef);
+                for (int i = 0; i < keys.Length; ++i)
+                {
+                    SetProperty(apis, env, obj, keys[i], values[i]);
+                }
+                ExpressionsWrap.Helpper.CheckException(apis, scope);
+            }
+            finally
+            {
+                PuertsNative.pesapi_close_scope(apis, scope);
+            }
+        }
+
+        static void SetProperty(IntPtr apis, IntPtr env, IntPtr obj, string key, object value)
+        {
+            if (string.IsNullOrEmpty(key))
+                return;
+            var jsVal = ExpressionsWrap.Helpper.NativeToScript_Object(apis, env, value);
+            PuertsNative.pesapi_set_property(apis, env, obj, key, jsVal);
         }
 
         public void Dispose()

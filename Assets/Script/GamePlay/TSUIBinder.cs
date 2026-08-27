@@ -42,24 +42,29 @@ namespace SOC.GamePlay
 
             m_JsSelf = jsSelf;
             m_Bp = bp;
+            WriteBindControls(bp, false);
+        }
 
+        protected override void OnInternalDestroyed()
+        {
+            ReleaseJsCache();
+        }
+
+        void WriteBindControls(ScriptObject bp, bool clear)
+        {
             Canvas canvas = gameObject.GetComponent<Canvas>();
             if (canvas != null)
-                JsBinderHelper.SetJsProperty(bp, "_Canvas", canvas);
+                JsBinderHelper.SetJsProperty(bp, "_Canvas", clear ? null : canvas);
 
             if (m_BindControls == null)
                 return;
             for (int i = 0; i < m_BindControls.Length; ++i)
             {
                 var control = m_BindControls[i];
-                if (control != null)
-                    JsBinderHelper.SetJsProperty(bp, control.gameObject.name, control);
+                if (control == null)
+                    continue;
+                JsBinderHelper.SetJsProperty(bp, control.gameObject.name, clear ? null : control);
             }
-        }
-
-        protected override void OnInternalDestroyed()
-        {
-            ReleaseJsCache();
         }
 
         void ReleaseJsCache()
@@ -69,18 +74,7 @@ namespace SOC.GamePlay
                 try
                 {
                     if (m_Bp != null)
-                    {
-                        JsBinderHelper.SetJsProperty(m_Bp, "_Canvas", null);
-                        if (m_BindControls != null)
-                        {
-                            for (int i = 0; i < m_BindControls.Length; ++i)
-                            {
-                                var control = m_BindControls[i];
-                                if (control != null)
-                                    JsBinderHelper.SetJsProperty(m_Bp, control.gameObject.name, null);
-                            }
-                        }
-                    }
+                        WriteBindControls(m_Bp, true);
                     if (m_JsSelf != null)
                         JsBinderHelper.SetJsProperty(m_JsSelf, "bp", null);
                 }

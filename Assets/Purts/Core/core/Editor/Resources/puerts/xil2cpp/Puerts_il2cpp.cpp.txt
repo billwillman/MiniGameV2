@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Tencent is pleased to support the open source community by making Puerts available.
  * Copyright (C) 2020 Tencent.  All rights reserved.
  * Puerts is licensed under the BSD 3-Clause License, except for the third-party components listed in the file 'LICENSE' which may
@@ -2306,6 +2306,24 @@ Il2CppObject* ScriptObjectGetValue(Il2CppObject* scriptObject, struct pesapi_ffi
     return JsValueToCSRef(apis, type, env, val);
 }
 
+static void ScriptObjectSetPropertyInScope(struct pesapi_ffi* apis, pesapi_env env, pesapi_value jsObj, Il2CppString* key, Il2CppObject* obj)
+{
+    if (!key)
+    {
+        return;
+    }
+    const Il2CppChar* utf16 = il2cpp::utils::StringUtils::GetChars(key);
+    std::string key_std = il2cpp::utils::StringUtils::Utf16ToUtf8(utf16);
+    if (key_std.empty())
+    {
+        return;
+    }
+    pesapi_value jsVal = obj
+        ? CSRefToJsValue(apis, env, obj->klass, obj)
+        : ${invokePapi('create_null')}(env);
+    ${invokePapi('set_property')}(env, jsObj, key_std.c_str(), jsVal);
+}
+
 void ScriptObjectSetValue(Il2CppObject* scriptObject, struct pesapi_ffi* apis, Il2CppString* key, Il2CppObject* obj)
 {
     if (!scriptObject || !key)
@@ -2314,9 +2332,6 @@ void ScriptObjectSetValue(Il2CppObject* scriptObject, struct pesapi_ffi* apis, I
     }
 
     PObjectRefInfo* objectInfo = GetPObjectRefInfo(scriptObject);
-
-    const Il2CppChar* utf16 = il2cpp::utils::StringUtils::GetChars(key);
-    std::string key_std = il2cpp::utils::StringUtils::Utf16ToUtf8(utf16);
 
     pesapi_env_ref envRef = ${invokePapi('get_ref_associated_env')}(objectInfo->ValueRef);
     if (!${invokePapi('env_ref_is_valid')}(envRef))
@@ -2328,10 +2343,50 @@ void ScriptObjectSetValue(Il2CppObject* scriptObject, struct pesapi_ffi* apis, I
     AutoValueScope ValueScope(apis, envRef);
     auto env = ${invokePapi('get_env_from_ref')}(envRef);
     auto jsObj = ${invokePapi('get_value_from_ref')}(env, objectInfo->ValueRef);
-    pesapi_value jsVal = obj
-        ? CSRefToJsValue(apis, env, obj->klass, obj)
-        : ${invokePapi('create_null')}(env);
-    ${invokePapi('set_property')}(env, jsObj, key_std.c_str(), jsVal);
+    ScriptObjectSetPropertyInScope(apis, env, jsObj, key, obj);
+    if (${invokePapi('has_caught')}(ValueScope.scope()))
+    {
+        Exception::Raise(Exception::GetInvalidOperationException(${invokePapi('get_exception_as_string')}(ValueScope.scope(), true)));
+    }
+}
+
+void ScriptObjectSetValues(Il2CppObject* scriptObject, struct pesapi_ffi* apis, Il2CppArray* keys, Il2CppArray* values)
+{
+    if (!scriptObject || !keys || !values)
+    {
+        return;
+    }
+
+    uint32_t keyCount = il2cpp_array_length(keys);
+    if (keyCount != il2cpp_array_length(values))
+    {
+        Exception::Raise(Exception::GetArgumentException("values", "keys and values length mismatch"));
+        return;
+    }
+    if (keyCount == 0)
+    {
+        return;
+    }
+
+    PObjectRefInfo* objectInfo = GetPObjectRefInfo(scriptObject);
+    pesapi_env_ref envRef = ${invokePapi('get_ref_associated_env')}(objectInfo->ValueRef);
+    if (!${invokePapi('env_ref_is_valid')}(envRef))
+    {
+        Exception::Raise(Exception::GetInvalidOperationException("associated script env has disposed!"));
+        return;
+    }
+
+    AutoValueScope ValueScope(apis, envRef);
+    auto env = ${invokePapi('get_env_from_ref')}(envRef);
+    auto jsObj = ${invokePapi('get_value_from_ref')}(env, objectInfo->ValueRef);
+    int32_t keyElemSize = il2cpp_array_element_size(keys->klass);
+    int32_t valElemSize = il2cpp_array_element_size(values->klass);
+    for (uint32_t i = 0; i < keyCount; ++i)
+    {
+        Il2CppString* key = *(Il2CppString**)il2cpp_array_addr_with_size(keys, keyElemSize, i);
+        Il2CppObject* val = *(Il2CppObject**)il2cpp_array_addr_with_size(values, valElemSize, i);
+        ScriptObjectSetPropertyInScope(apis, env, jsObj, key, val);
+    }
     if (${invokePapi('has_caught')}(ValueScope.scope()))
     {
         Exception::Raise(Exception::GetInvalidOperationException(${invokePapi('get_exception_as_string')}(ValueScope.scope(), true)));
@@ -3046,6 +3101,7 @@ void InitialPuerts(pesapi_registry_api* registry_api, pesapi_registry registry)
     InternalCalls::Add("Puerts.NativeAPI::DestroyJSEnvPrivate(System.IntPtr)", (Il2CppMethodPointer)puerts::DestroyJSEnvPrivate);
     InternalCalls::Add("Puerts.ScriptObject::GetValue(System.IntPtr,System.String,System.Type)", (Il2CppMethodPointer)puerts::ScriptObjectGetValue);
     InternalCalls::Add("Puerts.ScriptObject::SetValue(System.IntPtr,System.String,System.Object)", (Il2CppMethodPointer)puerts::ScriptObjectSetValue);
+    InternalCalls::Add("Puerts.ScriptObject::SetValues(System.IntPtr,System.String[],System.Object[])", (Il2CppMethodPointer)puerts::ScriptObjectSetValues);
     InternalCalls::Add("Puerts.NativeAPI::SetExtensionMethodGet(System.Reflection.MethodBase)", (Il2CppMethodPointer)puerts::SetExtensionMethodGet);
     puerts::g_registry_api = registry_api;
     puerts::g_registry = registry;

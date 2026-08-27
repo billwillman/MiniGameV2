@@ -20,6 +20,9 @@ namespace Puerts
         IntPtr valueRef;
         IntPtr nativeJsEnv;
 
+        // IL2CPP InternalCall stubs: bodies never run in Player. Native impl is
+        // ScriptObjectGetValue / ScriptObjectSetValue / ScriptObjectSetValues in
+        // Puerts_il2cpp.cpp, registered by InitialPuerts.
         [MethodImpl(MethodImplOptions.InternalCall)]
         object GetValue(IntPtr apis, string key, Type resultType)
         {
@@ -33,6 +36,13 @@ namespace Puerts
             throw new NotImplementedException();
         }
 
+        [UnityEngine.Scripting.Preserve]
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        void SetValues(IntPtr apis, string[] keys, object[] values)
+        {
+            throw new NotImplementedException();
+        }
+
         public T Get<T>(string key) 
         {
             return (T)GetValue(apis, key, typeof(T));
@@ -42,6 +52,20 @@ namespace Puerts
         public void Set(string key, object value)
         {
             SetValue(apis, key, value);
+        }
+
+        [UnityEngine.Scripting.Preserve]
+        public void Set(string[] keys, object[] values)
+        {
+            if (keys == null)
+                throw new ArgumentNullException("keys");
+            if (values == null)
+                throw new ArgumentNullException("values");
+            if (keys.Length != values.Length)
+                throw new ArgumentException("keys and values length mismatch");
+            if (keys.Length == 0)
+                return;
+            SetValues(apis, keys, values);
         }
 
         ~ScriptObject()
