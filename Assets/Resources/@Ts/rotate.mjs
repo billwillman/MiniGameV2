@@ -3,10 +3,11 @@ import { $typeof } from "puerts";
 class Rotate {
     constructor(bindTo) {
         this.bindTo = bindTo;
-        const uiType = $typeof(CS.SOC.GamePlay.TSUIBinder);
-        const ui = bindTo.GetComponent(uiType);
-        if (ui != null && ui.m_BindControls != null) {
-            console.log("[rotate] TSUIBinder m_BindControls length=" + ui.m_BindControls.Length);
+        this.bp = {};
+        const ui = bindTo.GetComponent($typeof(CS.SOC.GamePlay.TSUIBinder));
+        if (ui != null) {
+            ui.InitRegisterControls(this);
+            console.log("[rotate] bp keys=" + Object.keys(this.bp).join(","));
         }
         bindTo.JsUpdate = () => this.onUpdate();
         bindTo.JsOnDestroy = () => this.onDestroy();

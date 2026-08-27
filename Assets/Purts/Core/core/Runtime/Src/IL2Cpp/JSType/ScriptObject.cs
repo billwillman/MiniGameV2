@@ -26,9 +26,22 @@ namespace Puerts
             throw new NotImplementedException();
         }
 
+        [UnityEngine.Scripting.Preserve]
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        void SetValue(IntPtr apis, string key, object value)
+        {
+            throw new NotImplementedException();
+        }
+
         public T Get<T>(string key) 
         {
             return (T)GetValue(apis, key, typeof(T));
+        }
+
+        [UnityEngine.Scripting.Preserve]
+        public void Set(string key, object value)
+        {
+            SetValue(apis, key, value);
         }
 
         ~ScriptObject()

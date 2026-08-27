@@ -50,6 +50,29 @@ namespace Puerts
             }
         }
 
+        public void Set(string key, object value)
+        {
+            this.scripEnv.CheckLiveness();
+            var envRef = PuertsNative.pesapi_get_ref_associated_env(apis, objRef);
+            if (!PuertsNative.pesapi_env_ref_is_valid(apis, envRef))
+            {
+                throw new InvalidOperationException("associated script env has disposed!");
+            }
+            var scope = PuertsNative.pesapi_open_scope(apis, envRef);
+            try
+            {
+                var env = PuertsNative.pesapi_get_env_from_ref(apis, envRef);
+                var obj = PuertsNative.pesapi_get_value_from_ref(apis, env, objRef);
+                var jsVal = ExpressionsWrap.Helpper.NativeToScript_Object(apis, env, value);
+                PuertsNative.pesapi_set_property(apis, env, obj, key, jsVal);
+                ExpressionsWrap.Helpper.CheckException(apis, scope);
+            }
+            finally
+            {
+                PuertsNative.pesapi_close_scope(apis, scope);
+            }
+        }
+
         public void Dispose()
         {
             Dispose(true);
