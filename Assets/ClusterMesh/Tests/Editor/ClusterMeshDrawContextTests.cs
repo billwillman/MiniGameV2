@@ -47,5 +47,14 @@ namespace ClusterMesh.Tests
             var ctx = new ClusterMeshDrawContext(null, cull, lit);
             Assert.DoesNotThrow(() => { ctx.Dispose(); ctx.Dispose(); });
         }
+
+        [Test]
+        public void Renderer_OnEnableWithEmptyAsset_DoesNotThrow()
+        {
+            var go = new GameObject("CMRenderer");
+            var renderer = go.AddComponent<ClusterMeshRenderer>();
+            Assert.DoesNotThrow(() => renderer.EnsureInitialized());
+            Object.DestroyImmediate(go);
+        }
     }
 }
