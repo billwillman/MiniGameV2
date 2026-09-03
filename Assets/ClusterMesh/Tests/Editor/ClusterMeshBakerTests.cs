@@ -74,6 +74,35 @@ namespace ClusterMesh.Tests
                 ClusterMeshBaker.Bake(null, Array.Empty<Material>(), new ClusterMeshBakeSettings()));
         }
 
+        [Test]
+        public void Bake_EmptyTangents_RebuildsFromUvAndPosition()
+        {
+            var mesh = new Mesh { name = "CMTestNoTangents" };
+            mesh.vertices = new[]
+            {
+                new Vector3(0f, 0f, 0f),
+                new Vector3(0f, 0f, 1f),
+                new Vector3(0f, 1f, 0f)
+            };
+            mesh.triangles = new[] { 0, 1, 2 };
+            mesh.uv = new[] { Vector2.zero, Vector2.right, Vector2.up };
+            mesh.RecalculateNormals();
+            mesh.RecalculateBounds();
+            Assert.That(mesh.tangents == null || mesh.tangents.Length == 0, Is.True);
+
+            var result = ClusterMeshBaker.Bake(mesh, new Material[1], new ClusterMeshBakeSettings());
+            var dummy = new Vector4(1f, 0f, 0f, 1f);
+            Assert.That(result.vertices.Length, Is.EqualTo(3));
+            for (int i = 0; i < result.vertices.Length; i++)
+            {
+                Vector4 tan = result.vertices[i].tangent;
+                Assert.That(new Vector3(tan.x, tan.y, tan.z).sqrMagnitude, Is.GreaterThan(0.5f));
+                Assert.That(tan, Is.Not.EqualTo(dummy));
+            }
+
+            Object.DestroyImmediate(mesh);
+        }
+
         static bool ContainsPoint(ClusterHeader cluster, Vector4 position)
         {
             var c = (Vector3)cluster.aabbCenter;

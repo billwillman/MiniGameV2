@@ -23,6 +23,9 @@ namespace ClusterMesh
             if (sourcePositions == null || sourcePositions.Length == 0)
                 throw new InvalidOperationException("ClusterMesh baker requires a mesh with vertices.");
 
+            if (sourceTangents == null || sourceTangents.Length == 0)
+                sourceTangents = RebuildTangents(sourcePositions, sourceNormals, sourceUvs, mesh);
+
             var clusters = new List<ClusterHeader>();
             var vertices = new List<ClusterVertex>();
             var indices = new List<uint>();
@@ -232,7 +235,7 @@ namespace ClusterMesh
                         local = (uint)remap.Count;
                         remap[src] = local;
                         var n = (normals != null && src < normals.Length) ? normals[src] : Vector3.up;
-                        var tan = (tangents != null && src < tangents.Length) ? tangents[src] : new Vector4(1f, 0f, 0f, 1f);
+                        var tan = tangents[src];
                         var uv = (uvs != null && src < uvs.Length) ? uvs[src] : Vector2.zero;
                         vertices.Add(new ClusterVertex
                         {
@@ -272,6 +275,89 @@ namespace ClusterMesh
                 coneAxisCutoff = new Vector4(axis.x, axis.y, axis.z, cutoff),
                 coneApex = center
             });
+        }
+
+        static Vector4[] RebuildTangents(Vector3[] positions, Vector3[] normals, Vector2[] uvs, Mesh mesh)
+        {
+            var tanAccum = new Vector3[positions.Length];
+            var bitanAccum = new Vector3[positions.Length];
+            int subMeshCount = Mathf.Max(1, mesh.subMeshCount);
+            for (int sub = 0; sub < subMeshCount; sub++)
+            {
+                int[] tris = mesh.GetTriangles(sub);
+                for (int i = 0; i + 2 < tris.Length; i += 3)
+                {
+                    int i0 = tris[i];
+                    int i1 = tris[i + 1];
+                    int i2 = tris[i + 2];
+                    if (i0 == i1 || i1 == i2 || i0 == i2)
+                        continue;
+
+                    Vector3 p0 = positions[i0];
+                    Vector3 p1 = positions[i1];
+                    Vector3 p2 = positions[i2];
+                    Vector2 w0 = (uvs != null && i0 < uvs.Length) ? uvs[i0] : Vector2.zero;
+                    Vector2 w1 = (uvs != null && i1 < uvs.Length) ? uvs[i1] : Vector2.zero;
+                    Vector2 w2 = (uvs != null && i2 < uvs.Length) ? uvs[i2] : Vector2.zero;
+
+                    Vector3 e1 = p1 - p0;
+                    Vector3 e2 = p2 - p0;
+                    Vector2 duv1 = w1 - w0;
+                    Vector2 duv2 = w2 - w0;
+                    float det = duv1.x * duv2.y - duv2.x * duv1.y;
+                    Vector3 sdir;
+                    Vector3 tdir;
+                    if (Mathf.Abs(det) < 1e-8f)
+                    {
+                        sdir = Vector3.right;
+                        tdir = Vector3.forward;
+                    }
+                    else
+                    {
+                        float r = 1f / det;
+                        sdir = new Vector3(
+                            (duv2.y * e1.x - duv1.y * e2.x) * r,
+                            (duv2.y * e1.y - duv1.y * e2.y) * r,
+                            (duv2.y * e1.z - duv1.y * e2.z) * r);
+                        tdir = new Vector3(
+                            (duv1.x * e2.x - duv2.x * e1.x) * r,
+                            (duv1.x * e2.y - duv2.x * e1.y) * r,
+                            (duv1.x * e2.z - duv2.x * e1.z) * r);
+                    }
+
+                    float len01 = e1.magnitude;
+                    float len02 = e2.magnitude;
+                    float len12 = (p2 - p1).magnitude;
+                    float wgt0 = len01 + len02;
+                    float wgt1 = len01 + len12;
+                    float wgt2 = len02 + len12;
+
+                    tanAccum[i0] += sdir * wgt0;
+                    tanAccum[i1] += sdir * wgt1;
+                    tanAccum[i2] += sdir * wgt2;
+                    bitanAccum[i0] += tdir * wgt0;
+                    bitanAccum[i1] += tdir * wgt1;
+                    bitanAccum[i2] += tdir * wgt2;
+                }
+            }
+
+            var result = new Vector4[positions.Length];
+            for (int i = 0; i < positions.Length; i++)
+            {
+                Vector3 n = (normals != null && i < normals.Length && normals[i].sqrMagnitude > 1e-12f)
+                    ? normals[i].normalized
+                    : Vector3.up;
+                Vector3 t = tanAccum[i];
+                if (t.sqrMagnitude < 1e-12f)
+                    t = Vector3.Cross(n, Vector3.up);
+                if (t.sqrMagnitude < 1e-12f)
+                    t = Vector3.Cross(n, Vector3.right);
+                t = (t - n * Vector3.Dot(n, t)).normalized;
+                float sign = Vector3.Dot(Vector3.Cross(n, t), bitanAccum[i]) < 0f ? -1f : 1f;
+                result[i] = new Vector4(t.x, t.y, t.z, sign);
+            }
+
+            return result;
         }
 
         static void BuildCone(List<int> clusterTris, List<int> triangleList, Vector3[] positions, Vector3 apex, out Vector3 axis, out float cutoff)

@@ -20,9 +20,9 @@ namespace ClusterMesh
 #if UNITY_EDITOR
             if (cullShader == null)
                 cullShader = UnityEditor.AssetDatabase.LoadAssetAtPath<ComputeShader>("Assets/ClusterMesh/Shaders/ClusterMeshCull.compute");
+#endif
             if (litShader == null)
                 litShader = Shader.Find("ClusterMesh/Lit");
-#endif
             _context = new ClusterMeshDrawContext(asset, cullShader, litShader);
             if (!_context.IsReady && !_loggedError && !string.IsNullOrEmpty(_context.Error))
             {

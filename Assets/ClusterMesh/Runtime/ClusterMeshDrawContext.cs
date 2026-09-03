@@ -25,7 +25,7 @@ namespace ClusterMesh
         readonly GraphicsBuffer _clusterBuffer;
         readonly GraphicsBuffer _vertexBuffer;
         readonly GraphicsBuffer _indexBuffer;
-        readonly GraphicsBuffer _visibleBuffer;
+        readonly GraphicsBuffer[] _visibleBuffers;
         readonly GraphicsBuffer[] _argsBuffers;
         readonly Material[] _materials;
         readonly Plane[] _planes = new Plane[6];
@@ -33,7 +33,7 @@ namespace ClusterMesh
         readonly uint[] _argsSeed = new uint[5];
         bool _disposed;
 
-        public bool IsReady { get; }
+        public bool IsReady { get; private set; }
         public string Error { get; }
         public int IsolateIndex { get; set; } = -1;
 
@@ -71,14 +71,11 @@ namespace ClusterMesh
             _indexBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, Mathf.Max(1, asset.indices.Length), 4);
             if (asset.indices.Length > 0)
                 _indexBuffer.SetData(asset.indices);
-            _visibleBuffer = new GraphicsBuffer(
-                GraphicsBuffer.Target.Append | GraphicsBuffer.Target.Structured,
-                asset.clusters.Length,
-                4);
 
             int materialCount = Mathf.Max(1, asset.materials != null ? asset.materials.Length : 1);
             _materials = new Material[materialCount];
             _argsBuffers = new GraphicsBuffer[materialCount];
+            _visibleBuffers = new GraphicsBuffer[materialCount];
             _argsSeed[0] = (uint)ClusterMeshLimits.TemplateVertexCount;
             for (int i = 0; i < materialCount; i++)
             {
@@ -86,6 +83,10 @@ namespace ClusterMesh
                 _materials[i] = ClusterMeshMaterialUtil.CreateRuntimeMaterial(source, litShader);
                 _argsBuffers[i] = new GraphicsBuffer(GraphicsBuffer.Target.IndirectArguments, 1, 20);
                 _argsBuffers[i].SetData(_argsSeed);
+                _visibleBuffers[i] = new GraphicsBuffer(
+                    GraphicsBuffer.Target.Append | GraphicsBuffer.Target.Structured,
+                    asset.clusters.Length,
+                    4);
             }
 
             IsReady = true;
@@ -106,9 +107,10 @@ namespace ClusterMesh
 
             for (int materialIndex = 0; materialIndex < _materials.Length; materialIndex++)
             {
-                _visibleBuffer.SetCounterValue(0);
+                GraphicsBuffer visible = _visibleBuffers[materialIndex];
+                visible.SetCounterValue(0);
                 _cullShader.SetBuffer(_cullKernel, ClustersId, _clusterBuffer);
-                _cullShader.SetBuffer(_cullKernel, VisibleId, _visibleBuffer);
+                _cullShader.SetBuffer(_cullKernel, VisibleId, visible);
                 _cullShader.SetInt(ClusterCountId, _asset.clusters.Length);
                 _cullShader.SetInt(MaterialIndexId, materialIndex);
                 _cullShader.SetInt(IsolateIndexId, IsolateIndex);
@@ -117,13 +119,13 @@ namespace ClusterMesh
                 _cullShader.Dispatch(_cullKernel, groups, 1, 1);
 
                 _argsBuffers[materialIndex].SetData(_argsSeed);
-                GraphicsBuffer.CopyCount(_visibleBuffer, _argsBuffers[materialIndex], 4);
+                GraphicsBuffer.CopyCount(visible, _argsBuffers[materialIndex], 4);
 
                 Material mat = _materials[materialIndex];
                 mat.SetBuffer(ClustersId, _clusterBuffer);
                 mat.SetBuffer(VerticesId, _vertexBuffer);
                 mat.SetBuffer(IndicesId, _indexBuffer);
-                mat.SetBuffer(VisibleId, _visibleBuffer);
+                mat.SetBuffer(VisibleId, visible);
                 mat.SetMatrix(LocalToWorldId, localToWorld);
                 mat.SetMatrix(WorldToLocalId, worldToLocal);
 
@@ -170,10 +172,16 @@ namespace ClusterMesh
             if (_disposed)
                 return;
             _disposed = true;
+            IsReady = false;
             _clusterBuffer?.Dispose();
             _vertexBuffer?.Dispose();
             _indexBuffer?.Dispose();
-            _visibleBuffer?.Dispose();
+            if (_visibleBuffers != null)
+            {
+                for (int i = 0; i < _visibleBuffers.Length; i++)
+                    _visibleBuffers[i]?.Dispose();
+            }
+
             if (_argsBuffers != null)
             {
                 for (int i = 0; i < _argsBuffers.Length; i++)
@@ -185,12 +193,20 @@ namespace ClusterMesh
                 for (int i = 0; i < _materials.Length; i++)
                 {
                     if (_materials[i] != null)
-                        UnityEngine.Object.DestroyImmediate(_materials[i]);
+                        DestroyUnityObject(_materials[i]);
                 }
             }
 
             if (_template != null)
-                UnityEngine.Object.DestroyImmediate(_template);
+                DestroyUnityObject(_template);
+        }
+
+        static void DestroyUnityObject(UnityEngine.Object obj)
+        {
+            if (Application.isPlaying)
+                UnityEngine.Object.Destroy(obj);
+            else
+                UnityEngine.Object.DestroyImmediate(obj);
         }
     }
 }

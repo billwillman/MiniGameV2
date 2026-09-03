@@ -77,7 +77,7 @@ Varyings ClusterMeshVert(Attributes input)
     float3 normalOS;
     float4 tangentOS;
     float2 uv;
-    FetchClusterVertex(input.vertexID, input.instanceID, positionOS, normalOS, tangentOS, uv);
+    FetchClusterVertex(input.vertexID, unity_InstanceID, positionOS, normalOS, tangentOS, uv);
 
     VertexPositionInputs pos = GetVertexPositionInputs(positionOS);
     VertexNormalInputs nrm = GetVertexNormalInputs(normalOS, tangentOS);
@@ -127,7 +127,7 @@ Varyings ClusterMeshShadowVert(Attributes input)
     float3 normalOS;
     float4 tangentOS;
     float2 uv;
-    FetchClusterVertex(input.vertexID, input.instanceID, positionOS, normalOS, tangentOS, uv);
+    FetchClusterVertex(input.vertexID, unity_InstanceID, positionOS, normalOS, tangentOS, uv);
     Varyings o;
     o.positionCS = TransformWorldToHClip(TransformObjectToWorld(positionOS));
 #if UNITY_REVERSED_Z

@@ -11,6 +11,7 @@ namespace ClusterMesh
         Vector2 _orbit = new Vector2(30f, 0f);
         float _distance = 3f;
         int _isolate = -1;
+        bool _showAabb;
         Vector2 _scroll;
 
         [MenuItem("Tools/ClusterMesh/Viewer")]
@@ -63,6 +64,7 @@ namespace ClusterMesh
             }
 
             _isolate = EditorGUILayout.IntField("Isolate Cluster (-1 = all)", _isolate);
+            _showAabb = EditorGUILayout.Toggle("Show AABB", _showAabb);
             if (_context != null)
                 _context.IsolateIndex = _isolate;
 
@@ -105,9 +107,27 @@ namespace ClusterMesh
             _preview.camera.transform.position = Quaternion.Euler(_orbit.x, _orbit.y, 0f) * new Vector3(0f, 0f, -_distance);
             _preview.camera.transform.LookAt(Vector3.zero);
             _context.Draw(Matrix4x4.identity, _preview.camera);
+            if (_showAabb)
+                DrawAabbOverlay();
             _preview.camera.Render();
             var tex = _preview.EndPreview();
             GUI.DrawTexture(rect, tex, ScaleMode.StretchToFill, false);
+        }
+
+        void DrawAabbOverlay()
+        {
+            if (_asset == null || _asset.clusters == null)
+                return;
+
+            Handles.SetCamera(_preview.camera);
+            Handles.color = new Color(0.2f, 1f, 0.35f, 1f);
+            for (int i = 0; i < _asset.clusters.Length; i++)
+            {
+                if (_isolate >= 0 && i != _isolate)
+                    continue;
+                ClusterHeader h = _asset.clusters[i];
+                Handles.DrawWireCube(h.aabbCenter, (Vector3)h.aabbExtents * 2f);
+            }
         }
 
         void HandleOrbit(Rect rect)

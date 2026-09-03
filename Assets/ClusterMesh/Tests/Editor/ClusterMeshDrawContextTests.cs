@@ -49,6 +49,24 @@ namespace ClusterMesh.Tests
         }
 
         [Test]
+        public void Dispose_SetsIsReadyFalse()
+        {
+            var mesh = ClusterMeshTestMeshes.Triangle();
+            var bake = ClusterMeshBaker.Bake(mesh, new Material[1], new ClusterMeshBakeSettings());
+            var asset = ScriptableObject.CreateInstance<ClusterMeshAsset>();
+            asset.CopyFrom(bake, mesh, new ClusterMeshBakeSettings());
+
+            var cull = AssetDatabase.LoadAssetAtPath<ComputeShader>("Assets/ClusterMesh/Shaders/ClusterMeshCull.compute");
+            var lit = Shader.Find("ClusterMesh/Lit");
+            var ctx = new ClusterMeshDrawContext(asset, cull, lit);
+            ctx.Dispose();
+            Assert.That(ctx.IsReady, Is.False);
+
+            Object.DestroyImmediate(asset);
+            Object.DestroyImmediate(mesh);
+        }
+
+        [Test]
         public void Renderer_OnEnableWithEmptyAsset_DoesNotThrow()
         {
             var go = new GameObject("CMRenderer");
