@@ -1,0 +1,56 @@
+#pragma kernel CullClusters
+
+#include "ClusterMeshBuffers.hlsl"
+
+StructuredBuffer<ClusterHeader> _Clusters;
+AppendStructuredBuffer<uint> _VisibleClusterIds;
+
+uint _ClusterCount;
+uint _MaterialIndex;
+int _IsolateIndex;
+float4 _Planes[6];
+float3 _LocalCameraPos;
+
+bool TestAabb(ClusterHeader h)
+{
+    float3 c = h.aabbCenter.xyz;
+    float3 e = h.aabbExtents.xyz;
+    [unroll]
+    for (int i = 0; i < 6; i++)
+    {
+        float3 n = _Planes[i].xyz;
+        float r = e.x * abs(n.x) + e.y * abs(n.y) + e.z * abs(n.z);
+        if (dot(n, c) + _Planes[i].w + r < 0.0f)
+            return false;
+    }
+    return true;
+}
+
+bool TestCone(ClusterHeader h)
+{
+    float cutoff = h.coneAxisCutoff.w;
+    if (cutoff < 0.0f)
+        return true;
+    float3 axis = h.coneAxisCutoff.xyz;
+    float3 view = _LocalCameraPos - h.coneApex.xyz;
+    float len = length(view);
+    if (len < 1e-6f)
+        return true;
+    return dot(view / len, axis) >= cutoff;
+}
+
+[numthreads(64, 1, 1)]
+void CullClusters(uint3 id : SV_DispatchThreadID)
+{
+    uint i = id.x;
+    if (i >= _ClusterCount)
+        return;
+    ClusterHeader h = _Clusters[i];
+    if (h.materialIndex != _MaterialIndex)
+        return;
+    if (_IsolateIndex >= 0 && (int)i != _IsolateIndex)
+        return;
+    if (!TestAabb(h) || !TestCone(h))
+        return;
+    _VisibleClusterIds.Append(i);
+}
