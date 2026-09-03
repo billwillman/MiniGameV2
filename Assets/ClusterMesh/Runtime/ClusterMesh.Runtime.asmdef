@@ -1,0 +1,10 @@
+{
+    "name": "ClusterMesh.Runtime",
+    "rootNamespace": "ClusterMesh",
+    "references": ["Unity.RenderPipelines.Universal.Runtime"],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "autoReferenced": true
+}

@@ -1,0 +1,11 @@
+{
+    "name": "ClusterMesh.Editor.Tests",
+    "rootNamespace": "ClusterMesh.Tests",
+    "references": [
+        "ClusterMesh.Runtime",
+        "ClusterMesh.Editor"
+    ],
+    "includePlatforms": ["Editor"],
+    "optionalUnityReferences": ["TestAssemblies"],
+    "allowUnsafeCode": false
+}

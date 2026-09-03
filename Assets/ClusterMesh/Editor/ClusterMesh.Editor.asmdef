@@ -1,0 +1,9 @@
+{
+    "name": "ClusterMesh.Editor",
+    "rootNamespace": "ClusterMesh",
+    "references": ["ClusterMesh.Runtime"],
+    "includePlatforms": ["Editor"],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "autoReferenced": true
+}
