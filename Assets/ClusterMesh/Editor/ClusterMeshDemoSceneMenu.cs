@@ -12,10 +12,7 @@ namespace ClusterMesh
         [MenuItem("Tools/ClusterMesh/Create Demo Scene")]
         public static void CreateDemoScene()
         {
-            if (!AssetDatabase.IsValidFolder("Assets/ClusterMesh"))
-                AssetDatabase.CreateFolder("Assets", "ClusterMesh");
-            if (!AssetDatabase.IsValidFolder("Assets/ClusterMesh/Samples"))
-                AssetDatabase.CreateFolder("Assets/ClusterMesh", "Samples");
+            EnsureSamplesFolder();
 
             var scene = EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects, NewSceneMode.Single);
             var root = CreateDemoObjects();
@@ -32,12 +29,33 @@ namespace ClusterMesh
                 },
                 renderer.asset.sourceMesh,
                 new ClusterMeshBakeSettings());
-            AssetDatabase.CreateAsset(stored, AssetPath);
+            PersistDemoAsset(stored);
             renderer.asset = stored;
 
+            DeleteAssetIfExists(ScenePath);
             EditorSceneManager.SaveScene(scene, ScenePath);
             AssetDatabase.SaveAssets();
             Selection.activeGameObject = root;
+        }
+
+        public static void EnsureSamplesFolder()
+        {
+            if (!AssetDatabase.IsValidFolder("Assets/ClusterMesh"))
+                AssetDatabase.CreateFolder("Assets", "ClusterMesh");
+            if (!AssetDatabase.IsValidFolder("Assets/ClusterMesh/Samples"))
+                AssetDatabase.CreateFolder("Assets/ClusterMesh", "Samples");
+        }
+
+        public static void DeleteAssetIfExists(string assetPath)
+        {
+            if (AssetDatabase.LoadAssetAtPath<Object>(assetPath) != null)
+                AssetDatabase.DeleteAsset(assetPath);
+        }
+
+        public static void PersistDemoAsset(ClusterMeshAsset asset)
+        {
+            DeleteAssetIfExists(AssetPath);
+            AssetDatabase.CreateAsset(asset, AssetPath);
         }
 
         public static GameObject CreateDemoObjects()
