@@ -34,11 +34,20 @@ namespace ClusterMesh
             _preview = null;
         }
 
+        void OnEnable()
+        {
+            if (_asset != null && _context == null)
+                RebuildContext();
+        }
+
         void OnGUI()
         {
             EditorGUI.BeginChangeCheck();
             _asset = (ClusterMeshAsset)EditorGUILayout.ObjectField("Asset", _asset, typeof(ClusterMeshAsset), false);
             if (EditorGUI.EndChangeCheck())
+                RebuildContext();
+
+            if (_asset != null && _context == null)
                 RebuildContext();
 
             if (_asset == null)
