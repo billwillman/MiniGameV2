@@ -48,5 +48,37 @@ namespace ClusterMesh
                 return true;
             return Vector3.Dot(view.normalized, axis) >= cutoff;
         }
+
+        public static void WorldPlanes(Camera camera, Plane[] dest)
+        {
+            GeometryUtility.CalculateFrustumPlanes(camera, dest);
+        }
+
+        public static void TransformAabb(in ClusterHeader header, Matrix4x4 localToWorld, out Vector3 worldCenter, out Vector3 worldExtents)
+        {
+            Vector3 c = header.aabbCenter;
+            Vector3 e = header.aabbExtents;
+            worldCenter = localToWorld.MultiplyPoint3x4(c);
+            Vector3 axisX = localToWorld.MultiplyVector(new Vector3(e.x, 0f, 0f));
+            Vector3 axisY = localToWorld.MultiplyVector(new Vector3(0f, e.y, 0f));
+            Vector3 axisZ = localToWorld.MultiplyVector(new Vector3(0f, 0f, e.z));
+            worldExtents = new Vector3(
+                Mathf.Abs(axisX.x) + Mathf.Abs(axisY.x) + Mathf.Abs(axisZ.x),
+                Mathf.Abs(axisX.y) + Mathf.Abs(axisY.y) + Mathf.Abs(axisZ.y),
+                Mathf.Abs(axisX.z) + Mathf.Abs(axisY.z) + Mathf.Abs(axisZ.z));
+        }
+
+        public static bool TestAabbWorld(Vector3 worldCenter, Vector3 worldExtents, Plane[] planes)
+        {
+            for (int i = 0; i < 6; i++)
+            {
+                Vector3 n = planes[i].normal;
+                float r = worldExtents.x * Mathf.Abs(n.x) + worldExtents.y * Mathf.Abs(n.y) + worldExtents.z * Mathf.Abs(n.z);
+                if (Vector3.Dot(n, worldCenter) + planes[i].distance + r < 0f)
+                    return false;
+            }
+
+            return true;
+        }
     }
 }

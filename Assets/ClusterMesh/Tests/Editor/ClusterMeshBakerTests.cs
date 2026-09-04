@@ -19,7 +19,7 @@ namespace ClusterMesh.Tests
             Assert.That(result.vertices.Length, Is.EqualTo(3));
             Assert.That(result.indices.Length, Is.EqualTo(3));
             Assert.That(ContainsPoint(result.clusters[0], result.vertices[0].position));
-            Object.DestroyImmediate(mesh);
+            UnityEngine.Object.DestroyImmediate(mesh);
         }
 
         [Test]
@@ -41,7 +41,7 @@ namespace ClusterMesh.Tests
             }
 
             Assert.That(bakedTris, Is.EqualTo(sourceTris));
-            Object.DestroyImmediate(mesh);
+            UnityEngine.Object.DestroyImmediate(mesh);
         }
 
         [Test]
@@ -53,7 +53,7 @@ namespace ClusterMesh.Tests
             Assert.That(result.clusters.Length, Is.EqualTo(2));
             Assert.That(result.clusters[0].materialIndex, Is.EqualTo(0u));
             Assert.That(result.clusters[1].materialIndex, Is.EqualTo(1u));
-            Object.DestroyImmediate(mesh);
+            UnityEngine.Object.DestroyImmediate(mesh);
         }
 
         [Test]
@@ -64,7 +64,7 @@ namespace ClusterMesh.Tests
 
             Assert.That(result.clusters.Length, Is.EqualTo(1));
             Assert.That(result.clusters[0].triangleCount, Is.EqualTo(1u));
-            Object.DestroyImmediate(mesh);
+            UnityEngine.Object.DestroyImmediate(mesh);
         }
 
         [Test]
@@ -100,7 +100,7 @@ namespace ClusterMesh.Tests
                 Assert.That(tan, Is.Not.EqualTo(dummy));
             }
 
-            Object.DestroyImmediate(mesh);
+            UnityEngine.Object.DestroyImmediate(mesh);
         }
 
         static bool ContainsPoint(ClusterHeader cluster, Vector4 position)

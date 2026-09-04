@@ -6,15 +6,26 @@ StructuredBuffer<ClusterHeader> _Clusters;
 AppendStructuredBuffer<uint> _VisibleClusterIds;
 
 uint _ClusterCount;
+uint _ObjectCount;
 uint _MaterialIndex;
 int _IsolateIndex;
 float4 _Planes[6];
-float3 _LocalCameraPos;
+float3 _WorldCameraPos;
+float4x4 _ObjectLocalToWorld[256];
 
-bool TestAabb(ClusterHeader h)
+void TransformAabb(ClusterHeader h, float4x4 m, out float3 worldCenter, out float3 worldExtents)
 {
     float3 c = h.aabbCenter.xyz;
     float3 e = h.aabbExtents.xyz;
+    worldCenter = mul(m, float4(c, 1.0f)).xyz;
+    float3 x = mul((float3x3)m, float3(e.x, 0, 0));
+    float3 y = mul((float3x3)m, float3(0, e.y, 0));
+    float3 z = mul((float3x3)m, float3(0, 0, e.z));
+    worldExtents = abs(x) + abs(y) + abs(z);
+}
+
+bool TestAabb(float3 c, float3 e)
+{
     [unroll]
     for (int i = 0; i < 6; i++)
     {
@@ -26,13 +37,14 @@ bool TestAabb(ClusterHeader h)
     return true;
 }
 
-bool TestCone(ClusterHeader h)
+bool TestCone(ClusterHeader h, float4x4 m)
 {
     float cutoff = h.coneAxisCutoff.w;
     if (cutoff < 0.0f)
         return true;
-    float3 axis = h.coneAxisCutoff.xyz;
-    float3 view = _LocalCameraPos - h.coneApex.xyz;
+    float3 apex = mul(m, float4(h.coneApex.xyz, 1.0f)).xyz;
+    float3 axis = normalize(mul((float3x3)m, h.coneAxisCutoff.xyz));
+    float3 view = _WorldCameraPos - apex;
     float len = length(view);
     if (len < 1e-6f)
         return true;
@@ -42,15 +54,20 @@ bool TestCone(ClusterHeader h)
 [numthreads(64, 1, 1)]
 void CullClusters(uint3 id : SV_DispatchThreadID)
 {
+    uint total = _ObjectCount * _ClusterCount;
     uint i = id.x;
-    if (i >= _ClusterCount)
+    if (i >= total)
         return;
-    ClusterHeader h = _Clusters[i];
+    uint objectIndex = i / _ClusterCount;
+    uint clusterIndex = i % _ClusterCount;
+    ClusterHeader h = _Clusters[clusterIndex];
     if (h.materialIndex != _MaterialIndex)
         return;
-    if (_IsolateIndex >= 0 && (int)i != _IsolateIndex)
+    if (_IsolateIndex >= 0 && (int)clusterIndex != _IsolateIndex)
         return;
-    if (!TestAabb(h) || !TestCone(h))
+    float3 wc, we;
+    TransformAabb(h, _ObjectLocalToWorld[objectIndex], wc, we);
+    if (!TestAabb(wc, we) || !TestCone(h, _ObjectLocalToWorld[objectIndex]))
         return;
-    _VisibleClusterIds.Append(i);
+    _VisibleClusterIds.Append((objectIndex << 16) | clusterIndex);
 }

@@ -23,14 +23,16 @@ StructuredBuffer<ClusterHeader> _Clusters;
 StructuredBuffer<ClusterVertex> _Vertices;
 StructuredBuffer<uint> _Indices;
 StructuredBuffer<uint> _VisibleClusterIds;
-float4x4 _ClusterLocalToWorld;
-float4x4 _ClusterWorldToLocal;
+float4x4 _ObjectLocalToWorld[256];
+float4x4 _ObjectWorldToLocal[256];
 
 #if defined(UNITY_PROCEDURAL_INSTANCING_ENABLED)
 void ClusterMeshSetup()
 {
-    unity_ObjectToWorld = _ClusterLocalToWorld;
-    unity_WorldToObject = _ClusterWorldToLocal;
+    uint packed = _VisibleClusterIds[unity_InstanceID];
+    uint objectIndex = packed >> 16;
+    unity_ObjectToWorld = _ObjectLocalToWorld[objectIndex];
+    unity_WorldToObject = _ObjectWorldToLocal[objectIndex];
 }
 #endif
 
@@ -51,7 +53,8 @@ struct Varyings
 
 void FetchClusterVertex(uint vertexID, uint instanceID, out float3 positionOS, out float3 normalOS, out float4 tangentOS, out float2 uv)
 {
-    uint clusterId = _VisibleClusterIds[instanceID];
+    uint packed = _VisibleClusterIds[instanceID];
+    uint clusterId = packed & 0xFFFFu;
     ClusterHeader h = _Clusters[clusterId];
     if (vertexID >= h.triangleCount * 3)
     {

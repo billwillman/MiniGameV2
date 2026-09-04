@@ -8,6 +8,7 @@ namespace ClusterMesh
     {
         public const string ScenePath = "Assets/ClusterMesh/Samples/ClusterMeshDemo.unity";
         public const string AssetPath = "Assets/ClusterMesh/Samples/DemoCube.asset";
+        public const int InstanceCount = 10;
 
         [MenuItem("Tools/ClusterMesh/Create Demo Scene")]
         public static void CreateDemoScene()
@@ -16,21 +17,23 @@ namespace ClusterMesh
 
             var scene = EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects, NewSceneMode.Single);
             var root = CreateDemoObjects();
-            var renderer = root.GetComponentInChildren<ClusterMeshRenderer>();
+            var renderers = root.GetComponentsInChildren<ClusterMeshRenderer>();
+            var first = renderers[0];
 
             var stored = ScriptableObject.CreateInstance<ClusterMeshAsset>();
             stored.CopyFrom(
                 new ClusterMeshBakeResult
                 {
-                    clusters = renderer.asset.clusters,
-                    vertices = renderer.asset.vertices,
-                    indices = renderer.asset.indices,
-                    materials = renderer.asset.materials
+                    clusters = first.asset.clusters,
+                    vertices = first.asset.vertices,
+                    indices = first.asset.indices,
+                    materials = first.asset.materials
                 },
-                renderer.asset.sourceMesh,
+                first.asset.sourceMesh,
                 new ClusterMeshBakeSettings());
             PersistDemoAsset(stored);
-            renderer.asset = stored;
+            for (int i = 0; i < renderers.Length; i++)
+                renderers[i].asset = stored;
 
             DeleteAssetIfExists(ScenePath);
             EditorSceneManager.SaveScene(scene, ScenePath);
@@ -75,12 +78,27 @@ namespace ClusterMesh
                 new ClusterMeshBakeSettings());
 
             var host = new GameObject("ClusterMeshDemo");
+            host.SetActive(false);
             cube.transform.SetParent(host.transform, true);
-            var clusterRenderer = host.AddComponent<ClusterMeshRenderer>();
-            clusterRenderer.asset = asset;
-            clusterRenderer.cullShader = AssetDatabase.LoadAssetAtPath<ComputeShader>("Assets/ClusterMesh/Shaders/ClusterMeshCull.compute");
-            clusterRenderer.litShader = Shader.Find("ClusterMesh/Lit");
-            clusterRenderer.targetCamera = Object.FindObjectOfType<Camera>();
+
+            var cull = AssetDatabase.LoadAssetAtPath<ComputeShader>("Assets/ClusterMesh/Shaders/ClusterMeshCull.compute");
+            var lit = Shader.Find("ClusterMesh/Lit");
+            var camera = Object.FindObjectOfType<Camera>();
+
+            for (int i = 0; i < InstanceCount; i++)
+            {
+                var child = new GameObject("ClusterMeshInstance_" + i);
+                child.transform.SetParent(host.transform, false);
+                child.transform.position = new Vector3((i - 4.5f) * 1.5f, 0f, 0f);
+                var clusterRenderer = child.AddComponent<ClusterMeshRenderer>();
+                clusterRenderer.asset = asset;
+                clusterRenderer.cullShader = cull;
+                clusterRenderer.litShader = lit;
+                clusterRenderer.targetCamera = camera;
+            }
+
+            host.SetActive(true);
+            ClusterMeshSceneBatcher.Flush();
             return host;
         }
     }

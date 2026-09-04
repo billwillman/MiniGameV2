@@ -46,7 +46,7 @@ namespace ClusterMesh.Tests
             Assert.That(context, Is.Not.Null);
             Assert.That(((ClusterMeshDrawContext)context).IsReady, Is.EqualTo(ClusterMeshCapability.IsSupported()));
 
-            window.Close();
+            typeof(ClusterMeshViewerWindow).GetMethod("OnDisable", flags).Invoke(window, null);
             Object.DestroyImmediate(window);
             Object.DestroyImmediate(asset);
         }

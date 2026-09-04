@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -11,12 +12,13 @@ namespace ClusterMesh
         static readonly int IndicesId = Shader.PropertyToID("_Indices");
         static readonly int VisibleId = Shader.PropertyToID("_VisibleClusterIds");
         static readonly int ClusterCountId = Shader.PropertyToID("_ClusterCount");
+        static readonly int ObjectCountId = Shader.PropertyToID("_ObjectCount");
         static readonly int MaterialIndexId = Shader.PropertyToID("_MaterialIndex");
         static readonly int IsolateIndexId = Shader.PropertyToID("_IsolateIndex");
         static readonly int PlanesId = Shader.PropertyToID("_Planes");
-        static readonly int LocalCameraPosId = Shader.PropertyToID("_LocalCameraPos");
-        static readonly int LocalToWorldId = Shader.PropertyToID("_ClusterLocalToWorld");
-        static readonly int WorldToLocalId = Shader.PropertyToID("_ClusterWorldToLocal");
+        static readonly int WorldCameraPosId = Shader.PropertyToID("_WorldCameraPos");
+        static readonly int ObjectLocalToWorldId = Shader.PropertyToID("_ObjectLocalToWorld");
+        static readonly int ObjectWorldToLocalId = Shader.PropertyToID("_ObjectWorldToLocal");
 
         readonly ClusterMeshAsset _asset;
         readonly ComputeShader _cullShader;
@@ -31,6 +33,9 @@ namespace ClusterMesh
         readonly Plane[] _planes = new Plane[6];
         readonly Vector4[] _planeVectors = new Vector4[6];
         readonly uint[] _argsSeed = new uint[5];
+        readonly Matrix4x4[] _single = new Matrix4x4[1];
+        readonly Matrix4x4[] _l2w = new Matrix4x4[ClusterMeshLimits.MaxBatchedObjects];
+        readonly Matrix4x4[] _w2l = new Matrix4x4[ClusterMeshLimits.MaxBatchedObjects];
         bool _disposed;
 
         public bool IsReady { get; private set; }
@@ -73,6 +78,7 @@ namespace ClusterMesh
                 _indexBuffer.SetData(asset.indices);
 
             int materialCount = Mathf.Max(1, asset.materials != null ? asset.materials.Length : 1);
+            int visibleCapacity = Mathf.Max(1, asset.clusters.Length) * ClusterMeshLimits.MaxBatchedObjects;
             _materials = new Material[materialCount];
             _argsBuffers = new GraphicsBuffer[materialCount];
             _visibleBuffers = new GraphicsBuffer[materialCount];
@@ -85,7 +91,7 @@ namespace ClusterMesh
                 _argsBuffers[i].SetData(_argsSeed);
                 _visibleBuffers[i] = new GraphicsBuffer(
                     GraphicsBuffer.Target.Append | GraphicsBuffer.Target.Structured,
-                    asset.clusters.Length,
+                    visibleCapacity,
                     4);
             }
 
@@ -94,53 +100,90 @@ namespace ClusterMesh
 
         public void Draw(Matrix4x4 localToWorld, Camera camera)
         {
-            if (!IsReady || camera == null)
+            _single[0] = localToWorld;
+            Draw(_single, 1, camera);
+        }
+
+        public void Draw(IList<Matrix4x4> localToWorld, Camera camera)
+        {
+            if (localToWorld == null)
+                return;
+            Draw(localToWorld, localToWorld.Count, camera);
+        }
+
+        void Draw(IList<Matrix4x4> localToWorld, int count, Camera camera)
+        {
+            if (!IsReady || camera == null || count <= 0)
                 return;
 
-            Matrix4x4 worldToLocal = localToWorld.inverse;
-            ClusterMeshFrustum.CameraToLocalPlanes(camera, localToWorld, _planes);
+            ClusterMeshFrustum.WorldPlanes(camera, _planes);
             for (int i = 0; i < 6; i++)
                 _planeVectors[i] = new Vector4(_planes[i].normal.x, _planes[i].normal.y, _planes[i].normal.z, _planes[i].distance);
 
-            Bounds worldBounds = TransformBounds(localToWorld);
-            int groups = Mathf.CeilToInt(_asset.clusters.Length / 64f);
-
-            for (int materialIndex = 0; materialIndex < _materials.Length; materialIndex++)
+            int chunkSize = ClusterMeshLimits.MaxBatchedObjects;
+            int chunks = Mathf.CeilToInt(count / (float)chunkSize);
+            for (int chunk = 0; chunk < chunks; chunk++)
             {
-                GraphicsBuffer visible = _visibleBuffers[materialIndex];
-                visible.SetCounterValue(0);
+                int start = chunk * chunkSize;
+                int n = Mathf.Min(chunkSize, count - start);
+                Bounds worldBounds = new Bounds();
+                bool hasBounds = false;
+                for (int i = 0; i < n; i++)
+                {
+                    Matrix4x4 l2w = localToWorld[start + i];
+                    _l2w[i] = l2w;
+                    _w2l[i] = l2w.inverse;
+                    Bounds b = TransformBounds(l2w);
+                    if (!hasBounds)
+                    {
+                        worldBounds = b;
+                        hasBounds = true;
+                    }
+                    else
+                        worldBounds.Encapsulate(b);
+                }
+
+                int groups = Mathf.CeilToInt((n * _asset.clusters.Length) / 64f);
                 _cullShader.SetBuffer(_cullKernel, ClustersId, _clusterBuffer);
-                _cullShader.SetBuffer(_cullKernel, VisibleId, visible);
+                _cullShader.SetInt(ObjectCountId, n);
                 _cullShader.SetInt(ClusterCountId, _asset.clusters.Length);
-                _cullShader.SetInt(MaterialIndexId, materialIndex);
                 _cullShader.SetInt(IsolateIndexId, IsolateIndex);
                 _cullShader.SetVectorArray(PlanesId, _planeVectors);
-                _cullShader.SetVector(LocalCameraPosId, worldToLocal.MultiplyPoint3x4(camera.transform.position));
-                _cullShader.Dispatch(_cullKernel, groups, 1, 1);
+                _cullShader.SetVector(WorldCameraPosId, camera.transform.position);
+                _cullShader.SetMatrixArray(ObjectLocalToWorldId, _l2w);
 
-                _argsBuffers[materialIndex].SetData(_argsSeed);
-                GraphicsBuffer.CopyCount(visible, _argsBuffers[materialIndex], 4);
+                for (int materialIndex = 0; materialIndex < _materials.Length; materialIndex++)
+                {
+                    GraphicsBuffer visible = _visibleBuffers[materialIndex];
+                    visible.SetCounterValue(0);
+                    _cullShader.SetBuffer(_cullKernel, VisibleId, visible);
+                    _cullShader.SetInt(MaterialIndexId, materialIndex);
+                    _cullShader.Dispatch(_cullKernel, Mathf.Max(1, groups), 1, 1);
 
-                Material mat = _materials[materialIndex];
-                mat.SetBuffer(ClustersId, _clusterBuffer);
-                mat.SetBuffer(VerticesId, _vertexBuffer);
-                mat.SetBuffer(IndicesId, _indexBuffer);
-                mat.SetBuffer(VisibleId, visible);
-                mat.SetMatrix(LocalToWorldId, localToWorld);
-                mat.SetMatrix(WorldToLocalId, worldToLocal);
+                    _argsBuffers[materialIndex].SetData(_argsSeed);
+                    GraphicsBuffer.CopyCount(visible, _argsBuffers[materialIndex], 4);
 
-                Graphics.DrawMeshInstancedIndirect(
-                    _template,
-                    0,
-                    mat,
-                    worldBounds,
-                    _argsBuffers[materialIndex],
-                    0,
-                    null,
-                    ShadowCastingMode.On,
-                    true,
-                    0,
-                    camera);
+                    Material mat = _materials[materialIndex];
+                    mat.SetBuffer(ClustersId, _clusterBuffer);
+                    mat.SetBuffer(VerticesId, _vertexBuffer);
+                    mat.SetBuffer(IndicesId, _indexBuffer);
+                    mat.SetBuffer(VisibleId, visible);
+                    mat.SetMatrixArray(ObjectLocalToWorldId, _l2w);
+                    mat.SetMatrixArray(ObjectWorldToLocalId, _w2l);
+
+                    Graphics.DrawMeshInstancedIndirect(
+                        _template,
+                        0,
+                        mat,
+                        worldBounds,
+                        _argsBuffers[materialIndex],
+                        0,
+                        null,
+                        ShadowCastingMode.On,
+                        true,
+                        0,
+                        camera);
+                }
             }
         }
 

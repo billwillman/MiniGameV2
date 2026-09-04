@@ -10,25 +10,17 @@ namespace ClusterMesh
         public ComputeShader cullShader;
         public Shader litShader;
 
-        ClusterMeshDrawContext _context;
-        bool _loggedError;
+        bool _registered;
 
         public void EnsureInitialized()
         {
-            if (_context != null)
-                return;
 #if UNITY_EDITOR
             if (cullShader == null)
                 cullShader = UnityEditor.AssetDatabase.LoadAssetAtPath<ComputeShader>("Assets/ClusterMesh/Shaders/ClusterMeshCull.compute");
 #endif
             if (litShader == null)
                 litShader = Shader.Find("ClusterMesh/Lit");
-            _context = new ClusterMeshDrawContext(asset, cullShader, litShader);
-            if (!_context.IsReady && !_loggedError && !string.IsNullOrEmpty(_context.Error))
-            {
-                Debug.LogError("ClusterMesh: " + _context.Error, this);
-                _loggedError = true;
-            }
+            SyncRegistration();
         }
 
         void OnEnable()
@@ -38,26 +30,37 @@ namespace ClusterMesh
 
         void OnDisable()
         {
-            _context?.Dispose();
-            _context = null;
+            ClusterMeshSceneBatcher.Unregister(this);
+            _registered = false;
         }
 
         void OnValidate()
         {
-            if (!isActiveAndEnabled)
-                return;
-            _context?.Dispose();
-            _context = null;
-            _loggedError = false;
-            if (Application.isPlaying)
+            ClusterMeshSceneBatcher.Unregister(this);
+            _registered = false;
+            if (isActiveAndEnabled)
                 EnsureInitialized();
         }
 
         void LateUpdate()
         {
             EnsureInitialized();
-            Camera camera = targetCamera != null ? targetCamera : Camera.main;
-            _context?.Draw(transform.localToWorldMatrix, camera);
+            ClusterMeshSceneBatcher.Flush();
+        }
+
+        void SyncRegistration()
+        {
+            bool has = asset != null && asset.clusters != null && asset.clusters.Length > 0;
+            if (has && isActiveAndEnabled)
+            {
+                ClusterMeshSceneBatcher.Register(this);
+                _registered = true;
+            }
+            else if (_registered)
+            {
+                ClusterMeshSceneBatcher.Unregister(this);
+                _registered = false;
+            }
         }
     }
 }

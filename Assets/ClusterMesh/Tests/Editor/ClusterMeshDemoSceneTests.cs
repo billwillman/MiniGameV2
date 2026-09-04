@@ -1,27 +1,40 @@
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.TestTools;
 
 namespace ClusterMesh.Tests
 {
     public sealed class ClusterMeshDemoSceneTests
     {
+        static void ExpectCapabilityErrorIfUnsupported()
+        {
+            string reason = ClusterMeshCapability.GetUnsupportedReason();
+            if (reason != null)
+                LogAssert.Expect(LogType.Error, "ClusterMesh: " + reason);
+        }
+
         [Test]
         public void CreateDemoObjects_AddsRendererWithBakedAsset()
         {
+            ExpectCapabilityErrorIfUnsupported();
             var root = ClusterMeshDemoSceneMenu.CreateDemoObjects();
-            var renderer = root.GetComponentInChildren<ClusterMeshRenderer>();
-            Assert.That(renderer, Is.Not.Null);
-            Assert.That(renderer.asset, Is.Not.Null);
-            Assert.That(renderer.asset.clusters.Length, Is.GreaterThan(0));
+            var renderers = root.GetComponentsInChildren<ClusterMeshRenderer>();
+            Assert.That(renderers.Length, Is.EqualTo(ClusterMeshDemoSceneMenu.InstanceCount));
+            Assert.That(renderers[0].asset, Is.Not.Null);
+            Assert.That(renderers[0].asset.clusters.Length, Is.GreaterThan(0));
+            for (int i = 1; i < renderers.Length; i++)
+                Assert.That(renderers[i].asset, Is.SameAs(renderers[0].asset));
             Object.DestroyImmediate(root);
-            Object.DestroyImmediate(renderer.asset);
+            Object.DestroyImmediate(renderers[0].asset);
+            ClusterMeshSceneBatcher.ResetForTests();
         }
 
         [Test]
         public void PersistDemoAsset_CalledTwice_DoesNotThrow()
         {
             ClusterMeshDemoSceneMenu.EnsureSamplesFolder();
+            ExpectCapabilityErrorIfUnsupported();
             var root = ClusterMeshDemoSceneMenu.CreateDemoObjects();
             var renderer = root.GetComponentInChildren<ClusterMeshRenderer>();
             ClusterMeshAsset stored1 = null;
@@ -59,6 +72,7 @@ namespace ClusterMesh.Tests
                     Object.DestroyImmediate(stored2);
                 Object.DestroyImmediate(root);
                 Object.DestroyImmediate(renderer.asset);
+                ClusterMeshSceneBatcher.ResetForTests();
             }
         }
     }
