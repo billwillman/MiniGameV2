@@ -49,16 +49,7 @@ namespace ClusterMesh
             var renderers = root.GetComponentsInChildren<ClusterMeshRenderer>();
             var first = renderers[0];
             var stored = ScriptableObject.CreateInstance<ClusterMeshAsset>();
-            stored.CopyFrom(
-                new ClusterMeshBakeResult
-                {
-                    clusters = first.asset.clusters,
-                    vertices = first.asset.vertices,
-                    indices = first.asset.indices,
-                    materials = first.asset.materials
-                },
-                first.asset.sourceMesh,
-                new ClusterMeshBakeSettings());
+            stored.CopyPackedFrom(first.asset);
             PersistDemoAsset(stored);
             for (int i = 0; i < renderers.Length; i++)
                 renderers[i].asset = stored;

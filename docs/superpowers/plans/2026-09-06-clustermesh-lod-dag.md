@@ -35,6 +35,8 @@
 - Modify: `Assets/ClusterMesh/Editor/ClusterMeshLodBaker.cs` — DAG loop
 - Modify: `Assets/ClusterMesh/Tests/Editor/ClusterMeshLodTests.cs`
 - Modify: `Assets/ClusterMesh/Tests/Editor/ClusterMeshBakerTests.cs`
+- Modify: `Assets/ClusterMesh/Editor/ClusterMeshBakerWindow.cs` — `buildLodHierarchy` 开关（已做）
+- Modify: `Assets/ClusterMesh/Tests/Editor/ClusterMeshBakerWindowTests.cs` — `WriteAsset_LodOff_WritesVersionZero`（已做）
 - Spec: `docs/superpowers/specs/2026-09-06-clustermesh-lod-dag-design.md`
 
 ---

@@ -1,12 +1,14 @@
 # ClusterMesh 锁边 + 多层 DAG 设计
 
 Date: 2026-09-06  
-Status: Locked for implementation  
+Status: Implemented（含 Baker 窗口 `buildLodHierarchy` 开关）  
 Module: `Assets/ClusterMesh`  
 Parent LOD: `docs/superpowers/specs/2026-09-06-clustermesh-lod-design.md`  
 Parent: `docs/superpowers/specs/2026-09-04-clustermesh-design.md`
 
 本文件覆盖 **Nanite 式离线层次**：分组、锁外圈、三角减半、再切开、收到根。不改 2026-09-04 规格正文。合批键、Indirect、template 372、4 个 vertex StructuredBuffer、Cone、分色、阴影开关一律沿用。不重写 2026-09-06 两层 LOD 规格正文；新 Bake 以本文件为准。
+
+几何瘦身与存盘压缩见 `docs/superpowers/specs/2026-09-06-clustermesh-geometry-pack-design.md`。
 
 允许 **重新 Bake**。`hierarchyVersion`：`0` 预 LOD；`1` 两层树（`parentIndex` 仍是 cluster）；`2` 本组 DAG（`parentIndex` 是 **父组** 下标）。
 
@@ -53,6 +55,7 @@ Parent: `docs/superpowers/specs/2026-09-04-clustermesh-design.md`
 | 合批 | 批内阈值 **max**。默认 0 |
 | 多材质 | 每个 submesh 一棵 DAG，各自收根 |
 | Draw | 不变。父块仍是普通 cluster |
+| Baker 窗口 | `Tools/ClusterMesh/Baker` 有 **Build LOD Hierarchy**，默认勾选（`true`）。关掉则只切叶子，`hierarchyVersion = 0`，资产更小。成功提示写出 cluster 数、组数、version |
 
 ## 4. 数据
 
@@ -107,6 +110,8 @@ DrawContext 增加 groups 的 GraphicsBuffer（空则绑 1 条占位）。这不
 
 `hierarchyVersion = settings.buildLodHierarchy ? 2 : 0`。
 
+`ClusterMeshBakerWindow` 把该开关画在 Cluster 预算下面。默认与 `ClusterMeshBakeSettings` 一致为 `true`。Demo Scene 菜单仍用默认设置（建层次），不另开开关。
+
 ## 6. Cull / 场景
 
 `ClusterMeshCull.compute`：`StructuredBuffer<ClusterGroup> _Groups`，`uint _GroupCount`。
@@ -125,6 +130,7 @@ Viewer / Renderer 阈值默认 0。Show Lod Levels 按层号着色（不只有 L
 - `ClusterGroup` stride 48；header 仍 96。
 - v2：`T<=0` 只叶子；大 T 出父组块、藏孩子；v0 不被 LOD 否决；v1 旧公式仍过。
 - Bake：`buildLodHierarchy=false` → version 0。`true` → version 2，Grid 有组；4 个孩子同一 `parentIndex`；组 `clusterCount` ≥ 1。
+- `WriteAsset` 关层次 → `hierarchyVersion == 0`，无组。
 - 锁边：每个成功组，外圈锁点位置出现在该组父 cluster 顶点里（epsilon）。
 - 2 块可合成时能到 1 个无父的粗块（小网格）。
 - 合批 10 物体仍 1 Indirect（阈值 0）。

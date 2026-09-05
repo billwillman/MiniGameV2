@@ -100,8 +100,8 @@ namespace ClusterMesh
 
             _scroll = EditorGUILayout.BeginScrollView(_scroll);
             EditorGUILayout.LabelField("Clusters", _asset.clusters != null ? _asset.clusters.Length.ToString() : "0");
-            EditorGUILayout.LabelField("Vertices", _asset.vertices != null ? _asset.vertices.Length.ToString() : "0");
-            EditorGUILayout.LabelField("Indices", _asset.indices != null ? _asset.indices.Length.ToString() : "0");
+            EditorGUILayout.LabelField("Vertices", _asset.vertexCount.ToString());
+            EditorGUILayout.LabelField("Indices", _asset.indexCount.ToString());
             EditorGUILayout.LabelField("Materials", _asset.materials != null ? _asset.materials.Length.ToString() : "0");
             EditorGUILayout.EndScrollView();
         }

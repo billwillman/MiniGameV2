@@ -83,7 +83,7 @@ float4 coneApex
 
 `ClusterMeshAsset` / `ClusterMeshBakeResult` 增加 `int hierarchyVersion`。`CopyFrom` 一并写入。
 
-`ClusterMeshBakeSettings.buildLodHierarchy` 默认 `true`。单测若只需叶子，设 `false`。
+`ClusterMeshBakeSettings.buildLodHierarchy` 默认 `true`。单测若只需叶子，设 `false`。Baker 窗口开关见 DAG 规格第 3 节；新 Bake 以 DAG 规格为准。
 
 ## 5. Baker
 

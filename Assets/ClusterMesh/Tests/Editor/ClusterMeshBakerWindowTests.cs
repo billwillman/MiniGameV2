@@ -28,7 +28,10 @@ namespace ClusterMesh.Tests
                 new Material[1],
                 new ClusterMeshBakeSettings { buildLodHierarchy = false });
             Assert.That(asset.hierarchyVersion, Is.EqualTo(0));
+            Assert.That(asset.geometryVersion, Is.EqualTo(ClusterMeshLimits.GeometryVersion));
             Assert.That(asset.groups == null || asset.groups.Length == 0, Is.True);
+            Assert.That(asset.packedVertices, Is.Not.Null);
+            Assert.That(asset.packedVertices.Length, Is.GreaterThan(0));
             Object.DestroyImmediate(asset);
             Object.DestroyImmediate(mesh);
         }

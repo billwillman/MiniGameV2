@@ -11,10 +11,13 @@ namespace ClusterMesh
         public int maxVerticesPerCluster = ClusterMeshLimits.MaxVerticesPerCluster;
         public int maxTrianglesPerCluster = ClusterMeshLimits.MaxTrianglesPerCluster;
         public ClusterHeader[] clusters;
-        public ClusterVertex[] vertices;
-        public uint[] indices;
         public ClusterGroup[] groups;
         public int hierarchyVersion;
+        public int geometryVersion;
+        public int vertexCount;
+        public int indexCount;
+        public byte[] packedVertices;
+        public byte[] packedIndices;
 
         public void CopyFrom(ClusterMeshBakeResult result, Mesh source, ClusterMeshBakeSettings settings)
         {
@@ -23,10 +26,25 @@ namespace ClusterMesh
             maxVerticesPerCluster = settings.maxVerticesPerCluster;
             maxTrianglesPerCluster = settings.maxTrianglesPerCluster;
             clusters = result.clusters;
-            vertices = result.vertices;
-            indices = result.indices;
             groups = result.groups;
             hierarchyVersion = result.hierarchyVersion;
+            ClusterMeshGeometry.WritePacked(this, result);
+        }
+
+        public void CopyPackedFrom(ClusterMeshAsset other)
+        {
+            sourceMesh = other.sourceMesh;
+            materials = other.materials;
+            maxVerticesPerCluster = other.maxVerticesPerCluster;
+            maxTrianglesPerCluster = other.maxTrianglesPerCluster;
+            clusters = other.clusters;
+            groups = other.groups;
+            hierarchyVersion = other.hierarchyVersion;
+            geometryVersion = other.geometryVersion;
+            vertexCount = other.vertexCount;
+            indexCount = other.indexCount;
+            packedVertices = other.packedVertices;
+            packedIndices = other.packedIndices;
         }
     }
 }

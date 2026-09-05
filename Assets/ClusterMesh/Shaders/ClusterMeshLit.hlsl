@@ -104,12 +104,11 @@ void FetchClusterVertex(uint vertexID, uint instanceID, out float3 positionOS, o
         return;
     }
 
-    uint localIndex = _Indices[h.indexOffset + vertexID];
-    ClusterVertex v = _Vertices[h.vertexOffset + localIndex];
-    positionOS = v.position.xyz;
-    normalOS = v.normal.xyz;
-    tangentOS = v.tangent;
-    uv = v.uv.xy;
+    uint raw = _Indices[(h.indexOffset + vertexID) >> 1];
+    uint localIndex = ((h.indexOffset + vertexID) & 1u) == 0u
+        ? (raw & 0xffffu)
+        : (raw >> 16);
+    ClusterMeshUnpackVertex(_Vertices[h.vertexOffset + localIndex], positionOS, normalOS, tangentOS, uv);
 }
 
 Varyings ClusterMeshVert(Attributes input)

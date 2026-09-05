@@ -34,6 +34,17 @@ namespace ClusterMesh
 
     [Serializable]
     [StructLayout(LayoutKind.Sequential)]
+    public struct ClusterPackedVertex
+    {
+        public Vector4 position;
+        public uint nrmXY;
+        public uint nrmZ_tanW;
+        public uint tanXY;
+        public uint uv;
+    }
+
+    [Serializable]
+    [StructLayout(LayoutKind.Sequential)]
     public struct ClusterGroup
     {
         public int clusterStart;

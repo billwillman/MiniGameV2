@@ -64,6 +64,12 @@ namespace ClusterMesh
                 return;
             }
 
+            if (!ClusterMeshGeometry.TryReadGpuGeometry(asset, out ClusterPackedVertex[] packedVerts, out uint[] packedIndices, out string geoError))
+            {
+                Error = geoError;
+                return;
+            }
+
             string reason = ClusterMeshCapability.GetUnsupportedReason();
             if (reason != null)
             {
@@ -88,12 +94,18 @@ namespace ClusterMesh
                 _groupBuffer.SetData(asset.groups);
             else
                 _groupBuffer.SetData(new ClusterGroup[1]);
-            _vertexBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, Mathf.Max(1, asset.vertices.Length), 64);
-            if (asset.vertices.Length > 0)
-                _vertexBuffer.SetData(asset.vertices);
-            _indexBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, Mathf.Max(1, asset.indices.Length), 4);
-            if (asset.indices.Length > 0)
-                _indexBuffer.SetData(asset.indices);
+            _vertexBuffer = new GraphicsBuffer(
+                GraphicsBuffer.Target.Structured,
+                Mathf.Max(1, packedVerts.Length),
+                ClusterMeshLimits.ClusterVertexStride);
+            if (packedVerts.Length > 0)
+                _vertexBuffer.SetData(packedVerts);
+            _indexBuffer = new GraphicsBuffer(
+                GraphicsBuffer.Target.Structured,
+                Mathf.Max(1, packedIndices.Length),
+                4);
+            if (packedIndices.Length > 0)
+                _indexBuffer.SetData(packedIndices);
 
             int materialCount = Mathf.Max(1, asset.materials != null ? asset.materials.Length : 1);
             int visibleCapacity = Mathf.Max(1, asset.clusters.Length) * ClusterMeshLimits.MaxBatchedObjects;
