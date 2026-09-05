@@ -34,6 +34,16 @@ namespace ClusterMesh.Tests
         }
 
         [Test]
+        public void DisposeCachedContexts_Twice_DoesNotThrow()
+        {
+            Assert.DoesNotThrow(() =>
+            {
+                ClusterMeshSceneBatcher.DisposeCachedContexts();
+                ClusterMeshSceneBatcher.DisposeCachedContexts();
+            });
+        }
+
+        [Test]
         public void CountDrawCalls_MatchesMaterialAndChunkRules()
         {
             Assert.That(ClusterMeshSceneBatcher.CountDrawCalls(10, 1), Is.EqualTo(1));

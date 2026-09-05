@@ -61,6 +61,52 @@ namespace ClusterMesh.Tests
         }
 
         [Test]
+        public void TestCone_GrazingAngle_DoesNotCull()
+        {
+            var cone = new ClusterHeader
+            {
+                coneAxisCutoff = new Vector4(0f, 0f, 1f, 0.5f),
+                coneApex = Vector3.zero
+            };
+            Assert.That(ClusterMeshFrustum.TestCone(cone, new Vector3(2f, 0f, 0f)), Is.True);
+        }
+
+        [Test]
+        public void TestCone_CameraInsideClusterBounds_DoesNotCull()
+        {
+            var cone = new ClusterHeader
+            {
+                coneAxisCutoff = new Vector4(0f, 0f, 1f, 1f),
+                coneApex = Vector3.zero,
+                aabbExtents = new Vector4(1f, 1f, 1f, 0f)
+            };
+            Assert.That(ClusterMeshFrustum.TestCone(cone, new Vector3(0f, 0f, -0.2f)), Is.True);
+        }
+
+        [Test]
+        public void TestCone_FarBehind_StillCullsWithExtents()
+        {
+            var cone = new ClusterHeader
+            {
+                coneAxisCutoff = new Vector4(0f, 0f, 1f, 1f),
+                coneApex = Vector3.zero,
+                aabbExtents = new Vector4(0.1f, 0.1f, 0.1f, 0f)
+            };
+            Assert.That(ClusterMeshFrustum.TestCone(cone, new Vector3(0f, 0f, -2f)), Is.False);
+        }
+
+        [Test]
+        public void TestCone_BakedFlatTriangle_SideViewVisible()
+        {
+            var mesh = ClusterMeshTestMeshes.Triangle();
+            var result = ClusterMeshBaker.Bake(mesh, new Material[1], new ClusterMeshBakeSettings());
+            ClusterHeader header = result.clusters[0];
+            Vector3 side = (Vector3)header.coneApex + new Vector3(2f, 0f, 0.1f);
+            Assert.That(ClusterMeshFrustum.TestCone(header, side), Is.True);
+            Object.DestroyImmediate(mesh);
+        }
+
+        [Test]
         public void CameraToLocalPlanes_IdentityCameraContainsOrigin()
         {
             var go = new GameObject("CMFrustumCam");
@@ -79,6 +125,21 @@ namespace ClusterMesh.Tests
             };
             Assert.That(ClusterMeshFrustum.TestAabb(header, planes), Is.True);
             Object.DestroyImmediate(go);
+        }
+
+        [Test]
+        public void AssetLocalBounds_EncapsulatesClusters()
+        {
+            var asset = ScriptableObject.CreateInstance<ClusterMeshAsset>();
+            asset.clusters = new[]
+            {
+                new ClusterHeader { aabbCenter = new Vector4(0f, 0f, 0f, 0f), aabbExtents = new Vector4(1f, 1f, 1f, 0f) },
+                new ClusterHeader { aabbCenter = new Vector4(10f, 0f, 0f, 0f), aabbExtents = new Vector4(1f, 1f, 1f, 0f) }
+            };
+            Bounds b = ClusterMeshFrustum.AssetLocalBounds(asset);
+            Assert.That(b.min.x, Is.LessThanOrEqualTo(-1f));
+            Assert.That(b.max.x, Is.GreaterThanOrEqualTo(11f));
+            Object.DestroyImmediate(asset);
         }
 
         [Test]

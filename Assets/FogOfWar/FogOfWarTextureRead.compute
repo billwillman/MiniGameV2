@@ -1,0 +1,42 @@
+Texture2D<float4> _FogTexture;
+
+#pragma bind_buffer(name: outputBuffer, binding: 0)
+RWStructuredBuffer<float> _OutputBuffer;
+
+// Single Value
+#pragma kernel FogOfWarTextureReadSingleValue
+
+int2 _FogTextureUV;
+
+[numthreads(1, 1, 1)]
+void FogOfWarTextureReadSingleValue(uint3 id : SV_DispatchThreadID)
+{
+    _OutputBuffer[0] = _FogTexture.Load(int3(_FogTextureUV, 0))[1];
+}
+
+// Area Average
+#pragma kernel FogOfWarTextureReadAreaAverage
+
+int4 _FogTextureArea;
+int _FogTextureChannel;
+
+[numthreads(1, 1, 1)]
+void FogOfWarTextureReadAreaAverage(uint3 id : SV_DispatchThreadID)
+{
+    _OutputBuffer[0] = _FogTexture.Load(int3(_FogTextureUV, 0))[_FogTextureChannel];
+    
+    int xmin = _FogTextureArea[0];
+    int ymin = _FogTextureArea[1];
+    int xmax = _FogTextureArea[2];
+    int ymax = _FogTextureArea[3];
+    
+    float total = 0;
+    for (int y = ymin; y < ymax; ++y)
+    {
+        for (int x = xmin; x < xmax; ++x)
+            total += _FogTexture.Load(int3(x, y, 0))[_FogTextureChannel];
+    }
+    
+    int count = (ymax - ymin) * (xmax - xmin);
+    _OutputBuffer[0] = total / count;
+}

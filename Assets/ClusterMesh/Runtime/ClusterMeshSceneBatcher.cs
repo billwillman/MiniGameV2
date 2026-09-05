@@ -96,7 +96,8 @@ namespace ClusterMesh
                 ClusterMeshDrawContext ctx = GetOrCreate(seed);
                 if (ctx == null || !ctx.IsReady)
                     continue;
-                ctx.Draw(Matrices, camera);
+                ctx.EnableConeCull = seed.enableConeCull;
+                ctx.Draw(Matrices, camera, seed.castShadows);
             }
         }
 
@@ -148,13 +149,18 @@ namespace ClusterMesh
             CollectBatches(Renderers, dest);
         }
 
-        public static void ResetForTests()
+        public static void DisposeCachedContexts()
         {
-            Renderers.Clear();
             foreach (var kv in Contexts)
                 kv.Value?.Dispose();
             Contexts.Clear();
             _flushedFrame = int.MinValue;
+        }
+
+        public static void ResetForTests()
+        {
+            Renderers.Clear();
+            DisposeCachedContexts();
             _loggedError = false;
         }
 

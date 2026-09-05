@@ -389,6 +389,8 @@ namespace ClusterMesh
             float minDot = 1f;
             foreach (var n in normals)
                 minDot = Mathf.Min(minDot, Vector3.Dot(axis, n));
+            // Store cos(α). Runtime culls only when the camera is behind the
+            // whole normal cone (dot < -sin(α)), not when it leaves the cone.
             cutoff = minDot < 0f ? -1f : minDot;
         }
     }

@@ -15,6 +15,7 @@ namespace ClusterMesh
         static readonly int ObjectCountId = Shader.PropertyToID("_ObjectCount");
         static readonly int MaterialIndexId = Shader.PropertyToID("_MaterialIndex");
         static readonly int IsolateIndexId = Shader.PropertyToID("_IsolateIndex");
+        static readonly int EnableConeCullId = Shader.PropertyToID("_EnableConeCull");
         static readonly int PlanesId = Shader.PropertyToID("_Planes");
         static readonly int WorldCameraPosId = Shader.PropertyToID("_WorldCameraPos");
         static readonly int ObjectLocalToWorldId = Shader.PropertyToID("_ObjectLocalToWorld");
@@ -41,6 +42,7 @@ namespace ClusterMesh
         public bool IsReady { get; private set; }
         public string Error { get; }
         public int IsolateIndex { get; set; } = -1;
+        public bool EnableConeCull { get; set; } = true;
 
         public ClusterMeshDrawContext(ClusterMeshAsset asset, ComputeShader cullShader, Shader litShader)
         {
@@ -98,20 +100,20 @@ namespace ClusterMesh
             IsReady = true;
         }
 
-        public void Draw(Matrix4x4 localToWorld, Camera camera)
+        public void Draw(Matrix4x4 localToWorld, Camera camera, bool castShadows = true)
         {
             _single[0] = localToWorld;
-            Draw(_single, 1, camera);
+            Draw(_single, 1, camera, castShadows);
         }
 
-        public void Draw(IList<Matrix4x4> localToWorld, Camera camera)
+        public void Draw(IList<Matrix4x4> localToWorld, Camera camera, bool castShadows = true)
         {
             if (localToWorld == null)
                 return;
-            Draw(localToWorld, localToWorld.Count, camera);
+            Draw(localToWorld, localToWorld.Count, camera, castShadows);
         }
 
-        void Draw(IList<Matrix4x4> localToWorld, int count, Camera camera)
+        void Draw(IList<Matrix4x4> localToWorld, int count, Camera camera, bool castShadows)
         {
             if (!IsReady || camera == null || count <= 0)
                 return;
@@ -148,6 +150,7 @@ namespace ClusterMesh
                 _cullShader.SetInt(ObjectCountId, n);
                 _cullShader.SetInt(ClusterCountId, _asset.clusters.Length);
                 _cullShader.SetInt(IsolateIndexId, IsolateIndex);
+                _cullShader.SetInt(EnableConeCullId, EnableConeCull ? 1 : 0);
                 _cullShader.SetVectorArray(PlanesId, _planeVectors);
                 _cullShader.SetVector(WorldCameraPosId, camera.transform.position);
                 _cullShader.SetMatrixArray(ObjectLocalToWorldId, _l2w);
@@ -179,8 +182,8 @@ namespace ClusterMesh
                         _argsBuffers[materialIndex],
                         0,
                         null,
-                        ShadowCastingMode.On,
-                        true,
+                        castShadows ? ShadowCastingMode.On : ShadowCastingMode.Off,
+                        castShadows,
                         0,
                         camera);
                 }

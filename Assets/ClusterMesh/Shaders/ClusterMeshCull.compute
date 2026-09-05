@@ -9,6 +9,7 @@ uint _ClusterCount;
 uint _ObjectCount;
 uint _MaterialIndex;
 int _IsolateIndex;
+int _EnableConeCull;
 float4 _Planes[6];
 float3 _WorldCameraPos;
 float4x4 _ObjectLocalToWorld[256];
@@ -37,18 +38,31 @@ bool TestAabb(float3 c, float3 e)
     return true;
 }
 
-bool TestCone(ClusterHeader h, float4x4 m)
+bool TestCone(ClusterHeader h, float4x4 m, float3 worldExtents)
 {
     float cutoff = h.coneAxisCutoff.w;
     if (cutoff < 0.0f)
         return true;
     float3 apex = mul(m, float4(h.coneApex.xyz, 1.0f)).xyz;
-    float3 axis = normalize(mul((float3x3)m, h.coneAxisCutoff.xyz));
-    float3 view = _WorldCameraPos - apex;
-    float len = length(view);
-    if (len < 1e-6f)
+    float3 axis = mul((float3x3)m, h.coneAxisCutoff.xyz);
+    float axisLen = length(axis);
+    if (axisLen < 1e-8f)
         return true;
-    return dot(view / len, axis) >= cutoff;
+    axis /= axisLen;
+    float3 view = _WorldCameraPos - apex;
+    float dist = length(view);
+    if (dist < 1e-6f)
+        return true;
+    float radius = length(worldExtents);
+    if (dist <= radius)
+        return true;
+    view /= dist;
+    float cosA = saturate(cutoff);
+    float sinA = sqrt(1.0f - cosA * cosA);
+    float sinB = radius / dist;
+    float cosB = sqrt(max(0.0f, 1.0f - sinB * sinB));
+    float threshold = -(sinA * cosB + cosA * sinB);
+    return dot(view, axis) >= threshold;
 }
 
 [numthreads(64, 1, 1)]
@@ -67,7 +81,9 @@ void CullClusters(uint3 id : SV_DispatchThreadID)
         return;
     float3 wc, we;
     TransformAabb(h, _ObjectLocalToWorld[objectIndex], wc, we);
-    if (!TestAabb(wc, we) || !TestCone(h, _ObjectLocalToWorld[objectIndex]))
+    if (!TestAabb(wc, we))
+        return;
+    if (_EnableConeCull != 0 && !TestCone(h, _ObjectLocalToWorld[objectIndex], we))
         return;
     _VisibleClusterIds.Append((objectIndex << 16) | clusterIndex);
 }

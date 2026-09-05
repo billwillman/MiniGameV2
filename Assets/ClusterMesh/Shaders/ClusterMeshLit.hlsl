@@ -23,16 +23,24 @@ StructuredBuffer<ClusterHeader> _Clusters;
 StructuredBuffer<ClusterVertex> _Vertices;
 StructuredBuffer<uint> _Indices;
 StructuredBuffer<uint> _VisibleClusterIds;
-float4x4 _ObjectLocalToWorld[256];
-float4x4 _ObjectWorldToLocal[256];
+
+CBUFFER_START(ClusterMeshBatch)
+    float4x4 _ObjectLocalToWorld[256];
+    float4x4 _ObjectWorldToLocal[256];
+CBUFFER_END
+
+void ApplyClusterMeshInstance(uint instanceID)
+{
+    uint packed = _VisibleClusterIds[instanceID];
+    uint objectIndex = packed >> 16;
+    unity_ObjectToWorld = _ObjectLocalToWorld[objectIndex];
+    unity_WorldToObject = _ObjectWorldToLocal[objectIndex];
+}
 
 #if defined(UNITY_PROCEDURAL_INSTANCING_ENABLED)
 void ClusterMeshSetup()
 {
-    uint packed = _VisibleClusterIds[unity_InstanceID];
-    uint objectIndex = packed >> 16;
-    unity_ObjectToWorld = _ObjectLocalToWorld[objectIndex];
-    unity_WorldToObject = _ObjectWorldToLocal[objectIndex];
+    ApplyClusterMeshInstance(unity_InstanceID);
 }
 #endif
 
@@ -75,12 +83,12 @@ void FetchClusterVertex(uint vertexID, uint instanceID, out float3 positionOS, o
 
 Varyings ClusterMeshVert(Attributes input)
 {
-    UNITY_SETUP_INSTANCE_ID(input);
     float3 positionOS;
     float3 normalOS;
     float4 tangentOS;
     float2 uv;
-    FetchClusterVertex(input.vertexID, unity_InstanceID, positionOS, normalOS, tangentOS, uv);
+    ApplyClusterMeshInstance(input.instanceID);
+    FetchClusterVertex(input.vertexID, input.instanceID, positionOS, normalOS, tangentOS, uv);
 
     VertexPositionInputs pos = GetVertexPositionInputs(positionOS);
     VertexNormalInputs nrm = GetVertexNormalInputs(normalOS, tangentOS);
@@ -125,12 +133,12 @@ half4 ClusterMeshFrag(Varyings input) : SV_Target
 
 Varyings ClusterMeshShadowVert(Attributes input)
 {
-    UNITY_SETUP_INSTANCE_ID(input);
     float3 positionOS;
     float3 normalOS;
     float4 tangentOS;
     float2 uv;
-    FetchClusterVertex(input.vertexID, unity_InstanceID, positionOS, normalOS, tangentOS, uv);
+    ApplyClusterMeshInstance(input.instanceID);
+    FetchClusterVertex(input.vertexID, input.instanceID, positionOS, normalOS, tangentOS, uv);
     Varyings o;
     o.positionCS = TransformWorldToHClip(TransformObjectToWorld(positionOS));
 #if UNITY_REVERSED_Z

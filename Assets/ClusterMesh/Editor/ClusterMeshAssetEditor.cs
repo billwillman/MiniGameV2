@@ -36,13 +36,17 @@ namespace ClusterMesh
             if (_preview == null)
             {
                 _preview = new PreviewRenderUtility();
-                _preview.camera.nearClipPlane = 0.01f;
-                _preview.camera.farClipPlane = 100f;
+                _preview.camera.fieldOfView = 50f;
             }
 
+            Bounds bounds = ClusterMeshFrustum.AssetLocalBounds(asset);
+            Vector3 look = bounds.center;
+            float radius = Mathf.Max(bounds.extents.magnitude, 0.05f);
+            _preview.camera.nearClipPlane = Mathf.Max(0.01f, radius * 0.002f);
+            _preview.camera.farClipPlane = Mathf.Max(100f, radius * 40f);
             _preview.BeginPreview(r, background);
-            _preview.camera.transform.position = new Vector3(0f, 0.75f, -2.4f);
-            _preview.camera.transform.LookAt(Vector3.zero);
+            _preview.camera.transform.position = look + new Vector3(0f, radius * 0.35f, -radius * 2.4f);
+            _preview.camera.transform.LookAt(look);
             _context.Draw(Matrix4x4.identity, _preview.camera);
             _preview.camera.Render();
             GUI.DrawTexture(r, _preview.EndPreview(), ScaleMode.StretchToFill, false);

@@ -42,11 +42,30 @@ namespace ClusterMesh
             float cutoff = header.coneAxisCutoff.w;
             if (cutoff < 0f)
                 return true;
+
             Vector3 axis = header.coneAxisCutoff;
-            Vector3 view = localCameraPos - (Vector3)header.coneApex;
-            if (view.sqrMagnitude < 1e-12f)
+            float axisLenSq = axis.sqrMagnitude;
+            if (axisLenSq < 1e-16f)
                 return true;
-            return Vector3.Dot(view.normalized, axis) >= cutoff;
+            axis /= Mathf.Sqrt(axisLenSq);
+
+            Vector3 view = localCameraPos - (Vector3)header.coneApex;
+            float dist = view.magnitude;
+            if (dist < 1e-6f)
+                return true;
+
+            Vector3 extents = header.aabbExtents;
+            float radius = extents.magnitude;
+            if (dist <= radius)
+                return true;
+
+            view /= dist;
+            float cosA = Mathf.Clamp01(cutoff);
+            float sinA = Mathf.Sqrt(1f - cosA * cosA);
+            float sinB = radius / dist;
+            float cosB = Mathf.Sqrt(Mathf.Max(0f, 1f - sinB * sinB));
+            float threshold = -(sinA * cosB + cosA * sinB);
+            return Vector3.Dot(view, axis) >= threshold;
         }
 
         public static void WorldPlanes(Camera camera, Plane[] dest)
@@ -66,6 +85,32 @@ namespace ClusterMesh
                 Mathf.Abs(axisX.x) + Mathf.Abs(axisY.x) + Mathf.Abs(axisZ.x),
                 Mathf.Abs(axisX.y) + Mathf.Abs(axisY.y) + Mathf.Abs(axisZ.y),
                 Mathf.Abs(axisX.z) + Mathf.Abs(axisY.z) + Mathf.Abs(axisZ.z));
+        }
+
+        public static Bounds AssetLocalBounds(ClusterMeshAsset asset)
+        {
+            var bounds = new Bounds(Vector3.zero, Vector3.zero);
+            if (asset == null || asset.clusters == null || asset.clusters.Length == 0)
+                return bounds;
+
+            bool init = false;
+            for (int i = 0; i < asset.clusters.Length; i++)
+            {
+                Vector3 c = asset.clusters[i].aabbCenter;
+                Vector3 e = asset.clusters[i].aabbExtents;
+                if (!init)
+                {
+                    bounds = new Bounds(c, e * 2f);
+                    init = true;
+                }
+                else
+                {
+                    bounds.Encapsulate(c + e);
+                    bounds.Encapsulate(c - e);
+                }
+            }
+
+            return bounds;
         }
 
         public static bool TestAabbWorld(Vector3 worldCenter, Vector3 worldExtents, Plane[] planes)

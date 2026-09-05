@@ -9,6 +9,9 @@ namespace ClusterMesh
         public Camera targetCamera;
         public ComputeShader cullShader;
         public Shader litShader;
+        public bool castShadows = true;
+        public bool enableConeCull = true;
+        public bool showClusterAabb;
 
         bool _registered;
 
@@ -60,6 +63,20 @@ namespace ClusterMesh
             {
                 ClusterMeshSceneBatcher.Unregister(this);
                 _registered = false;
+            }
+        }
+
+        void OnDrawGizmosSelected()
+        {
+            if (!showClusterAabb || asset == null || asset.clusters == null)
+                return;
+
+            Gizmos.color = new Color(0.2f, 1f, 0.35f, 1f);
+            Gizmos.matrix = transform.localToWorldMatrix;
+            for (int i = 0; i < asset.clusters.Length; i++)
+            {
+                ClusterHeader h = asset.clusters[i];
+                Gizmos.DrawWireCube(h.aabbCenter, (Vector3)h.aabbExtents * 2f);
             }
         }
     }
