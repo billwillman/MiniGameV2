@@ -16,5 +16,21 @@ namespace ClusterMesh.Tests
             Object.DestroyImmediate(asset);
             Object.DestroyImmediate(mesh);
         }
+
+        [Test]
+        public void WriteAsset_LodOff_WritesVersionZero()
+        {
+            var mesh = ClusterMeshTestMeshes.Grid(16, 16);
+            var asset = ScriptableObject.CreateInstance<ClusterMeshAsset>();
+            ClusterMeshBakerWindow.WriteAsset(
+                asset,
+                mesh,
+                new Material[1],
+                new ClusterMeshBakeSettings { buildLodHierarchy = false });
+            Assert.That(asset.hierarchyVersion, Is.EqualTo(0));
+            Assert.That(asset.groups == null || asset.groups.Length == 0, Is.True);
+            Object.DestroyImmediate(asset);
+            Object.DestroyImmediate(mesh);
+        }
     }
 }

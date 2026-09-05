@@ -38,7 +38,6 @@ namespace ClusterMesh
                 "2. 选输出目录。空着则写到 Assets/ClusterMesh/Samples。\n" +
                 "3. 填资产名，点 Bake。成功后 Project 会选中生成的 .asset。\n" +
                 "4. 选中生成的 .asset，用 GameObject/ClusterMesh/Cluster Mesh、Project 右键 ClusterMesh/Add to Scene，或 Inspector「加入场景」。\n" +
-                "层次 LOD：默认 Bake 会 4 合 1 出父块。旧资产不重 Bake 只有叶子。场景里勾 Show Lod Levels 可看 L0/L1。\n" +
                 "5. 看效果：打开 Tools/ClusterMesh/Viewer 拖同一个资产；或 Tools/ClusterMesh/Create Demo Scene。\n\n" +
                 "限制：只要 MeshFilter，不要 SkinnedMesh。默认每 cluster 最多 64 顶点 / 124 三角。\n" +
                 "Stats 里 SetPass/Batches 会含阴影、Depth、多相机。合批看 Frame Debugger 的 DrawMeshInstancedIndirect。投射/接收阴影可在 ClusterMeshRenderer 上分开关。",
@@ -70,6 +69,19 @@ namespace ClusterMesh
             _settings.maxTrianglesPerCluster = EditorGUILayout.IntField(
                 new GUIContent("Max Triangles", "每个 cluster 最多多少三角。默认 124。"),
                 _settings.maxTrianglesPerCluster);
+
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("LOD", EditorStyles.boldLabel);
+            _settings.buildLodHierarchy = EditorGUILayout.Toggle(
+                new GUIContent(
+                    "Build LOD Hierarchy",
+                    "勾选：离线建锁边多层 DAG（资产更大，远处可换粗块）。不勾：只存叶子，文件更小，没有 cluster LOD。"),
+                _settings.buildLodHierarchy);
+            EditorGUILayout.HelpBox(
+                _settings.buildLodHierarchy
+                    ? "会分组、锁边、减半再切开，尽量收到根。重 Bake 后 Viewer / Renderer 拉阈值才能看到换层。"
+                    : "只切叶子。资产大约能小一半，运行时始终画细块。",
+                MessageType.None);
 
             EditorGUILayout.Space();
             if (GUILayout.Button("Bake", GUILayout.Height(28)))
@@ -124,7 +136,11 @@ namespace ClusterMesh
                 string path = AssetDatabase.GenerateUniqueAssetPath(folder + "/" + _assetName + ".asset");
                 AssetDatabase.CreateAsset(asset, path);
                 AssetDatabase.SaveAssets();
-                _info = "已写入 " + path + "，共 " + asset.clusters.Length + " 个 cluster。";
+                int groupCount = asset.groups != null ? asset.groups.Length : 0;
+                _info = "已写入 " + path + "，共 " + asset.clusters.Length + " 个 cluster" +
+                    (_settings.buildLodHierarchy
+                        ? "，" + groupCount + " 个 LOD 组（hierarchyVersion=" + asset.hierarchyVersion + "）。"
+                        : "（未建层次，hierarchyVersion=" + asset.hierarchyVersion + "）。");
                 Selection.activeObject = asset;
             }
             catch (Exception ex)
