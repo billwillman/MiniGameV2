@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace ClusterMesh
@@ -50,6 +51,19 @@ namespace ClusterMesh
             if (perspective)
                 e /= Mathf.Max(distance, 1e-4f);
             return e;
+        }
+
+        public static float MaxAxisScale(Matrix4x4 localToWorld)
+        {
+            float sx = new Vector3(localToWorld.m00, localToWorld.m10, localToWorld.m20).magnitude;
+            float sy = new Vector3(localToWorld.m01, localToWorld.m11, localToWorld.m21).magnitude;
+            float sz = new Vector3(localToWorld.m02, localToWorld.m12, localToWorld.m22).magnitude;
+            return Mathf.Max(sx, Mathf.Max(sy, Mathf.Max(sz, 1e-6f)));
+        }
+
+        public static bool UsePerClusterCone(int hierarchyVersion, float threshold, bool hasOwningGroup)
+        {
+            return !(hierarchyVersion >= HierarchyVersionDag && threshold > 0f && hasOwningGroup);
         }
 
         public static bool TryGetParent(
@@ -146,12 +160,12 @@ namespace ClusterMesh
             }
         }
 
-        public static bool TryGetOwningGroup(int clusterIndex, ClusterGroup[] groups, out int groupIndex)
+        public static bool TryGetOwningGroup(int clusterIndex, IList<ClusterGroup> groups, out int groupIndex)
         {
             groupIndex = NoParent;
             if (groups == null || clusterIndex < 0)
                 return false;
-            for (int i = 0; i < groups.Length; i++)
+            for (int i = 0; i < groups.Count; i++)
             {
                 ClusterGroup g = groups[i];
                 if (clusterIndex >= g.clusterStart && clusterIndex < g.clusterStart + g.clusterCount)
@@ -178,6 +192,7 @@ namespace ClusterMesh
             if (clusters == null || clusterIndex < 0 || clusterIndex >= clusters.Length)
                 return false;
             ClusterHeader self = clusters[clusterIndex];
+            float objScale = MaxAxisScale(localToWorld);
             if (hierarchyVersion >= HierarchyVersionDag &&
                 TryGetOwningGroup(clusterIndex, groups, out int ownGroup))
             {
@@ -190,12 +205,12 @@ namespace ClusterMesh
                 if (hasParent)
                 {
                     ClusterGroup p = groups[g.parentGroupIndex];
-                    parentLodError = p.lodError;
+                    parentLodError = p.lodError * objScale;
                     parentDist = Vector3.Distance(cameraPos, localToWorld.MultiplyPoint3x4(p.aabbCenter));
                 }
 
                 ClusterHeader own = self;
-                own.lodError = g.lodError;
+                own.lodError = g.lodError * objScale;
                 return IsVisible(
                     own, parentLodError, hasParent, selfDist, parentDist,
                     scale, threshold, hierarchyVersion, perspective);
@@ -209,8 +224,10 @@ namespace ClusterMesh
             float pDist = 0f;
             if (hasP)
                 pDist = Vector3.Distance(cameraPos, localToWorld.MultiplyPoint3x4(parentLocal));
+            ClusterHeader scaled = self;
+            scaled.lodError = self.lodError * objScale;
             return IsVisible(
-                self, parentErr, hasP, leafDist, pDist,
+                scaled, parentErr * objScale, hasP, leafDist, pDist,
                 scale, threshold, hierarchyVersion, perspective);
         }
 
@@ -252,8 +269,11 @@ namespace ClusterMesh
             float parentDist = 0f;
             if (hasParent)
                 parentDist = Vector3.Distance(cameraPos, localToWorld.MultiplyPoint3x4(parentLocal));
+            float objScale = MaxAxisScale(localToWorld);
+            ClusterHeader scaled = self;
+            scaled.lodError = self.lodError * objScale;
             return IsVisible(
-                self, parentLodError, hasParent, selfDist, parentDist,
+                scaled, parentLodError * objScale, hasParent, selfDist, parentDist,
                 scale, threshold, hierarchyVersion, perspective);
         }
 

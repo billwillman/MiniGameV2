@@ -174,8 +174,6 @@ namespace ClusterMesh
                     grew = false;
                     int candidate = FindGrowCandidate(clusterTris, triangleList, unused, vertexToTris, usedVerts, settings);
                     if (candidate < 0)
-                        candidate = FindAnyFit(unused, triangleList, usedVerts, clusterTris.Count, settings);
-                    if (candidate < 0)
                         break;
                     AddTriangle(candidate, triangleList, unused, clusterTris, usedVerts);
                     remaining--;
@@ -221,17 +219,6 @@ namespace ClusterMesh
                             return n;
                     }
                 }
-            }
-
-            return -1;
-        }
-
-        static int FindAnyFit(bool[] unused, List<int> triangleList, HashSet<int> usedVerts, int clusterTriangleCount, ClusterMeshBakeSettings settings)
-        {
-            for (int t = 0; t < unused.Length; t++)
-            {
-                if (unused[t] && Fits(t, triangleList, usedVerts, clusterTriangleCount, settings))
-                    return t;
             }
 
             return -1;

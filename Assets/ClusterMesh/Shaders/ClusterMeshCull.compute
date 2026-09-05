@@ -71,9 +71,17 @@ bool TestCone(ClusterHeader h, float4x4 m, float3 worldExtents)
     return dot(view, axis) >= threshold;
 }
 
-float LodProjected(float lodError, float3 worldCenter)
+float MaxAxisScale(float4x4 m)
 {
-    float e = lodError * _LodProjectionScale;
+    float sx = length(mul((float3x3)m, float3(1, 0, 0)));
+    float sy = length(mul((float3x3)m, float3(0, 1, 0)));
+    float sz = length(mul((float3x3)m, float3(0, 0, 1)));
+    return max(sx, max(sy, max(sz, 1e-6f)));
+}
+
+float LodProjected(float lodError, float3 worldCenter, float4x4 m)
+{
+    float e = lodError * MaxAxisScale(m) * _LodProjectionScale;
     if (_LodPerspective != 0)
     {
         float dist = max(length(_WorldCameraPos - worldCenter), 1e-4f);
@@ -101,7 +109,7 @@ int FindOwningGroup(uint clusterIndex)
     return -1;
 }
 
-bool TestLod(ClusterHeader h, float4x4 m, uint clusterIndex)
+bool TestLod(ClusterHeader h, float4x4 m, uint clusterIndex, int owningGroup)
 {
     if (_HierarchyVersion < 1)
         return true;
@@ -109,12 +117,12 @@ bool TestLod(ClusterHeader h, float4x4 m, uint clusterIndex)
         return LodLevel(h.flags) == 0u;
     if (_HierarchyVersion >= 2)
     {
-        int own = FindOwningGroup(clusterIndex);
+        int own = owningGroup;
         if (own >= 0)
         {
             ClusterGroup g = _Groups[own];
             float3 gc = mul(m, float4(g.aabbCenter.xyz, 1.0f)).xyz;
-            if (LodProjected(g.lodError, gc) >= _LodErrorThreshold)
+            if (LodProjected(g.lodError, gc, m) >= _LodErrorThreshold)
                 return false;
             if (g.parentGroupIndex < 0)
                 return true;
@@ -122,7 +130,7 @@ bool TestLod(ClusterHeader h, float4x4 m, uint clusterIndex)
                 return true;
             ClusterGroup pg = _Groups[g.parentGroupIndex];
             float3 pgc = mul(m, float4(pg.aabbCenter.xyz, 1.0f)).xyz;
-            return LodProjected(pg.lodError, pgc) >= _LodErrorThreshold;
+            return LodProjected(pg.lodError, pgc, m) >= _LodErrorThreshold;
         }
         if (h.parentIndex < 0)
             return true;
@@ -130,11 +138,11 @@ bool TestLod(ClusterHeader h, float4x4 m, uint clusterIndex)
             return true;
         ClusterGroup parent = _Groups[h.parentIndex];
         float3 pc = mul(m, float4(parent.aabbCenter.xyz, 1.0f)).xyz;
-        return LodProjected(parent.lodError, pc) >= _LodErrorThreshold;
+        return LodProjected(parent.lodError, pc, m) >= _LodErrorThreshold;
     }
     float3 wc, we;
     TransformAabb(h, m, wc, we);
-    if (LodProjected(h.lodError, wc) >= _LodErrorThreshold)
+    if (LodProjected(h.lodError, wc, m) >= _LodErrorThreshold)
         return false;
     if (h.parentIndex < 0)
         return true;
@@ -143,7 +151,7 @@ bool TestLod(ClusterHeader h, float4x4 m, uint clusterIndex)
     ClusterHeader p = _Clusters[h.parentIndex];
     float3 pwc, pwe;
     TransformAabb(p, m, pwc, pwe);
-    return LodProjected(p.lodError, pwc) >= _LodErrorThreshold;
+    return LodProjected(p.lodError, pwc, m) >= _LodErrorThreshold;
 }
 
 [numthreads(64, 1, 1)]
@@ -164,9 +172,15 @@ void CullClusters(uint3 id : SV_DispatchThreadID)
     TransformAabb(h, _ObjectLocalToWorld[objectIndex], wc, we);
     if (!TestAabb(wc, we))
         return;
-    if (_EnableConeCull != 0 && !TestCone(h, _ObjectLocalToWorld[objectIndex], we))
+    int owningGroup = -1;
+    if (_HierarchyVersion >= 2 && _LodErrorThreshold > 0.0f)
+        owningGroup = FindOwningGroup(clusterIndex);
+    bool useCone = _EnableConeCull != 0;
+    if (useCone && _HierarchyVersion >= 2 && _LodErrorThreshold > 0.0f && owningGroup >= 0)
+        useCone = false;
+    if (useCone && !TestCone(h, _ObjectLocalToWorld[objectIndex], we))
         return;
-    if (!TestLod(h, _ObjectLocalToWorld[objectIndex], clusterIndex))
+    if (!TestLod(h, _ObjectLocalToWorld[objectIndex], clusterIndex, owningGroup))
         return;
     _VisibleClusterIds.Append((objectIndex << 16) | clusterIndex);
 }

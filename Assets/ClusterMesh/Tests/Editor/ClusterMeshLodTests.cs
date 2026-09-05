@@ -206,5 +206,29 @@ namespace ClusterMesh.Tests
             Assert.That(ClusterMeshLodQuality.FromValue(0f), Is.EqualTo(ClusterMeshLodQuality.Preset.Custom));
             Assert.That(ClusterMeshLodQuality.FromValue(10f), Is.EqualTo(ClusterMeshLodQuality.Preset.Custom));
         }
+
+        [Test]
+        public void UsePerClusterCone_SkipsOwningGroupWhenDagAndThresholdOn()
+        {
+            Assert.That(ClusterMeshLod.UsePerClusterCone(2, 1f, true), Is.False);
+            Assert.That(ClusterMeshLod.UsePerClusterCone(2, 1f, false), Is.True);
+            Assert.That(ClusterMeshLod.UsePerClusterCone(2, 0f, true), Is.True);
+            Assert.That(ClusterMeshLod.UsePerClusterCone(1, 1f, true), Is.True);
+        }
+
+        [Test]
+        public void MaxAxisScale_UniformScale2_IsTwo()
+        {
+            Assert.That(ClusterMeshLod.MaxAxisScale(Matrix4x4.Scale(new Vector3(2f, 2f, 2f))), Is.EqualTo(2f).Within(1e-4f));
+            Assert.That(ClusterMeshLod.MaxAxisScale(Matrix4x4.identity), Is.EqualTo(1f).Within(1e-4f));
+        }
+
+        [Test]
+        public void ProjectError_ObjectScale2_DoublesScreenError()
+        {
+            float unscaled = ClusterMeshLod.ProjectError(0.5f, 10f, 100f, true);
+            float scaled = ClusterMeshLod.ProjectError(0.5f * ClusterMeshLod.MaxAxisScale(Matrix4x4.Scale(Vector3.one * 2f)), 10f, 100f, true);
+            Assert.That(scaled, Is.EqualTo(unscaled * 2f).Within(1e-4f));
+        }
     }
 }

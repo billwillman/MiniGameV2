@@ -22,6 +22,26 @@ namespace ClusterMesh.Tests
             return mesh;
         }
 
+        public static Mesh TwoFarTriangles()
+        {
+            var mesh = new Mesh { name = "CMTestTwoFarTriangles" };
+            mesh.vertices = new[]
+            {
+                new Vector3(0f, 0f, 0f), new Vector3(1f, 0f, 0f), new Vector3(0f, 1f, 0f),
+                new Vector3(10f, 0f, 0f), new Vector3(11f, 0f, 0f), new Vector3(10f, 1f, 0f)
+            };
+            mesh.triangles = new[] { 0, 1, 2, 3, 4, 5 };
+            mesh.uv = new[]
+            {
+                Vector2.zero, Vector2.right, Vector2.up,
+                Vector2.zero, Vector2.right, Vector2.up
+            };
+            mesh.RecalculateNormals();
+            mesh.RecalculateBounds();
+            mesh.RecalculateTangents();
+            return mesh;
+        }
+
         public static Mesh TwoSubmeshTriangles()
         {
             var mesh = new Mesh { name = "CMTestTwoSubmesh" };

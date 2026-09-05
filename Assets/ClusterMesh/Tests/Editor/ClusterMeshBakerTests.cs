@@ -285,6 +285,45 @@ namespace ClusterMesh.Tests
         }
 
         [Test]
+        public void Bake_TwoFarTriangles_DefaultBudget_TwoClusters()
+        {
+            var mesh = ClusterMeshTestMeshes.TwoFarTriangles();
+            var result = ClusterMeshBaker.Bake(mesh, new Material[1], new ClusterMeshBakeSettings());
+            Assert.That(result.clusters.Length, Is.EqualTo(2));
+            int withParent = 0;
+            foreach (var c in result.clusters)
+            {
+                if (c.parentIndex >= 0)
+                    withParent++;
+            }
+
+            Assert.That(withParent, Is.EqualTo(0));
+            UnityEngine.Object.DestroyImmediate(mesh);
+        }
+
+        [Test]
+        public void Bake_LodOn_Grid_OwningGroupParentIsSharedByAllMembers()
+        {
+            var mesh = ClusterMeshTestMeshes.Grid(16, 16);
+            var result = ClusterMeshBaker.Bake(mesh, new Material[1], new ClusterMeshBakeSettings());
+            Assert.That(result.groups, Is.Not.Null);
+            for (int g = 0; g < result.groups.Length; g++)
+            {
+                ClusterGroup group = result.groups[g];
+                if (group.parentGroupIndex < 0)
+                    continue;
+                for (int i = 0; i < group.clusterCount; i++)
+                {
+                    int ci = group.clusterStart + i;
+                    Assert.That(result.clusters[ci].parentIndex, Is.EqualTo(group.parentGroupIndex),
+                        "owning group " + g + " cluster " + ci + " was swallowed without its siblings");
+                }
+            }
+
+            UnityEngine.Object.DestroyImmediate(mesh);
+        }
+
+        [Test]
         public void Bake_LodOn_FourIsolatedGrids_DoesNotForceParentGroup()
         {
             var mesh = ClusterMeshTestMeshes.FourIsolatedGrids();

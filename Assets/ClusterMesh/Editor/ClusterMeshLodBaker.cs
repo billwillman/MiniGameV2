@@ -35,7 +35,7 @@ namespace ClusterMesh
                 while (remaining.Count >= 2)
                 {
                     int size = remaining.Count >= 4 ? 4 : remaining.Count;
-                    List<int> group = PickGroup(clusters, vertices, indices, remaining, size, edgeCache);
+                    List<int> group = PickGroup(clusters, vertices, indices, remaining, size, edgeCache, groups);
                     if (group.Count < 2)
                     {
                         remaining.Remove(group[0]);
@@ -47,7 +47,11 @@ namespace ClusterMesh
 
                     int startClusters = clusters.Count;
                     if (!TryEmitGroup(clusters, vertices, indices, groups, group, settings, level))
+                    {
+                        for (int i = 0; i < group.Count; i++)
+                            next.Add(group[i]);
                         continue;
+                    }
 
                     emitted = true;
                     for (int i = startClusters; i < clusters.Count; i++)
@@ -166,7 +170,8 @@ namespace ClusterMesh
             List<uint> indices,
             List<int> remaining,
             int size,
-            Dictionary<int, HashSet<(int, int, int, int, int, int)>> edgeCache)
+            Dictionary<int, HashSet<(int, int, int, int, int, int)>> edgeCache,
+            List<ClusterGroup> groups)
         {
             int first = remaining[0];
             for (int i = 1; i < remaining.Count; i++)
@@ -175,9 +180,11 @@ namespace ClusterMesh
                     first = remaining[i];
             }
 
-            var group = new List<int>(size) { first };
-            var groupEdges = new HashSet<(int, int, int, int, int, int)>(
-                BoundaryEdges(clusters, vertices, indices, first, edgeCache));
+            var group = OwningMembersInRemaining(first, remaining, groups);
+            var groupEdges = new HashSet<(int, int, int, int, int, int)>();
+            for (int i = 0; i < group.Count; i++)
+                groupEdges.UnionWith(BoundaryEdges(clusters, vertices, indices, group[i], edgeCache));
+            var skip = new HashSet<int>();
             while (group.Count < size)
             {
                 Vector3 pivot = AverageCenter(clusters, group);
@@ -186,7 +193,7 @@ namespace ClusterMesh
                 for (int i = 0; i < remaining.Count; i++)
                 {
                     int idx = remaining[i];
-                    if (Contains(group, idx))
+                    if (Contains(group, idx) || skip.Contains(idx))
                         continue;
                     if (!SharesBoundaryEdge(groupEdges, clusters, vertices, indices, idx, edgeCache))
                         continue;
@@ -199,11 +206,49 @@ namespace ClusterMesh
 
                 if (best < 0)
                     break;
-                group.Add(best);
-                groupEdges.UnionWith(BoundaryEdges(clusters, vertices, indices, best, edgeCache));
+                List<int> extra = OwningMembersInRemaining(best, remaining, groups);
+                int add = 0;
+                for (int i = 0; i < extra.Count; i++)
+                {
+                    if (!Contains(group, extra[i]))
+                        add++;
+                }
+
+                if (add > 0 && group.Count + add > size)
+                {
+                    skip.Add(best);
+                    continue;
+                }
+
+                for (int i = 0; i < extra.Count; i++)
+                {
+                    if (Contains(group, extra[i]))
+                        continue;
+                    group.Add(extra[i]);
+                    groupEdges.UnionWith(BoundaryEdges(clusters, vertices, indices, extra[i], edgeCache));
+                }
             }
 
             return group;
+        }
+
+        static List<int> OwningMembersInRemaining(int seed, List<int> remaining, List<ClusterGroup> groups)
+        {
+            var members = new List<int>();
+            if (groups != null && ClusterMeshLod.TryGetOwningGroup(seed, groups, out int gi))
+            {
+                ClusterGroup g = groups[gi];
+                for (int i = 0; i < remaining.Count; i++)
+                {
+                    int idx = remaining[i];
+                    if (idx >= g.clusterStart && idx < g.clusterStart + g.clusterCount)
+                        members.Add(idx);
+                }
+            }
+
+            if (members.Count == 0)
+                members.Add(seed);
+            return members;
         }
 
         static bool SharesBoundaryEdge(
@@ -415,18 +460,30 @@ namespace ClusterMesh
                 ClusterHeader leaf = clusters[group[i]];
                 leaf.parentIndex = groupIndex;
                 clusters[group[i]] = leaf;
-                LinkSourceGroup(groups, group[i], groupIndex);
+                LinkSourceGroup(groups, group, group[i], groupIndex);
             }
 
             return true;
         }
 
-        static void LinkSourceGroup(List<ClusterGroup> groups, int clusterIndex, int parentGroupIndex)
+        static void LinkSourceGroup(List<ClusterGroup> groups, List<int> newGroup, int clusterIndex, int parentGroupIndex)
         {
             for (int i = 0; i < groups.Count - 1; i++)
             {
                 ClusterGroup g = groups[i];
                 if (clusterIndex < g.clusterStart || clusterIndex >= g.clusterStart + g.clusterCount)
+                    continue;
+                bool all = true;
+                for (int c = g.clusterStart; c < g.clusterStart + g.clusterCount; c++)
+                {
+                    if (!Contains(newGroup, c))
+                    {
+                        all = false;
+                        break;
+                    }
+                }
+
+                if (!all)
                     continue;
                 g.parentGroupIndex = parentGroupIndex;
                 groups[i] = g;
@@ -620,9 +677,9 @@ namespace ClusterMesh
             float bestLen = float.MaxValue;
             for (int t = 0; t + 2 < tris.Count; t += 3)
             {
-                Consider(pos, locked, tris[t], tris[t + 1], ref bestA, ref bestB, ref bestLen);
-                Consider(pos, locked, tris[t + 1], tris[t + 2], ref bestA, ref bestB, ref bestLen);
-                Consider(pos, locked, tris[t + 2], tris[t], ref bestA, ref bestB, ref bestLen);
+                Consider(pos, tris, locked, tris[t], tris[t + 1], ref bestA, ref bestB, ref bestLen);
+                Consider(pos, tris, locked, tris[t + 1], tris[t + 2], ref bestA, ref bestB, ref bestLen);
+                Consider(pos, tris, locked, tris[t + 2], tris[t], ref bestA, ref bestB, ref bestLen);
             }
 
             if (bestA < 0)
@@ -681,6 +738,7 @@ namespace ClusterMesh
 
         static void Consider(
             List<Vector3> pos,
+            List<int> tris,
             List<bool> locked,
             int a,
             int b,
@@ -695,9 +753,61 @@ namespace ClusterMesh
             float len = (pos[a] - pos[b]).sqrMagnitude;
             if (len >= bestLen)
                 return;
+            if (WouldFlip(pos, tris, locked, a, b))
+                return;
             bestLen = len;
             bestA = a;
             bestB = b;
+        }
+
+        static bool WouldFlip(List<Vector3> pos, List<int> tris, List<bool> locked, int a, int b)
+        {
+            int keep;
+            int drop;
+            if (locked[a] && !locked[b])
+            {
+                keep = a;
+                drop = b;
+            }
+            else if (locked[b] && !locked[a])
+            {
+                keep = b;
+                drop = a;
+            }
+            else
+            {
+                keep = Mathf.Min(a, b);
+                drop = Mathf.Max(a, b);
+            }
+
+            for (int t = 0; t + 2 < tris.Count; t += 3)
+            {
+                int i0 = tris[t];
+                int i1 = tris[t + 1];
+                int i2 = tris[t + 2];
+                Vector3 oa = pos[i0];
+                Vector3 ob = pos[i1];
+                Vector3 oc = pos[i2];
+                Vector3 oldN = Vector3.Cross(ob - oa, oc - oa);
+                if (i0 == drop)
+                    i0 = keep;
+                if (i1 == drop)
+                    i1 = keep;
+                if (i2 == drop)
+                    i2 = keep;
+                if (i0 == i1 || i1 == i2 || i0 == i2)
+                    continue;
+                Vector3 na = pos[i0];
+                Vector3 nb = pos[i1];
+                Vector3 nc = pos[i2];
+                Vector3 newN = Vector3.Cross(nb - na, nc - na);
+                if (oldN.sqrMagnitude < 1e-12f || newN.sqrMagnitude < 1e-12f)
+                    continue;
+                if (Vector3.Dot(oldN, newN) < 0f)
+                    return true;
+            }
+
+            return false;
         }
 
         public static float SurfaceDeviation(List<Vector3> points, List<Vector3> meshPos, List<int> meshTris)
