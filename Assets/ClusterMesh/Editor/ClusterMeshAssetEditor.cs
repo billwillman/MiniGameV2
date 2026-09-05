@@ -59,6 +59,12 @@ namespace ClusterMesh
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Clusters", asset.clusters != null ? asset.clusters.Length.ToString() : "0");
             EditorGUILayout.LabelField("Vertices", asset.vertices != null ? asset.vertices.Length.ToString() : "0");
+            EditorGUILayout.Space();
+            if (GUILayout.Button("加入场景"))
+            {
+                var created = ClusterMeshPlaceMenu.CreateInScene(asset);
+                Selection.activeGameObject = created;
+            }
         }
     }
 }

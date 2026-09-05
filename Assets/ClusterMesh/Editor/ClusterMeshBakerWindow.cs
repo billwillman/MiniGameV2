@@ -37,7 +37,7 @@ namespace ClusterMesh
                 "1. 拖一张 Mesh，或拖场景里带 MeshFilter 的物体（会用它的 Mesh 和材质）。\n" +
                 "2. 选输出目录。空着则写到 Assets/ClusterMesh/Samples。\n" +
                 "3. 填资产名，点 Bake。成功后 Project 会选中生成的 .asset。\n" +
-                "4. 新建空物体，加 ClusterMeshRenderer，把 .asset 拖到 Asset。\n" +
+                "4. 选中生成的 .asset，用 GameObject/ClusterMesh/Cluster Mesh、Project 右键 ClusterMesh/Add to Scene，或 Inspector「加入场景」。\n" +
                 "5. 看效果：打开 Tools/ClusterMesh/Viewer 拖同一个资产；或 Tools/ClusterMesh/Create Demo Scene。\n\n" +
                 "限制：只要 MeshFilter，不要 SkinnedMesh。默认每 cluster 最多 64 顶点 / 124 三角。\n" +
                 "Stats 里 SetPass/Batches 会含阴影、Depth、多相机。合批看 Frame Debugger 的 DrawMeshInstancedIndirect。阴影可在 ClusterMeshRenderer 上关 Cast Shadows。",
