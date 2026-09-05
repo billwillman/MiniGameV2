@@ -25,4 +25,14 @@ struct ClusterVertex
     float4 uv;
 };
 
+struct ClusterGroup
+{
+    int clusterStart;
+    int clusterCount;
+    int parentGroupIndex;
+    float lodError;
+    float4 aabbCenter;
+    float4 aabbExtents;
+};
+
 #endif

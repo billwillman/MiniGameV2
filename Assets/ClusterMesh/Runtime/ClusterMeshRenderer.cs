@@ -19,7 +19,7 @@ namespace ClusterMesh
         public bool showClusterAabb;
         [Tooltip("Screen-pixel LOD error. 0 = leaves only.")]
         public float lodErrorThreshold;
-        [Tooltip("Draw which LOD each visible cluster uses (L0 leaf / L1 parent).")]
+        [Tooltip("Draw which LOD each visible cluster uses.")]
         public bool showLodLevels;
 
         bool _registered;
@@ -90,26 +90,12 @@ namespace ClusterMesh
             for (int i = 0; i < asset.clusters.Length; i++)
             {
                 ClusterHeader h = asset.clusters[i];
-                ClusterMeshFrustum.TransformAabb(h, m, out Vector3 wc, out _);
-                float selfDist = Vector3.Distance(cam.transform.position, wc);
-                bool hasParent = h.parentIndex >= 0 && h.parentIndex < asset.clusters.Length;
-                ClusterHeader parent = hasParent ? asset.clusters[h.parentIndex] : default;
-                float parentDist = 0f;
-                if (hasParent)
-                {
-                    ClusterMeshFrustum.TransformAabb(parent, m, out Vector3 pwc, out _);
-                    parentDist = Vector3.Distance(cam.transform.position, pwc);
-                }
-
-                if (!ClusterMeshLod.IsVisible(
-                        h, parent, hasParent, selfDist, parentDist, scale,
+                if (!ClusterMeshLod.IsClusterVisible(
+                        h, asset.clusters, asset.groups, m, cam.transform.position, scale,
                         lodErrorThreshold, asset.hierarchyVersion, perspective))
                     continue;
 
-                int lod = ClusterMeshLod.Level(h.flags);
-                Gizmos.color = lod == 0
-                    ? new Color(0.2f, 0.85f, 1f, 1f)
-                    : new Color(1f, 0.55f, 0.1f, 1f);
+                Gizmos.color = ClusterMeshLod.LevelColor(ClusterMeshLod.Level(h.flags));
                 Gizmos.DrawWireCube(h.aabbCenter, (Vector3)h.aabbExtents * 2f);
             }
 

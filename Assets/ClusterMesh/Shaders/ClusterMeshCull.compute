@@ -3,9 +3,11 @@
 #include "ClusterMeshBuffers.hlsl"
 
 StructuredBuffer<ClusterHeader> _Clusters;
+StructuredBuffer<ClusterGroup> _Groups;
 AppendStructuredBuffer<uint> _VisibleClusterIds;
 
 uint _ClusterCount;
+uint _GroupCount;
 uint _ObjectCount;
 uint _MaterialIndex;
 int _IsolateIndex;
@@ -80,18 +82,34 @@ float LodProjected(float lodError, float3 worldCenter)
     return e;
 }
 
+uint LodLevel(uint flags)
+{
+    uint packed = (flags >> 8) & 255u;
+    if (packed > 0u)
+        return packed;
+    return (flags & 1u) != 0u ? 1u : 0u;
+}
+
 bool TestLod(ClusterHeader h, float4x4 m)
 {
     if (_HierarchyVersion < 1)
         return true;
     if (_LodErrorThreshold <= 0.0f)
-        return (h.flags & 1u) == 0u;
+        return LodLevel(h.flags) == 0u;
     float3 wc, we;
     TransformAabb(h, m, wc, we);
     if (LodProjected(h.lodError, wc) >= _LodErrorThreshold)
         return false;
     if (h.parentIndex < 0)
         return true;
+    if (_HierarchyVersion >= 2)
+    {
+        if ((uint)h.parentIndex >= _GroupCount)
+            return true;
+        ClusterGroup g = _Groups[h.parentIndex];
+        float3 gc = mul(m, float4(g.aabbCenter.xyz, 1.0f)).xyz;
+        return LodProjected(g.lodError, gc) >= _LodErrorThreshold;
+    }
     if ((uint)h.parentIndex >= _ClusterCount)
         return true;
     ClusterHeader p = _Clusters[h.parentIndex];

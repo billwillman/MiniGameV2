@@ -5,66 +5,135 @@ namespace ClusterMesh
 {
     public static class ClusterMeshLodBaker
     {
-        public static void BuildParents(
+        const float QuantizeScale = 100000f;
+
+        public static void BuildHierarchy(
             List<ClusterHeader> clusters,
             List<ClusterVertex> vertices,
             List<uint> indices,
+            List<ClusterGroup> groups,
             int leafStart,
             int leafEnd,
             ClusterMeshBakeSettings settings)
         {
-            if (clusters == null || settings == null || leafEnd - leafStart < 4)
+            if (clusters == null || groups == null || settings == null || leafEnd - leafStart < 2)
                 return;
 
-            var used = new bool[leafEnd];
-            while (true)
+            var pending = new List<int>(leafEnd - leafStart);
+            for (int i = leafStart; i < leafEnd; i++)
+                pending.Add(i);
+
+            int level = 0;
+            while (pending.Count >= 2 && level < ClusterMeshLod.MaxLodLevels)
             {
-                int first = -1;
-                int remaining = 0;
-                for (int i = leafStart; i < leafEnd; i++)
+                level++;
+                var remaining = new List<int>(pending);
+                var next = new List<int>();
+                bool emitted = false;
+
+                while (remaining.Count >= 2)
                 {
-                    if (used[i])
+                    int size = remaining.Count >= 4 ? 4 : remaining.Count;
+                    List<int> group = PickGroup(clusters, remaining, size);
+                    RemoveAll(remaining, group);
+
+                    int startClusters = clusters.Count;
+                    if (!TryEmitGroup(clusters, vertices, indices, groups, group, settings, level))
                         continue;
-                    remaining++;
-                    if (first < 0)
-                        first = i;
+
+                    emitted = true;
+                    for (int i = startClusters; i < clusters.Count; i++)
+                        next.Add(i);
                 }
 
-                if (remaining < 4)
+                if (remaining.Count == 1)
+                    next.Add(remaining[0]);
+
+                if (!emitted)
                     break;
-
-                var group = new List<int>(4) { first };
-                used[first] = true;
-                while (group.Count < 4)
-                {
-                    Vector3 pivot = AverageCenter(clusters, group);
-                    int best = -1;
-                    float bestD = float.MaxValue;
-                    for (int i = leafStart; i < leafEnd; i++)
-                    {
-                        if (used[i])
-                            continue;
-                        float d = ((Vector3)clusters[i].aabbCenter - pivot).sqrMagnitude;
-                        if (d >= bestD)
-                            continue;
-                        bestD = d;
-                        best = i;
-                    }
-
-                    used[best] = true;
-                    group.Add(best);
-                }
-
-                int parentIndex = EmitParent(clusters, vertices, indices, group, settings);
-                if (parentIndex < 0)
-                    continue;
-                for (int g = 0; g < group.Count; g++)
-                {
-                    ClusterHeader leaf = clusters[group[g]];
-                    leaf.parentIndex = parentIndex;
-                    clusters[group[g]] = leaf;
-                }
+                pending = next;
             }
+        }
+
+        public static void GetGroupLockedPositions(
+            List<ClusterHeader> clusters,
+            List<ClusterVertex> vertices,
+            List<uint> indices,
+            List<int> group,
+            List<Vector3> dest)
+        {
+            dest.Clear();
+            var pos = new List<Vector3>();
+            var nrm = new List<Vector3>();
+            var tan = new List<Vector4>();
+            var uv = new List<Vector2>();
+            var tris = new List<int>();
+            ExpandLeaves(clusters, vertices, indices, group, pos, nrm, tan, uv, tris);
+            var locked = new List<bool>();
+            MarkLocked(pos, tris, locked);
+            var seen = new HashSet<(int, int, int)>();
+            for (int i = 0; i < pos.Count; i++)
+            {
+                if (!locked[i])
+                    continue;
+                var key = Quantize(pos[i]);
+                if (!seen.Add(key))
+                    continue;
+                dest.Add(pos[i]);
+            }
+        }
+
+        static List<int> PickGroup(List<ClusterHeader> clusters, List<int> remaining, int size)
+        {
+            int first = remaining[0];
+            for (int i = 1; i < remaining.Count; i++)
+            {
+                if (remaining[i] < first)
+                    first = remaining[i];
+            }
+
+            var group = new List<int>(size) { first };
+            while (group.Count < size)
+            {
+                Vector3 pivot = AverageCenter(clusters, group);
+                int best = -1;
+                float bestD = float.MaxValue;
+                for (int i = 0; i < remaining.Count; i++)
+                {
+                    int idx = remaining[i];
+                    if (Contains(group, idx))
+                        continue;
+                    float d = ((Vector3)clusters[idx].aabbCenter - pivot).sqrMagnitude;
+                    if (d >= bestD)
+                        continue;
+                    bestD = d;
+                    best = idx;
+                }
+
+                group.Add(best);
+            }
+
+            return group;
+        }
+
+        static void RemoveAll(List<int> remaining, List<int> group)
+        {
+            for (int i = remaining.Count - 1; i >= 0; i--)
+            {
+                if (Contains(group, remaining[i]))
+                    remaining.RemoveAt(i);
+            }
+        }
+
+        static bool Contains(List<int> list, int value)
+        {
+            for (int i = 0; i < list.Count; i++)
+            {
+                if (list[i] == value)
+                    return true;
+            }
+
+            return false;
         }
 
         static Vector3 AverageCenter(List<ClusterHeader> clusters, List<int> group)
@@ -75,12 +144,14 @@ namespace ClusterMesh
             return s / group.Count;
         }
 
-        static int EmitParent(
+        static bool TryEmitGroup(
             List<ClusterHeader> clusters,
             List<ClusterVertex> vertices,
             List<uint> indices,
+            List<ClusterGroup> groups,
             List<int> group,
-            ClusterMeshBakeSettings settings)
+            ClusterMeshBakeSettings settings,
+            int level)
         {
             var pos = new List<Vector3>();
             var nrm = new List<Vector3>();
@@ -89,59 +160,91 @@ namespace ClusterMesh
             var tris = new List<int>();
             ExpandLeaves(clusters, vertices, indices, group, pos, nrm, tan, uv, tris);
             if (tris.Count < 3)
-                return -1;
+                return false;
 
             var srcPos = new List<Vector3>(pos);
             var srcTris = new List<int>(tris);
-            Collapse(pos, nrm, tan, uv, tris, settings.maxVerticesPerCluster, settings.maxTrianglesPerCluster);
-            if (tris.Count < 3 || pos.Count < 3)
-                return -1;
+            int srcTriCount = tris.Count / 3;
+            var locked = new List<bool>();
+            MarkLocked(pos, tris, locked);
+            CollapseHalf(pos, nrm, tan, uv, tris, locked, srcTriCount);
+            if (tris.Count < 3 || tris.Count / 3 >= srcTriCount)
+                return false;
 
-            uint materialIndex = clusters[group[0]].materialIndex;
-            uint vertexOffset = (uint)vertices.Count;
-            uint indexOffset = (uint)indices.Count;
-            for (int i = 0; i < pos.Count; i++)
+            float childError = 0f;
+            Vector3 gmin = (Vector3)clusters[group[0]].aabbCenter - (Vector3)clusters[group[0]].aabbExtents;
+            Vector3 gmax = (Vector3)clusters[group[0]].aabbCenter + (Vector3)clusters[group[0]].aabbExtents;
+            for (int i = 0; i < group.Count; i++)
             {
-                vertices.Add(new ClusterVertex
-                {
-                    position = pos[i],
-                    normal = nrm[i].sqrMagnitude > 1e-12f ? nrm[i].normalized : Vector3.up,
-                    tangent = tan[i],
-                    uv = new Vector4(uv[i].x, uv[i].y, 0f, 0f)
-                });
+                ClusterHeader ch = clusters[group[i]];
+                childError = Mathf.Max(childError, ch.lodError);
+                Vector3 cmin = (Vector3)ch.aabbCenter - (Vector3)ch.aabbExtents;
+                Vector3 cmax = (Vector3)ch.aabbCenter + (Vector3)ch.aabbExtents;
+                gmin = Vector3.Min(gmin, cmin);
+                gmax = Vector3.Max(gmax, cmax);
             }
 
-            for (int i = 0; i < tris.Count; i++)
-                indices.Add((uint)tris[i]);
+            float lodError = Mathf.Max(1e-6f, Mathf.Max(MaxDeviation(pos, srcPos, srcTris), childError));
+            int startClusters = clusters.Count;
+            ClusterMeshBaker.ClusterTriangles(
+                clusters[group[0]].materialIndex,
+                new List<int>(tris),
+                pos.ToArray(),
+                nrm.ToArray(),
+                tan.ToArray(),
+                uv.ToArray(),
+                settings,
+                clusters,
+                vertices,
+                indices,
+                lodError,
+                ClusterMeshLod.PackFlags(level));
 
-            Vector3 min = pos[0];
-            Vector3 max = pos[0];
-            for (int i = 1; i < pos.Count; i++)
+            int newCount = clusters.Count - startClusters;
+            if (newCount <= 0)
+                return false;
+
+            int newTris = 0;
+            for (int i = startClusters; i < clusters.Count; i++)
+                newTris += (int)clusters[i].triangleCount;
+            if (newCount >= group.Count && newTris >= srcTriCount)
             {
-                min = Vector3.Min(min, pos[i]);
-                max = Vector3.Max(max, pos[i]);
+                clusters.RemoveRange(startClusters, newCount);
+                return false;
             }
 
-            Vector3 center = (min + max) * 0.5f;
-            BuildCone(pos, tris, out Vector3 axis, out float cutoff);
-            float lodError = Mathf.Max(1e-6f, MaxDeviation(pos, srcPos, srcTris));
-
-            clusters.Add(new ClusterHeader
+            int groupIndex = groups.Count;
+            groups.Add(new ClusterGroup
             {
-                vertexOffset = vertexOffset,
-                vertexCount = (uint)pos.Count,
-                indexOffset = indexOffset,
-                triangleCount = (uint)(tris.Count / 3),
-                materialIndex = materialIndex,
-                parentIndex = ClusterMeshLod.NoParent,
+                clusterStart = startClusters,
+                clusterCount = newCount,
+                parentGroupIndex = ClusterMeshLod.NoParent,
                 lodError = lodError,
-                flags = ClusterMeshLod.FlagParent,
-                aabbCenter = center,
-                aabbExtents = (max - min) * 0.5f,
-                coneAxisCutoff = new Vector4(axis.x, axis.y, axis.z, cutoff),
-                coneApex = center
+                aabbCenter = (gmin + gmax) * 0.5f,
+                aabbExtents = (gmax - gmin) * 0.5f
             });
-            return clusters.Count - 1;
+
+            for (int i = 0; i < group.Count; i++)
+            {
+                ClusterHeader leaf = clusters[group[i]];
+                leaf.parentIndex = groupIndex;
+                clusters[group[i]] = leaf;
+                LinkSourceGroup(groups, group[i], groupIndex);
+            }
+
+            return true;
+        }
+
+        static void LinkSourceGroup(List<ClusterGroup> groups, int clusterIndex, int parentGroupIndex)
+        {
+            for (int i = 0; i < groups.Count - 1; i++)
+            {
+                ClusterGroup g = groups[i];
+                if (clusterIndex < g.clusterStart || clusterIndex >= g.clusterStart + g.clusterCount)
+                    continue;
+                g.parentGroupIndex = parentGroupIndex;
+                groups[i] = g;
+            }
         }
 
         static void ExpandLeaves(
@@ -181,19 +284,82 @@ namespace ClusterMesh
             }
         }
 
-        static void Collapse(
+        static void MarkLocked(List<Vector3> pos, List<int> tris, List<bool> locked)
+        {
+            locked.Clear();
+            var weld = new int[pos.Count];
+            var map = new Dictionary<(int, int, int), int>();
+            for (int i = 0; i < pos.Count; i++)
+            {
+                var key = Quantize(pos[i]);
+                if (!map.TryGetValue(key, out int canon))
+                {
+                    canon = i;
+                    map[key] = i;
+                }
+
+                weld[i] = canon;
+                locked.Add(false);
+            }
+
+            var edges = new Dictionary<(int, int), int>();
+            for (int t = 0; t + 2 < tris.Count; t += 3)
+            {
+                CountEdge(edges, weld[tris[t]], weld[tris[t + 1]]);
+                CountEdge(edges, weld[tris[t + 1]], weld[tris[t + 2]]);
+                CountEdge(edges, weld[tris[t + 2]], weld[tris[t]]);
+            }
+
+            var lockedCanon = new HashSet<int>();
+            foreach (var kv in edges)
+            {
+                if (kv.Value != 1)
+                    continue;
+                lockedCanon.Add(kv.Key.Item1);
+                lockedCanon.Add(kv.Key.Item2);
+            }
+
+            for (int i = 0; i < pos.Count; i++)
+                locked[i] = lockedCanon.Contains(weld[i]);
+        }
+
+        static void CountEdge(Dictionary<(int, int), int> edges, int a, int b)
+        {
+            if (a == b)
+                return;
+            if (a > b)
+            {
+                int tmp = a;
+                a = b;
+                b = tmp;
+            }
+
+            edges.TryGetValue((a, b), out int count);
+            edges[(a, b)] = count + 1;
+        }
+
+        static (int, int, int) Quantize(Vector3 p)
+        {
+            return (
+                Mathf.RoundToInt(p.x * QuantizeScale),
+                Mathf.RoundToInt(p.y * QuantizeScale),
+                Mathf.RoundToInt(p.z * QuantizeScale));
+        }
+
+        static void CollapseHalf(
             List<Vector3> pos,
             List<Vector3> nrm,
             List<Vector4> tan,
             List<Vector2> uv,
             List<int> tris,
-            int maxVerts,
-            int maxTris)
+            List<bool> locked,
+            int srcTriCount)
         {
+            int target = Mathf.Max(1, srcTriCount / 2);
             int guard = pos.Count * 8 + 8;
-            while (guard-- > 0 && (pos.Count > maxVerts || tris.Count / 3 > maxTris))
+            while (guard-- > 0 && tris.Count / 3 > target)
             {
-                if (!TryCollapseShortest(pos, nrm, tan, uv, tris))
+                if (!TryCollapseShortest(pos, nrm, tan, uv, tris, locked))
                     break;
             }
         }
@@ -203,29 +369,51 @@ namespace ClusterMesh
             List<Vector3> nrm,
             List<Vector4> tan,
             List<Vector2> uv,
-            List<int> tris)
+            List<int> tris,
+            List<bool> locked)
         {
             int bestA = -1;
             int bestB = -1;
             float bestLen = float.MaxValue;
             for (int t = 0; t + 2 < tris.Count; t += 3)
             {
-                Consider(pos, tris[t], tris[t + 1], ref bestA, ref bestB, ref bestLen);
-                Consider(pos, tris[t + 1], tris[t + 2], ref bestA, ref bestB, ref bestLen);
-                Consider(pos, tris[t + 2], tris[t], ref bestA, ref bestB, ref bestLen);
+                Consider(pos, locked, tris[t], tris[t + 1], ref bestA, ref bestB, ref bestLen);
+                Consider(pos, locked, tris[t + 1], tris[t + 2], ref bestA, ref bestB, ref bestLen);
+                Consider(pos, locked, tris[t + 2], tris[t], ref bestA, ref bestB, ref bestLen);
             }
 
             if (bestA < 0)
                 return false;
-            int keep = Mathf.Min(bestA, bestB);
-            int drop = Mathf.Max(bestA, bestB);
-            nrm[keep] = (nrm[keep] + nrm[drop]).normalized;
-            tan[keep] = tan[keep];
-            uv[keep] = (uv[keep] + uv[drop]) * 0.5f;
+
+            int keep;
+            int drop;
+            if (locked[bestA] && !locked[bestB])
+            {
+                keep = bestA;
+                drop = bestB;
+            }
+            else if (locked[bestB] && !locked[bestA])
+            {
+                keep = bestB;
+                drop = bestA;
+            }
+            else
+            {
+                keep = Mathf.Min(bestA, bestB);
+                drop = Mathf.Max(bestA, bestB);
+            }
+
+            if (!locked[keep])
+            {
+                nrm[keep] = (nrm[keep] + nrm[drop]).normalized;
+                uv[keep] = (uv[keep] + uv[drop]) * 0.5f;
+            }
+
+            int keepMapped = keep > drop ? keep - 1 : keep;
             for (int i = 0; i < tris.Count; i++)
             {
                 if (tris[i] == drop)
-                    tris[i] = keep;
+                    tris[i] = keepMapped;
                 else if (tris[i] > drop)
                     tris[i]--;
             }
@@ -234,6 +422,7 @@ namespace ClusterMesh
             nrm.RemoveAt(drop);
             tan.RemoveAt(drop);
             uv.RemoveAt(drop);
+            locked.RemoveAt(drop);
 
             for (int i = tris.Count - 3; i >= 0; i -= 3)
             {
@@ -247,9 +436,18 @@ namespace ClusterMesh
             return true;
         }
 
-        static void Consider(List<Vector3> pos, int a, int b, ref int bestA, ref int bestB, ref float bestLen)
+        static void Consider(
+            List<Vector3> pos,
+            List<bool> locked,
+            int a,
+            int b,
+            ref int bestA,
+            ref int bestB,
+            ref float bestLen)
         {
             if (a == b)
+                return;
+            if (locked[a] && locked[b])
                 return;
             float len = (pos[a] - pos[b]).sqrMagnitude;
             if (len >= bestLen)
@@ -257,38 +455,6 @@ namespace ClusterMesh
             bestLen = len;
             bestA = a;
             bestB = b;
-        }
-
-        static void BuildCone(List<Vector3> pos, List<int> tris, out Vector3 axis, out float cutoff)
-        {
-            Vector3 weighted = Vector3.zero;
-            var normals = new List<Vector3>();
-            for (int i = 0; i + 2 < tris.Count; i += 3)
-            {
-                Vector3 a = pos[tris[i]];
-                Vector3 b = pos[tris[i + 1]];
-                Vector3 c = pos[tris[i + 2]];
-                Vector3 n = Vector3.Cross(b - a, c - a);
-                float area2 = n.magnitude;
-                if (area2 < 1e-12f)
-                    continue;
-                n /= area2;
-                normals.Add(n);
-                weighted += n * area2;
-            }
-
-            if (weighted.sqrMagnitude < 1e-12f)
-            {
-                axis = Vector3.up;
-                cutoff = -1f;
-                return;
-            }
-
-            axis = weighted.normalized;
-            float minDot = 1f;
-            foreach (var n in normals)
-                minDot = Mathf.Min(minDot, Vector3.Dot(axis, n));
-            cutoff = minDot < 0f ? -1f : minDot;
         }
 
         static float MaxDeviation(List<Vector3> parentVerts, List<Vector3> srcPos, List<int> srcTris)

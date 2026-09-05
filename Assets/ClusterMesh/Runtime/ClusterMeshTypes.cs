@@ -33,6 +33,18 @@ namespace ClusterMesh
     }
 
     [Serializable]
+    [StructLayout(LayoutKind.Sequential)]
+    public struct ClusterGroup
+    {
+        public int clusterStart;
+        public int clusterCount;
+        public int parentGroupIndex;
+        public float lodError;
+        public Vector4 aabbCenter;
+        public Vector4 aabbExtents;
+    }
+
+    [Serializable]
     public sealed class ClusterMeshBakeSettings
     {
         public int maxVerticesPerCluster = ClusterMeshLimits.MaxVerticesPerCluster;
@@ -46,6 +58,7 @@ namespace ClusterMesh
         public ClusterVertex[] vertices;
         public uint[] indices;
         public Material[] materials;
+        public ClusterGroup[] groups;
         public int hierarchyVersion;
     }
 }

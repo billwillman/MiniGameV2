@@ -14,6 +14,13 @@ namespace ClusterMesh.Tests
         }
 
         [Test]
+        public void Group_StrideIs48()
+        {
+            Assert.That(Marshal.SizeOf<ClusterGroup>(), Is.EqualTo(48));
+            Assert.That(ClusterMeshLimits.ClusterGroupStride, Is.EqualTo(48));
+        }
+
+        [Test]
         public void ThresholdZero_HidesParents_ShowsLeaves()
         {
             var leaf = new ClusterHeader { parentIndex = 0, lodError = 0f, flags = 0 };
@@ -60,6 +67,50 @@ namespace ClusterMesh.Tests
         {
             Assert.That(ClusterMeshLod.Level(0), Is.EqualTo(0));
             Assert.That(ClusterMeshLod.Level(ClusterMeshLod.FlagParent), Is.EqualTo(1));
+            Assert.That(ClusterMeshLod.Level(ClusterMeshLod.PackFlags(0)), Is.EqualTo(0));
+            Assert.That(ClusterMeshLod.Level(ClusterMeshLod.PackFlags(1)), Is.EqualTo(1));
+            Assert.That(ClusterMeshLod.Level(ClusterMeshLod.PackFlags(2)), Is.EqualTo(2));
+            Assert.That(ClusterMeshLod.IsParent(ClusterMeshLod.PackFlags(2)), Is.True);
+        }
+
+        [Test]
+        public void DagVersion_ThresholdZero_HidesParents()
+        {
+            var leaf = new ClusterHeader { parentIndex = 0, lodError = 0f, flags = ClusterMeshLod.PackFlags(0) };
+            var parent = new ClusterHeader
+            {
+                parentIndex = ClusterMeshLod.NoParent,
+                lodError = 0.5f,
+                flags = ClusterMeshLod.PackFlags(1)
+            };
+            var group = new ClusterGroup { lodError = 0.5f };
+            Assert.That(
+                ClusterMeshLod.IsVisible(leaf, group, true, 1f, 2f, 100f, 0f, 2, true),
+                Is.True);
+            Assert.That(
+                ClusterMeshLod.IsVisible(parent, group, false, 2f, 0f, 100f, 0f, 2, true),
+                Is.False);
+        }
+
+        [Test]
+        public void DagVersion_LargeThreshold_ShowsParent_HidesChild()
+        {
+            var group = new ClusterGroup { lodError = 0.4f };
+            var parent = new ClusterHeader
+            {
+                parentIndex = ClusterMeshLod.NoParent,
+                lodError = 0.4f,
+                flags = ClusterMeshLod.PackFlags(1)
+            };
+            var leaf = new ClusterHeader { parentIndex = 0, lodError = 0f, flags = ClusterMeshLod.PackFlags(0) };
+            const float scale = 100f;
+            const float t = 51f;
+            Assert.That(
+                ClusterMeshLod.IsVisible(leaf, group, true, 1f, 1f, scale, t, 2, true),
+                Is.False);
+            Assert.That(
+                ClusterMeshLod.IsVisible(parent, group, false, 1f, 0f, scale, t, 2, true),
+                Is.True);
         }
     }
 }

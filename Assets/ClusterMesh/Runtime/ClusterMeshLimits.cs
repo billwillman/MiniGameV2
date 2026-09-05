@@ -7,6 +7,7 @@ namespace ClusterMesh
         public const int TemplateVertexCount = MaxTrianglesPerCluster * 3;
         public const int MaxBatchedObjects = 256;
         public const int ClusterHeaderStride = 96;
+        public const int ClusterGroupStride = 48;
 
         public static uint PackVisibleId(int objectIndex, int clusterIndex)
         {

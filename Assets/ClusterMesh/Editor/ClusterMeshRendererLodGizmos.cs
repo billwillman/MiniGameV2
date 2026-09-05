@@ -24,30 +24,18 @@ namespace ClusterMesh
             Matrix4x4 m = renderer.transform.localToWorldMatrix;
             Handles.matrix = m;
             ClusterHeader[] clusters = renderer.asset.clusters;
+            ClusterGroup[] groups = renderer.asset.groups;
             for (int i = 0; i < clusters.Length; i++)
             {
                 ClusterHeader h = clusters[i];
-                ClusterMeshFrustum.TransformAabb(h, m, out Vector3 wc, out _);
-                float selfDist = Vector3.Distance(cam.transform.position, wc);
-                bool hasParent = h.parentIndex >= 0 && h.parentIndex < clusters.Length;
-                ClusterHeader parent = hasParent ? clusters[h.parentIndex] : default;
-                float parentDist = 0f;
-                if (hasParent)
-                {
-                    ClusterMeshFrustum.TransformAabb(parent, m, out Vector3 pwc, out _);
-                    parentDist = Vector3.Distance(cam.transform.position, pwc);
-                }
-
-                if (!ClusterMeshLod.IsVisible(
-                        h, parent, hasParent, selfDist, parentDist, scale,
+                if (!ClusterMeshLod.IsClusterVisible(
+                        h, clusters, groups, m, cam.transform.position, scale,
                         renderer.lodErrorThreshold, renderer.asset.hierarchyVersion, perspective))
                     continue;
 
                 int lod = ClusterMeshLod.Level(h.flags);
-                Handles.color = lod == 0
-                    ? new Color(0.2f, 0.85f, 1f, 1f)
-                    : new Color(1f, 0.55f, 0.1f, 1f);
-                Handles.Label((Vector3)h.aabbCenter, lod == 0 ? "L0" : "L1");
+                Handles.color = ClusterMeshLod.LevelColor(lod);
+                Handles.Label((Vector3)h.aabbCenter, "L" + lod);
             }
 
             Handles.matrix = Matrix4x4.identity;

@@ -13,6 +13,7 @@ namespace ClusterMesh
         public ClusterHeader[] clusters;
         public ClusterVertex[] vertices;
         public uint[] indices;
+        public ClusterGroup[] groups;
         public int hierarchyVersion;
 
         public void CopyFrom(ClusterMeshBakeResult result, Mesh source, ClusterMeshBakeSettings settings)
@@ -24,6 +25,7 @@ namespace ClusterMesh
             clusters = result.clusters;
             vertices = result.vertices;
             indices = result.indices;
+            groups = result.groups;
             hierarchyVersion = result.hierarchyVersion;
         }
     }

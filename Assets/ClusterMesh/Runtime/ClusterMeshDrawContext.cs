@@ -8,6 +8,8 @@ namespace ClusterMesh
     public sealed class ClusterMeshDrawContext : IDisposable
     {
         static readonly int ClustersId = Shader.PropertyToID("_Clusters");
+        static readonly int GroupsId = Shader.PropertyToID("_Groups");
+        static readonly int GroupCountId = Shader.PropertyToID("_GroupCount");
         static readonly int VerticesId = Shader.PropertyToID("_Vertices");
         static readonly int IndicesId = Shader.PropertyToID("_Indices");
         static readonly int VisibleId = Shader.PropertyToID("_VisibleClusterIds");
@@ -31,6 +33,7 @@ namespace ClusterMesh
         readonly int _cullKernel;
         readonly Mesh _template;
         readonly GraphicsBuffer _clusterBuffer;
+        readonly GraphicsBuffer _groupBuffer;
         readonly GraphicsBuffer _vertexBuffer;
         readonly GraphicsBuffer _indexBuffer;
         readonly GraphicsBuffer[] _visibleBuffers;
@@ -79,6 +82,12 @@ namespace ClusterMesh
 
             _clusterBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, asset.clusters.Length, ClusterMeshLimits.ClusterHeaderStride);
             _clusterBuffer.SetData(asset.clusters);
+            int groupCount = asset.groups != null ? asset.groups.Length : 0;
+            _groupBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, Mathf.Max(1, groupCount), ClusterMeshLimits.ClusterGroupStride);
+            if (groupCount > 0)
+                _groupBuffer.SetData(asset.groups);
+            else
+                _groupBuffer.SetData(new ClusterGroup[1]);
             _vertexBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, Mathf.Max(1, asset.vertices.Length), 64);
             if (asset.vertices.Length > 0)
                 _vertexBuffer.SetData(asset.vertices);
@@ -154,8 +163,10 @@ namespace ClusterMesh
 
                 int groups = Mathf.CeilToInt((n * _asset.clusters.Length) / 64f);
                 _cullShader.SetBuffer(_cullKernel, ClustersId, _clusterBuffer);
+                _cullShader.SetBuffer(_cullKernel, GroupsId, _groupBuffer);
                 _cullShader.SetInt(ObjectCountId, n);
                 _cullShader.SetInt(ClusterCountId, _asset.clusters.Length);
+                _cullShader.SetInt(GroupCountId, _asset.groups != null ? _asset.groups.Length : 0);
                 _cullShader.SetInt(IsolateIndexId, IsolateIndex);
                 _cullShader.SetInt(EnableConeCullId, EnableConeCull ? 1 : 0);
                 _cullShader.SetInt(HierarchyVersionId, _asset.hierarchyVersion);
@@ -232,6 +243,7 @@ namespace ClusterMesh
             _disposed = true;
             IsReady = false;
             _clusterBuffer?.Dispose();
+            _groupBuffer?.Dispose();
             _vertexBuffer?.Dispose();
             _indexBuffer?.Dispose();
             if (_visibleBuffers != null)

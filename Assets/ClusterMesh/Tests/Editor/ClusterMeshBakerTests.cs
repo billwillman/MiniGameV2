@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using NUnit.Framework;
 using UnityEngine;
 
@@ -98,7 +99,92 @@ namespace ClusterMesh.Tests
 
             Assert.That(parents, Is.GreaterThan(0));
             Assert.That(leafTris, Is.EqualTo(mesh.triangles.Length / 3));
-            Assert.That(result.hierarchyVersion, Is.EqualTo(1));
+            Assert.That(result.hierarchyVersion, Is.EqualTo(ClusterMeshLod.HierarchyVersionDag));
+            Assert.That(result.groups, Is.Not.Null);
+            Assert.That(result.groups.Length, Is.GreaterThan(0));
+            UnityEngine.Object.DestroyImmediate(mesh);
+        }
+
+        [Test]
+        public void Bake_LodOn_FourQuads_OneGroup_SharedParentIndex()
+        {
+            var mesh = ClusterMeshTestMeshes.Grid(2, 2);
+            var settings = new ClusterMeshBakeSettings
+            {
+                maxVerticesPerCluster = 4,
+                maxTrianglesPerCluster = 2
+            };
+            var result = ClusterMeshBaker.Bake(mesh, new Material[1], settings);
+            Assert.That(result.hierarchyVersion, Is.EqualTo(ClusterMeshLod.HierarchyVersionDag));
+            Assert.That(result.groups.Length, Is.GreaterThan(0));
+
+            int leaves = 0;
+            foreach (var c in result.clusters)
+            {
+                if (ClusterMeshLod.Level(c.flags) == 0)
+                    leaves++;
+            }
+
+            Assert.That(leaves, Is.EqualTo(4));
+            ClusterGroup g0 = result.groups[0];
+            Assert.That(g0.clusterCount, Is.GreaterThan(0));
+            int children = 0;
+            for (int i = 0; i < result.clusters.Length; i++)
+            {
+                if (result.clusters[i].parentIndex == 0)
+                    children++;
+            }
+
+            Assert.That(children, Is.EqualTo(4));
+            UnityEngine.Object.DestroyImmediate(mesh);
+        }
+
+        [Test]
+        public void Bake_LodOn_FourQuads_LockedBorderInParents()
+        {
+            var mesh = ClusterMeshTestMeshes.Grid(2, 2);
+            var settings = new ClusterMeshBakeSettings
+            {
+                maxVerticesPerCluster = 4,
+                maxTrianglesPerCluster = 2
+            };
+            var result = ClusterMeshBaker.Bake(mesh, new Material[1], settings);
+            var clusters = new List<ClusterHeader>(result.clusters);
+            var vertices = new List<ClusterVertex>(result.vertices);
+            var indices = new List<uint>(result.indices);
+            var children = new List<int>();
+            for (int i = 0; i < result.clusters.Length; i++)
+            {
+                if (result.clusters[i].parentIndex == 0)
+                    children.Add(i);
+            }
+
+            Assert.That(children.Count, Is.EqualTo(4));
+            var locked = new List<Vector3>();
+            ClusterMeshLodBaker.GetGroupLockedPositions(clusters, vertices, indices, children, locked);
+            Assert.That(locked.Count, Is.GreaterThan(0));
+
+            ClusterGroup g0 = result.groups[0];
+            for (int i = 0; i < locked.Count; i++)
+            {
+                bool found = false;
+                for (int c = 0; c < g0.clusterCount && !found; c++)
+                {
+                    ClusterHeader p = result.clusters[g0.clusterStart + c];
+                    for (int v = 0; v < (int)p.vertexCount; v++)
+                    {
+                        Vector3 pv = result.vertices[(int)p.vertexOffset + v].position;
+                        if ((pv - locked[i]).sqrMagnitude <= 1e-8f)
+                        {
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+
+                Assert.That(found, Is.True, "locked border vertex missing from parent clusters");
+            }
+
             UnityEngine.Object.DestroyImmediate(mesh);
         }
 
