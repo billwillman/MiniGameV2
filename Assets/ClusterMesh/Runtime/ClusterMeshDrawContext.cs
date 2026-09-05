@@ -102,20 +102,20 @@ namespace ClusterMesh
             IsReady = true;
         }
 
-        public void Draw(Matrix4x4 localToWorld, Camera camera, bool castShadows = true)
+        public void Draw(Matrix4x4 localToWorld, Camera camera, bool castShadows = true, bool receiveShadows = true)
         {
             _single[0] = localToWorld;
-            Draw(_single, 1, camera, castShadows);
+            Draw(_single, 1, camera, castShadows, receiveShadows);
         }
 
-        public void Draw(IList<Matrix4x4> localToWorld, Camera camera, bool castShadows = true)
+        public void Draw(IList<Matrix4x4> localToWorld, Camera camera, bool castShadows = true, bool receiveShadows = true)
         {
             if (localToWorld == null)
                 return;
-            Draw(localToWorld, localToWorld.Count, camera, castShadows);
+            Draw(localToWorld, localToWorld.Count, camera, castShadows, receiveShadows);
         }
 
-        void Draw(IList<Matrix4x4> localToWorld, int count, Camera camera, bool castShadows)
+        void Draw(IList<Matrix4x4> localToWorld, int count, Camera camera, bool castShadows, bool receiveShadows)
         {
             if (!IsReady || camera == null || count <= 0)
                 return;
@@ -186,7 +186,7 @@ namespace ClusterMesh
                         0,
                         null,
                         castShadows ? ShadowCastingMode.On : ShadowCastingMode.Off,
-                        castShadows,
+                        receiveShadows,
                         0,
                         camera);
                 }

@@ -40,7 +40,7 @@ namespace ClusterMesh
                 "4. 选中生成的 .asset，用 GameObject/ClusterMesh/Cluster Mesh、Project 右键 ClusterMesh/Add to Scene，或 Inspector「加入场景」。\n" +
                 "5. 看效果：打开 Tools/ClusterMesh/Viewer 拖同一个资产；或 Tools/ClusterMesh/Create Demo Scene。\n\n" +
                 "限制：只要 MeshFilter，不要 SkinnedMesh。默认每 cluster 最多 64 顶点 / 124 三角。\n" +
-                "Stats 里 SetPass/Batches 会含阴影、Depth、多相机。合批看 Frame Debugger 的 DrawMeshInstancedIndirect。阴影可在 ClusterMeshRenderer 上关 Cast Shadows。",
+                "Stats 里 SetPass/Batches 会含阴影、Depth、多相机。合批看 Frame Debugger 的 DrawMeshInstancedIndirect。投射/接收阴影可在 ClusterMeshRenderer 上分开关。",
                 MessageType.Info);
 
             EditorGUILayout.Space();

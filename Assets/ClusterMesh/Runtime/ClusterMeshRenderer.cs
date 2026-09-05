@@ -9,7 +9,10 @@ namespace ClusterMesh
         public Camera targetCamera;
         public ComputeShader cullShader;
         public Shader litShader;
+        [Tooltip("Write this object into the shadow map (ShadowCaster pass).")]
         public bool castShadows = true;
+        [Tooltip("Receive shadows from other objects on this surface.")]
+        public bool receiveShadows = true;
         public bool enableConeCull = true;
         [Tooltip("Replace lighting with a solid color per cluster.")]
         public bool showClusterColors;

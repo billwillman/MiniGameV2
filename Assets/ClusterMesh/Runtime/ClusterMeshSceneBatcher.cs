@@ -100,7 +100,7 @@ namespace ClusterMesh
                     continue;
                 ctx.EnableConeCull = seed.enableConeCull;
                 ctx.EnableClusterColor = clusterColors;
-                ctx.Draw(Matrices, camera, seed.castShadows);
+                ctx.Draw(Matrices, camera, seed.castShadows, seed.receiveShadows);
             }
         }
 

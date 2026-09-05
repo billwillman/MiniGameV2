@@ -74,5 +74,15 @@ namespace ClusterMesh.Tests
             Assert.DoesNotThrow(() => renderer.EnsureInitialized());
             Object.DestroyImmediate(go);
         }
+
+        [Test]
+        public void Renderer_ShadowFlags_DefaultOn()
+        {
+            var go = new GameObject("CMRendererShadows");
+            var renderer = go.AddComponent<ClusterMeshRenderer>();
+            Assert.That(renderer.castShadows, Is.True);
+            Assert.That(renderer.receiveShadows, Is.True);
+            Object.DestroyImmediate(go);
+        }
     }
 }
