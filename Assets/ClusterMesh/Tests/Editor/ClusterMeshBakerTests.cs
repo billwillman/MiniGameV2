@@ -189,6 +189,128 @@ namespace ClusterMesh.Tests
         }
 
         [Test]
+        public void Bake_LodOn_FourQuads_WeldedSoup_NineVertsEightBoundaryEdges()
+        {
+            var mesh = ClusterMeshTestMeshes.Grid(2, 2);
+            var settings = new ClusterMeshBakeSettings
+            {
+                maxVerticesPerCluster = 4,
+                maxTrianglesPerCluster = 2
+            };
+            var result = ClusterMeshBaker.Bake(mesh, new Material[1], settings);
+            var children = new List<int>();
+            for (int i = 0; i < result.clusters.Length; i++)
+            {
+                if (result.clusters[i].parentIndex == 0)
+                    children.Add(i);
+            }
+
+            Assert.That(children.Count, Is.EqualTo(4));
+            var pos = new List<Vector3>();
+            var nrm = new List<Vector3>();
+            var tan = new List<Vector4>();
+            var uv = new List<Vector2>();
+            var tris = new List<int>();
+            ClusterMeshLodBaker.BuildWeldedGroupSoup(
+                new List<ClusterHeader>(result.clusters),
+                new List<ClusterVertex>(result.vertices),
+                new List<uint>(result.indices),
+                children,
+                pos, nrm, tan, uv, tris);
+            Assert.That(pos.Count, Is.EqualTo(9));
+            Assert.That(tris.Count / 3, Is.EqualTo(8));
+            Assert.That(ClusterMeshLodBaker.CountBoundaryEdges(pos, tris), Is.EqualTo(8));
+
+            ClusterGroup g0 = result.groups[0];
+            var pPos = new List<Vector3>();
+            var pTris = new List<int>();
+            for (int c = 0; c < g0.clusterCount; c++)
+            {
+                ClusterHeader p = result.clusters[g0.clusterStart + c];
+                int baseV = pPos.Count;
+                for (int v = 0; v < (int)p.vertexCount; v++)
+                    pPos.Add(result.vertices[(int)p.vertexOffset + v].position);
+                for (int t = 0; t < (int)p.triangleCount; t++)
+                {
+                    pTris.Add(baseV + (int)result.indices[(int)p.indexOffset + t * 3]);
+                    pTris.Add(baseV + (int)result.indices[(int)p.indexOffset + t * 3 + 1]);
+                    pTris.Add(baseV + (int)result.indices[(int)p.indexOffset + t * 3 + 2]);
+                }
+            }
+
+            ClusterMeshLodBaker.WeldSoup(pPos, pTris);
+            Assert.That(ClusterMeshLodBaker.CountBoundaryEdges(pPos, pTris), Is.EqualTo(8));
+
+            UnityEngine.Object.DestroyImmediate(mesh);
+        }
+
+        [Test]
+        public void SurfaceDeviation_PointAboveFlatQuad_IsHeight()
+        {
+            var meshPos = new List<Vector3>
+            {
+                new Vector3(0f, 0f, 0f),
+                new Vector3(1f, 0f, 0f),
+                new Vector3(1f, 1f, 0f),
+                new Vector3(0f, 1f, 0f)
+            };
+            var meshTris = new List<int> { 0, 1, 2, 0, 2, 3 };
+            var points = new List<Vector3> { new Vector3(0.5f, 0.5f, 1f) };
+            Assert.That(ClusterMeshLodBaker.SurfaceDeviation(points, meshPos, meshTris), Is.EqualTo(1f).Within(1e-4f));
+        }
+
+        [Test]
+        public void Bake_LodOn_BumpyFourQuads_ParentErrorTracksHeight()
+        {
+            var mesh = ClusterMeshTestMeshes.BumpyFourQuads();
+            var settings = new ClusterMeshBakeSettings
+            {
+                maxVerticesPerCluster = 4,
+                maxTrianglesPerCluster = 2
+            };
+            var result = ClusterMeshBaker.Bake(mesh, new Material[1], settings);
+            float maxErr = 0f;
+            int parents = 0;
+            foreach (var c in result.clusters)
+            {
+                if (!ClusterMeshLod.IsParent(c.flags))
+                    continue;
+                parents++;
+                maxErr = Mathf.Max(maxErr, c.lodError);
+            }
+
+            Assert.That(parents, Is.GreaterThan(0));
+            Assert.That(maxErr, Is.GreaterThan(0.5f));
+            UnityEngine.Object.DestroyImmediate(mesh);
+        }
+
+        [Test]
+        public void Bake_LodOn_FourIsolatedGrids_DoesNotForceParentGroup()
+        {
+            var mesh = ClusterMeshTestMeshes.FourIsolatedGrids();
+            var settings = new ClusterMeshBakeSettings
+            {
+                maxVerticesPerCluster = 9,
+                maxTrianglesPerCluster = 8
+            };
+            var result = ClusterMeshBaker.Bake(mesh, new Material[1], settings);
+            int leaves = 0;
+            int withParent = 0;
+            foreach (var c in result.clusters)
+            {
+                if (ClusterMeshLod.Level(c.flags) == 0)
+                    leaves++;
+                if (c.parentIndex >= 0)
+                    withParent++;
+            }
+
+            Assert.That(leaves, Is.EqualTo(4));
+            Assert.That(withParent, Is.EqualTo(0));
+            Assert.That(result.groups == null || result.groups.Length == 0, Is.True);
+            UnityEngine.Object.DestroyImmediate(mesh);
+        }
+
+        [Test]
         public void Bake_NullMesh_Throws()
         {
             Assert.Throws<InvalidOperationException>(() =>

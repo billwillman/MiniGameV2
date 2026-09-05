@@ -146,6 +146,74 @@ namespace ClusterMesh
             }
         }
 
+        public static bool TryGetOwningGroup(int clusterIndex, ClusterGroup[] groups, out int groupIndex)
+        {
+            groupIndex = NoParent;
+            if (groups == null || clusterIndex < 0)
+                return false;
+            for (int i = 0; i < groups.Length; i++)
+            {
+                ClusterGroup g = groups[i];
+                if (clusterIndex >= g.clusterStart && clusterIndex < g.clusterStart + g.clusterCount)
+                {
+                    groupIndex = i;
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public static bool IsClusterVisible(
+            int clusterIndex,
+            ClusterHeader[] clusters,
+            ClusterGroup[] groups,
+            Matrix4x4 localToWorld,
+            Vector3 cameraPos,
+            float scale,
+            float threshold,
+            int hierarchyVersion,
+            bool perspective)
+        {
+            if (clusters == null || clusterIndex < 0 || clusterIndex >= clusters.Length)
+                return false;
+            ClusterHeader self = clusters[clusterIndex];
+            if (hierarchyVersion >= HierarchyVersionDag &&
+                TryGetOwningGroup(clusterIndex, groups, out int ownGroup))
+            {
+                ClusterGroup g = groups[ownGroup];
+                Vector3 ownWorld = localToWorld.MultiplyPoint3x4(g.aabbCenter);
+                float selfDist = Vector3.Distance(cameraPos, ownWorld);
+                bool hasParent = g.parentGroupIndex >= 0 && groups != null && g.parentGroupIndex < groups.Length;
+                float parentLodError = 0f;
+                float parentDist = 0f;
+                if (hasParent)
+                {
+                    ClusterGroup p = groups[g.parentGroupIndex];
+                    parentLodError = p.lodError;
+                    parentDist = Vector3.Distance(cameraPos, localToWorld.MultiplyPoint3x4(p.aabbCenter));
+                }
+
+                ClusterHeader own = self;
+                own.lodError = g.lodError;
+                return IsVisible(
+                    own, parentLodError, hasParent, selfDist, parentDist,
+                    scale, threshold, hierarchyVersion, perspective);
+            }
+
+            ClusterMeshFrustum.TransformAabb(self, localToWorld, out Vector3 wc, out _);
+            float leafDist = Vector3.Distance(cameraPos, wc);
+            TryGetParent(
+                self, clusters, groups, hierarchyVersion,
+                out float parentErr, out Vector3 parentLocal, out bool hasP);
+            float pDist = 0f;
+            if (hasP)
+                pDist = Vector3.Distance(cameraPos, localToWorld.MultiplyPoint3x4(parentLocal));
+            return IsVisible(
+                self, parentErr, hasP, leafDist, pDist,
+                scale, threshold, hierarchyVersion, perspective);
+        }
+
         public static bool IsClusterVisible(
             in ClusterHeader self,
             ClusterHeader[] clusters,
@@ -157,6 +225,25 @@ namespace ClusterMesh
             int hierarchyVersion,
             bool perspective)
         {
+            int index = -1;
+            if (clusters != null)
+            {
+                for (int i = 0; i < clusters.Length; i++)
+                {
+                    if (clusters[i].vertexOffset == self.vertexOffset &&
+                        clusters[i].indexOffset == self.indexOffset &&
+                        clusters[i].flags == self.flags)
+                    {
+                        index = i;
+                        break;
+                    }
+                }
+            }
+
+            if (index >= 0)
+                return IsClusterVisible(
+                    index, clusters, groups, localToWorld, cameraPos, scale, threshold, hierarchyVersion, perspective);
+
             ClusterMeshFrustum.TransformAabb(self, localToWorld, out Vector3 wc, out _);
             float selfDist = Vector3.Distance(cameraPos, wc);
             TryGetParent(

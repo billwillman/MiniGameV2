@@ -29,7 +29,7 @@ namespace ClusterMesh
             {
                 ClusterHeader h = clusters[i];
                 if (!ClusterMeshLod.IsClusterVisible(
-                        h, clusters, groups, m, cam.transform.position, scale,
+                        i, clusters, groups, m, cam.transform.position, scale,
                         renderer.lodErrorThreshold, renderer.asset.hierarchyVersion, perspective))
                     continue;
 

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace ClusterMesh.Tests
@@ -94,6 +95,54 @@ namespace ClusterMesh.Tests
             mesh.vertices = positions;
             mesh.uv = uvs;
             mesh.triangles = tris;
+            mesh.RecalculateNormals();
+            mesh.RecalculateBounds();
+            mesh.RecalculateTangents();
+            return mesh;
+        }
+
+        public static Mesh BumpyFourQuads()
+        {
+            var mesh = Grid(2, 2);
+            mesh.name = "CMTestBumpyFourQuads";
+            var positions = mesh.vertices;
+            positions[4] = new Vector3(1f, 1f, 1f);
+            mesh.vertices = positions;
+            mesh.RecalculateNormals();
+            mesh.RecalculateBounds();
+            mesh.RecalculateTangents();
+            return mesh;
+        }
+
+        public static Mesh FourIsolatedGrids()
+        {
+            var origins = new[]
+            {
+                Vector3.zero,
+                new Vector3(10f, 0f, 0f),
+                new Vector3(0f, 10f, 0f),
+                new Vector3(10f, 10f, 0f)
+            };
+
+            var positions = new List<Vector3>();
+            var uvs = new List<Vector2>();
+            var tris = new List<int>();
+            foreach (var origin in origins)
+            {
+                int baseV = positions.Count;
+                var piece = Grid(2, 2);
+                foreach (var p in piece.vertices)
+                    positions.Add(p + origin);
+                uvs.AddRange(piece.uv);
+                foreach (int t in piece.triangles)
+                    tris.Add(baseV + t);
+                UnityEngine.Object.DestroyImmediate(piece);
+            }
+
+            var mesh = new Mesh { name = "CMTestFourIsolatedGrids" };
+            mesh.SetVertices(positions);
+            mesh.SetUVs(0, uvs);
+            mesh.SetTriangles(tris, 0);
             mesh.RecalculateNormals();
             mesh.RecalculateBounds();
             mesh.RecalculateTangents();

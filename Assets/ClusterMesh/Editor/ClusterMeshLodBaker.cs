@@ -31,10 +31,18 @@ namespace ClusterMesh
                 var next = new List<int>();
                 bool emitted = false;
 
+                var edgeCache = new Dictionary<int, HashSet<(int, int, int, int, int, int)>>();
                 while (remaining.Count >= 2)
                 {
                     int size = remaining.Count >= 4 ? 4 : remaining.Count;
-                    List<int> group = PickGroup(clusters, remaining, size);
+                    List<int> group = PickGroup(clusters, vertices, indices, remaining, size, edgeCache);
+                    if (group.Count < 2)
+                    {
+                        remaining.Remove(group[0]);
+                        next.Add(group[0]);
+                        continue;
+                    }
+
                     RemoveAll(remaining, group);
 
                     int startClusters = clusters.Count;
@@ -55,6 +63,75 @@ namespace ClusterMesh
             }
         }
 
+        public static void BuildWeldedGroupSoup(
+            List<ClusterHeader> clusters,
+            List<ClusterVertex> vertices,
+            List<uint> indices,
+            List<int> group,
+            List<Vector3> pos,
+            List<Vector3> nrm,
+            List<Vector4> tan,
+            List<Vector2> uv,
+            List<int> tris)
+        {
+            pos.Clear();
+            nrm.Clear();
+            tan.Clear();
+            uv.Clear();
+            tris.Clear();
+            ExpandLeaves(clusters, vertices, indices, group, pos, nrm, tan, uv, tris);
+            WeldSoup(pos, nrm, tan, uv, tris);
+        }
+
+        public static void WeldSoup(List<Vector3> pos, List<int> tris)
+        {
+            var nrm = new List<Vector3>(pos.Count);
+            var tan = new List<Vector4>(pos.Count);
+            var uv = new List<Vector2>(pos.Count);
+            for (int i = 0; i < pos.Count; i++)
+            {
+                nrm.Add(Vector3.up);
+                tan.Add(new Vector4(1f, 0f, 0f, 1f));
+                uv.Add(Vector2.zero);
+            }
+
+            WeldSoup(pos, nrm, tan, uv, tris);
+        }
+
+        public static int CountBoundaryEdges(List<Vector3> pos, List<int> tris)
+        {
+            var weld = new int[pos.Count];
+            var map = new Dictionary<(int, int, int), int>();
+            for (int i = 0; i < pos.Count; i++)
+            {
+                var key = Quantize(pos[i]);
+                if (!map.TryGetValue(key, out int canon))
+                {
+                    canon = i;
+                    map[key] = i;
+                }
+
+                weld[i] = canon;
+            }
+
+            var edges = new Dictionary<(int, int), int>();
+            for (int t = 0; t + 2 < tris.Count; t += 3)
+            {
+                CountEdge(edges, weld[tris[t]], weld[tris[t + 1]]);
+                CountEdge(edges, weld[tris[t + 1]], weld[tris[t + 2]]);
+                CountEdge(edges, weld[tris[t + 2]], weld[tris[t]]);
+            }
+
+            int open = 0;
+            foreach (var kv in edges)
+            {
+                if (kv.Value == 1)
+                    open++;
+            }
+
+            return open;
+        }
+
         public static void GetGroupLockedPositions(
             List<ClusterHeader> clusters,
             List<ClusterVertex> vertices,
@@ -68,7 +145,7 @@ namespace ClusterMesh
             var tan = new List<Vector4>();
             var uv = new List<Vector2>();
             var tris = new List<int>();
-            ExpandLeaves(clusters, vertices, indices, group, pos, nrm, tan, uv, tris);
+            BuildWeldedGroupSoup(clusters, vertices, indices, group, pos, nrm, tan, uv, tris);
             var locked = new List<bool>();
             MarkLocked(pos, tris, locked);
             var seen = new HashSet<(int, int, int)>();
@@ -83,7 +160,13 @@ namespace ClusterMesh
             }
         }
 
-        static List<int> PickGroup(List<ClusterHeader> clusters, List<int> remaining, int size)
+        static List<int> PickGroup(
+            List<ClusterHeader> clusters,
+            List<ClusterVertex> vertices,
+            List<uint> indices,
+            List<int> remaining,
+            int size,
+            Dictionary<int, HashSet<(int, int, int, int, int, int)>> edgeCache)
         {
             int first = remaining[0];
             for (int i = 1; i < remaining.Count; i++)
@@ -93,6 +176,8 @@ namespace ClusterMesh
             }
 
             var group = new List<int>(size) { first };
+            var groupEdges = new HashSet<(int, int, int, int, int, int)>(
+                BoundaryEdges(clusters, vertices, indices, first, edgeCache));
             while (group.Count < size)
             {
                 Vector3 pivot = AverageCenter(clusters, group);
@@ -103,6 +188,8 @@ namespace ClusterMesh
                     int idx = remaining[i];
                     if (Contains(group, idx))
                         continue;
+                    if (!SharesBoundaryEdge(groupEdges, clusters, vertices, indices, idx, edgeCache))
+                        continue;
                     float d = ((Vector3)clusters[idx].aabbCenter - pivot).sqrMagnitude;
                     if (d >= bestD)
                         continue;
@@ -110,10 +197,100 @@ namespace ClusterMesh
                     best = idx;
                 }
 
+                if (best < 0)
+                    break;
                 group.Add(best);
+                groupEdges.UnionWith(BoundaryEdges(clusters, vertices, indices, best, edgeCache));
             }
 
             return group;
+        }
+
+        static bool SharesBoundaryEdge(
+            HashSet<(int, int, int, int, int, int)> groupEdges,
+            List<ClusterHeader> clusters,
+            List<ClusterVertex> vertices,
+            List<uint> indices,
+            int clusterIndex,
+            Dictionary<int, HashSet<(int, int, int, int, int, int)>> edgeCache)
+        {
+            HashSet<(int, int, int, int, int, int)> edges =
+                BoundaryEdges(clusters, vertices, indices, clusterIndex, edgeCache);
+            foreach (var edge in edges)
+            {
+                if (groupEdges.Contains(edge))
+                    return true;
+            }
+
+            return false;
+        }
+
+        static HashSet<(int, int, int, int, int, int)> BoundaryEdges(
+            List<ClusterHeader> clusters,
+            List<ClusterVertex> vertices,
+            List<uint> indices,
+            int clusterIndex,
+            Dictionary<int, HashSet<(int, int, int, int, int, int)>> edgeCache)
+        {
+            if (edgeCache.TryGetValue(clusterIndex, out var cached))
+                return cached;
+
+            ClusterHeader h = clusters[clusterIndex];
+            int vCount = (int)h.vertexCount;
+            var weld = new int[vCount];
+            var qpos = new (int, int, int)[vCount];
+            var map = new Dictionary<(int, int, int), int>();
+            for (int v = 0; v < vCount; v++)
+            {
+                var key = Quantize(vertices[(int)h.vertexOffset + v].position);
+                qpos[v] = key;
+                if (!map.TryGetValue(key, out int canon))
+                {
+                    canon = v;
+                    map[key] = v;
+                }
+
+                weld[v] = canon;
+            }
+
+            var counts = new Dictionary<(int, int), int>();
+            int triN = (int)h.triangleCount;
+            for (int t = 0; t < triN; t++)
+            {
+                int i0 = (int)indices[(int)h.indexOffset + t * 3];
+                int i1 = (int)indices[(int)h.indexOffset + t * 3 + 1];
+                int i2 = (int)indices[(int)h.indexOffset + t * 3 + 2];
+                CountEdge(counts, weld[i0], weld[i1]);
+                CountEdge(counts, weld[i1], weld[i2]);
+                CountEdge(counts, weld[i2], weld[i0]);
+            }
+
+            var edges = new HashSet<(int, int, int, int, int, int)>();
+            foreach (var kv in counts)
+            {
+                if (kv.Value != 1)
+                    continue;
+                var a = qpos[kv.Key.Item1];
+                var b = qpos[kv.Key.Item2];
+                edges.Add(OrderedEdge(a, b));
+            }
+
+            edgeCache[clusterIndex] = edges;
+            return edges;
+        }
+
+        static (int, int, int, int, int, int) OrderedEdge((int, int, int) a, (int, int, int) b)
+        {
+            if (a.Item1 > b.Item1
+                || (a.Item1 == b.Item1 && a.Item2 > b.Item2)
+                || (a.Item1 == b.Item1 && a.Item2 == b.Item2 && a.Item3 > b.Item3))
+            {
+                var tmp = a;
+                a = b;
+                b = tmp;
+            }
+
+            return (a.Item1, a.Item2, a.Item3, b.Item1, b.Item2, b.Item3);
         }
 
         static void RemoveAll(List<int> remaining, List<int> group)
@@ -158,7 +335,7 @@ namespace ClusterMesh
             var tan = new List<Vector4>();
             var uv = new List<Vector2>();
             var tris = new List<int>();
-            ExpandLeaves(clusters, vertices, indices, group, pos, nrm, tan, uv, tris);
+            BuildWeldedGroupSoup(clusters, vertices, indices, group, pos, nrm, tan, uv, tris);
             if (tris.Count < 3)
                 return false;
 
@@ -169,6 +346,11 @@ namespace ClusterMesh
             MarkLocked(pos, tris, locked);
             CollapseHalf(pos, nrm, tan, uv, tris, locked, srcTriCount);
             if (tris.Count < 3 || tris.Count / 3 >= srcTriCount)
+                return false;
+            if (CountBoundaryEdges(pos, tris) > CountBoundaryEdges(srcPos, srcTris))
+                return false;
+            float srcEdge = MaxEdgeSq(srcPos, srcTris);
+            if (srcEdge > 0f && MaxEdgeSq(pos, tris) > srcEdge * 64f)
                 return false;
 
             float childError = 0f;
@@ -184,7 +366,11 @@ namespace ClusterMesh
                 gmax = Vector3.Max(gmax, cmax);
             }
 
-            float lodError = Mathf.Max(1e-6f, Mathf.Max(MaxDeviation(pos, srcPos, srcTris), childError));
+            float lodError = Mathf.Max(
+                1e-6f,
+                childError,
+                SurfaceDeviation(pos, srcPos, srcTris),
+                SurfaceDeviation(srcPos, pos, tris));
             int startClusters = clusters.Count;
             ClusterMeshBaker.ClusterTriangles(
                 clusters[group[0]].materialIndex,
@@ -323,6 +509,63 @@ namespace ClusterMesh
                 locked[i] = lockedCanon.Contains(weld[i]);
         }
 
+        static void WeldSoup(
+            List<Vector3> pos,
+            List<Vector3> nrm,
+            List<Vector4> tan,
+            List<Vector2> uv,
+            List<int> tris)
+        {
+            if (pos.Count == 0)
+                return;
+
+            var map = new Dictionary<(int, int, int), int>();
+            var remap = new int[pos.Count];
+            var wPos = new List<Vector3>();
+            var wNrm = new List<Vector3>();
+            var wTan = new List<Vector4>();
+            var wUv = new List<Vector2>();
+            for (int i = 0; i < pos.Count; i++)
+            {
+                var key = Quantize(pos[i]);
+                if (!map.TryGetValue(key, out int canon))
+                {
+                    canon = wPos.Count;
+                    map[key] = canon;
+                    wPos.Add(pos[i]);
+                    wNrm.Add(i < nrm.Count ? nrm[i] : Vector3.up);
+                    wTan.Add(i < tan.Count ? tan[i] : new Vector4(1f, 0f, 0f, 1f));
+                    wUv.Add(i < uv.Count ? uv[i] : Vector2.zero);
+                }
+
+                remap[i] = canon;
+            }
+
+            var wTris = new List<int>(tris.Count);
+            for (int t = 0; t + 2 < tris.Count; t += 3)
+            {
+                int a = remap[tris[t]];
+                int b = remap[tris[t + 1]];
+                int c = remap[tris[t + 2]];
+                if (a == b || b == c || a == c)
+                    continue;
+                wTris.Add(a);
+                wTris.Add(b);
+                wTris.Add(c);
+            }
+
+            pos.Clear();
+            nrm.Clear();
+            tan.Clear();
+            uv.Clear();
+            tris.Clear();
+            pos.AddRange(wPos);
+            nrm.AddRange(wNrm);
+            tan.AddRange(wTan);
+            uv.AddRange(wUv);
+            tris.AddRange(wTris);
+        }
+
         static void CountEdge(Dictionary<(int, int), int> edges, int a, int b)
         {
             if (a == b)
@@ -457,25 +700,41 @@ namespace ClusterMesh
             bestB = b;
         }
 
-        static float MaxDeviation(List<Vector3> parentVerts, List<Vector3> srcPos, List<int> srcTris)
+        public static float SurfaceDeviation(List<Vector3> points, List<Vector3> meshPos, List<int> meshTris)
         {
+            if (points == null || meshPos == null || meshTris == null || points.Count == 0)
+                return 0f;
+
             float max = 0f;
-            for (int i = 0; i < parentVerts.Count; i++)
+            for (int i = 0; i < points.Count; i++)
             {
                 float best = float.MaxValue;
-                for (int t = 0; t + 2 < srcTris.Count; t += 3)
+                for (int t = 0; t + 2 < meshTris.Count; t += 3)
                 {
                     float d = PointTriangleDistance(
-                        parentVerts[i],
-                        srcPos[srcTris[t]],
-                        srcPos[srcTris[t + 1]],
-                        srcPos[srcTris[t + 2]]);
+                        points[i],
+                        meshPos[meshTris[t]],
+                        meshPos[meshTris[t + 1]],
+                        meshPos[meshTris[t + 2]]);
                     if (d < best)
                         best = d;
                 }
 
                 if (best < float.MaxValue)
                     max = Mathf.Max(max, best);
+            }
+
+            return max;
+        }
+
+        static float MaxEdgeSq(List<Vector3> pos, List<int> tris)
+        {
+            float max = 0f;
+            for (int t = 0; t + 2 < tris.Count; t += 3)
+            {
+                max = Mathf.Max(max, (pos[tris[t]] - pos[tris[t + 1]]).sqrMagnitude);
+                max = Mathf.Max(max, (pos[tris[t + 1]] - pos[tris[t + 2]]).sqrMagnitude);
+                max = Mathf.Max(max, (pos[tris[t + 2]] - pos[tris[t]]).sqrMagnitude);
             }
 
             return max;
