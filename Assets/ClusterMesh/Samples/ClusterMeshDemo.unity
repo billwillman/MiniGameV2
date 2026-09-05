@@ -175,6 +175,7 @@ MonoBehaviour:
   litShader: {fileID: 4800000, guid: 487a515aa7a15f14abb1152f6a8ba524, type: 3}
   castShadows: 1
   enableConeCull: 1
+  showClusterColors: 0
   showClusterAabb: 0
 --- !u!1 &486424598
 GameObject:
@@ -270,6 +271,7 @@ MonoBehaviour:
   litShader: {fileID: 4800000, guid: 487a515aa7a15f14abb1152f6a8ba524, type: 3}
   castShadows: 1
   enableConeCull: 1
+  showClusterColors: 0
   showClusterAabb: 0
 --- !u!1 &951488347
 GameObject:
@@ -430,6 +432,7 @@ MonoBehaviour:
   litShader: {fileID: 4800000, guid: 487a515aa7a15f14abb1152f6a8ba524, type: 3}
   castShadows: 1
   enableConeCull: 1
+  showClusterColors: 0
   showClusterAabb: 0
 --- !u!1 &1032842997
 GameObject:
@@ -482,6 +485,7 @@ MonoBehaviour:
   litShader: {fileID: 4800000, guid: 487a515aa7a15f14abb1152f6a8ba524, type: 3}
   castShadows: 1
   enableConeCull: 1
+  showClusterColors: 0
   showClusterAabb: 0
 --- !u!1 &1279723074
 GameObject:
@@ -629,6 +633,7 @@ MonoBehaviour:
   litShader: {fileID: 4800000, guid: 487a515aa7a15f14abb1152f6a8ba524, type: 3}
   castShadows: 1
   enableConeCull: 1
+  showClusterColors: 0
   showClusterAabb: 0
 --- !u!1 &1467090817
 GameObject:
@@ -681,6 +686,7 @@ MonoBehaviour:
   litShader: {fileID: 4800000, guid: 487a515aa7a15f14abb1152f6a8ba524, type: 3}
   castShadows: 1
   enableConeCull: 1
+  showClusterColors: 0
   showClusterAabb: 0
 --- !u!1 &1470900799
 GameObject:
@@ -733,6 +739,7 @@ MonoBehaviour:
   litShader: {fileID: 4800000, guid: 487a515aa7a15f14abb1152f6a8ba524, type: 3}
   castShadows: 1
   enableConeCull: 1
+  showClusterColors: 0
   showClusterAabb: 0
 --- !u!1 &1524179103
 GameObject:
@@ -785,7 +792,61 @@ MonoBehaviour:
   litShader: {fileID: 4800000, guid: 487a515aa7a15f14abb1152f6a8ba524, type: 3}
   castShadows: 1
   enableConeCull: 1
+  showClusterColors: 0
   showClusterAabb: 0
+--- !u!1 &1708015862
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 7
+  m_Component:
+  - component: {fileID: 1708015864}
+  - component: {fileID: 1708015863}
+  m_Layer: 0
+  m_HasEditorInfo: 1
+  m_Name: Mia
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1708015863
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1708015862}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 99e53680ecfb1044fbebd512165424a7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  asset: {fileID: 11400000, guid: f565353deb727574d8c2642a13ff630a, type: 2}
+  targetCamera: {fileID: 0}
+  cullShader: {fileID: 7200000, guid: 62624d1a5bd0e8948821f9c09bf56d55, type: 3}
+  litShader: {fileID: 4800000, guid: 487a515aa7a15f14abb1152f6a8ba524, type: 3}
+  castShadows: 1
+  enableConeCull: 1
+  showClusterColors: 0
+  showClusterAabb: 0
+--- !u!4 &1708015864
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1708015862}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0.7071068, z: 0.7071068, w: 0}
+  m_LocalPosition: {x: 2.25, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: -90, y: 180, z: 0}
 --- !u!1 &1795183808
 GameObject:
   m_ObjectHideFlags: 0
@@ -837,6 +898,7 @@ MonoBehaviour:
   litShader: {fileID: 4800000, guid: 487a515aa7a15f14abb1152f6a8ba524, type: 3}
   castShadows: 1
   enableConeCull: 1
+  showClusterColors: 0
   showClusterAabb: 0
 --- !u!1 &2056009470
 GameObject:
@@ -1009,6 +1071,7 @@ MonoBehaviour:
   litShader: {fileID: 4800000, guid: 487a515aa7a15f14abb1152f6a8ba524, type: 3}
   castShadows: 1
   enableConeCull: 1
+  showClusterColors: 0
   showClusterAabb: 0
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
@@ -1017,3 +1080,4 @@ SceneRoots:
   - {fileID: 1279723077}
   - {fileID: 2056009473}
   - {fileID: 486424599}
+  - {fileID: 1708015864}

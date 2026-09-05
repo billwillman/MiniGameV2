@@ -11,6 +11,8 @@ namespace ClusterMesh
         public Shader litShader;
         public bool castShadows = true;
         public bool enableConeCull = true;
+        [Tooltip("Replace lighting with a solid color per cluster.")]
+        public bool showClusterColors;
         public bool showClusterAabb;
 
         bool _registered;
@@ -71,11 +73,13 @@ namespace ClusterMesh
             if (!showClusterAabb || asset == null || asset.clusters == null)
                 return;
 
-            Gizmos.color = new Color(0.2f, 1f, 0.35f, 1f);
             Gizmos.matrix = transform.localToWorldMatrix;
             for (int i = 0; i < asset.clusters.Length; i++)
             {
                 ClusterHeader h = asset.clusters[i];
+                Gizmos.color = showClusterColors
+                    ? ClusterMeshDebugColors.Rgb((uint)i)
+                    : new Color(0.2f, 1f, 0.35f, 1f);
                 Gizmos.DrawWireCube(h.aabbCenter, (Vector3)h.aabbExtents * 2f);
             }
         }

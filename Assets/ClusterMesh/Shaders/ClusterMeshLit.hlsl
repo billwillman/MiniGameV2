@@ -23,6 +23,7 @@ StructuredBuffer<ClusterHeader> _Clusters;
 StructuredBuffer<ClusterVertex> _Vertices;
 StructuredBuffer<uint> _Indices;
 StructuredBuffer<uint> _VisibleClusterIds;
+float _EnableClusterColor;
 
 CBUFFER_START(ClusterMeshBatch)
     float4x4 _ObjectLocalToWorld[256];
@@ -57,12 +58,42 @@ struct Varyings
     float3 normalWS : TEXCOORD1;
     float4 tangentWS : TEXCOORD2;
     float2 uv : TEXCOORD3;
+    nointerpolation uint clusterId : TEXCOORD4;
 };
 
-void FetchClusterVertex(uint vertexID, uint instanceID, out float3 positionOS, out float3 normalOS, out float4 tangentOS, out float2 uv)
+float3 ClusterMeshHsvToRgb(float h, float s, float v)
+{
+    if (s <= 0.0f)
+        return v;
+    float num = h * 6.0f;
+    int sector = (int)floor(num);
+    float f = num - sector;
+    float p = v * (1.0f - s);
+    float q = v * (1.0f - s * f);
+    float t = v * (1.0f - s * (1.0f - f));
+    if (sector == 0 || sector == 6)
+        return float3(v, t, p);
+    if (sector == 1)
+        return float3(q, v, p);
+    if (sector == 2)
+        return float3(p, v, t);
+    if (sector == 3)
+        return float3(p, q, v);
+    if (sector == 4)
+        return float3(t, p, v);
+    return float3(v, p, q);
+}
+
+float3 ClusterMeshDebugRgb(uint clusterId)
+{
+    float hue = frac((clusterId + 1.0f) * 0.6180339887f);
+    return ClusterMeshHsvToRgb(hue, 0.72f, 0.95f);
+}
+
+void FetchClusterVertex(uint vertexID, uint instanceID, out float3 positionOS, out float3 normalOS, out float4 tangentOS, out float2 uv, out uint clusterId)
 {
     uint packed = _VisibleClusterIds[instanceID];
-    uint clusterId = packed & 0xFFFFu;
+    clusterId = packed & 0xFFFFu;
     ClusterHeader h = _Clusters[clusterId];
     if (vertexID >= h.triangleCount * 3)
     {
@@ -87,8 +118,9 @@ Varyings ClusterMeshVert(Attributes input)
     float3 normalOS;
     float4 tangentOS;
     float2 uv;
+    uint clusterId;
     ApplyClusterMeshInstance(input.instanceID);
-    FetchClusterVertex(input.vertexID, input.instanceID, positionOS, normalOS, tangentOS, uv);
+    FetchClusterVertex(input.vertexID, input.instanceID, positionOS, normalOS, tangentOS, uv, clusterId);
 
     VertexPositionInputs pos = GetVertexPositionInputs(positionOS);
     VertexNormalInputs nrm = GetVertexNormalInputs(normalOS, tangentOS);
@@ -99,6 +131,7 @@ Varyings ClusterMeshVert(Attributes input)
     o.normalWS = nrm.normalWS;
     o.tangentWS = float4(nrm.tangentWS, tangentOS.w);
     o.uv = TRANSFORM_TEX(uv, _BaseMap);
+    o.clusterId = clusterId;
     return o;
 }
 
@@ -106,6 +139,8 @@ half4 ClusterMeshFrag(Varyings input) : SV_Target
 {
     half4 albedo = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, input.uv) * _BaseColor;
     clip(albedo.a - _Cutoff);
+    if (_EnableClusterColor > 0.5f)
+        return half4(ClusterMeshDebugRgb(input.clusterId), albedo.a);
 
     float3 normalTS = UnpackNormalScale(SAMPLE_TEXTURE2D(_BumpMap, sampler_BumpMap, input.uv), _BumpScale);
     float3 nT = normalize(input.tangentWS.xyz);
@@ -137,8 +172,9 @@ Varyings ClusterMeshShadowVert(Attributes input)
     float3 normalOS;
     float4 tangentOS;
     float2 uv;
+    uint clusterId;
     ApplyClusterMeshInstance(input.instanceID);
-    FetchClusterVertex(input.vertexID, input.instanceID, positionOS, normalOS, tangentOS, uv);
+    FetchClusterVertex(input.vertexID, input.instanceID, positionOS, normalOS, tangentOS, uv, clusterId);
     Varyings o;
     o.positionCS = TransformWorldToHClip(TransformObjectToWorld(positionOS));
 #if UNITY_REVERSED_Z
@@ -150,6 +186,7 @@ Varyings ClusterMeshShadowVert(Attributes input)
     o.normalWS = 0;
     o.tangentWS = 0;
     o.uv = uv;
+    o.clusterId = clusterId;
     return o;
 }
 

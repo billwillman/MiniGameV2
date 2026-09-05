@@ -9,6 +9,7 @@ Shader "ClusterMesh/Lit"
         _Metallic("Metallic", Range(0,1)) = 0
         _Smoothness("Smoothness", Range(0,1)) = 0.5
         _Cutoff("Alpha Cutoff", Range(0,1)) = 0
+        [HideInInspector] _EnableClusterColor("Enable Cluster Color", Float) = 0
     }
 
     SubShader

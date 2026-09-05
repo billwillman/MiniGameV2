@@ -14,6 +14,7 @@ namespace ClusterMesh
         int _isolate = -1;
         bool _showAabb;
         bool _coneCull = true;
+        bool _clusterColors = true;
         Vector2 _scroll;
         Material _aabbMat;
 
@@ -78,12 +79,14 @@ namespace ClusterMesh
             _showAabb = EditorGUILayout.Toggle("Show AABB", _showAabb);
             EditorGUI.BeginChangeCheck();
             _coneCull = EditorGUILayout.Toggle("Cone Cull", _coneCull);
+            _clusterColors = EditorGUILayout.Toggle("Cluster Colors", _clusterColors);
             if (EditorGUI.EndChangeCheck())
                 Repaint();
             if (_context != null)
             {
                 _context.IsolateIndex = _isolate;
                 _context.EnableConeCull = _coneCull;
+                _context.EnableClusterColor = _clusterColors;
             }
             if (!_coneCull)
                 EditorGUILayout.HelpBox("Cone Cull 已关。Viewer 和场景用同一条 compute；这里误剔，场景里同一套也会剔。对比完再打开。", MessageType.Warning);
@@ -159,12 +162,15 @@ namespace ClusterMesh
             GL.LoadProjectionMatrix(_preview.camera.projectionMatrix);
             GL.modelview = _preview.camera.worldToCameraMatrix;
             GL.Begin(GL.LINES);
-            GL.Color(new Color(0.2f, 1f, 0.35f, 1f));
             for (int i = 0; i < _asset.clusters.Length; i++)
             {
                 if (_isolate >= 0 && i != _isolate)
                     continue;
                 ClusterHeader h = _asset.clusters[i];
+                Color c = _clusterColors
+                    ? ClusterMeshDebugColors.Rgb((uint)i)
+                    : new Color(0.2f, 1f, 0.35f, 1f);
+                GL.Color(c);
                 DrawWireBox(h.aabbCenter, h.aabbExtents);
             }
 

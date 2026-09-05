@@ -84,6 +84,7 @@ namespace ClusterMesh
 
                 Matrices.Clear();
                 Matrices.Add(seed.transform.localToWorldMatrix);
+                bool clusterColors = seed.showClusterColors;
                 for (int j = i + 1; j < Renderers.Count; j++)
                 {
                     ClusterMeshRenderer other = Renderers[j];
@@ -91,12 +92,14 @@ namespace ClusterMesh
                         continue;
                     Seen.Add(j);
                     Matrices.Add(other.transform.localToWorldMatrix);
+                    clusterColors |= other.showClusterColors;
                 }
 
                 ClusterMeshDrawContext ctx = GetOrCreate(seed);
                 if (ctx == null || !ctx.IsReady)
                     continue;
                 ctx.EnableConeCull = seed.enableConeCull;
+                ctx.EnableClusterColor = clusterColors;
                 ctx.Draw(Matrices, camera, seed.castShadows);
             }
         }

@@ -16,6 +16,7 @@ namespace ClusterMesh
         static readonly int MaterialIndexId = Shader.PropertyToID("_MaterialIndex");
         static readonly int IsolateIndexId = Shader.PropertyToID("_IsolateIndex");
         static readonly int EnableConeCullId = Shader.PropertyToID("_EnableConeCull");
+        static readonly int EnableClusterColorId = Shader.PropertyToID("_EnableClusterColor");
         static readonly int PlanesId = Shader.PropertyToID("_Planes");
         static readonly int WorldCameraPosId = Shader.PropertyToID("_WorldCameraPos");
         static readonly int ObjectLocalToWorldId = Shader.PropertyToID("_ObjectLocalToWorld");
@@ -43,6 +44,7 @@ namespace ClusterMesh
         public string Error { get; }
         public int IsolateIndex { get; set; } = -1;
         public bool EnableConeCull { get; set; } = true;
+        public bool EnableClusterColor { get; set; }
 
         public ClusterMeshDrawContext(ClusterMeshAsset asset, ComputeShader cullShader, Shader litShader)
         {
@@ -173,6 +175,7 @@ namespace ClusterMesh
                     mat.SetBuffer(VisibleId, visible);
                     mat.SetMatrixArray(ObjectLocalToWorldId, _l2w);
                     mat.SetMatrixArray(ObjectWorldToLocalId, _w2l);
+                    mat.SetFloat(EnableClusterColorId, EnableClusterColor ? 1f : 0f);
 
                     Graphics.DrawMeshInstancedIndirect(
                         _template,
