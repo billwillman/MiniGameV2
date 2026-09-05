@@ -1,0 +1,281 @@
+using System;
+using UnityEngine;
+using Puerts;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
+
+namespace PuertsMcp
+{
+    /// <summary>
+    /// Manages PuerTS Node.js ScriptEnv lifecycle for the MCP Server.
+    /// Uses BackendNodeJS to get full Node.js API support (http, streams, etc.).
+    /// </summary>
+    public class McpScriptManager : IDisposable
+    {
+        private ScriptEnv scriptEnv;
+        private bool isInitialized;
+        private bool isTicking;
+        private string lastError;
+
+        // TS function delegates
+        private Action<string, int, Action<bool, string>> onInitialize;
+        private Action onShutdown;
+
+        private const string EntryModule = "McpServer/main.cjs";
+
+        /// <summary>
+        /// Whether the MCP Server TS module has been successfully loaded and the server is running.
+        /// </summary>
+        public bool IsInitialized => isInitialized;
+
+        /// <summary>
+        /// Last error message if initialization failed.
+        /// </summary>
+        public string LastError => lastError;
+
+        /// <summary>
+        /// Initialize ScriptEnv with Node.js backend and start the MCP Server.
+        /// </summary>
+        /// <param name="resourceRoot">Resource root path passed to TS onInitialize (e.g. "LLMAgent/editor-assistant").</param>
+        /// <param name="port">TCP port for the MCP HTTP Server (default 3100).</param>
+        /// <param name="onReady">Optional callback invoked when the MCP Server startup completes. Bool arg indicates success.</param>
+        public void Initialize(string resourceRoot, int port = 3100, Action<bool> onReady = null)
+        {
+            if (isInitialized)
+            {
+                Debug.LogWarning("[McpScriptManager] Already initialized. Call Shutdown() first.");
+                return;
+            }
+
+            try
+            {
+                scriptEnv = new ScriptEnv(new BackendNodeJS());
+
+                // Load the CJS bundle via require() — node:xxx built-ins work with require()
+                // but fail with ESM import in PuerTS.
+                // Use the resolved package path to locate the bundled CJS file.
+                // This works for all UPM installation methods (local, Git URL, tarball, etc.).
+                var resourcePath = ResolvePackageResourcePath(EntryModule);
+                // Normalise to forward slashes so Node.js require() can resolve it
+                var fullPath = resourcePath.Replace("\\", "/");
+                ScriptObject moduleExports = scriptEnv.Eval<ScriptObject>(
+                    $"require('{fullPath}')"
+                );
+
+                // Get exported functions from CJS module
+                onInitialize = moduleExports.Get<Action<string, int, Action<bool, string>>>("onInitialize");
+                onShutdown = moduleExports.Get<Action>("onShutdown");
+
+                if (onInitialize == null)
+                {
+                    lastError = "[McpScriptManager] Failed to get 'onInitialize' export from module.";
+                    Debug.LogError(lastError);
+                    return;
+                }
+
+                // Start ticking ScriptEnv immediately (needed for JS microtask/promise processing)
+                StartTicking();
+
+                // Trigger async initialization: load builtins + start HTTP server
+                onInitialize(resourceRoot, port, (bool success, string errorMsg) =>
+                {
+                    if (success)
+                    {
+                        isInitialized = true;
+                        lastError = null;
+                        Debug.Log($"[McpScriptManager] MCP Server initialized and listening on port {port}.");
+                    }
+                    else
+                    {
+                        isInitialized = false;
+                        lastError = $"[McpScriptManager] Server failed to start: {errorMsg}";
+                        Debug.LogError(lastError);
+                    }
+                    onReady?.Invoke(success);
+                });
+            }
+            catch (Exception ex)
+            {
+                lastError = $"[McpScriptManager] Failed to initialize: {ex.Message} {ex.StackTrace}";
+                Debug.LogError(lastError);
+                isInitialized = false;
+            }
+        }
+
+        /// <summary>
+        /// Shut down the MCP Server and release all resources.
+        /// </summary>
+        public void Shutdown()
+        {
+            if (!isInitialized && scriptEnv == null)
+                return;
+
+            try
+            {
+                onShutdown?.Invoke();
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[McpScriptManager] Error calling onShutdown: {ex.Message}");
+            }
+
+            Dispose();
+        }
+
+        /// <summary>
+        /// Start ticking the ScriptEnv to process JS microtasks.
+        /// </summary>
+        private void StartTicking()
+        {
+            if (isTicking) return;
+            isTicking = true;
+#if UNITY_EDITOR
+            EditorApplication.update += Tick;
+#else
+            var go = new GameObject("[McpScriptEnvTicker]");
+            go.hideFlags = HideFlags.HideAndDontSave;
+            UnityEngine.Object.DontDestroyOnLoad(go);
+            var ticker = go.AddComponent<ScriptEnvTicker>();
+            ticker.onTick = Tick;
+            _tickerGo = go;
+#endif
+        }
+
+        /// <summary>
+        /// Stop ticking.
+        /// </summary>
+        private void StopTicking()
+        {
+            if (!isTicking) return;
+            isTicking = false;
+#if UNITY_EDITOR
+            EditorApplication.update -= Tick;
+#else
+            if (_tickerGo != null)
+            {
+                UnityEngine.Object.Destroy(_tickerGo);
+                _tickerGo = null;
+            }
+#endif
+        }
+
+        /// <summary>
+        /// Called every frame to process pending JS microtasks.
+        /// </summary>
+        private void Tick()
+        {
+            if (scriptEnv != null)
+            {
+                try
+                {
+                    scriptEnv.Tick();
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogError($"[McpScriptManager] Tick error: {ex.Message}");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Release ScriptEnv resources.
+        /// </summary>
+        public void Dispose()
+        {
+            StopTicking();
+
+            onInitialize = null;
+            onShutdown = null;
+            isInitialized = false;
+
+            if (scriptEnv != null)
+            {
+                try
+                {
+                    scriptEnv.Dispose();
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogWarning($"[McpScriptManager] Error disposing ScriptEnv: {ex.Message}");
+                }
+                scriptEnv = null;
+            }
+        }
+
+        /// <summary>
+        /// Resolve the physical path of a resource file inside the com.tencent.puerts.mcp package.
+        /// Supports UPM (Packages/) and Assets installs such as Assets/Purts/Mcp/mcp.
+        /// </summary>
+        private static string ResolvePackageResourcePath(string relativeResourcePath)
+        {
+            const string packageName = "com.tencent.puerts.mcp";
+            const string resourceFolder = "Resources";
+
+            foreach (var root in EnumeratePackageRoots(packageName))
+            {
+                var resolvedPath = System.IO.Path.Combine(root, resourceFolder, relativeResourcePath);
+                if (System.IO.File.Exists(resolvedPath))
+                {
+                    return resolvedPath;
+                }
+            }
+
+            var fallback = System.IO.Path.GetFullPath($"Packages/{packageName}/{resourceFolder}/{relativeResourcePath}");
+            throw new System.IO.FileNotFoundException(
+                $"[McpScriptManager] Missing {relativeResourcePath}. MCP is not under Packages/{packageName}; " +
+                $"expected Assets/Purts/Mcp/mcp/Resources/{relativeResourcePath}. Tried: {fallback}");
+        }
+
+        private static System.Collections.Generic.IEnumerable<string> EnumeratePackageRoots(string packageName)
+        {
+#if UNITY_EDITOR
+            var packageInfo = UnityEditor.PackageManager.PackageInfo.FindForAssetPath($"Packages/{packageName}");
+            if (packageInfo != null && !string.IsNullOrEmpty(packageInfo.resolvedPath))
+            {
+                yield return packageInfo.resolvedPath;
+            }
+
+            var scriptGuids = UnityEditor.AssetDatabase.FindAssets("McpScriptManager t:MonoScript");
+            var projectRoot = System.IO.Path.GetDirectoryName(Application.dataPath);
+            for (int i = 0; i < scriptGuids.Length; i++)
+            {
+                var csPath = UnityEditor.AssetDatabase.GUIDToAssetPath(scriptGuids[i]);
+                if (string.IsNullOrEmpty(csPath) || !csPath.EndsWith("McpScriptManager.cs"))
+                {
+                    continue;
+                }
+
+                // .../Runtime/McpScriptManager.cs → package root is parent of Runtime
+                var absCsPath = System.IO.Path.GetFullPath(System.IO.Path.Combine(projectRoot, csPath));
+                var runtimeDir = System.IO.Path.GetDirectoryName(absCsPath);
+                var packageRoot = System.IO.Path.GetDirectoryName(runtimeDir);
+                if (!string.IsNullOrEmpty(packageRoot))
+                {
+                    yield return packageRoot;
+                }
+            }
+
+            yield return System.IO.Path.Combine(Application.dataPath, "Purts", "Mcp", "mcp");
+#endif
+            yield return System.IO.Path.GetFullPath($"Packages/{packageName}");
+        }
+
+#if !UNITY_EDITOR
+        private GameObject _tickerGo;
+
+        /// <summary>
+        /// Hidden MonoBehaviour singleton for Runtime ScriptEnv ticking.
+        /// </summary>
+        private class ScriptEnvTicker : MonoBehaviour
+        {
+            public Action onTick;
+
+            private void Update()
+            {
+                onTick?.Invoke();
+            }
+        }
+#endif
+    }
+}
