@@ -32,6 +32,7 @@ namespace ClusterMesh
 
             for (int sub = 0; sub < subMeshCount; sub++)
             {
+                int leafStart = clusters.Count;
                 int[] tris = mesh.GetTriangles(sub);
                 BakeSubmesh(
                     (uint)sub,
@@ -44,6 +45,8 @@ namespace ClusterMesh
                     clusters,
                     vertices,
                     indices);
+                if (settings.buildLodHierarchy)
+                    ClusterMeshLodBaker.BuildParents(clusters, vertices, indices, leafStart, clusters.Count, settings);
             }
 
             if (clusters.Count == 0)
@@ -61,7 +64,8 @@ namespace ClusterMesh
                 clusters = clusters.ToArray(),
                 vertices = vertices.ToArray(),
                 indices = indices.ToArray(),
-                materials = materialSlots
+                materials = materialSlots,
+                hierarchyVersion = settings.buildLodHierarchy ? 1 : 0
             };
         }
 
@@ -270,6 +274,9 @@ namespace ClusterMesh
                 indexOffset = indexOffset,
                 triangleCount = (uint)clusterTris.Count,
                 materialIndex = materialIndex,
+                parentIndex = ClusterMeshLod.NoParent,
+                lodError = 0f,
+                flags = 0,
                 aabbCenter = center,
                 aabbExtents = extents,
                 coneAxisCutoff = new Vector4(axis.x, axis.y, axis.z, cutoff),

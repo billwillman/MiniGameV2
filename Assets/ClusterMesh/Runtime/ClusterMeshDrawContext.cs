@@ -16,6 +16,10 @@ namespace ClusterMesh
         static readonly int MaterialIndexId = Shader.PropertyToID("_MaterialIndex");
         static readonly int IsolateIndexId = Shader.PropertyToID("_IsolateIndex");
         static readonly int EnableConeCullId = Shader.PropertyToID("_EnableConeCull");
+        static readonly int HierarchyVersionId = Shader.PropertyToID("_HierarchyVersion");
+        static readonly int LodPerspectiveId = Shader.PropertyToID("_LodPerspective");
+        static readonly int LodErrorThresholdId = Shader.PropertyToID("_LodErrorThreshold");
+        static readonly int LodProjectionScaleId = Shader.PropertyToID("_LodProjectionScale");
         static readonly int EnableClusterColorId = Shader.PropertyToID("_EnableClusterColor");
         static readonly int PlanesId = Shader.PropertyToID("_Planes");
         static readonly int WorldCameraPosId = Shader.PropertyToID("_WorldCameraPos");
@@ -45,6 +49,7 @@ namespace ClusterMesh
         public int IsolateIndex { get; set; } = -1;
         public bool EnableConeCull { get; set; } = true;
         public bool EnableClusterColor { get; set; }
+        public float LodErrorThreshold { get; set; }
 
         public ClusterMeshDrawContext(ClusterMeshAsset asset, ComputeShader cullShader, Shader litShader)
         {
@@ -72,7 +77,7 @@ namespace ClusterMesh
             _cullKernel = cullShader.FindKernel("CullClusters");
             _template = ClusterMeshTemplate.Create();
 
-            _clusterBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, asset.clusters.Length, 96);
+            _clusterBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, asset.clusters.Length, ClusterMeshLimits.ClusterHeaderStride);
             _clusterBuffer.SetData(asset.clusters);
             _vertexBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, Mathf.Max(1, asset.vertices.Length), 64);
             if (asset.vertices.Length > 0)
@@ -153,6 +158,10 @@ namespace ClusterMesh
                 _cullShader.SetInt(ClusterCountId, _asset.clusters.Length);
                 _cullShader.SetInt(IsolateIndexId, IsolateIndex);
                 _cullShader.SetInt(EnableConeCullId, EnableConeCull ? 1 : 0);
+                _cullShader.SetInt(HierarchyVersionId, _asset.hierarchyVersion);
+                _cullShader.SetInt(LodPerspectiveId, camera.orthographic ? 0 : 1);
+                _cullShader.SetFloat(LodErrorThresholdId, LodErrorThreshold);
+                _cullShader.SetFloat(LodProjectionScaleId, ClusterMeshLod.ProjectionScale(camera));
                 _cullShader.SetVectorArray(PlanesId, _planeVectors);
                 _cullShader.SetVector(WorldCameraPosId, camera.transform.position);
                 _cullShader.SetMatrixArray(ObjectLocalToWorldId, _l2w);

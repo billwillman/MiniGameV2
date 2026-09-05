@@ -85,6 +85,7 @@ namespace ClusterMesh
                 Matrices.Clear();
                 Matrices.Add(seed.transform.localToWorldMatrix);
                 bool clusterColors = seed.showClusterColors;
+                float lodT = seed.lodErrorThreshold;
                 for (int j = i + 1; j < Renderers.Count; j++)
                 {
                     ClusterMeshRenderer other = Renderers[j];
@@ -93,6 +94,7 @@ namespace ClusterMesh
                     Seen.Add(j);
                     Matrices.Add(other.transform.localToWorldMatrix);
                     clusterColors |= other.showClusterColors;
+                    lodT = Mathf.Max(lodT, other.lodErrorThreshold);
                 }
 
                 ClusterMeshDrawContext ctx = GetOrCreate(seed);
@@ -100,6 +102,7 @@ namespace ClusterMesh
                     continue;
                 ctx.EnableConeCull = seed.enableConeCull;
                 ctx.EnableClusterColor = clusterColors;
+                ctx.LodErrorThreshold = lodT;
                 ctx.Draw(Matrices, camera, seed.castShadows, seed.receiveShadows);
             }
         }

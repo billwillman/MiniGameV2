@@ -10,6 +10,10 @@ uint _ObjectCount;
 uint _MaterialIndex;
 int _IsolateIndex;
 int _EnableConeCull;
+int _HierarchyVersion;
+int _LodPerspective;
+float _LodErrorThreshold;
+float _LodProjectionScale;
 float4 _Planes[6];
 float3 _WorldCameraPos;
 float4x4 _ObjectLocalToWorld[256];
@@ -65,6 +69,37 @@ bool TestCone(ClusterHeader h, float4x4 m, float3 worldExtents)
     return dot(view, axis) >= threshold;
 }
 
+float LodProjected(float lodError, float3 worldCenter)
+{
+    float e = lodError * _LodProjectionScale;
+    if (_LodPerspective != 0)
+    {
+        float dist = max(length(_WorldCameraPos - worldCenter), 1e-4f);
+        e /= dist;
+    }
+    return e;
+}
+
+bool TestLod(ClusterHeader h, float4x4 m)
+{
+    if (_HierarchyVersion < 1)
+        return true;
+    if (_LodErrorThreshold <= 0.0f)
+        return (h.flags & 1u) == 0u;
+    float3 wc, we;
+    TransformAabb(h, m, wc, we);
+    if (LodProjected(h.lodError, wc) >= _LodErrorThreshold)
+        return false;
+    if (h.parentIndex < 0)
+        return true;
+    if ((uint)h.parentIndex >= _ClusterCount)
+        return true;
+    ClusterHeader p = _Clusters[h.parentIndex];
+    float3 pwc, pwe;
+    TransformAabb(p, m, pwc, pwe);
+    return LodProjected(p.lodError, pwc) >= _LodErrorThreshold;
+}
+
 [numthreads(64, 1, 1)]
 void CullClusters(uint3 id : SV_DispatchThreadID)
 {
@@ -84,6 +119,8 @@ void CullClusters(uint3 id : SV_DispatchThreadID)
     if (!TestAabb(wc, we))
         return;
     if (_EnableConeCull != 0 && !TestCone(h, _ObjectLocalToWorld[objectIndex], we))
+        return;
+    if (!TestLod(h, _ObjectLocalToWorld[objectIndex]))
         return;
     _VisibleClusterIds.Append((objectIndex << 16) | clusterIndex);
 }

@@ -15,6 +15,7 @@ namespace ClusterMesh
         bool _showAabb;
         bool _coneCull = true;
         bool _clusterColors = true;
+        float _lodError;
         Vector2 _scroll;
         Material _aabbMat;
 
@@ -80,6 +81,7 @@ namespace ClusterMesh
             EditorGUI.BeginChangeCheck();
             _coneCull = EditorGUILayout.Toggle("Cone Cull", _coneCull);
             _clusterColors = EditorGUILayout.Toggle("Cluster Colors", _clusterColors);
+            _lodError = EditorGUILayout.Slider("LOD Error Threshold", _lodError, 0f, 64f);
             if (EditorGUI.EndChangeCheck())
                 Repaint();
             if (_context != null)
@@ -87,7 +89,9 @@ namespace ClusterMesh
                 _context.IsolateIndex = _isolate;
                 _context.EnableConeCull = _coneCull;
                 _context.EnableClusterColor = _clusterColors;
+                _context.LodErrorThreshold = _lodError;
             }
+            EditorGUILayout.HelpBox("LOD 阈值 0 = 只叶子。拉大才出父块。要层次需按当前 Baker 重新 Bake。", MessageType.Info);
             if (!_coneCull)
                 EditorGUILayout.HelpBox("Cone Cull 已关。Viewer 和场景用同一条 compute；这里误剔，场景里同一套也会剔。对比完再打开。", MessageType.Warning);
 

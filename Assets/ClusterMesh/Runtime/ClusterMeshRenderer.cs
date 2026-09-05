@@ -17,6 +17,10 @@ namespace ClusterMesh
         [Tooltip("Replace lighting with a solid color per cluster.")]
         public bool showClusterColors;
         public bool showClusterAabb;
+        [Tooltip("Screen-pixel LOD error. 0 = leaves only.")]
+        public float lodErrorThreshold;
+        [Tooltip("Draw which LOD each visible cluster uses (L0 leaf / L1 parent).")]
+        public bool showLodLevels;
 
         bool _registered;
 
@@ -69,6 +73,58 @@ namespace ClusterMesh
                 ClusterMeshSceneBatcher.Unregister(this);
                 _registered = false;
             }
+        }
+
+        void OnDrawGizmos()
+        {
+            if (!showLodLevels || asset == null || asset.clusters == null)
+                return;
+            Camera cam = ResolveGizmoCamera();
+            if (cam == null)
+                return;
+
+            float scale = ClusterMeshLod.ProjectionScale(cam);
+            bool perspective = !cam.orthographic;
+            Matrix4x4 m = transform.localToWorldMatrix;
+            Gizmos.matrix = m;
+            for (int i = 0; i < asset.clusters.Length; i++)
+            {
+                ClusterHeader h = asset.clusters[i];
+                ClusterMeshFrustum.TransformAabb(h, m, out Vector3 wc, out _);
+                float selfDist = Vector3.Distance(cam.transform.position, wc);
+                bool hasParent = h.parentIndex >= 0 && h.parentIndex < asset.clusters.Length;
+                ClusterHeader parent = hasParent ? asset.clusters[h.parentIndex] : default;
+                float parentDist = 0f;
+                if (hasParent)
+                {
+                    ClusterMeshFrustum.TransformAabb(parent, m, out Vector3 pwc, out _);
+                    parentDist = Vector3.Distance(cam.transform.position, pwc);
+                }
+
+                if (!ClusterMeshLod.IsVisible(
+                        h, parent, hasParent, selfDist, parentDist, scale,
+                        lodErrorThreshold, asset.hierarchyVersion, perspective))
+                    continue;
+
+                int lod = ClusterMeshLod.Level(h.flags);
+                Gizmos.color = lod == 0
+                    ? new Color(0.2f, 0.85f, 1f, 1f)
+                    : new Color(1f, 0.55f, 0.1f, 1f);
+                Gizmos.DrawWireCube(h.aabbCenter, (Vector3)h.aabbExtents * 2f);
+            }
+
+            Gizmos.matrix = Matrix4x4.identity;
+        }
+
+        Camera ResolveGizmoCamera()
+        {
+            if (targetCamera != null)
+                return targetCamera;
+#if UNITY_EDITOR
+            if (!Application.isPlaying && UnityEditor.SceneView.lastActiveSceneView != null)
+                return UnityEditor.SceneView.lastActiveSceneView.camera;
+#endif
+            return Camera.main;
         }
 
         void OnDrawGizmosSelected()

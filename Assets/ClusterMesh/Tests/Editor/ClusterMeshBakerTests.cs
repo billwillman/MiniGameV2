@@ -32,15 +32,16 @@ namespace ClusterMesh.Tests
             Assert.That(result.clusters.Length, Is.GreaterThan(1));
 
             int sourceTris = mesh.triangles.Length / 3;
-            int bakedTris = 0;
+            int leafTris = 0;
             foreach (var cluster in result.clusters)
             {
                 Assert.That(cluster.vertexCount, Is.LessThanOrEqualTo((uint)ClusterMeshLimits.MaxVerticesPerCluster));
                 Assert.That(cluster.triangleCount, Is.LessThanOrEqualTo((uint)ClusterMeshLimits.MaxTrianglesPerCluster));
-                bakedTris += (int)cluster.triangleCount;
+                if (!ClusterMeshLod.IsParent(cluster.flags))
+                    leafTris += (int)cluster.triangleCount;
             }
 
-            Assert.That(bakedTris, Is.EqualTo(sourceTris));
+            Assert.That(leafTris, Is.EqualTo(sourceTris));
             UnityEngine.Object.DestroyImmediate(mesh);
         }
 
@@ -64,6 +65,40 @@ namespace ClusterMesh.Tests
 
             Assert.That(result.clusters.Length, Is.EqualTo(1));
             Assert.That(result.clusters[0].triangleCount, Is.EqualTo(1u));
+            UnityEngine.Object.DestroyImmediate(mesh);
+        }
+
+        [Test]
+        public void Bake_LodOff_Grid_TriangleCountEqualsSource()
+        {
+            var mesh = ClusterMeshTestMeshes.Grid(16, 16);
+            var result = ClusterMeshBaker.Bake(mesh, new Material[1], new ClusterMeshBakeSettings { buildLodHierarchy = false });
+            int baked = 0;
+            foreach (var c in result.clusters)
+                baked += (int)c.triangleCount;
+            Assert.That(baked, Is.EqualTo(mesh.triangles.Length / 3));
+            Assert.That(result.hierarchyVersion, Is.EqualTo(0));
+            UnityEngine.Object.DestroyImmediate(mesh);
+        }
+
+        [Test]
+        public void Bake_LodOn_Grid_HasParent_LeafTrisEqualSource()
+        {
+            var mesh = ClusterMeshTestMeshes.Grid(16, 16);
+            var result = ClusterMeshBaker.Bake(mesh, new Material[1], new ClusterMeshBakeSettings());
+            int leafTris = 0;
+            int parents = 0;
+            foreach (var c in result.clusters)
+            {
+                if (ClusterMeshLod.IsParent(c.flags))
+                    parents++;
+                else
+                    leafTris += (int)c.triangleCount;
+            }
+
+            Assert.That(parents, Is.GreaterThan(0));
+            Assert.That(leafTris, Is.EqualTo(mesh.triangles.Length / 3));
+            Assert.That(result.hierarchyVersion, Is.EqualTo(1));
             UnityEngine.Object.DestroyImmediate(mesh);
         }
 

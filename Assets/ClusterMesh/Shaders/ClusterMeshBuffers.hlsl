@@ -8,9 +8,9 @@ struct ClusterHeader
     uint indexOffset;
     uint triangleCount;
     uint materialIndex;
-    uint pad0;
-    uint pad1;
-    uint pad2;
+    int parentIndex;
+    float lodError;
+    uint flags;
     float4 aabbCenter;
     float4 aabbExtents;
     float4 coneAxisCutoff;
