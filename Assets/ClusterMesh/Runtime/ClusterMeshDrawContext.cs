@@ -47,6 +47,7 @@ namespace ClusterMesh
         readonly GraphicsBuffer[] _argsBuffers;
         readonly GraphicsBuffer[] _shadowArgsBuffers;
         readonly Material[] _materials;
+        readonly Material[] _shadowMaterials;
         readonly Plane[] _planes = new Plane[6];
         readonly Plane[] _receiverPlanes = new Plane[6];
         readonly Plane[] _shadowPlanes = new Plane[6];
@@ -129,6 +130,7 @@ namespace ClusterMesh
             int materialCount = Mathf.Max(1, asset.materials != null ? asset.materials.Length : 1);
             int visibleCapacity = Mathf.Max(1, asset.clusters.Length) * ClusterMeshLimits.MaxBatchedObjects;
             _materials = new Material[materialCount];
+            _shadowMaterials = new Material[materialCount];
             _argsBuffers = new GraphicsBuffer[materialCount];
             _shadowArgsBuffers = new GraphicsBuffer[materialCount];
             _visibleBuffers = new GraphicsBuffer[materialCount];
@@ -138,6 +140,7 @@ namespace ClusterMesh
             {
                 Material source = asset.materials != null && i < asset.materials.Length ? asset.materials[i] : null;
                 _materials[i] = ClusterMeshMaterialUtil.CreateRuntimeMaterial(source, litShader);
+                _shadowMaterials[i] = ClusterMeshMaterialUtil.CreateRuntimeMaterial(source, litShader);
                 _argsBuffers[i] = new GraphicsBuffer(GraphicsBuffer.Target.IndirectArguments, 1, 20);
                 _argsBuffers[i].SetData(_argsSeed);
                 _shadowArgsBuffers[i] = new GraphicsBuffer(GraphicsBuffer.Target.IndirectArguments, 1, 20);
@@ -271,37 +274,42 @@ namespace ClusterMesh
                     _argsBuffers[materialIndex].SetData(_argsSeed);
                     GraphicsBuffer.CopyCount(visible, _argsBuffers[materialIndex], 4);
 
-                    Material mat = _materials[materialIndex];
-                    mat.SetBuffer(ClustersId, _clusterBuffer);
-                    mat.SetBuffer(VerticesId, _vertexBuffer);
-                    mat.SetBuffer(IndicesId, _indexBuffer);
-                    mat.SetBuffer(VisibleId, visible);
-                    mat.SetMatrixArray(ObjectLocalToWorldId, _l2w);
-                    mat.SetMatrixArray(ObjectWorldToLocalId, _w2l);
-                    mat.SetFloat(EnableClusterColorId, EnableClusterColor ? 1f : 0f);
-
+                    Material colorMat = _materials[materialIndex];
+                    BindDrawMaterial(colorMat, visible);
                     if (splitShadows)
                     {
                         Graphics.DrawMeshInstancedIndirect(
-                            _template, 0, mat, worldBounds, _argsBuffers[materialIndex], 0, null,
+                            _template, 0, colorMat, worldBounds, _argsBuffers[materialIndex], 0, null,
                             ShadowCastingMode.Off, receiveShadows, 0, camera);
 
                         _shadowArgsBuffers[materialIndex].SetData(_argsSeed);
                         GraphicsBuffer.CopyCount(shadowVisible, _shadowArgsBuffers[materialIndex], 4);
-                        mat.SetBuffer(VisibleId, shadowVisible);
+                        Material shadowMat = _shadowMaterials[materialIndex];
+                        BindDrawMaterial(shadowMat, shadowVisible);
                         Graphics.DrawMeshInstancedIndirect(
-                            _template, 0, mat, worldBounds, _shadowArgsBuffers[materialIndex], 0, null,
+                            _template, 0, shadowMat, worldBounds, _shadowArgsBuffers[materialIndex], 0, null,
                             ShadowCastingMode.ShadowsOnly, false, 0, camera);
                     }
                     else
                     {
                         Graphics.DrawMeshInstancedIndirect(
-                            _template, 0, mat, worldBounds, _argsBuffers[materialIndex], 0, null,
+                            _template, 0, colorMat, worldBounds, _argsBuffers[materialIndex], 0, null,
                             castShadows ? ShadowCastingMode.On : ShadowCastingMode.Off,
                             receiveShadows, 0, camera);
                     }
                 }
             }
+        }
+
+        void BindDrawMaterial(Material mat, GraphicsBuffer visible)
+        {
+            mat.SetBuffer(ClustersId, _clusterBuffer);
+            mat.SetBuffer(VerticesId, _vertexBuffer);
+            mat.SetBuffer(IndicesId, _indexBuffer);
+            mat.SetBuffer(VisibleId, visible);
+            mat.SetMatrixArray(ObjectLocalToWorldId, _l2w);
+            mat.SetMatrixArray(ObjectWorldToLocalId, _w2l);
+            mat.SetFloat(EnableClusterColorId, EnableClusterColor ? 1f : 0f);
         }
 
         static void CopyPlanes(Plane[] src, Vector4[] dest)
@@ -356,6 +364,15 @@ namespace ClusterMesh
                 {
                     if (_materials[i] != null)
                         DestroyUnityObject(_materials[i]);
+                }
+            }
+
+            if (_shadowMaterials != null)
+            {
+                for (int i = 0; i < _shadowMaterials.Length; i++)
+                {
+                    if (_shadowMaterials[i] != null)
+                        DestroyUnityObject(_shadowMaterials[i]);
                 }
             }
 

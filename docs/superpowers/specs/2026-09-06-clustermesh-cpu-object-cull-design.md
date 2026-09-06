@@ -80,7 +80,7 @@ Nanite 上面多数都做。我们不做是原型停在「一份 compute + URP �
 | GPU 主画 | `TestAabb(_Planes)`（现有全相机远平面）+ 现有 Cone 规则 + LOD → `_VisibleClusterIds` |
 | GPU 阴影 | `_EnableShadowList != 0` 且 `TestAabb(_ShadowPlanes)` + LOD，**不做 Cone** → `_ShadowClusterIds` |
 | 两份 list | 同一 kernel。在两份里都合格的 cluster 两份都 append |
-| Draw | 主画绑 color buffer，`ShadowsOff`（拆 list 时）。阴影绑 shadow buffer，`ShadowsOnly`，`receiveShadows=false`。shader 已有 `ShadowCaster` |
+| Draw | 主画绑 color buffer，`ShadowsOff`（拆 list 时）。阴影绑 shadow buffer，`ShadowsOnly`，`receiveShadows=false`。shader 已有 `ShadowCaster`。主画和阴影必须用**两份 Material 实例**，不能在提交主画后再 `SetBuffer` 同一份 Material 的 `_VisibleClusterIds`（Indirect 延迟执行，后写会盖住主画，instanceCount 对不上就会闪） |
 | `worldBounds` | 压缩后所有留下物体的世界盒并。必须含只为投影留下的，否则 Unity 可能整 draw 不进 cascade |
 | 合批投射 | `batchCastShadows =` 批内任一 `castShadows`。避免 seed 关影、别人开着，整批按无影剔 |
 | 合批接收 | 仍用 seed 的 `receiveShadows`（主画） |
@@ -159,3 +159,11 @@ Nanite 上面多数都做。我们不做是原型停在「一份 compute + URP �
 Tuanjie `2022.3.48t2`，`-batchmode -nographics`，`ClusterMesh.Editor.Tests`。编辑器占用则不编造成功。不用重 Bake。
 
 出包是否做对：用「同资产约 200、镜头里约 20」看 Dispatch / 主画是否按留下的降。Demo 全在画面里持平才正常。身后投进画面的人只涨阴影 list，不涨主画。
+
+## 10. 经验：拆 list 后画面闪
+
+完整记录：`docs/superpowers/lessons/2026-09-06-indirect-shared-material-flicker.md`。
+
+**原因：** Indirect 延迟执行。主画和 ShadowsOnly 若共用一份 Material，后一次 `SetBuffer(_VisibleClusterIds, 阴影list)` 会盖住主画；主画 `instanceCount` 对不上阴影 buffer，越界读就会闪。关 Sun（单 list）不闪。单测挡不住，因为没跑 URP 真正出画。
+
+**做法：** `_materials` / `_shadowMaterials` 两份实例。提交主画后不再改那份 buffer。同一帧两次 Indirect 要读不同 StructuredBuffer，禁止先 Draw 再改同一份 Material。

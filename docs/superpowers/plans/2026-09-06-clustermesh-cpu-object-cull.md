@@ -41,3 +41,4 @@
 ### Task 3: Verify
 
 - [x] `ClusterMesh.Editor.Tests` batchmode — 103/103 passed, 0 failed
+- [x] 闪屏：同一 Material 上先主画再 `SetBuffer` 阴影 list；改为两份 Material。经验见 `docs/superpowers/lessons/2026-09-06-indirect-shared-material-flicker.md`
