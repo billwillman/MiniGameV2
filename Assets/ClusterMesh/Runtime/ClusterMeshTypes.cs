@@ -13,9 +13,9 @@ namespace ClusterMesh
         public uint indexOffset;
         public uint triangleCount;
         public uint materialIndex;
-        public uint pad0;
-        public uint pad1;
-        public uint pad2;
+        public int parentIndex;
+        public float lodError;
+        public uint flags;
         public Vector4 aabbCenter;
         public Vector4 aabbExtents;
         public Vector4 coneAxisCutoff;
@@ -33,10 +33,35 @@ namespace ClusterMesh
     }
 
     [Serializable]
+    [StructLayout(LayoutKind.Sequential)]
+    public struct ClusterPackedVertex
+    {
+        public Vector4 position;
+        public uint nrmXY;
+        public uint nrmZ_tanW;
+        public uint tanXY;
+        public uint uv;
+    }
+
+    [Serializable]
+    [StructLayout(LayoutKind.Sequential)]
+    public struct ClusterGroup
+    {
+        public int clusterStart;
+        public int clusterCount;
+        public int parentGroupIndex;
+        public float lodError;
+        public Vector4 aabbCenter;
+        public Vector4 aabbExtents;
+    }
+
+    [Serializable]
     public sealed class ClusterMeshBakeSettings
     {
         public int maxVerticesPerCluster = ClusterMeshLimits.MaxVerticesPerCluster;
         public int maxTrianglesPerCluster = ClusterMeshLimits.MaxTrianglesPerCluster;
+        public bool buildLodHierarchy = true;
+        public bool useQemSimplify = true;
     }
 
     public sealed class ClusterMeshBakeResult
@@ -45,5 +70,7 @@ namespace ClusterMesh
         public ClusterVertex[] vertices;
         public uint[] indices;
         public Material[] materials;
+        public ClusterGroup[] groups;
+        public int hierarchyVersion;
     }
 }

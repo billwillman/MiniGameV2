@@ -8,6 +8,8 @@ namespace ClusterMesh
     {
         ClusterMeshDrawContext _context;
         PreviewRenderUtility _preview;
+        Vector2 _orbit = ClusterMeshPreviewOrbit.DefaultAngles;
+        readonly float _distance = ClusterMeshPreviewOrbit.DefaultDistance;
 
         void OnDisable()
         {
@@ -39,13 +41,14 @@ namespace ClusterMesh
                 _preview.camera.fieldOfView = 50f;
             }
 
+            HandleOrbit(r);
             Bounds bounds = ClusterMeshFrustum.AssetLocalBounds(asset);
             Vector3 look = bounds.center;
             float radius = Mathf.Max(bounds.extents.magnitude, 0.05f);
             _preview.camera.nearClipPlane = Mathf.Max(0.01f, radius * 0.002f);
             _preview.camera.farClipPlane = Mathf.Max(100f, radius * 40f);
             _preview.BeginPreview(r, background);
-            _preview.camera.transform.position = look + new Vector3(0f, radius * 0.35f, -radius * 2.4f);
+            _preview.camera.transform.position = look + ClusterMeshPreviewOrbit.Offset(_orbit, radius, _distance);
             _preview.camera.transform.LookAt(look);
             _context.Draw(Matrix4x4.identity, _preview.camera);
             _preview.camera.Render();
@@ -58,12 +61,46 @@ namespace ClusterMesh
             var asset = (ClusterMeshAsset)target;
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Clusters", asset.clusters != null ? asset.clusters.Length.ToString() : "0");
-            EditorGUILayout.LabelField("Vertices", asset.vertices != null ? asset.vertices.Length.ToString() : "0");
+            EditorGUILayout.LabelField("Vertices", asset.vertexCount.ToString());
+            EditorGUILayout.LabelField("Indices", asset.indexCount.ToString());
             EditorGUILayout.Space();
             if (GUILayout.Button("加入场景"))
             {
                 var created = ClusterMeshPlaceMenu.CreateInScene(asset);
                 Selection.activeGameObject = created;
+            }
+        }
+
+        void HandleOrbit(Rect rect)
+        {
+            int id = GUIUtility.GetControlID(FocusType.Passive);
+            Event e = Event.current;
+            switch (e.GetTypeForControl(id))
+            {
+                case EventType.MouseDown:
+                    if (rect.Contains(e.mousePosition) && e.button == 0)
+                    {
+                        GUIUtility.hotControl = id;
+                        EditorGUIUtility.SetWantsMouseJumping(1);
+                        e.Use();
+                    }
+                    break;
+                case EventType.MouseDrag:
+                    if (GUIUtility.hotControl == id)
+                    {
+                        _orbit = ClusterMeshPreviewOrbit.ApplyDrag(_orbit, e.delta);
+                        e.Use();
+                        Repaint();
+                    }
+                    break;
+                case EventType.MouseUp:
+                    if (GUIUtility.hotControl == id)
+                    {
+                        GUIUtility.hotControl = 0;
+                        EditorGUIUtility.SetWantsMouseJumping(0);
+                        e.Use();
+                    }
+                    break;
             }
         }
     }

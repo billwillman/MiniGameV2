@@ -29,9 +29,11 @@ namespace ClusterMesh
             var clusters = new List<ClusterHeader>();
             var vertices = new List<ClusterVertex>();
             var indices = new List<uint>();
+            var groups = new List<ClusterGroup>();
 
             for (int sub = 0; sub < subMeshCount; sub++)
             {
+                int leafStart = clusters.Count;
                 int[] tris = mesh.GetTriangles(sub);
                 BakeSubmesh(
                     (uint)sub,
@@ -44,6 +46,9 @@ namespace ClusterMesh
                     clusters,
                     vertices,
                     indices);
+                if (settings.buildLodHierarchy)
+                    ClusterMeshLodBaker.BuildHierarchy(
+                        clusters, vertices, indices, groups, leafStart, clusters.Count, settings);
             }
 
             if (clusters.Count == 0)
@@ -61,7 +66,9 @@ namespace ClusterMesh
                 clusters = clusters.ToArray(),
                 vertices = vertices.ToArray(),
                 indices = indices.ToArray(),
-                materials = materialSlots
+                materials = materialSlots,
+                groups = groups.ToArray(),
+                hierarchyVersion = settings.buildLodHierarchy ? ClusterMeshLod.HierarchyVersionDag : 0
             };
         }
 
@@ -90,7 +97,39 @@ namespace ClusterMesh
                 triangleList.Add(c);
             }
 
+            ClusterTriangles(
+                materialIndex,
+                triangleList,
+                positions,
+                normals,
+                tangents,
+                uvs,
+                settings,
+                clusters,
+                vertices,
+                indices,
+                0f,
+                ClusterMeshLod.PackFlags(0));
+        }
+
+        internal static void ClusterTriangles(
+            uint materialIndex,
+            List<int> triangleList,
+            Vector3[] positions,
+            Vector3[] normals,
+            Vector4[] tangents,
+            Vector2[] uvs,
+            ClusterMeshBakeSettings settings,
+            List<ClusterHeader> clusters,
+            List<ClusterVertex> vertices,
+            List<uint> indices,
+            float lodError,
+            uint flags)
+        {
             int triCount = triangleList.Count / 3;
+            if (triCount <= 0)
+                return;
+
             var unused = new bool[triCount];
             for (int i = 0; i < triCount; i++)
                 unused[i] = true;
@@ -135,15 +174,25 @@ namespace ClusterMesh
                     grew = false;
                     int candidate = FindGrowCandidate(clusterTris, triangleList, unused, vertexToTris, usedVerts, settings);
                     if (candidate < 0)
-                        candidate = FindAnyFit(unused, triangleList, usedVerts, clusterTris.Count, settings);
-                    if (candidate < 0)
                         break;
                     AddTriangle(candidate, triangleList, unused, clusterTris, usedVerts);
                     remaining--;
                     grew = true;
                 }
 
-                EmitCluster(materialIndex, clusterTris, triangleList, positions, normals, tangents, uvs, clusters, vertices, indices);
+                EmitCluster(
+                    materialIndex,
+                    clusterTris,
+                    triangleList,
+                    positions,
+                    normals,
+                    tangents,
+                    uvs,
+                    clusters,
+                    vertices,
+                    indices,
+                    lodError,
+                    flags);
             }
         }
 
@@ -170,17 +219,6 @@ namespace ClusterMesh
                             return n;
                     }
                 }
-            }
-
-            return -1;
-        }
-
-        static int FindAnyFit(bool[] unused, List<int> triangleList, HashSet<int> usedVerts, int clusterTriangleCount, ClusterMeshBakeSettings settings)
-        {
-            for (int t = 0; t < unused.Length; t++)
-            {
-                if (unused[t] && Fits(t, triangleList, usedVerts, clusterTriangleCount, settings))
-                    return t;
             }
 
             return -1;
@@ -218,7 +256,9 @@ namespace ClusterMesh
             Vector2[] uvs,
             List<ClusterHeader> clusters,
             List<ClusterVertex> vertices,
-            List<uint> destIndices)
+            List<uint> destIndices,
+            float lodError,
+            uint flags)
         {
             var remap = new Dictionary<int, uint>();
             uint vertexOffset = (uint)vertices.Count;
@@ -270,6 +310,9 @@ namespace ClusterMesh
                 indexOffset = indexOffset,
                 triangleCount = (uint)clusterTris.Count,
                 materialIndex = materialIndex,
+                parentIndex = ClusterMeshLod.NoParent,
+                lodError = lodError,
+                flags = flags,
                 aabbCenter = center,
                 aabbExtents = extents,
                 coneAxisCutoff = new Vector4(axis.x, axis.y, axis.z, cutoff),

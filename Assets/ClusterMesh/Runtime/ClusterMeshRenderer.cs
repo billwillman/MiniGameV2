@@ -14,9 +14,15 @@ namespace ClusterMesh
         [Tooltip("Receive shadows from other objects on this surface.")]
         public bool receiveShadows = true;
         public bool enableConeCull = true;
+        [Tooltip("CPU object cull before dispatch. Off = this object is always submitted.")]
+        public bool enableCpuObjectCull = true;
         [Tooltip("Replace lighting with a solid color per cluster.")]
         public bool showClusterColors;
         public bool showClusterAabb;
+        [Tooltip("Screen-pixel LOD error. 0 = leaves only.")]
+        public float lodErrorThreshold;
+        [Tooltip("Draw which LOD each visible cluster uses.")]
+        public bool showLodLevels;
 
         bool _registered;
 
@@ -69,6 +75,44 @@ namespace ClusterMesh
                 ClusterMeshSceneBatcher.Unregister(this);
                 _registered = false;
             }
+        }
+
+        void OnDrawGizmos()
+        {
+            if (!showLodLevels || asset == null || asset.clusters == null)
+                return;
+            Camera cam = ResolveGizmoCamera();
+            if (cam == null)
+                return;
+
+            float scale = ClusterMeshLod.ProjectionScale(cam);
+            bool perspective = !cam.orthographic;
+            Matrix4x4 m = transform.localToWorldMatrix;
+            Gizmos.matrix = m;
+            for (int i = 0; i < asset.clusters.Length; i++)
+            {
+                ClusterHeader h = asset.clusters[i];
+                if (!ClusterMeshLod.IsClusterVisible(
+                        i, asset.clusters, asset.groups, m, cam.transform.position, scale,
+                        lodErrorThreshold, asset.hierarchyVersion, perspective))
+                    continue;
+
+                Gizmos.color = ClusterMeshLod.LevelColor(ClusterMeshLod.Level(h.flags));
+                Gizmos.DrawWireCube(h.aabbCenter, (Vector3)h.aabbExtents * 2f);
+            }
+
+            Gizmos.matrix = Matrix4x4.identity;
+        }
+
+        Camera ResolveGizmoCamera()
+        {
+            if (targetCamera != null)
+                return targetCamera;
+#if UNITY_EDITOR
+            if (!Application.isPlaying && UnityEditor.SceneView.lastActiveSceneView != null)
+                return UnityEditor.SceneView.lastActiveSceneView.camera;
+#endif
+            return Camera.main;
         }
 
         void OnDrawGizmosSelected()

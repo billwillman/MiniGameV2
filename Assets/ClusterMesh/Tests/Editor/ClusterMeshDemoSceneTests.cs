@@ -41,17 +41,10 @@ namespace ClusterMesh.Tests
             ClusterMeshAsset stored2 = null;
             try
             {
-                var bake = new ClusterMeshBakeResult
-                {
-                    clusters = renderer.asset.clusters,
-                    vertices = renderer.asset.vertices,
-                    indices = renderer.asset.indices,
-                    materials = renderer.asset.materials
-                };
                 stored1 = ScriptableObject.CreateInstance<ClusterMeshAsset>();
-                stored1.CopyFrom(bake, renderer.asset.sourceMesh, new ClusterMeshBakeSettings());
+                stored1.CopyPackedFrom(renderer.asset);
                 stored2 = ScriptableObject.CreateInstance<ClusterMeshAsset>();
-                stored2.CopyFrom(bake, renderer.asset.sourceMesh, new ClusterMeshBakeSettings());
+                stored2.CopyPackedFrom(renderer.asset);
 
                 Assert.DoesNotThrow(() =>
                 {

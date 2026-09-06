@@ -26,9 +26,25 @@ namespace ClusterMesh
         static readonly List<ClusterMeshRenderer> Renderers = new List<ClusterMeshRenderer>();
         static readonly Dictionary<ClusterMeshAsset, ClusterMeshDrawContext> Contexts = new Dictionary<ClusterMeshAsset, ClusterMeshDrawContext>();
         static readonly List<Matrix4x4> Matrices = new List<Matrix4x4>(64);
+        static readonly List<bool> CpuCullFlags = new List<bool>(64);
         static readonly HashSet<int> Seen = new HashSet<int>();
         static int _flushedFrame = int.MinValue;
         static bool _loggedError;
+
+        public static int RegisteredCount
+        {
+            get
+            {
+                int n = 0;
+                for (int i = 0; i < Renderers.Count; i++)
+                {
+                    if (Renderers[i] != null)
+                        n++;
+                }
+
+                return n;
+            }
+        }
 
         public static void Register(ClusterMeshRenderer renderer)
         {
@@ -83,8 +99,12 @@ namespace ClusterMesh
                     continue;
 
                 Matrices.Clear();
+                CpuCullFlags.Clear();
                 Matrices.Add(seed.transform.localToWorldMatrix);
+                CpuCullFlags.Add(seed.enableCpuObjectCull);
                 bool clusterColors = seed.showClusterColors;
+                float lodT = seed.lodErrorThreshold;
+                bool batchCast = seed.castShadows;
                 for (int j = i + 1; j < Renderers.Count; j++)
                 {
                     ClusterMeshRenderer other = Renderers[j];
@@ -92,7 +112,10 @@ namespace ClusterMesh
                         continue;
                     Seen.Add(j);
                     Matrices.Add(other.transform.localToWorldMatrix);
+                    CpuCullFlags.Add(other.enableCpuObjectCull);
                     clusterColors |= other.showClusterColors;
+                    lodT = Mathf.Max(lodT, other.lodErrorThreshold);
+                    batchCast |= other.castShadows;
                 }
 
                 ClusterMeshDrawContext ctx = GetOrCreate(seed);
@@ -100,7 +123,8 @@ namespace ClusterMesh
                     continue;
                 ctx.EnableConeCull = seed.enableConeCull;
                 ctx.EnableClusterColor = clusterColors;
-                ctx.Draw(Matrices, camera, seed.castShadows, seed.receiveShadows);
+                ctx.LodErrorThreshold = lodT;
+                ctx.Draw(Matrices, CpuCullFlags, camera, batchCast, seed.receiveShadows);
             }
         }
 
@@ -110,6 +134,14 @@ namespace ClusterMesh
                 return 0;
             int chunks = Mathf.CeilToInt(objectCount / (float)ClusterMeshLimits.MaxBatchedObjects);
             return chunks * materialCount;
+        }
+
+        public static int CountIndirectDraws(int objectCount, int materialCount, bool splitShadows)
+        {
+            int color = CountDrawCalls(objectCount, materialCount);
+            if (color <= 0)
+                return 0;
+            return splitShadows ? color * 2 : color;
         }
 
         public static void CollectBatches(IList<ClusterMeshRenderer> source, List<ClusterMeshBatchDesc> dest)

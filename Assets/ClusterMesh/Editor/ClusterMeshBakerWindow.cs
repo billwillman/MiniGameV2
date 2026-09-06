@@ -15,6 +15,11 @@ namespace ClusterMesh
         string _info;
         Vector2 _scroll;
 
+        public static bool ShowsQemToggle(bool buildLodHierarchy)
+        {
+            return buildLodHierarchy;
+        }
+
         [MenuItem("Tools/ClusterMesh/Baker")]
         public static void Open()
         {
@@ -71,6 +76,27 @@ namespace ClusterMesh
                 _settings.maxTrianglesPerCluster);
 
             EditorGUILayout.Space();
+            EditorGUILayout.LabelField("LOD", EditorStyles.boldLabel);
+            _settings.buildLodHierarchy = EditorGUILayout.Toggle(
+                new GUIContent(
+                    "Build LOD Hierarchy",
+                    "勾选：离线建锁边多层 DAG（资产更大，远处可换粗块）。不勾：只存叶子，文件更小，没有 cluster LOD。"),
+                _settings.buildLodHierarchy);
+            EditorGUILayout.HelpBox(
+                _settings.buildLodHierarchy
+                    ? "会分组、锁边、减半再切开，尽量收到根。重 Bake 后 Viewer / Renderer 拉阈值才能看到换层。"
+                    : "只切叶子。资产大约能小一半，运行时始终画细块。",
+                MessageType.None);
+            if (ShowsQemToggle(_settings.buildLodHierarchy))
+            {
+                _settings.useQemSimplify = EditorGUILayout.Toggle(
+                    new GUIContent(
+                        "QEM Simplify",
+                        "勾选：组内用 QEM（位置+法线+UV）折叠。不勾：最短边，和以前一样。阈值 T 仍在 Renderer 上调。"),
+                    _settings.useQemSimplify);
+            }
+
+            EditorGUILayout.Space();
             if (GUILayout.Button("Bake", GUILayout.Height(28)))
                 Bake();
 
@@ -123,7 +149,11 @@ namespace ClusterMesh
                 string path = AssetDatabase.GenerateUniqueAssetPath(folder + "/" + _assetName + ".asset");
                 AssetDatabase.CreateAsset(asset, path);
                 AssetDatabase.SaveAssets();
-                _info = "已写入 " + path + "，共 " + asset.clusters.Length + " 个 cluster。";
+                int groupCount = asset.groups != null ? asset.groups.Length : 0;
+                _info = "已写入 " + path + "，共 " + asset.clusters.Length + " 个 cluster" +
+                    (_settings.buildLodHierarchy
+                        ? "，" + groupCount + " 个 LOD 组（hierarchyVersion=" + asset.hierarchyVersion + "）。"
+                        : "（未建层次，hierarchyVersion=" + asset.hierarchyVersion + "）。");
                 Selection.activeObject = asset;
             }
             catch (Exception ex)

@@ -19,6 +19,58 @@ namespace ClusterMesh.Tests
         }
 
         [Test]
+        public void Constructor_OldGeometryVersion_IsNotReady()
+        {
+            var mesh = ClusterMeshTestMeshes.Triangle();
+            var bake = ClusterMeshBaker.Bake(mesh, new Material[1], new ClusterMeshBakeSettings());
+            var asset = ScriptableObject.CreateInstance<ClusterMeshAsset>();
+            asset.CopyFrom(bake, mesh, new ClusterMeshBakeSettings());
+            asset.geometryVersion = 0;
+
+            var cull = AssetDatabase.LoadAssetAtPath<ComputeShader>("Assets/ClusterMesh/Shaders/ClusterMeshCull.compute");
+            var lit = Shader.Find("ClusterMesh/Lit");
+            using (var ctx = new ClusterMeshDrawContext(asset, cull, lit))
+            {
+                Assert.That(ctx.IsReady, Is.False);
+                Assert.That(ctx.Error, Does.Contain("rebake"));
+            }
+
+            Object.DestroyImmediate(asset);
+            Object.DestroyImmediate(mesh);
+        }
+
+        [Test]
+        public void Constructor_ValidBake_ShadowMaterialIsDistinctInstance()
+        {
+            var mesh = ClusterMeshTestMeshes.Triangle();
+            var bake = ClusterMeshBaker.Bake(mesh, new Material[1], new ClusterMeshBakeSettings());
+            var asset = ScriptableObject.CreateInstance<ClusterMeshAsset>();
+            asset.CopyFrom(bake, mesh, new ClusterMeshBakeSettings());
+
+            var cull = AssetDatabase.LoadAssetAtPath<ComputeShader>("Assets/ClusterMesh/Shaders/ClusterMeshCull.compute");
+            var lit = Shader.Find("ClusterMesh/Lit");
+            using (var ctx = new ClusterMeshDrawContext(asset, cull, lit))
+            {
+                if (!ctx.IsReady)
+                {
+                    Object.DestroyImmediate(asset);
+                    Object.DestroyImmediate(mesh);
+                    return;
+                }
+
+                var flags = System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance;
+                var color = (Material[])typeof(ClusterMeshDrawContext).GetField("_materials", flags).GetValue(ctx);
+                var shadow = (Material[])typeof(ClusterMeshDrawContext).GetField("_shadowMaterials", flags).GetValue(ctx);
+                Assert.That(shadow, Is.Not.Null);
+                Assert.That(shadow.Length, Is.EqualTo(color.Length));
+                Assert.That(shadow[0], Is.Not.SameAs(color[0]));
+            }
+
+            Object.DestroyImmediate(asset);
+            Object.DestroyImmediate(mesh);
+        }
+
+        [Test]
         public void Constructor_ValidBake_ReadyIffCapabilityAllows()
         {
             var mesh = ClusterMeshTestMeshes.Triangle();
