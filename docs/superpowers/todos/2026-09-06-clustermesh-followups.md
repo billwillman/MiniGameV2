@@ -16,6 +16,7 @@ Branch: `feat/clustermesh-lod`
 - [x] 第 3 项：CPU 物体剔 + 方向光挤出棱柱 + 主画/阴影分 list（`93391f8`）
 - [x] 拆 list 后主画 / 阴影各一份 Material，避免 Indirect 延迟绑 buffer 闪屏（lesson：`docs/superpowers/lessons/2026-09-06-indirect-shared-material-flicker.md`）
 - [x] 跨物体合批、几何打包、两层 LOD、锁边多层 DAG
+- [x] Baker 离线 QEM 简化（默认开，可关回最短边；`862b496`）
 
 规格：`2026-09-06-clustermesh-cull-lookup-design.md`、`2026-09-06-clustermesh-cpu-object-cull-design.md`。
 
@@ -86,8 +87,16 @@ Profiler 打到对应热点再讨论 + spec。不要为「感觉该上」开工�
 | 蒙皮 | 只要静态 `MeshFilter` |
 | URP Renderer Feature / 接游戏场景 | 研究原型自包含；正式接入另开 |
 | GLES 降级绘制 | 无 Compute / Indirect 报错不画 |
-| METIS / meshoptimizer / 时域抗跳变 | DAG 非目标 |
+| METIS / meshoptimizer | DAG 非目标 |
 | 改 64/124、header 96、组 48 | 全期锁定 |
+
+### 时域 LOD 抗跳（2026-09-06 讨论后停）
+
+- [ ] **选层滞回，消阈值附近来回抖**  
+  方向已定：**A**（硬切 + 记忆，不 crossfade / 不 geomorph）。Nanite 主路径也是硬切，靠 ~1px 误差 + TAA，不靠淡入。我们 T 常 2～4px 且整组进出，所以会闪。  
+  未锁：滞回带宽（倾向 A1：往粗 `T×0.8` / 往细 `T×1.2`）还是延迟 N 帧。系数第一期写死。  
+  约束：`T<=0` 仍只出叶子；按 **组** 记历史（与整组进/出对齐）；主画和阴影同一套记忆；不改 64/124 / header 96。  
+  开工前：补完 A1/A2 并落盘 spec。不写 spec 不动 `TestLod`。
 
 ---
 
