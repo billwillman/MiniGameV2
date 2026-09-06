@@ -87,6 +87,26 @@ namespace ClusterMesh
                 Mathf.Abs(axisX.z) + Mathf.Abs(axisY.z) + Mathf.Abs(axisZ.z));
         }
 
+        public static Bounds TransformLocalBounds(Bounds local, Matrix4x4 localToWorld)
+        {
+            Vector3 min = new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity);
+            Vector3 max = new Vector3(float.NegativeInfinity, float.NegativeInfinity, float.NegativeInfinity);
+            Vector3 c = local.center;
+            Vector3 e = local.extents;
+            for (int x = -1; x <= 1; x += 2)
+            for (int y = -1; y <= 1; y += 2)
+            for (int z = -1; z <= 1; z += 2)
+            {
+                Vector3 w = localToWorld.MultiplyPoint3x4(c + Vector3.Scale(e, new Vector3(x, y, z)));
+                min = Vector3.Min(min, w);
+                max = Vector3.Max(max, w);
+            }
+
+            var bounds = new Bounds();
+            bounds.SetMinMax(min, max);
+            return bounds;
+        }
+
         public static Bounds AssetLocalBounds(ClusterMeshAsset asset)
         {
             var bounds = new Bounds(Vector3.zero, Vector3.zero);

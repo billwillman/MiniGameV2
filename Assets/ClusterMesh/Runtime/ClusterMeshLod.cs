@@ -178,6 +178,41 @@ namespace ClusterMesh
             return false;
         }
 
+        public static int[] BuildOwningGroupIndices(int clusterCount, IList<ClusterGroup> groups)
+        {
+            int count = clusterCount < 0 ? 0 : clusterCount;
+            var indices = new int[count];
+            for (int i = 0; i < count; i++)
+                indices[i] = NoParent;
+            if (groups == null)
+                return indices;
+
+            for (int g = 0; g < groups.Count; g++)
+            {
+                ClusterGroup group = groups[g];
+                int start = group.clusterStart;
+                int n = group.clusterCount;
+                if (start < 0 || n <= 0)
+                    continue;
+
+                int end = start + n;
+                if (end < start)
+                    continue;
+                if (start > count)
+                    continue;
+
+                int lo = start;
+                int hi = end > count ? count : end;
+                for (int c = lo; c < hi; c++)
+                {
+                    if (indices[c] == NoParent)
+                        indices[c] = g;
+                }
+            }
+
+            return indices;
+        }
+
         public static bool IsClusterVisible(
             int clusterIndex,
             ClusterHeader[] clusters,

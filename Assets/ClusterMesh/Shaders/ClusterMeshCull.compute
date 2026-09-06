@@ -4,6 +4,7 @@
 
 StructuredBuffer<ClusterHeader> _Clusters;
 StructuredBuffer<ClusterGroup> _Groups;
+StructuredBuffer<int> _OwningGroups;
 AppendStructuredBuffer<uint> _VisibleClusterIds;
 
 uint _ClusterCount;
@@ -98,15 +99,12 @@ uint LodLevel(uint flags)
     return (flags & 1u) != 0u ? 1u : 0u;
 }
 
-int FindOwningGroup(uint clusterIndex)
+int ReadOwningGroup(uint clusterIndex)
 {
-    for (uint i = 0; i < _GroupCount; i++)
-    {
-        ClusterGroup g = _Groups[i];
-        if (clusterIndex >= (uint)g.clusterStart && clusterIndex < (uint)(g.clusterStart + g.clusterCount))
-            return (int)i;
-    }
-    return -1;
+    int own = _OwningGroups[clusterIndex];
+    if (own < 0 || (uint)own >= _GroupCount)
+        return -1;
+    return own;
 }
 
 bool TestLod(ClusterHeader h, float4x4 m, uint clusterIndex, int owningGroup)
@@ -174,7 +172,7 @@ void CullClusters(uint3 id : SV_DispatchThreadID)
         return;
     int owningGroup = -1;
     if (_HierarchyVersion >= 2 && _LodErrorThreshold > 0.0f)
-        owningGroup = FindOwningGroup(clusterIndex);
+        owningGroup = ReadOwningGroup(clusterIndex);
     bool useCone = _EnableConeCull != 0;
     if (useCone && _HierarchyVersion >= 2 && _LodErrorThreshold > 0.0f && owningGroup >= 0)
         useCone = false;

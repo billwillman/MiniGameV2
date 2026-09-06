@@ -9,6 +9,7 @@ namespace ClusterMesh
     {
         static readonly int ClustersId = Shader.PropertyToID("_Clusters");
         static readonly int GroupsId = Shader.PropertyToID("_Groups");
+        static readonly int OwningGroupsId = Shader.PropertyToID("_OwningGroups");
         static readonly int GroupCountId = Shader.PropertyToID("_GroupCount");
         static readonly int VerticesId = Shader.PropertyToID("_Vertices");
         static readonly int IndicesId = Shader.PropertyToID("_Indices");
@@ -34,6 +35,8 @@ namespace ClusterMesh
         readonly Mesh _template;
         readonly GraphicsBuffer _clusterBuffer;
         readonly GraphicsBuffer _groupBuffer;
+        readonly GraphicsBuffer _owningGroupBuffer;
+        readonly Bounds _localBounds;
         readonly GraphicsBuffer _vertexBuffer;
         readonly GraphicsBuffer _indexBuffer;
         readonly GraphicsBuffer[] _visibleBuffers;
@@ -94,6 +97,13 @@ namespace ClusterMesh
                 _groupBuffer.SetData(asset.groups);
             else
                 _groupBuffer.SetData(new ClusterGroup[1]);
+            int[] owning = ClusterMeshLod.BuildOwningGroupIndices(asset.clusters.Length, asset.groups);
+            _owningGroupBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, Mathf.Max(1, owning.Length), 4);
+            if (owning.Length > 0)
+                _owningGroupBuffer.SetData(owning);
+            else
+                _owningGroupBuffer.SetData(new[] { ClusterMeshLod.NoParent });
+            _localBounds = ClusterMeshFrustum.AssetLocalBounds(asset);
             _vertexBuffer = new GraphicsBuffer(
                 GraphicsBuffer.Target.Structured,
                 Mathf.Max(1, packedVerts.Length),
@@ -176,6 +186,7 @@ namespace ClusterMesh
                 int groups = Mathf.CeilToInt((n * _asset.clusters.Length) / 64f);
                 _cullShader.SetBuffer(_cullKernel, ClustersId, _clusterBuffer);
                 _cullShader.SetBuffer(_cullKernel, GroupsId, _groupBuffer);
+                _cullShader.SetBuffer(_cullKernel, OwningGroupsId, _owningGroupBuffer);
                 _cullShader.SetInt(ObjectCountId, n);
                 _cullShader.SetInt(ClusterCountId, _asset.clusters.Length);
                 _cullShader.SetInt(GroupCountId, _asset.groups != null ? _asset.groups.Length : 0);
@@ -227,25 +238,7 @@ namespace ClusterMesh
 
         Bounds TransformBounds(Matrix4x4 localToWorld)
         {
-            Vector3 min = new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity);
-            Vector3 max = new Vector3(float.NegativeInfinity, float.NegativeInfinity, float.NegativeInfinity);
-            for (int i = 0; i < _asset.clusters.Length; i++)
-            {
-                Vector3 c = _asset.clusters[i].aabbCenter;
-                Vector3 e = _asset.clusters[i].aabbExtents;
-                for (int x = -1; x <= 1; x += 2)
-                for (int y = -1; y <= 1; y += 2)
-                for (int z = -1; z <= 1; z += 2)
-                {
-                    Vector3 w = localToWorld.MultiplyPoint3x4(c + Vector3.Scale(e, new Vector3(x, y, z)));
-                    min = Vector3.Min(min, w);
-                    max = Vector3.Max(max, w);
-                }
-            }
-
-            var bounds = new Bounds();
-            bounds.SetMinMax(min, max);
-            return bounds;
+            return ClusterMeshFrustum.TransformLocalBounds(_localBounds, localToWorld);
         }
 
         public void Dispose()
@@ -256,6 +249,7 @@ namespace ClusterMesh
             IsReady = false;
             _clusterBuffer?.Dispose();
             _groupBuffer?.Dispose();
+            _owningGroupBuffer?.Dispose();
             _vertexBuffer?.Dispose();
             _indexBuffer?.Dispose();
             if (_visibleBuffers != null)

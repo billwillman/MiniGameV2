@@ -230,5 +230,66 @@ namespace ClusterMesh.Tests
             float scaled = ClusterMeshLod.ProjectError(0.5f * ClusterMeshLod.MaxAxisScale(Matrix4x4.Scale(Vector3.one * 2f)), 10f, 100f, true);
             Assert.That(scaled, Is.EqualTo(unscaled * 2f).Within(1e-4f));
         }
+
+        [Test]
+        public void BuildOwningGroupIndices_LeavesMinusOne_ParentsGetGroup()
+        {
+            var groups = new[]
+            {
+                new ClusterGroup { clusterStart = 2, clusterCount = 2 },
+                new ClusterGroup { clusterStart = 4, clusterCount = 1 }
+            };
+            int[] indices = ClusterMeshLod.BuildOwningGroupIndices(5, groups);
+            Assert.That(indices, Is.EqualTo(new[] { -1, -1, 0, 0, 1 }));
+        }
+
+        [Test]
+        public void BuildOwningGroupIndices_NullOrEmpty_AllMinusOne()
+        {
+            Assert.That(ClusterMeshLod.BuildOwningGroupIndices(3, null), Is.EqualTo(new[] { -1, -1, -1 }));
+            Assert.That(ClusterMeshLod.BuildOwningGroupIndices(0, null), Is.Empty);
+            Assert.That(ClusterMeshLod.BuildOwningGroupIndices(-2, null), Is.Empty);
+        }
+
+        [Test]
+        public void BuildOwningGroupIndices_OutOfRangeStart_Skipped()
+        {
+            var groups = new[]
+            {
+                new ClusterGroup { clusterStart = 10, clusterCount = 2 },
+                new ClusterGroup { clusterStart = -1, clusterCount = 3 }
+            };
+            Assert.That(ClusterMeshLod.BuildOwningGroupIndices(4, groups), Is.EqualTo(new[] { -1, -1, -1, -1 }));
+        }
+
+        [Test]
+        public void BuildOwningGroupIndices_Overlap_FirstGroupWins()
+        {
+            var groups = new[]
+            {
+                new ClusterGroup { clusterStart = 1, clusterCount = 2 },
+                new ClusterGroup { clusterStart = 2, clusterCount = 2 }
+            };
+            int[] indices = ClusterMeshLod.BuildOwningGroupIndices(4, groups);
+            Assert.That(indices, Is.EqualTo(new[] { -1, 0, 0, 1 }));
+            Assert.That(ClusterMeshLod.TryGetOwningGroup(2, groups, out int g), Is.True);
+            Assert.That(indices[2], Is.EqualTo(g));
+        }
+
+        [Test]
+        public void BuildOwningGroupIndices_BakedGrid_MatchesTryGetOwningGroup()
+        {
+            var mesh = ClusterMeshTestMeshes.Grid(2, 2);
+            var result = ClusterMeshBaker.Bake(mesh, new Material[1], new ClusterMeshBakeSettings { buildLodHierarchy = true });
+            int[] indices = ClusterMeshLod.BuildOwningGroupIndices(result.clusters.Length, result.groups);
+            Assert.That(indices.Length, Is.EqualTo(result.clusters.Length));
+            for (int i = 0; i < result.clusters.Length; i++)
+            {
+                bool found = ClusterMeshLod.TryGetOwningGroup(i, result.groups, out int g);
+                Assert.That(indices[i], Is.EqualTo(found ? g : ClusterMeshLod.NoParent));
+            }
+
+            Object.DestroyImmediate(mesh);
+        }
     }
 }

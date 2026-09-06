@@ -167,5 +167,59 @@ namespace ClusterMesh.Tests
             Assert.That(c, Is.EqualTo(new Vector3(10f, 0f, 0f)));
             Assert.That(e, Is.EqualTo(new Vector3(1f, 2f, 3f)));
         }
+
+        [Test]
+        public void TransformLocalBounds_Identity_MatchesLocal()
+        {
+            var local = new Bounds(new Vector3(1f, 2f, 3f), new Vector3(2f, 4f, 6f));
+            Bounds world = ClusterMeshFrustum.TransformLocalBounds(local, Matrix4x4.identity);
+            Assert.That(world.center, Is.EqualTo(local.center));
+            Assert.That(world.extents, Is.EqualTo(local.extents));
+        }
+
+        [Test]
+        public void TransformLocalBounds_Translation_MovesCenterKeepsSize()
+        {
+            var local = new Bounds(Vector3.zero, new Vector3(2f, 4f, 6f));
+            Bounds world = ClusterMeshFrustum.TransformLocalBounds(local, Matrix4x4.Translate(new Vector3(10f, 0f, 0f)));
+            Assert.That(world.center, Is.EqualTo(new Vector3(10f, 0f, 0f)));
+            Assert.That(world.extents, Is.EqualTo(local.extents));
+        }
+
+        [Test]
+        public void TransformLocalBounds_AssetBoxContainsClusterWorldCorners()
+        {
+            var asset = ScriptableObject.CreateInstance<ClusterMeshAsset>();
+            asset.clusters = new[]
+            {
+                new ClusterHeader { aabbCenter = new Vector4(0f, 0f, 0f, 0f), aabbExtents = new Vector4(1f, 0.5f, 0.25f, 0f) },
+                new ClusterHeader { aabbCenter = new Vector4(10f, 1f, -2f, 0f), aabbExtents = new Vector4(0.5f, 1f, 1.5f, 0f) }
+            };
+            Bounds local = ClusterMeshFrustum.AssetLocalBounds(asset);
+            Matrix4x4 l2w = Matrix4x4.TRS(new Vector3(3f, -1f, 4f), Quaternion.Euler(20f, 40f, -15f), new Vector3(2f, 0.5f, 1.25f));
+            Bounds world = ClusterMeshFrustum.TransformLocalBounds(local, l2w);
+            for (int i = 0; i < asset.clusters.Length; i++)
+            {
+                Vector3 c = asset.clusters[i].aabbCenter;
+                Vector3 e = asset.clusters[i].aabbExtents;
+                for (int x = -1; x <= 1; x += 2)
+                for (int y = -1; y <= 1; y += 2)
+                for (int z = -1; z <= 1; z += 2)
+                {
+                    Vector3 w = l2w.MultiplyPoint3x4(c + Vector3.Scale(e, new Vector3(x, y, z)));
+                    Assert.That(world.Contains(w) || PointOnBounds(world, w), Is.True);
+                }
+            }
+
+            Object.DestroyImmediate(asset);
+        }
+
+        static bool PointOnBounds(Bounds bounds, Vector3 p)
+        {
+            const float eps = 1e-4f;
+            return p.x >= bounds.min.x - eps && p.x <= bounds.max.x + eps
+                && p.y >= bounds.min.y - eps && p.y <= bounds.max.y + eps
+                && p.z >= bounds.min.z - eps && p.z <= bounds.max.z + eps;
+        }
     }
 }
