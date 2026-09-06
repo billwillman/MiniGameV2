@@ -31,6 +31,21 @@ namespace ClusterMesh
         static int _flushedFrame = int.MinValue;
         static bool _loggedError;
 
+        public static int RegisteredCount
+        {
+            get
+            {
+                int n = 0;
+                for (int i = 0; i < Renderers.Count; i++)
+                {
+                    if (Renderers[i] != null)
+                        n++;
+                }
+
+                return n;
+            }
+        }
+
         public static void Register(ClusterMeshRenderer renderer)
         {
             if (renderer == null || renderer.asset == null || renderer.asset.clusters == null || renderer.asset.clusters.Length == 0)
