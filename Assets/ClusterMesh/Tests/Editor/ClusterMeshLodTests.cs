@@ -280,7 +280,11 @@ namespace ClusterMesh.Tests
         public void BuildOwningGroupIndices_BakedGrid_MatchesTryGetOwningGroup()
         {
             var mesh = ClusterMeshTestMeshes.Grid(2, 2);
-            var result = ClusterMeshBaker.Bake(mesh, new Material[1], new ClusterMeshBakeSettings { buildLodHierarchy = true });
+            var result = ClusterMeshBaker.Bake(mesh, new Material[1], new ClusterMeshBakeSettings
+            {
+                buildLodHierarchy = true,
+                useQemSimplify = false
+            });
             int[] indices = ClusterMeshLod.BuildOwningGroupIndices(result.clusters.Length, result.groups);
             Assert.That(indices.Length, Is.EqualTo(result.clusters.Length));
             for (int i = 0; i < result.clusters.Length; i++)

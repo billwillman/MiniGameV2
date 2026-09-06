@@ -61,6 +61,7 @@ namespace ClusterMesh
         public int maxVerticesPerCluster = ClusterMeshLimits.MaxVerticesPerCluster;
         public int maxTrianglesPerCluster = ClusterMeshLimits.MaxTrianglesPerCluster;
         public bool buildLodHierarchy = true;
+        public bool useQemSimplify = true;
     }
 
     public sealed class ClusterMeshBakeResult

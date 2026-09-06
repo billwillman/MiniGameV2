@@ -15,6 +15,11 @@ namespace ClusterMesh
         string _info;
         Vector2 _scroll;
 
+        public static bool ShowsQemToggle(bool buildLodHierarchy)
+        {
+            return buildLodHierarchy;
+        }
+
         [MenuItem("Tools/ClusterMesh/Baker")]
         public static void Open()
         {
@@ -82,6 +87,14 @@ namespace ClusterMesh
                     ? "会分组、锁边、减半再切开，尽量收到根。重 Bake 后 Viewer / Renderer 拉阈值才能看到换层。"
                     : "只切叶子。资产大约能小一半，运行时始终画细块。",
                 MessageType.None);
+            if (ShowsQemToggle(_settings.buildLodHierarchy))
+            {
+                _settings.useQemSimplify = EditorGUILayout.Toggle(
+                    new GUIContent(
+                        "QEM Simplify",
+                        "勾选：组内用 QEM（位置+法线+UV）折叠。不勾：最短边，和以前一样。阈值 T 仍在 Renderer 上调。"),
+                    _settings.useQemSimplify);
+            }
 
             EditorGUILayout.Space();
             if (GUILayout.Button("Bake", GUILayout.Height(28)))

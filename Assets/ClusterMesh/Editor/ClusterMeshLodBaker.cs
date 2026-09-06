@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 
 namespace ClusterMesh
@@ -24,46 +25,60 @@ namespace ClusterMesh
                 pending.Add(i);
 
             int level = 0;
-            while (pending.Count >= 2 && level < ClusterMeshLod.MaxLodLevels)
+            int leafCount = pending.Count;
+            try
             {
-                level++;
-                var remaining = new List<int>(pending);
-                var next = new List<int>();
-                bool emitted = false;
-
-                var edgeCache = new Dictionary<int, HashSet<(int, int, int, int, int, int)>>();
-                while (remaining.Count >= 2)
+                while (pending.Count >= 2 && level < ClusterMeshLod.MaxLodLevels)
                 {
-                    int size = remaining.Count >= 4 ? 4 : remaining.Count;
-                    List<int> group = PickGroup(clusters, vertices, indices, remaining, size, edgeCache, groups);
-                    if (group.Count < 2)
+                    level++;
+                    var remaining = new List<int>(pending);
+                    var next = new List<int>();
+                    bool emitted = false;
+                    int levelStart = remaining.Count;
+
+                    var edgeCache = new Dictionary<int, HashSet<(int, int, int, int, int, int)>>();
+                    while (remaining.Count >= 2)
                     {
-                        remaining.Remove(group[0]);
-                        next.Add(group[0]);
-                        continue;
+                        EditorUtility.DisplayProgressBar(
+                            "ClusterMesh Baker",
+                            "LOD " + level + "  剩余 " + remaining.Count + " / " + leafCount + " clusters",
+                            1f - (remaining.Count / (float)Mathf.Max(1, levelStart)));
+
+                        int size = remaining.Count >= 4 ? 4 : remaining.Count;
+                        List<int> group = PickGroup(clusters, vertices, indices, remaining, size, edgeCache, groups);
+                        if (group.Count < 2)
+                        {
+                            remaining.Remove(group[0]);
+                            next.Add(group[0]);
+                            continue;
+                        }
+
+                        RemoveAll(remaining, group);
+
+                        int startClusters = clusters.Count;
+                        if (!TryEmitGroup(clusters, vertices, indices, groups, group, settings, level))
+                        {
+                            for (int i = 0; i < group.Count; i++)
+                                next.Add(group[i]);
+                            continue;
+                        }
+
+                        emitted = true;
+                        for (int i = startClusters; i < clusters.Count; i++)
+                            next.Add(i);
                     }
 
-                    RemoveAll(remaining, group);
+                    if (remaining.Count == 1)
+                        next.Add(remaining[0]);
 
-                    int startClusters = clusters.Count;
-                    if (!TryEmitGroup(clusters, vertices, indices, groups, group, settings, level))
-                    {
-                        for (int i = 0; i < group.Count; i++)
-                            next.Add(group[i]);
-                        continue;
-                    }
-
-                    emitted = true;
-                    for (int i = startClusters; i < clusters.Count; i++)
-                        next.Add(i);
+                    if (!emitted)
+                        break;
+                    pending = next;
                 }
-
-                if (remaining.Count == 1)
-                    next.Add(remaining[0]);
-
-                if (!emitted)
-                    break;
-                pending = next;
+            }
+            finally
+            {
+                EditorUtility.ClearProgressBar();
             }
         }
 
@@ -389,7 +404,7 @@ namespace ClusterMesh
             int srcTriCount = tris.Count / 3;
             var locked = new List<bool>();
             MarkLocked(pos, tris, locked);
-            CollapseHalf(pos, nrm, tan, uv, tris, locked, srcTriCount);
+            CollapseHalf(pos, nrm, tan, uv, tris, locked, srcTriCount, settings.useQemSimplify);
             if (tris.Count < 3 || tris.Count / 3 >= srcTriCount)
                 return false;
             if (CountBoundaryEdges(pos, tris) > CountBoundaryEdges(srcPos, srcTris))
@@ -653,18 +668,22 @@ namespace ClusterMesh
             List<Vector2> uv,
             List<int> tris,
             List<bool> locked,
-            int srcTriCount)
+            int srcTriCount,
+            bool useQem)
         {
             int target = Mathf.Max(1, srcTriCount / 2);
             int guard = pos.Count * 8 + 8;
             while (guard-- > 0 && tris.Count / 3 > target)
             {
-                if (!TryCollapseShortest(pos, nrm, tan, uv, tris, locked))
+                bool collapsed = useQem
+                    ? ClusterMeshQem.TryCollapseQem(pos, nrm, tan, uv, tris, locked)
+                    : TryCollapseShortest(pos, nrm, tan, uv, tris, locked);
+                if (!collapsed)
                     break;
             }
         }
 
-        static bool TryCollapseShortest(
+        public static bool TryCollapseShortest(
             List<Vector3> pos,
             List<Vector3> nrm,
             List<Vector4> tan,

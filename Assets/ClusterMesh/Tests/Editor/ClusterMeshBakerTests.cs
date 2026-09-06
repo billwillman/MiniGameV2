@@ -112,7 +112,8 @@ namespace ClusterMesh.Tests
             var settings = new ClusterMeshBakeSettings
             {
                 maxVerticesPerCluster = 4,
-                maxTrianglesPerCluster = 2
+                maxTrianglesPerCluster = 2,
+                useQemSimplify = false
             };
             var result = ClusterMeshBaker.Bake(mesh, new Material[1], settings);
             Assert.That(result.hierarchyVersion, Is.EqualTo(ClusterMeshLod.HierarchyVersionDag));
@@ -146,7 +147,8 @@ namespace ClusterMesh.Tests
             var settings = new ClusterMeshBakeSettings
             {
                 maxVerticesPerCluster = 4,
-                maxTrianglesPerCluster = 2
+                maxTrianglesPerCluster = 2,
+                useQemSimplify = false
             };
             var result = ClusterMeshBaker.Bake(mesh, new Material[1], settings);
             var clusters = new List<ClusterHeader>(result.clusters);
@@ -195,7 +197,8 @@ namespace ClusterMesh.Tests
             var settings = new ClusterMeshBakeSettings
             {
                 maxVerticesPerCluster = 4,
-                maxTrianglesPerCluster = 2
+                maxTrianglesPerCluster = 2,
+                useQemSimplify = false
             };
             var result = ClusterMeshBaker.Bake(mesh, new Material[1], settings);
             var children = new List<int>();
@@ -266,7 +269,8 @@ namespace ClusterMesh.Tests
             var settings = new ClusterMeshBakeSettings
             {
                 maxVerticesPerCluster = 4,
-                maxTrianglesPerCluster = 2
+                maxTrianglesPerCluster = 2,
+                useQemSimplify = false
             };
             var result = ClusterMeshBaker.Bake(mesh, new Material[1], settings);
             float maxErr = 0f;
