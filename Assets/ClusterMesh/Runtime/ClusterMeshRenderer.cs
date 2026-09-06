@@ -14,6 +14,8 @@ namespace ClusterMesh
         [Tooltip("Receive shadows from other objects on this surface.")]
         public bool receiveShadows = true;
         public bool enableConeCull = true;
+        [Tooltip("CPU object cull before dispatch. Off = this object is always submitted.")]
+        public bool enableCpuObjectCull = true;
         [Tooltip("Replace lighting with a solid color per cluster.")]
         public bool showClusterColors;
         public bool showClusterAabb;

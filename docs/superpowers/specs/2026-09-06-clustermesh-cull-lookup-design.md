@@ -23,7 +23,7 @@ Parent: `docs/superpowers/specs/2026-09-06-clustermesh-lod-dag-design.md`
 
 ### Non-goals
 
-- CPU 物体视锥（第 3 项）、按层 / 按组减 dispatch（第 4 项）。
+- CPU 物体剔 + 方向光阴影 list：见 `2026-09-06-clustermesh-cpu-object-cull-design.md`。按层 / 按组减 dispatch（第 4 项）仍不做。
 - 把 owning 下标写进 header 或 `.asset`。
 - Hi-Z、流式、改 96/48、改选层。
 - 改 Baker、Gizmo、Viewer 的每帧逻辑（Gizmo 仍可扫组）。

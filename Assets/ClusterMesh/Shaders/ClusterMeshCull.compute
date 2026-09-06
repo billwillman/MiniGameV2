@@ -6,6 +6,7 @@ StructuredBuffer<ClusterHeader> _Clusters;
 StructuredBuffer<ClusterGroup> _Groups;
 StructuredBuffer<int> _OwningGroups;
 AppendStructuredBuffer<uint> _VisibleClusterIds;
+AppendStructuredBuffer<uint> _ShadowClusterIds;
 
 uint _ClusterCount;
 uint _GroupCount;
@@ -13,6 +14,8 @@ uint _ObjectCount;
 uint _MaterialIndex;
 int _IsolateIndex;
 int _EnableConeCull;
+int _EnableShadowList;
+float4 _ShadowPlanes[6];
 int _HierarchyVersion;
 int _LodPerspective;
 float _LodErrorThreshold;
@@ -32,14 +35,15 @@ void TransformAabb(ClusterHeader h, float4x4 m, out float3 worldCenter, out floa
     worldExtents = abs(x) + abs(y) + abs(z);
 }
 
-bool TestAabb(float3 c, float3 e)
+bool TestAabb(float3 c, float3 e, bool shadow)
 {
     [unroll]
     for (int i = 0; i < 6; i++)
     {
-        float3 n = _Planes[i].xyz;
+        float4 p = shadow ? _ShadowPlanes[i] : _Planes[i];
+        float3 n = p.xyz;
         float r = e.x * abs(n.x) + e.y * abs(n.y) + e.z * abs(n.z);
-        if (dot(n, c) + _Planes[i].w + r < 0.0f)
+        if (dot(n, c) + p.w + r < 0.0f)
             return false;
     }
     return true;
@@ -168,17 +172,24 @@ void CullClusters(uint3 id : SV_DispatchThreadID)
         return;
     float3 wc, we;
     TransformAabb(h, _ObjectLocalToWorld[objectIndex], wc, we);
-    if (!TestAabb(wc, we))
+    bool inCamera = TestAabb(wc, we, false);
+    bool inShadow = _EnableShadowList != 0 && TestAabb(wc, we, true);
+    if (!inCamera && !inShadow)
         return;
     int owningGroup = -1;
     if (_HierarchyVersion >= 2 && _LodErrorThreshold > 0.0f)
         owningGroup = ReadOwningGroup(clusterIndex);
-    bool useCone = _EnableConeCull != 0;
-    if (useCone && _HierarchyVersion >= 2 && _LodErrorThreshold > 0.0f && owningGroup >= 0)
-        useCone = false;
-    if (useCone && !TestCone(h, _ObjectLocalToWorld[objectIndex], we))
-        return;
     if (!TestLod(h, _ObjectLocalToWorld[objectIndex], clusterIndex, owningGroup))
         return;
-    _VisibleClusterIds.Append((objectIndex << 16) | clusterIndex);
+    uint packed = (objectIndex << 16) | clusterIndex;
+    if (inCamera)
+    {
+        bool useCone = _EnableConeCull != 0;
+        if (useCone && _HierarchyVersion >= 2 && _LodErrorThreshold > 0.0f && owningGroup >= 0)
+            useCone = false;
+        if (!useCone || TestCone(h, _ObjectLocalToWorld[objectIndex], we))
+            _VisibleClusterIds.Append(packed);
+    }
+    if (inShadow)
+        _ShadowClusterIds.Append(packed);
 }

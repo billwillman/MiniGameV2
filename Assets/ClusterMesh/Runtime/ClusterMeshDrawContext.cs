@@ -14,6 +14,9 @@ namespace ClusterMesh
         static readonly int VerticesId = Shader.PropertyToID("_Vertices");
         static readonly int IndicesId = Shader.PropertyToID("_Indices");
         static readonly int VisibleId = Shader.PropertyToID("_VisibleClusterIds");
+        static readonly int ShadowVisibleId = Shader.PropertyToID("_ShadowClusterIds");
+        static readonly int ShadowPlanesId = Shader.PropertyToID("_ShadowPlanes");
+        static readonly int EnableShadowListId = Shader.PropertyToID("_EnableShadowList");
         static readonly int ClusterCountId = Shader.PropertyToID("_ClusterCount");
         static readonly int ObjectCountId = Shader.PropertyToID("_ObjectCount");
         static readonly int MaterialIndexId = Shader.PropertyToID("_MaterialIndex");
@@ -40,12 +43,18 @@ namespace ClusterMesh
         readonly GraphicsBuffer _vertexBuffer;
         readonly GraphicsBuffer _indexBuffer;
         readonly GraphicsBuffer[] _visibleBuffers;
+        readonly GraphicsBuffer[] _shadowVisibleBuffers;
         readonly GraphicsBuffer[] _argsBuffers;
+        readonly GraphicsBuffer[] _shadowArgsBuffers;
         readonly Material[] _materials;
         readonly Plane[] _planes = new Plane[6];
+        readonly Plane[] _receiverPlanes = new Plane[6];
+        readonly Plane[] _shadowPlanes = new Plane[6];
         readonly Vector4[] _planeVectors = new Vector4[6];
+        readonly Vector4[] _shadowPlaneVectors = new Vector4[6];
         readonly uint[] _argsSeed = new uint[5];
         readonly Matrix4x4[] _single = new Matrix4x4[1];
+        readonly bool[] _singleCull = { true };
         readonly Matrix4x4[] _l2w = new Matrix4x4[ClusterMeshLimits.MaxBatchedObjects];
         readonly Matrix4x4[] _w2l = new Matrix4x4[ClusterMeshLimits.MaxBatchedObjects];
         bool _disposed;
@@ -121,7 +130,9 @@ namespace ClusterMesh
             int visibleCapacity = Mathf.Max(1, asset.clusters.Length) * ClusterMeshLimits.MaxBatchedObjects;
             _materials = new Material[materialCount];
             _argsBuffers = new GraphicsBuffer[materialCount];
+            _shadowArgsBuffers = new GraphicsBuffer[materialCount];
             _visibleBuffers = new GraphicsBuffer[materialCount];
+            _shadowVisibleBuffers = new GraphicsBuffer[materialCount];
             _argsSeed[0] = (uint)ClusterMeshLimits.TemplateVertexCount;
             for (int i = 0; i < materialCount; i++)
             {
@@ -129,7 +140,13 @@ namespace ClusterMesh
                 _materials[i] = ClusterMeshMaterialUtil.CreateRuntimeMaterial(source, litShader);
                 _argsBuffers[i] = new GraphicsBuffer(GraphicsBuffer.Target.IndirectArguments, 1, 20);
                 _argsBuffers[i].SetData(_argsSeed);
+                _shadowArgsBuffers[i] = new GraphicsBuffer(GraphicsBuffer.Target.IndirectArguments, 1, 20);
+                _shadowArgsBuffers[i].SetData(_argsSeed);
                 _visibleBuffers[i] = new GraphicsBuffer(
+                    GraphicsBuffer.Target.Append | GraphicsBuffer.Target.Structured,
+                    visibleCapacity,
+                    4);
+                _shadowVisibleBuffers[i] = new GraphicsBuffer(
                     GraphicsBuffer.Target.Append | GraphicsBuffer.Target.Structured,
                     visibleCapacity,
                     4);
@@ -141,39 +158,73 @@ namespace ClusterMesh
         public void Draw(Matrix4x4 localToWorld, Camera camera, bool castShadows = true, bool receiveShadows = true)
         {
             _single[0] = localToWorld;
-            Draw(_single, 1, camera, castShadows, receiveShadows);
+            Draw(_single, _singleCull, 1, camera, castShadows, receiveShadows);
         }
 
         public void Draw(IList<Matrix4x4> localToWorld, Camera camera, bool castShadows = true, bool receiveShadows = true)
         {
             if (localToWorld == null)
                 return;
-            Draw(localToWorld, localToWorld.Count, camera, castShadows, receiveShadows);
+            Draw(localToWorld, null, localToWorld.Count, camera, castShadows, receiveShadows);
         }
 
-        void Draw(IList<Matrix4x4> localToWorld, int count, Camera camera, bool castShadows, bool receiveShadows)
+        public void Draw(
+            IList<Matrix4x4> localToWorld,
+            IList<bool> enableCpuObjectCull,
+            Camera camera,
+            bool castShadows = true,
+            bool receiveShadows = true)
+        {
+            if (localToWorld == null)
+                return;
+            Draw(localToWorld, enableCpuObjectCull, localToWorld.Count, camera, castShadows, receiveShadows);
+        }
+
+        void Draw(
+            IList<Matrix4x4> localToWorld,
+            IList<bool> enableCpuObjectCull,
+            int count,
+            Camera camera,
+            bool castShadows,
+            bool receiveShadows)
         {
             if (!IsReady || camera == null || count <= 0)
                 return;
 
             ClusterMeshFrustum.WorldPlanes(camera, _planes);
-            for (int i = 0; i < 6; i++)
-                _planeVectors[i] = new Vector4(_planes[i].normal.x, _planes[i].normal.y, _planes[i].normal.z, _planes[i].distance);
+            CopyPlanes(_planes, _planeVectors);
 
+            Light sun = null;
+            bool splitShadows = false;
+            if (castShadows && ClusterMeshObjectCull.TryGetMainDirectionalShadowLight(out sun) && sun != null)
+            {
+                splitShadows = true;
+                ClusterMeshObjectCull.BuildReceiverFrustumPlanes(camera, ClusterMeshObjectCull.ShadowDistance(camera), _receiverPlanes);
+                ClusterMeshObjectCull.ExtrudePlanesToward(_receiverPlanes, -sun.transform.forward, _shadowPlanes);
+                CopyPlanes(_shadowPlanes, _shadowPlaneVectors);
+            }
+
+            bool failSafe = castShadows && !splitShadows;
             int chunkSize = ClusterMeshLimits.MaxBatchedObjects;
             int chunks = Mathf.CeilToInt(count / (float)chunkSize);
             for (int chunk = 0; chunk < chunks; chunk++)
             {
                 int start = chunk * chunkSize;
-                int n = Mathf.Min(chunkSize, count - start);
+                int raw = Mathf.Min(chunkSize, count - start);
                 Bounds worldBounds = new Bounds();
                 bool hasBounds = false;
-                for (int i = 0; i < n; i++)
+                int n = 0;
+                for (int i = 0; i < raw; i++)
                 {
                     Matrix4x4 l2w = localToWorld[start + i];
-                    _l2w[i] = l2w;
-                    _w2l[i] = l2w.inverse;
                     Bounds b = TransformBounds(l2w);
+                    bool enableCull = enableCpuObjectCull == null
+                        || start + i >= enableCpuObjectCull.Count
+                        || enableCpuObjectCull[start + i];
+                    if (!failSafe && !ClusterMeshObjectCull.KeepObject(b, _planes, enableCull, splitShadows, _shadowPlanes))
+                        continue;
+                    _l2w[n] = l2w;
+                    _w2l[n] = l2w.inverse;
                     if (!hasBounds)
                     {
                         worldBounds = b;
@@ -181,7 +232,11 @@ namespace ClusterMesh
                     }
                     else
                         worldBounds.Encapsulate(b);
+                    n++;
                 }
+
+                if (n <= 0)
+                    continue;
 
                 int groups = Mathf.CeilToInt((n * _asset.clusters.Length) / 64f);
                 _cullShader.SetBuffer(_cullKernel, ClustersId, _clusterBuffer);
@@ -192,19 +247,24 @@ namespace ClusterMesh
                 _cullShader.SetInt(GroupCountId, _asset.groups != null ? _asset.groups.Length : 0);
                 _cullShader.SetInt(IsolateIndexId, IsolateIndex);
                 _cullShader.SetInt(EnableConeCullId, EnableConeCull ? 1 : 0);
+                _cullShader.SetInt(EnableShadowListId, splitShadows ? 1 : 0);
                 _cullShader.SetInt(HierarchyVersionId, _asset.hierarchyVersion);
                 _cullShader.SetInt(LodPerspectiveId, camera.orthographic ? 0 : 1);
                 _cullShader.SetFloat(LodErrorThresholdId, LodErrorThreshold);
                 _cullShader.SetFloat(LodProjectionScaleId, ClusterMeshLod.ProjectionScale(camera));
                 _cullShader.SetVectorArray(PlanesId, _planeVectors);
+                _cullShader.SetVectorArray(ShadowPlanesId, _shadowPlaneVectors);
                 _cullShader.SetVector(WorldCameraPosId, camera.transform.position);
                 _cullShader.SetMatrixArray(ObjectLocalToWorldId, _l2w);
 
                 for (int materialIndex = 0; materialIndex < _materials.Length; materialIndex++)
                 {
                     GraphicsBuffer visible = _visibleBuffers[materialIndex];
+                    GraphicsBuffer shadowVisible = _shadowVisibleBuffers[materialIndex];
                     visible.SetCounterValue(0);
+                    shadowVisible.SetCounterValue(0);
                     _cullShader.SetBuffer(_cullKernel, VisibleId, visible);
+                    _cullShader.SetBuffer(_cullKernel, ShadowVisibleId, shadowVisible);
                     _cullShader.SetInt(MaterialIndexId, materialIndex);
                     _cullShader.Dispatch(_cullKernel, Mathf.Max(1, groups), 1, 1);
 
@@ -220,20 +280,34 @@ namespace ClusterMesh
                     mat.SetMatrixArray(ObjectWorldToLocalId, _w2l);
                     mat.SetFloat(EnableClusterColorId, EnableClusterColor ? 1f : 0f);
 
-                    Graphics.DrawMeshInstancedIndirect(
-                        _template,
-                        0,
-                        mat,
-                        worldBounds,
-                        _argsBuffers[materialIndex],
-                        0,
-                        null,
-                        castShadows ? ShadowCastingMode.On : ShadowCastingMode.Off,
-                        receiveShadows,
-                        0,
-                        camera);
+                    if (splitShadows)
+                    {
+                        Graphics.DrawMeshInstancedIndirect(
+                            _template, 0, mat, worldBounds, _argsBuffers[materialIndex], 0, null,
+                            ShadowCastingMode.Off, receiveShadows, 0, camera);
+
+                        _shadowArgsBuffers[materialIndex].SetData(_argsSeed);
+                        GraphicsBuffer.CopyCount(shadowVisible, _shadowArgsBuffers[materialIndex], 4);
+                        mat.SetBuffer(VisibleId, shadowVisible);
+                        Graphics.DrawMeshInstancedIndirect(
+                            _template, 0, mat, worldBounds, _shadowArgsBuffers[materialIndex], 0, null,
+                            ShadowCastingMode.ShadowsOnly, false, 0, camera);
+                    }
+                    else
+                    {
+                        Graphics.DrawMeshInstancedIndirect(
+                            _template, 0, mat, worldBounds, _argsBuffers[materialIndex], 0, null,
+                            castShadows ? ShadowCastingMode.On : ShadowCastingMode.Off,
+                            receiveShadows, 0, camera);
+                    }
                 }
             }
+        }
+
+        static void CopyPlanes(Plane[] src, Vector4[] dest)
+        {
+            for (int i = 0; i < 6; i++)
+                dest[i] = new Vector4(src[i].normal.x, src[i].normal.y, src[i].normal.z, src[i].distance);
         }
 
         Bounds TransformBounds(Matrix4x4 localToWorld)
@@ -258,10 +332,22 @@ namespace ClusterMesh
                     _visibleBuffers[i]?.Dispose();
             }
 
+            if (_shadowVisibleBuffers != null)
+            {
+                for (int i = 0; i < _shadowVisibleBuffers.Length; i++)
+                    _shadowVisibleBuffers[i]?.Dispose();
+            }
+
             if (_argsBuffers != null)
             {
                 for (int i = 0; i < _argsBuffers.Length; i++)
                     _argsBuffers[i]?.Dispose();
+            }
+
+            if (_shadowArgsBuffers != null)
+            {
+                for (int i = 0; i < _shadowArgsBuffers.Length; i++)
+                    _shadowArgsBuffers[i]?.Dispose();
             }
 
             if (_materials != null)

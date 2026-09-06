@@ -3,7 +3,8 @@
     "rootNamespace": "ClusterMesh.Tests",
     "references": [
         "ClusterMesh.Runtime",
-        "ClusterMesh.Editor"
+        "ClusterMesh.Editor",
+        "Unity.RenderPipelines.Universal.Runtime"
     ],
     "includePlatforms": ["Editor"],
     "optionalUnityReferences": ["TestAssemblies"],
