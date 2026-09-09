@@ -42,6 +42,7 @@ PlayerSettings:
     height: 1
   m_SplashScreenLogos: []
   m_VirtualRealitySplashScreen: {fileID: 0}
+  expectedBundleIdentifier: com.Unity-Technologies.com.unity.template.urp-blank
   integrityHash: 
   m_HolographicTrackingLossScreen: {fileID: 0}
   defaultScreenWidth: 1024
@@ -53,6 +54,8 @@ PlayerSettings:
   unsupportedMSAAFallback: 0
   m_SpriteBatchVertexThreshold: 300
   m_MTRendering: 1
+  renderThreadParallel: 0
+  renderThreadExp: 0
   mipStripping: 0
   numberOfMipsStripped: 0
   numberOfMipsStrippedPerMipmapLimitGroup: {}
@@ -72,6 +75,7 @@ PlayerSettings:
   androidRenderOutsideSafeArea: 1
   androidUseSwappy: 0
   androidDisableUnityAndroidVSync: 0
+  useSRGBBackBuffer: 1
   androidBlitType: 0
   androidResizableWindow: 0
   androidDefaultWindowWidth: 1920
@@ -81,7 +85,10 @@ PlayerSettings:
   androidFullscreenMode: 1
   androidAutoRotationBehavior: 1
   androidUrasMode: 0
+  disableBluetoothAudioUpdate: 0
+  enableURASMultiView: 0
   androidEnableSensors: 0
+  androidPredictiveBackSupport: 1
   defaultIsNativeResolution: 1
   macRetinaSupport: 1
   runInBackground: 0
@@ -89,6 +96,7 @@ PlayerSettings:
   muteOtherAudioSources: 0
   Prepare IOS For Recording: 0
   Force IOS Speakers When Recording: 0
+  audioSpatialExperience: 0
   deferSystemGesturesMode: 0
   hideHomeButton: 0
   submitAnalytics: 1
@@ -148,12 +156,16 @@ PlayerSettings:
   openHarmonyRenderOutsideSafeArea: 1
   openHarmonyResizableWindow: 0
   openHarmonyEnableLowLatencyAudio: 0
+  openHarmonyLaunchAccelerationAbility: 0
   openHarmonyFullscreenMode: 1
+  openHarmonyAutoRotationBehavior: 1
   openHarmonyBlitType: 0
   openHarmonyDefaultWindowWidth: 1920
   openHarmonyDefaultWindowHeight: 1080
   openHarmonyMinimumWindowWidth: 400
   openHarmonyMinimumWindowHeight: 300
+  openHarmonyMaximumWindowRatio: 10
+  openHarmonyMinimumWindowRatio: 0.1
   stadiaPresentMode: 0
   stadiaTargetFramerate: 0
   vulkanNumSwapchainBuffers: 3
@@ -214,10 +226,12 @@ PlayerSettings:
   strictShaderVariantMatching: 0
   VertexChannelCompressionMask: 4054
   iPhoneSdkVersion: 988
-  iOSTargetOSVersionString: 12.0
+  iOSSimulatorArchitecture: 0
+  iOSTargetOSVersionString: 13.0
   tvOSSdkVersion: 0
+  tvOSSimulatorArchitecture: 0
   tvOSRequireExtendedGameController: 0
-  tvOSTargetOSVersionString: 12.0
+  tvOSTargetOSVersionString: 13.0
   VisionOSSdkVersion: 0
   VisionOSTargetOSVersionString: 1.0
   uIPrerenderedIcon: 0
@@ -571,10 +585,22 @@ PlayerSettings:
   openGLRequireES31AEP: 0
   openGLRequireES32: 0
   m_TemplateCustomTags: {}
+  renderThreadMap:
+    Standalone: 0
+    WebGL: 0
+    WeixinMiniGame: 0
   mobileMTRendering:
     Android: 1
     iPhone: 1
     tvOS: 1
+  m_VirtualGeometryRuntimeMap:
+    Android: 1
+    Standalone: 1
+    iPhone: 1
+  m_VirtualGeometryDataEncodingMap:
+    Android: 1
+    Standalone: 2
+    iPhone: 1
   m_BuildTargetGroupLightmapEncodingQuality:
   - m_BuildTarget: Android
     m_EncodingQuality: 1
@@ -741,6 +767,7 @@ PlayerSettings:
   switchSocketBufferEfficiency: 4
   switchSocketInitializeEnabled: 1
   switchNetworkInterfaceManagerInitializeEnabled: 1
+  switchDisableHTCSPlayerConnection: 0
   switchUseNewStyleFilepaths: 0
   switchUseLegacyFmodPriorities: 0
   switchUseMicroSleepForYield: 1
@@ -853,12 +880,13 @@ PlayerSettings:
   webGLPowerPreference: 2
   scriptingDefineSymbols:
     Android: ENABLE_INPUT_SYSTEM;NODECANVAS
-    Standalone: NODECANVAS;SLATE
+    Standalone: NODECANVAS;SLATE;ENABLE_UNITY_COLLECTIONS_CHECKS
     WeixinMiniGame: NODECANVAS
   additionalCompilerArguments: {}
   platformArchitecture: {}
   scriptingBackend:
     Android: 0
+    Standalone: 1
   il2cppCompilerConfiguration: {}
   il2cppCodeGeneration:
     WebGL: 1
@@ -969,23 +997,31 @@ PlayerSettings:
   embeddedLinuxEnableGamepadInput: 0
   logStartupTiming: 0
   hmiCpuConfiguration: 
+  customShaderCachePath: 
   openHarmonySplashScreen: {fileID: 0}
   openHarmonySplashScreenScale: 0
   OpenHarmonyTargetArchitectures: 2
   openHarmonyClientID: 
   openHarmonyAppID: 
   openHarmonyDeviceTypes: 7
+  openHarmonyAppIconTypes: 1
   openHarmonySupportWindowModes: 1
   OpenHarmonyBundleVersionCode: 1
   forceOpenHarmonyInternetPermission: 0
   forceOpenHarmonySDCardPermission: 0
   openHarmonyUseLowAccuracyLocation: 0
   openHarmonyPredefinedPermissions: []
+  openHarmonyUseTuanjieLogo: 1
+  openHarmonyLaunchImage: {fileID: 0}
+  openHarmonyLaunchBackgroundColor: {r: 0.13725491, g: 0.12156863, b: 0.1254902, a: 1}
   OpenHarmonyKeystoreName: 
   OpenHarmonyKeyaliasName: 
   OpenHarmonyProfile: 
   OpenHarmonyCertificate: 
+  OpenHarmonyCompatibleSdkVersion: 14
   OpenHarmonyUseCustomKeystore: 0
+  OpenHarmonyUseCustomModuleJsonFive: 0
+  OpenHarmonyUseCustomTuanjiePlayerAbility: 0
   apiCompatibilityLevel: 6
   weixinMiniGameMemorySize: 32
   weixinMiniGameExceptionSupport: 1
@@ -1019,6 +1055,11 @@ PlayerSettings:
   weixinMiniGameInjectStrippedMethodLogger: 1
   weixinMiniGameEnableDotNetWasmExceptionHandling: 1
   weixinMiniGamePreserveEventDelegate: 0
+  activeSubplatform: 0
+  serializedFileTypeTreeMemoryOptimization: 0
+  stripBuiltinResources: 0
+  minigameMTRendering: 0
+  weixinMiniGameInvariantPosition: 0
   activeInputHandler: 2
   windowsGamepadBackendHint: 0
   cloudProjectId: 
@@ -1029,6 +1070,15 @@ PlayerSettings:
   cloudEnabled: 0
   legacyClampBlendShapeWeights: 0
   hmiLoadingImage: {fileID: 0}
+  qnxEGLPriority: 0
+  embeddedLinuxEGLPriority: 0
+  androidEGLPriority: 0
   platformRequiresReadableAssets: 0
   virtualTexturingSupportEnabled: 0
   insecureHttpOption: 0
+  useStringInternPool: 0
+  renderThreadTakeSnapshotOnlyOnce: 0
+  miniGameRenderThreadSyncMode: 0
+  miniGameRenderThreadWorkerWaitMode: 1
+  miniGameRenderThreadWorkerWaitTimeout: 1
+  miniGameRenderThreadLoopMode: 2

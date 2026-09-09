@@ -88,6 +88,9 @@ namespace ClusterMesh
         public bool EnableConeCull { get; set; } = true;
         public bool EnableClusterColor { get; set; }
         public float LodErrorThreshold { get; set; }
+#if UNITY_EDITOR
+        public int EditorDrawLayer { get; set; }
+#endif
 
         public ClusterMeshDrawContext(ClusterMeshAsset asset, ComputeShader cullShader, Shader litShader)
         {
@@ -184,14 +187,14 @@ namespace ClusterMesh
         public void Draw(Matrix4x4 localToWorld, Camera camera, bool castShadows = true, bool receiveShadows = true)
         {
             _single[0] = localToWorld;
-            Draw(_single, _singleCull, 1, camera, castShadows, receiveShadows);
+            Draw(_single, _singleCull, 1, camera, camera, castShadows, receiveShadows);
         }
 
         public void Draw(IList<Matrix4x4> localToWorld, Camera camera, bool castShadows = true, bool receiveShadows = true)
         {
             if (localToWorld == null)
                 return;
-            Draw(localToWorld, null, localToWorld.Count, camera, castShadows, receiveShadows);
+            Draw(localToWorld, null, localToWorld.Count, camera, camera, castShadows, receiveShadows);
         }
 
         public void Draw(
@@ -203,21 +206,41 @@ namespace ClusterMesh
         {
             if (localToWorld == null)
                 return;
-            Draw(localToWorld, enableCpuObjectCull, localToWorld.Count, camera, castShadows, receiveShadows);
+            Draw(localToWorld, enableCpuObjectCull, localToWorld.Count, camera, camera, castShadows, receiveShadows);
         }
+
+#if UNITY_EDITOR
+        public void DrawEditorPreview(
+            IList<Matrix4x4> localToWorld,
+            IList<bool> enableCpuObjectCull,
+            Camera cullingCamera,
+            Camera drawCamera,
+            bool castShadows = true,
+            bool receiveShadows = true)
+        {
+            if (localToWorld == null)
+                return;
+            Draw(
+                localToWorld, enableCpuObjectCull, localToWorld.Count,
+                cullingCamera, drawCamera, castShadows, receiveShadows);
+        }
+#endif
 
         void Draw(
             IList<Matrix4x4> localToWorld,
             IList<bool> enableCpuObjectCull,
             int count,
-            Camera camera,
+            Camera cullingCamera,
+            Camera drawCamera,
             bool castShadows,
             bool receiveShadows)
         {
-            if (!PrepareChunks(localToWorld, enableCpuObjectCull, count, camera, castShadows, receiveShadows))
+            if (drawCamera == null)
+                return;
+            if (!PrepareChunks(localToWorld, enableCpuObjectCull, count, cullingCamera, castShadows, receiveShadows))
                 return;
             for (int i = 0; i < _urpChunks.Count; i++)
-                SubmitLegacy(_urpChunks[i], camera);
+                SubmitLegacy(_urpChunks[i], drawCamera);
         }
 
         public bool PrepareUrp(
@@ -272,7 +295,8 @@ namespace ClusterMesh
             if (castShadows && ClusterMeshObjectCull.TryGetMainDirectionalShadowLight(out Light sun) && sun != null)
             {
                 splitShadows = true;
-                ClusterMeshObjectCull.BuildReceiverFrustumPlanes(camera, ClusterMeshObjectCull.ShadowDistance(camera), _receiverPlanes);
+                ClusterMeshObjectCull.BuildReceiverFrustumPlanes(
+                    camera, ClusterMeshObjectCull.ShadowDistance(camera), _receiverPlanes);
                 ClusterMeshObjectCull.ExtrudePlanesToward(_receiverPlanes, -sun.transform.forward, _shadowPlanes);
                 CopyPlanes(_shadowPlanes, _shadowPlaneVectors);
             }
@@ -412,19 +436,19 @@ namespace ClusterMesh
                 {
                     Graphics.DrawMeshInstancedIndirect(
                         _template, 0, colorMat, chunk.bounds, chunk.colorArgs[materialIndex], 0, null,
-                        ShadowCastingMode.Off, _preparedReceive, 0, camera);
+                        ShadowCastingMode.Off, _preparedReceive, ResolveDrawLayer(), camera);
                     Material shadowMat = _shadowMaterials[materialIndex];
                     BindDrawMaterial(shadowMat, chunk.shadowVisible[materialIndex]);
                     Graphics.DrawMeshInstancedIndirect(
                         _template, 0, shadowMat, chunk.bounds, chunk.shadowArgs[materialIndex], 0, null,
-                        ShadowCastingMode.ShadowsOnly, false, 0, camera);
+                        ShadowCastingMode.ShadowsOnly, false, ResolveDrawLayer(), camera);
                 }
                 else
                 {
                     Graphics.DrawMeshInstancedIndirect(
                         _template, 0, colorMat, chunk.bounds, chunk.colorArgs[materialIndex], 0, null,
                         _preparedCast ? ShadowCastingMode.On : ShadowCastingMode.Off,
-                        _preparedReceive, 0, camera);
+                        _preparedReceive, ResolveDrawLayer(), camera);
                 }
             }
         }
@@ -442,7 +466,7 @@ namespace ClusterMesh
                 BindDrawMaterial(shadowMat, visible);
                 Graphics.DrawMeshInstancedIndirect(
                     _template, 0, shadowMat, chunk.bounds, args, 0, null,
-                    ShadowCastingMode.ShadowsOnly, false, 0, camera);
+                    ShadowCastingMode.ShadowsOnly, false, ResolveDrawLayer(), camera);
             }
         }
 
@@ -456,6 +480,15 @@ namespace ClusterMesh
                 cmd.DrawMeshInstancedIndirect(
                     _template, 0, colorMat, shaderPass, chunk.colorArgs[materialIndex]);
             }
+        }
+
+        int ResolveDrawLayer()
+        {
+#if UNITY_EDITOR
+            return EditorDrawLayer;
+#else
+            return 0;
+#endif
         }
 
         void RestoreChunk(UrpChunk chunk)

@@ -20,15 +20,19 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Resources/Scenes/Playground.unity
     guid: e9017d5f96b9f09489b4b37e1d6eb914
+  m_BuildProfiles: []
   m_configObjects:
     com.unity.input.settings: {fileID: 11400000, guid: d9c741eccf34e56458380d7b54fee565,
       type: 2}
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 38fe465717e5d6b44ac5d021ee025f08,
       type: 3}
   m_SlimFeaturesWeixinMiniGame:
+    ACLDecompression: 0
     AllocateOverhead: 1
     DecompressASTC: 0
     DecompressDXT: 1
     DecompressETC: 1
     FreeTypeSfntPng: 1
     LightProbe: 2
+    RootMotion: 0
+    UseStringInternPool: 2

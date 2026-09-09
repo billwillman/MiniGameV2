@@ -14,6 +14,8 @@ namespace ClusterMesh.Tests
         public void TearDown()
         {
             ClusterMeshSceneBatcher.ResetForTests();
+            ClusterMeshSceneViewRenderer.DisposeCachedContexts();
+            ClusterMeshLifetime.SyncSceneViewTick(true);
             ClusterMeshLifetime.SyncEditModeTick();
             for (int i = 0; i < _trash.Count; i++)
             {
@@ -63,6 +65,23 @@ namespace ClusterMesh.Tests
         }
 
         [Test]
+        public void SceneViewRenderer_DisposeEmptyCache_DoesNotThrow()
+        {
+            Assert.DoesNotThrow(ClusterMeshSceneViewRenderer.DisposeCachedContexts);
+            Assert.That(ClusterMeshSceneViewRenderer.CachedContextCount, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void IsLayerVisible_RequiresEditorAndCameraMasks()
+        {
+            int layer = 7;
+            int mask = 1 << layer;
+            Assert.That(ClusterMeshSceneViewRenderer.IsLayerVisible(layer, mask, mask), Is.True);
+            Assert.That(ClusterMeshSceneViewRenderer.IsLayerVisible(layer, 0, mask), Is.False);
+            Assert.That(ClusterMeshSceneViewRenderer.IsLayerVisible(layer, mask, 0), Is.False);
+        }
+
+        [Test]
         public void SyncEditModeTick_False_SetsActive()
         {
             ClusterMeshLifetime.SyncEditModeTick(true);
@@ -73,9 +92,20 @@ namespace ClusterMesh.Tests
         [Test]
         public void SyncEditModeTick_True_ClearsActive()
         {
+            ClusterMeshLifetime.SyncSceneViewTick(true);
             ClusterMeshLifetime.SyncEditModeTick(false);
             ClusterMeshLifetime.SyncEditModeTick(true);
             Assert.That(ClusterMeshLifetime.EditModeTickActive, Is.False);
+            Assert.That(ClusterMeshLifetime.SceneViewTickActive, Is.True);
+        }
+
+        [Test]
+        public void SyncSceneViewTick_TracksIndependentSubscription()
+        {
+            ClusterMeshLifetime.SyncSceneViewTick(false);
+            Assert.That(ClusterMeshLifetime.SceneViewTickActive, Is.False);
+            ClusterMeshLifetime.SyncSceneViewTick(true);
+            Assert.That(ClusterMeshLifetime.SceneViewTickActive, Is.True);
         }
 
         [Test]
