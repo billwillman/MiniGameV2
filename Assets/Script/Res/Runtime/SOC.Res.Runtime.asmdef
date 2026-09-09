@@ -1,0 +1,16 @@
+{
+    "name": "SOC.Res.Runtime",
+    "rootNamespace": "",
+    "references": [
+        "GUID:5ba35eb824644a34f9a57e639c51aa3f"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

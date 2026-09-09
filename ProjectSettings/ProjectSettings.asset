@@ -880,12 +880,13 @@ PlayerSettings:
   webGLPowerPreference: 2
   scriptingDefineSymbols:
     Android: ENABLE_INPUT_SYSTEM;NODECANVAS
-    Standalone: NODECANVAS;SLATE
+    Standalone: NODECANVAS;SLATE;ENABLE_UNITY_COLLECTIONS_CHECKS
     WeixinMiniGame: NODECANVAS
   additionalCompilerArguments: {}
   platformArchitecture: {}
   scriptingBackend:
     Android: 0
+    Standalone: 1
   il2cppCompilerConfiguration: {}
   il2cppCodeGeneration:
     WebGL: 1
