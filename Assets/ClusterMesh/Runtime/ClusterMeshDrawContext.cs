@@ -58,7 +58,29 @@ namespace ClusterMesh
         readonly bool[] _singleCull = { true };
         readonly Matrix4x4[] _l2w = new Matrix4x4[ClusterMeshLimits.MaxBatchedObjects];
         readonly Matrix4x4[] _w2l = new Matrix4x4[ClusterMeshLimits.MaxBatchedObjects];
+        readonly List<UrpChunk> _urpChunks = new List<UrpChunk>();
+        readonly List<GraphicsBuffer> _extraArgs = new List<GraphicsBuffer>();
+        readonly List<GraphicsBuffer> _extraVisible = new List<GraphicsBuffer>();
+        int _visibleCapacity;
+        bool _preparedSplit;
+        bool _preparedCast;
+        bool _preparedReceive;
         bool _disposed;
+
+        const int ForwardShaderPass = 0;
+        const int DepthShaderPass = 2;
+
+        sealed class UrpChunk
+        {
+            public int n;
+            public Bounds bounds;
+            public Matrix4x4[] l2w;
+            public Matrix4x4[] w2l;
+            public GraphicsBuffer[] colorArgs;
+            public GraphicsBuffer[] shadowArgs;
+            public GraphicsBuffer[] visible;
+            public GraphicsBuffer[] shadowVisible;
+        }
 
         public bool IsReady { get; private set; }
         public string Error { get; }
@@ -129,6 +151,7 @@ namespace ClusterMesh
 
             int materialCount = Mathf.Max(1, asset.materials != null ? asset.materials.Length : 1);
             int visibleCapacity = Mathf.Max(1, asset.clusters.Length) * ClusterMeshLimits.MaxBatchedObjects;
+            _visibleCapacity = visibleCapacity;
             _materials = new Material[materialCount];
             _shadowMaterials = new Material[materialCount];
             _argsBuffers = new GraphicsBuffer[materialCount];
@@ -191,15 +214,62 @@ namespace ClusterMesh
             bool castShadows,
             bool receiveShadows)
         {
-            if (!IsReady || camera == null || count <= 0)
+            if (!PrepareChunks(localToWorld, enableCpuObjectCull, count, camera, castShadows, receiveShadows))
                 return;
+            for (int i = 0; i < _urpChunks.Count; i++)
+                SubmitLegacy(_urpChunks[i], camera);
+        }
+
+        public bool PrepareUrp(
+            IList<Matrix4x4> localToWorld,
+            IList<bool> enableCpuObjectCull,
+            Camera camera,
+            bool castShadows,
+            bool receiveShadows)
+        {
+            if (localToWorld == null)
+                return false;
+            if (!PrepareChunks(localToWorld, enableCpuObjectCull, localToWorld.Count, camera, castShadows, receiveShadows))
+                return false;
+            for (int i = 0; i < _urpChunks.Count; i++)
+                SubmitUrpShadows(_urpChunks[i], camera);
+            return true;
+        }
+
+        public void SubmitUrpDepth(CommandBuffer cmd)
+        {
+            if (cmd == null)
+                return;
+            for (int i = 0; i < _urpChunks.Count; i++)
+                SubmitCmd(_urpChunks[i], cmd, DepthShaderPass);
+        }
+
+        public void SubmitUrpColor(CommandBuffer cmd)
+        {
+            if (cmd == null)
+                return;
+            for (int i = 0; i < _urpChunks.Count; i++)
+                SubmitCmd(_urpChunks[i], cmd, ForwardShaderPass);
+        }
+
+        bool PrepareChunks(
+            IList<Matrix4x4> localToWorld,
+            IList<bool> enableCpuObjectCull,
+            int count,
+            Camera camera,
+            bool castShadows,
+            bool receiveShadows)
+        {
+            ReleaseExtras();
+            _urpChunks.Clear();
+            if (!IsReady || camera == null || count <= 0)
+                return false;
 
             ClusterMeshFrustum.WorldPlanes(camera, _planes);
             CopyPlanes(_planes, _planeVectors);
 
-            Light sun = null;
             bool splitShadows = false;
-            if (castShadows && ClusterMeshObjectCull.TryGetMainDirectionalShadowLight(out sun) && sun != null)
+            if (castShadows && ClusterMeshObjectCull.TryGetMainDirectionalShadowLight(out Light sun) && sun != null)
             {
                 splitShadows = true;
                 ClusterMeshObjectCull.BuildReceiverFrustumPlanes(camera, ClusterMeshObjectCull.ShadowDistance(camera), _receiverPlanes);
@@ -207,6 +277,9 @@ namespace ClusterMesh
                 CopyPlanes(_shadowPlanes, _shadowPlaneVectors);
             }
 
+            _preparedSplit = splitShadows;
+            _preparedCast = castShadows;
+            _preparedReceive = receiveShadows;
             bool failSafe = castShadows && !splitShadows;
             int chunkSize = ClusterMeshLimits.MaxBatchedObjects;
             int chunks = Mathf.CeilToInt(count / (float)chunkSize);
@@ -241,64 +314,182 @@ namespace ClusterMesh
                 if (n <= 0)
                     continue;
 
-                int groups = Mathf.CeilToInt((n * _asset.clusters.Length) / 64f);
-                _cullShader.SetBuffer(_cullKernel, ClustersId, _clusterBuffer);
-                _cullShader.SetBuffer(_cullKernel, GroupsId, _groupBuffer);
-                _cullShader.SetBuffer(_cullKernel, OwningGroupsId, _owningGroupBuffer);
-                _cullShader.SetInt(ObjectCountId, n);
-                _cullShader.SetInt(ClusterCountId, _asset.clusters.Length);
-                _cullShader.SetInt(GroupCountId, _asset.groups != null ? _asset.groups.Length : 0);
-                _cullShader.SetInt(IsolateIndexId, IsolateIndex);
-                _cullShader.SetInt(EnableConeCullId, EnableConeCull ? 1 : 0);
-                _cullShader.SetInt(EnableShadowListId, splitShadows ? 1 : 0);
-                _cullShader.SetInt(HierarchyVersionId, _asset.hierarchyVersion);
-                _cullShader.SetInt(LodPerspectiveId, camera.orthographic ? 0 : 1);
-                _cullShader.SetFloat(LodErrorThresholdId, LodErrorThreshold);
-                _cullShader.SetFloat(LodProjectionScaleId, ClusterMeshLod.ProjectionScale(camera));
-                _cullShader.SetVectorArray(PlanesId, _planeVectors);
-                _cullShader.SetVectorArray(ShadowPlanesId, _shadowPlaneVectors);
-                _cullShader.SetVector(WorldCameraPosId, camera.transform.position);
-                _cullShader.SetMatrixArray(ObjectLocalToWorldId, _l2w);
-
+                var stored = new UrpChunk
+                {
+                    n = n,
+                    bounds = worldBounds,
+                    l2w = new Matrix4x4[n],
+                    w2l = new Matrix4x4[n],
+                    colorArgs = new GraphicsBuffer[_materials.Length],
+                    shadowArgs = new GraphicsBuffer[_materials.Length],
+                    visible = new GraphicsBuffer[_materials.Length],
+                    shadowVisible = new GraphicsBuffer[_materials.Length]
+                };
+                Array.Copy(_l2w, stored.l2w, n);
+                Array.Copy(_w2l, stored.w2l, n);
+                bool primary = chunk == 0;
                 for (int materialIndex = 0; materialIndex < _materials.Length; materialIndex++)
                 {
-                    GraphicsBuffer visible = _visibleBuffers[materialIndex];
-                    GraphicsBuffer shadowVisible = _shadowVisibleBuffers[materialIndex];
-                    visible.SetCounterValue(0);
-                    shadowVisible.SetCounterValue(0);
-                    _cullShader.SetBuffer(_cullKernel, VisibleId, visible);
-                    _cullShader.SetBuffer(_cullKernel, ShadowVisibleId, shadowVisible);
-                    _cullShader.SetInt(MaterialIndexId, materialIndex);
-                    _cullShader.Dispatch(_cullKernel, Mathf.Max(1, groups), 1, 1);
+                    stored.visible[materialIndex] = primary
+                        ? _visibleBuffers[materialIndex]
+                        : AllocVisible();
+                    stored.shadowVisible[materialIndex] = primary
+                        ? _shadowVisibleBuffers[materialIndex]
+                        : AllocVisible();
+                    stored.colorArgs[materialIndex] = primary
+                        ? _argsBuffers[materialIndex]
+                        : AllocExtraArgs();
+                    stored.shadowArgs[materialIndex] = primary
+                        ? _shadowArgsBuffers[materialIndex]
+                        : AllocExtraArgs();
+                }
 
-                    _argsBuffers[materialIndex].SetData(_argsSeed);
-                    GraphicsBuffer.CopyCount(visible, _argsBuffers[materialIndex], 4);
-
-                    Material colorMat = _materials[materialIndex];
-                    BindDrawMaterial(colorMat, visible);
+                DispatchCull(n, camera, splitShadows, stored.visible, stored.shadowVisible);
+                for (int materialIndex = 0; materialIndex < _materials.Length; materialIndex++)
+                {
+                    stored.colorArgs[materialIndex].SetData(_argsSeed);
+                    GraphicsBuffer.CopyCount(stored.visible[materialIndex], stored.colorArgs[materialIndex], 4);
                     if (splitShadows)
                     {
-                        Graphics.DrawMeshInstancedIndirect(
-                            _template, 0, colorMat, worldBounds, _argsBuffers[materialIndex], 0, null,
-                            ShadowCastingMode.Off, receiveShadows, 0, camera);
-
-                        _shadowArgsBuffers[materialIndex].SetData(_argsSeed);
-                        GraphicsBuffer.CopyCount(shadowVisible, _shadowArgsBuffers[materialIndex], 4);
-                        Material shadowMat = _shadowMaterials[materialIndex];
-                        BindDrawMaterial(shadowMat, shadowVisible);
-                        Graphics.DrawMeshInstancedIndirect(
-                            _template, 0, shadowMat, worldBounds, _shadowArgsBuffers[materialIndex], 0, null,
-                            ShadowCastingMode.ShadowsOnly, false, 0, camera);
-                    }
-                    else
-                    {
-                        Graphics.DrawMeshInstancedIndirect(
-                            _template, 0, colorMat, worldBounds, _argsBuffers[materialIndex], 0, null,
-                            castShadows ? ShadowCastingMode.On : ShadowCastingMode.Off,
-                            receiveShadows, 0, camera);
+                        stored.shadowArgs[materialIndex].SetData(_argsSeed);
+                        GraphicsBuffer.CopyCount(stored.shadowVisible[materialIndex], stored.shadowArgs[materialIndex], 4);
                     }
                 }
+
+                _urpChunks.Add(stored);
             }
+
+            return _urpChunks.Count > 0;
+        }
+
+        void DispatchCull(
+            int n,
+            Camera camera,
+            bool splitShadows,
+            GraphicsBuffer[] visibleBuffers,
+            GraphicsBuffer[] shadowVisibleBuffers)
+        {
+            int groups = Mathf.CeilToInt((n * _asset.clusters.Length) / 64f);
+            _cullShader.SetBuffer(_cullKernel, ClustersId, _clusterBuffer);
+            _cullShader.SetBuffer(_cullKernel, GroupsId, _groupBuffer);
+            _cullShader.SetBuffer(_cullKernel, OwningGroupsId, _owningGroupBuffer);
+            _cullShader.SetInt(ObjectCountId, n);
+            _cullShader.SetInt(ClusterCountId, _asset.clusters.Length);
+            _cullShader.SetInt(GroupCountId, _asset.groups != null ? _asset.groups.Length : 0);
+            _cullShader.SetInt(IsolateIndexId, IsolateIndex);
+            _cullShader.SetInt(EnableConeCullId, EnableConeCull ? 1 : 0);
+            _cullShader.SetInt(EnableShadowListId, splitShadows ? 1 : 0);
+            _cullShader.SetInt(HierarchyVersionId, _asset.hierarchyVersion);
+            _cullShader.SetInt(LodPerspectiveId, camera.orthographic ? 0 : 1);
+            _cullShader.SetFloat(LodErrorThresholdId, LodErrorThreshold);
+            _cullShader.SetFloat(LodProjectionScaleId, ClusterMeshLod.ProjectionScale(camera));
+            _cullShader.SetVectorArray(PlanesId, _planeVectors);
+            _cullShader.SetVectorArray(ShadowPlanesId, _shadowPlaneVectors);
+            _cullShader.SetVector(WorldCameraPosId, camera.transform.position);
+            _cullShader.SetMatrixArray(ObjectLocalToWorldId, _l2w);
+
+            for (int materialIndex = 0; materialIndex < _materials.Length; materialIndex++)
+            {
+                GraphicsBuffer visible = visibleBuffers[materialIndex];
+                GraphicsBuffer shadowVisible = shadowVisibleBuffers[materialIndex];
+                visible.SetCounterValue(0);
+                shadowVisible.SetCounterValue(0);
+                _cullShader.SetBuffer(_cullKernel, VisibleId, visible);
+                _cullShader.SetBuffer(_cullKernel, ShadowVisibleId, shadowVisible);
+                _cullShader.SetInt(MaterialIndexId, materialIndex);
+                _cullShader.Dispatch(_cullKernel, Mathf.Max(1, groups), 1, 1);
+            }
+        }
+
+        void SubmitLegacy(UrpChunk chunk, Camera camera)
+        {
+            RestoreChunk(chunk);
+            for (int materialIndex = 0; materialIndex < _materials.Length; materialIndex++)
+            {
+                Material colorMat = _materials[materialIndex];
+                BindDrawMaterial(colorMat, chunk.visible[materialIndex]);
+                if (_preparedSplit)
+                {
+                    Graphics.DrawMeshInstancedIndirect(
+                        _template, 0, colorMat, chunk.bounds, chunk.colorArgs[materialIndex], 0, null,
+                        ShadowCastingMode.Off, _preparedReceive, 0, camera);
+                    Material shadowMat = _shadowMaterials[materialIndex];
+                    BindDrawMaterial(shadowMat, chunk.shadowVisible[materialIndex]);
+                    Graphics.DrawMeshInstancedIndirect(
+                        _template, 0, shadowMat, chunk.bounds, chunk.shadowArgs[materialIndex], 0, null,
+                        ShadowCastingMode.ShadowsOnly, false, 0, camera);
+                }
+                else
+                {
+                    Graphics.DrawMeshInstancedIndirect(
+                        _template, 0, colorMat, chunk.bounds, chunk.colorArgs[materialIndex], 0, null,
+                        _preparedCast ? ShadowCastingMode.On : ShadowCastingMode.Off,
+                        _preparedReceive, 0, camera);
+                }
+            }
+        }
+
+        void SubmitUrpShadows(UrpChunk chunk, Camera camera)
+        {
+            if (!_preparedCast)
+                return;
+            RestoreChunk(chunk);
+            for (int materialIndex = 0; materialIndex < _materials.Length; materialIndex++)
+            {
+                Material shadowMat = _shadowMaterials[materialIndex];
+                GraphicsBuffer visible = _preparedSplit ? chunk.shadowVisible[materialIndex] : chunk.visible[materialIndex];
+                GraphicsBuffer args = _preparedSplit ? chunk.shadowArgs[materialIndex] : chunk.colorArgs[materialIndex];
+                BindDrawMaterial(shadowMat, visible);
+                Graphics.DrawMeshInstancedIndirect(
+                    _template, 0, shadowMat, chunk.bounds, args, 0, null,
+                    ShadowCastingMode.ShadowsOnly, false, 0, camera);
+            }
+        }
+
+        void SubmitCmd(UrpChunk chunk, CommandBuffer cmd, int shaderPass)
+        {
+            RestoreChunk(chunk);
+            for (int materialIndex = 0; materialIndex < _materials.Length; materialIndex++)
+            {
+                Material colorMat = _materials[materialIndex];
+                BindDrawMaterial(colorMat, chunk.visible[materialIndex]);
+                cmd.DrawMeshInstancedIndirect(
+                    _template, 0, colorMat, shaderPass, chunk.colorArgs[materialIndex]);
+            }
+        }
+
+        void RestoreChunk(UrpChunk chunk)
+        {
+            Array.Copy(chunk.l2w, _l2w, chunk.n);
+            Array.Copy(chunk.w2l, _w2l, chunk.n);
+        }
+
+        GraphicsBuffer AllocExtraArgs()
+        {
+            var buffer = new GraphicsBuffer(GraphicsBuffer.Target.IndirectArguments, 1, 20);
+            buffer.SetData(_argsSeed);
+            _extraArgs.Add(buffer);
+            return buffer;
+        }
+
+        GraphicsBuffer AllocVisible()
+        {
+            var buffer = new GraphicsBuffer(
+                GraphicsBuffer.Target.Append | GraphicsBuffer.Target.Structured,
+                Mathf.Max(1, _visibleCapacity),
+                4);
+            _extraVisible.Add(buffer);
+            return buffer;
+        }
+
+        void ReleaseExtras()
+        {
+            for (int i = 0; i < _extraArgs.Count; i++)
+                _extraArgs[i]?.Dispose();
+            _extraArgs.Clear();
+            for (int i = 0; i < _extraVisible.Count; i++)
+                _extraVisible[i]?.Dispose();
+            _extraVisible.Clear();
         }
 
         void BindDrawMaterial(Material mat, GraphicsBuffer visible)
@@ -329,6 +520,8 @@ namespace ClusterMesh
                 return;
             _disposed = true;
             IsReady = false;
+            _urpChunks.Clear();
+            ReleaseExtras();
             _clusterBuffer?.Dispose();
             _groupBuffer?.Dispose();
             _owningGroupBuffer?.Dispose();

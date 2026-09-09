@@ -52,6 +52,11 @@ Branch: `feat/clustermesh-lod`
 - [ ] **CPU 剔全局 static 总闸**  
   现在只有每物体 `enableCpuObjectCull`。规格写了「总闸以后再加」。
 
+- [x] **URP Feature R1（保留老管线）**  
+  规格：`2026-09-07-clustermesh-urp-feature-design.md`。Game 相机且 Renderer 有激活 Feature：Depth/Forward 走 `cmd`，阴影仍 `Graphics.ShadowsOnly`；否则 `LateUpdate` Flush。菜单 `Tools/ClusterMesh/Enable|Disable URP Feature` 只动当前 URP Asset 的 Default Renderer。默认不改工程资产。
+
+R1 **没做**、且不要混进已勾选项的：P3 照明对齐、R2 自绑阴影 atlas、MotionVectors。见下方 D。
+
 ---
 
 ## C. 有条件才做
@@ -85,7 +90,7 @@ Profiler 打到对应热点再讨论 + spec。不要为「感觉该上」开工�
 | Nanite VSM / 多阴影视图 | 另一条管线 |
 | Hi-Z / 软件光栅 / 流式 | 第 1 期 + DAG 非目标 |
 | 蒙皮 | 只要静态 `MeshFilter` |
-| URP Renderer Feature / 接游戏场景 | 研究原型自包含；正式接入另开 |
+| URP Renderer Feature / 接游戏场景 | R1 已做；P3 / R2 / MotionVectors 见下方 |
 | GLES 降级绘制 | 无 Compute / Indirect 报错不画 |
 | METIS / meshoptimizer | DAG 非目标 |
 | 改 64/124、header 96、组 48 | 全期锁定 |
@@ -98,6 +103,32 @@ Profiler 打到对应热点再讨论 + spec。不要为「感觉该上」开工�
   约束：`T<=0` 仍只出叶子；按 **组** 记历史（与整组进/出对齐）；主画和阴影同一套记忆；不改 64/124 / header 96。  
   开工前：补完 A1/A2 并落盘 spec。不写 spec 不动 `TestLod`。
 
+### URP 照明 / Pass 对齐 P3（R1 明确没做）
+
+- [ ] **探针 / SH / 雾 / lightmap / DepthNormals**  
+  R1 只换提交时机，Lit 仍不像旁边 MeshRenderer。规格 Non-goals 写成 P3：这是 **shader 对齐**，不是再挂一个 Feature。  
+  玩家会看见：室内偏黑或不受 Light Probe、没有雾、不吃 lightmap、SSAO/法线相关 Pass 缺这块几何。  
+  开工前：单独讨论拆哪些（探针 vs 雾 vs DepthNormals 不要绑死同一期）并落盘 spec。不写 spec 不动 `ClusterMeshLit.hlsl`。  
+  不要和 R2、时域滞回、Hi-Z 混一期。
+
+- [ ] **MotionVectors（TAA / TSR）**  
+  R1 把深度推进 Prepass，减轻「深度图没有 ClusterMesh」；**没有** Velocity / MotionVectors Pass。相机或物体动、换 LOD 时 TAA 仍会鬼影。  
+  与时域 LOD 滞回正交：滞回少换层，MotionVectors 让已画的几何被 TAA 认出来。  
+  开工前：新 spec（哪一个 URP event、是否只要相机运动）。不写 spec 不加 Pass。
+
+- [ ] **叠相机 / 非 Default Renderer 挂 Feature**  
+  T1 锁定：菜单只动当前 URP Asset 的 Default Renderer，禁止扫全工程（避免误改 2D / Overlay / FogOfWar 那套）。  
+  Overlay 或相机指定了另一份 Renderer 时，要**手挂** `ClusterMeshUrpFeature`，否则那台相机仍走老 Flush。  
+  若以后要工具化：新讨论（仍禁止 FoW 式全工程扫描），不要改 T1 默认。
+
+### URP 阴影 R2（2026-09-07 讨论后停）
+
+- [ ] **自己往级联 atlas `cmd` 画阴影**  
+  规格：`2026-09-07-clustermesh-urp-feature-design.md` 第 5 节。  
+  **为何现在不做（产品级收益也不大）：** 影子质量来自 URP 级联 + 软阴影，R1 已走 `MainLightShadowCasterPass`。R2 不改变 atlas、不加点数、通常更贵。补不上探针 / 雾 / TAA / 蒙皮。  
+  **再开的触发（先证伪再写实现 plan）：** Render Graph 后 `Graphics.ShadowsOnly` 不再进影图；或要按 cascade 精剔 / VSM；或认证要求全在 SRP CommandBuffer。  
+  未触发禁止开。不要和 R1 / P3 同一 PR。
+
 ---
 
 ## 相关文档
@@ -106,3 +137,4 @@ Profiler 打到对应热点再讨论 + spec。不要为「感觉该上」开工�
 - `docs/superpowers/specs/2026-09-06-clustermesh-cpu-object-cull-design.md`
 - `docs/superpowers/lessons/2026-09-06-indirect-shared-material-flicker.md`
 - `docs/superpowers/specs/2026-09-04-clustermesh-design.md`（v1 非目标）
+- `docs/superpowers/specs/2026-09-07-clustermesh-urp-feature-design.md`（R1 已做 / P3·R2·MotionVectors 停放）

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace ClusterMesh
 {
@@ -28,8 +29,18 @@ namespace ClusterMesh
         static readonly List<Matrix4x4> Matrices = new List<Matrix4x4>(64);
         static readonly List<bool> CpuCullFlags = new List<bool>(64);
         static readonly HashSet<int> Seen = new HashSet<int>();
+        static readonly List<ClusterMeshDrawContext> UrpPrepared = new List<ClusterMeshDrawContext>();
         static int _flushedFrame = int.MinValue;
         static bool _loggedError;
+
+        delegate void BatchCallback(
+            ClusterMeshRenderer seed,
+            Camera camera,
+            List<Matrix4x4> matrices,
+            List<bool> cpuCullFlags,
+            bool clusterColors,
+            float lodErrorThreshold,
+            bool batchCast);
 
         public static int RegisteredCount
         {
@@ -81,51 +92,55 @@ namespace ClusterMesh
                 return;
             _flushedFrame = Time.frameCount;
 
-            for (int i = Renderers.Count - 1; i >= 0; i--)
+            ForEachRegisteredBatch((seed, camera, matrices, cpuCullFlags, clusterColors, lodT, batchCast) =>
             {
-                if (Renderers[i] == null)
-                    Renderers.RemoveAt(i);
-            }
-
-            Seen.Clear();
-            for (int i = 0; i < Renderers.Count; i++)
-            {
-                if (!Seen.Add(i))
-                    continue;
-
-                ClusterMeshRenderer seed = Renderers[i];
-                Camera camera = ResolveCamera(seed);
-                if (camera == null || seed.asset == null)
-                    continue;
-
-                Matrices.Clear();
-                CpuCullFlags.Clear();
-                Matrices.Add(seed.transform.localToWorldMatrix);
-                CpuCullFlags.Add(seed.enableCpuObjectCull);
-                bool clusterColors = seed.showClusterColors;
-                float lodT = seed.lodErrorThreshold;
-                bool batchCast = seed.castShadows;
-                for (int j = i + 1; j < Renderers.Count; j++)
-                {
-                    ClusterMeshRenderer other = Renderers[j];
-                    if (other == null || other.asset != seed.asset || ResolveCamera(other) != camera)
-                        continue;
-                    Seen.Add(j);
-                    Matrices.Add(other.transform.localToWorldMatrix);
-                    CpuCullFlags.Add(other.enableCpuObjectCull);
-                    clusterColors |= other.showClusterColors;
-                    lodT = Mathf.Max(lodT, other.lodErrorThreshold);
-                    batchCast |= other.castShadows;
-                }
-
+                if (ClusterMeshUrpBridge.ShouldSkipLegacyFlush(camera))
+                    return;
                 ClusterMeshDrawContext ctx = GetOrCreate(seed);
                 if (ctx == null || !ctx.IsReady)
-                    continue;
+                    return;
                 ctx.EnableConeCull = seed.enableConeCull;
                 ctx.EnableClusterColor = clusterColors;
                 ctx.LodErrorThreshold = lodT;
-                ctx.Draw(Matrices, CpuCullFlags, camera, batchCast, seed.receiveShadows);
-            }
+                ctx.Draw(matrices, cpuCullFlags, camera, batchCast, seed.receiveShadows);
+            });
+        }
+
+        public static void PrepareAndSubmitUrpShadows(Camera camera)
+        {
+            UrpPrepared.Clear();
+            if (!ClusterMeshUrpBridge.ShouldSubmitUrp(camera))
+                return;
+
+            ForEachRegisteredBatch((seed, resolved, matrices, cpuCullFlags, clusterColors, lodT, batchCast) =>
+            {
+                if (resolved != camera)
+                    return;
+                ClusterMeshDrawContext ctx = GetOrCreate(seed);
+                if (ctx == null || !ctx.IsReady)
+                    return;
+                ctx.EnableConeCull = seed.enableConeCull;
+                ctx.EnableClusterColor = clusterColors;
+                ctx.LodErrorThreshold = lodT;
+                if (ctx.PrepareUrp(matrices, cpuCullFlags, camera, batchCast, seed.receiveShadows))
+                    UrpPrepared.Add(ctx);
+            });
+        }
+
+        public static void SubmitUrpDepth(Camera camera, CommandBuffer cmd)
+        {
+            if (cmd == null || !ClusterMeshUrpBridge.ShouldSubmitUrp(camera))
+                return;
+            for (int i = 0; i < UrpPrepared.Count; i++)
+                UrpPrepared[i].SubmitUrpDepth(cmd);
+        }
+
+        public static void SubmitUrpColor(Camera camera, CommandBuffer cmd)
+        {
+            if (cmd == null || !ClusterMeshUrpBridge.ShouldSubmitUrp(camera))
+                return;
+            for (int i = 0; i < UrpPrepared.Count; i++)
+                UrpPrepared[i].SubmitUrpColor(cmd);
         }
 
         public static int CountDrawCalls(int objectCount, int materialCount)
@@ -195,8 +210,52 @@ namespace ClusterMesh
         public static void ResetForTests()
         {
             Renderers.Clear();
+            UrpPrepared.Clear();
             DisposeCachedContexts();
             _loggedError = false;
+        }
+
+        static void ForEachRegisteredBatch(BatchCallback callback)
+        {
+            for (int i = Renderers.Count - 1; i >= 0; i--)
+            {
+                if (Renderers[i] == null)
+                    Renderers.RemoveAt(i);
+            }
+
+            Seen.Clear();
+            for (int i = 0; i < Renderers.Count; i++)
+            {
+                if (!Seen.Add(i))
+                    continue;
+
+                ClusterMeshRenderer seed = Renderers[i];
+                Camera camera = ResolveCamera(seed);
+                if (camera == null || seed.asset == null)
+                    continue;
+
+                Matrices.Clear();
+                CpuCullFlags.Clear();
+                Matrices.Add(seed.transform.localToWorldMatrix);
+                CpuCullFlags.Add(seed.enableCpuObjectCull);
+                bool clusterColors = seed.showClusterColors;
+                float lodT = seed.lodErrorThreshold;
+                bool batchCast = seed.castShadows;
+                for (int j = i + 1; j < Renderers.Count; j++)
+                {
+                    ClusterMeshRenderer other = Renderers[j];
+                    if (other == null || other.asset != seed.asset || ResolveCamera(other) != camera)
+                        continue;
+                    Seen.Add(j);
+                    Matrices.Add(other.transform.localToWorldMatrix);
+                    CpuCullFlags.Add(other.enableCpuObjectCull);
+                    clusterColors |= other.showClusterColors;
+                    lodT = Mathf.Max(lodT, other.lodErrorThreshold);
+                    batchCast |= other.castShadows;
+                }
+
+                callback(seed, camera, Matrices, CpuCullFlags, clusterColors, lodT, batchCast);
+            }
         }
 
         static Camera ResolveCamera(ClusterMeshRenderer renderer)

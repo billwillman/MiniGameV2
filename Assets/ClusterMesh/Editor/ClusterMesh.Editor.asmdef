@@ -1,7 +1,10 @@
 {
     "name": "ClusterMesh.Editor",
     "rootNamespace": "ClusterMesh",
-    "references": ["ClusterMesh.Runtime"],
+    "references": [
+        "ClusterMesh.Runtime",
+        "Unity.RenderPipelines.Universal.Runtime"
+    ],
     "includePlatforms": ["Editor"],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
