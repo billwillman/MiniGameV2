@@ -164,14 +164,14 @@ namespace ClusterMesh
         public void Draw(Matrix4x4 localToWorld, Camera camera, bool castShadows = true, bool receiveShadows = true)
         {
             _single[0] = localToWorld;
-            Draw(_single, _singleCull, 1, camera, castShadows, receiveShadows);
+            Draw(_single, _singleCull, 1, camera, camera, castShadows, receiveShadows);
         }
 
         public void Draw(IList<Matrix4x4> localToWorld, Camera camera, bool castShadows = true, bool receiveShadows = true)
         {
             if (localToWorld == null)
                 return;
-            Draw(localToWorld, null, localToWorld.Count, camera, castShadows, receiveShadows);
+            Draw(localToWorld, null, localToWorld.Count, camera, camera, castShadows, receiveShadows);
         }
 
         public void Draw(
@@ -183,21 +183,39 @@ namespace ClusterMesh
         {
             if (localToWorld == null)
                 return;
-            Draw(localToWorld, enableCpuObjectCull, localToWorld.Count, camera, castShadows, receiveShadows);
+            Draw(localToWorld, enableCpuObjectCull, localToWorld.Count, camera, camera, castShadows, receiveShadows);
         }
+
+#if UNITY_EDITOR
+        public void DrawEditorPreview(
+            IList<Matrix4x4> localToWorld,
+            IList<bool> enableCpuObjectCull,
+            Camera cullingCamera,
+            Camera drawCamera,
+            bool castShadows = true,
+            bool receiveShadows = true)
+        {
+            if (localToWorld == null)
+                return;
+            Draw(
+                localToWorld, enableCpuObjectCull, localToWorld.Count,
+                cullingCamera, drawCamera, castShadows, receiveShadows);
+        }
+#endif
 
         void Draw(
             IList<Matrix4x4> localToWorld,
             IList<bool> enableCpuObjectCull,
             int count,
-            Camera camera,
+            Camera cullingCamera,
+            Camera drawCamera,
             bool castShadows,
             bool receiveShadows)
         {
-            if (!IsReady || camera == null || count <= 0)
+            if (!IsReady || cullingCamera == null || drawCamera == null || count <= 0)
                 return;
 
-            ClusterMeshFrustum.WorldPlanes(camera, _planes);
+            ClusterMeshFrustum.WorldPlanes(cullingCamera, _planes);
             CopyPlanes(_planes, _planeVectors);
 
             Light sun = null;
@@ -205,7 +223,8 @@ namespace ClusterMesh
             if (castShadows && ClusterMeshObjectCull.TryGetMainDirectionalShadowLight(out sun) && sun != null)
             {
                 splitShadows = true;
-                ClusterMeshObjectCull.BuildReceiverFrustumPlanes(camera, ClusterMeshObjectCull.ShadowDistance(camera), _receiverPlanes);
+                ClusterMeshObjectCull.BuildReceiverFrustumPlanes(
+                    cullingCamera, ClusterMeshObjectCull.ShadowDistance(cullingCamera), _receiverPlanes);
                 ClusterMeshObjectCull.ExtrudePlanesToward(_receiverPlanes, -sun.transform.forward, _shadowPlanes);
                 CopyPlanes(_shadowPlanes, _shadowPlaneVectors);
             }
@@ -255,12 +274,12 @@ namespace ClusterMesh
                 _cullShader.SetInt(EnableConeCullId, EnableConeCull ? 1 : 0);
                 _cullShader.SetInt(EnableShadowListId, splitShadows ? 1 : 0);
                 _cullShader.SetInt(HierarchyVersionId, _asset.hierarchyVersion);
-                _cullShader.SetInt(LodPerspectiveId, camera.orthographic ? 0 : 1);
+                _cullShader.SetInt(LodPerspectiveId, cullingCamera.orthographic ? 0 : 1);
                 _cullShader.SetFloat(LodErrorThresholdId, LodErrorThreshold);
-                _cullShader.SetFloat(LodProjectionScaleId, ClusterMeshLod.ProjectionScale(camera));
+                _cullShader.SetFloat(LodProjectionScaleId, ClusterMeshLod.ProjectionScale(cullingCamera));
                 _cullShader.SetVectorArray(PlanesId, _planeVectors);
                 _cullShader.SetVectorArray(ShadowPlanesId, _shadowPlaneVectors);
-                _cullShader.SetVector(WorldCameraPosId, camera.transform.position);
+                _cullShader.SetVector(WorldCameraPosId, cullingCamera.transform.position);
                 _cullShader.SetMatrixArray(ObjectLocalToWorldId, _l2w);
 
                 for (int materialIndex = 0; materialIndex < _materials.Length; materialIndex++)
@@ -289,7 +308,7 @@ namespace ClusterMesh
 #else
                             0,
 #endif
-                            camera);
+                            drawCamera);
 
                         _shadowArgsBuffers[materialIndex].SetData(_argsSeed);
                         GraphicsBuffer.CopyCount(shadowVisible, _shadowArgsBuffers[materialIndex], 4);
@@ -303,7 +322,7 @@ namespace ClusterMesh
 #else
                             0,
 #endif
-                            camera);
+                            drawCamera);
                     }
                     else
                     {
@@ -316,7 +335,7 @@ namespace ClusterMesh
 #else
                             0,
 #endif
-                            camera);
+                            drawCamera);
                     }
                 }
             }

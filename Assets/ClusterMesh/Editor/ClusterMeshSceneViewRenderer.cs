@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -8,7 +7,7 @@ using UnityEngine;
 namespace ClusterMesh
 {
     /// <summary>
-    /// Submits ClusterMesh draws for Scene view cameras while the editor is not playing.
+    /// Submits ClusterMesh draws for Scene view cameras in both Edit and Play modes.
     /// Kept in the Editor assembly so player rendering and builds are unaffected.
     /// </summary>
     public static class ClusterMeshSceneViewRenderer
@@ -16,11 +15,13 @@ namespace ClusterMesh
         readonly struct BatchKey : IEquatable<BatchKey>
         {
             public readonly ClusterMeshAsset asset;
-            public readonly Camera camera;
+            public readonly Camera drawCamera;
+            public readonly Camera cullingCamera;
             public readonly ComputeShader cullShader;
             public readonly Shader litShader;
             public readonly int assetId;
             public readonly int cameraId;
+            public readonly int cullingCameraId;
             public readonly int cullShaderId;
             public readonly int litShaderId;
             public readonly int layer;
@@ -30,14 +31,21 @@ namespace ClusterMesh
             public readonly bool castShadows;
             public readonly bool receiveShadows;
 
-            public BatchKey(ClusterMeshRenderer renderer, Camera sceneCamera, ComputeShader cull, Shader lit)
+            public BatchKey(
+                ClusterMeshRenderer renderer,
+                Camera sceneCamera,
+                Camera gameCamera,
+                ComputeShader cull,
+                Shader lit)
             {
                 asset = renderer.asset;
-                camera = sceneCamera;
+                drawCamera = sceneCamera;
+                cullingCamera = gameCamera;
                 cullShader = cull;
                 litShader = lit;
                 assetId = asset.GetInstanceID();
-                cameraId = camera.GetInstanceID();
+                cameraId = drawCamera.GetInstanceID();
+                cullingCameraId = cullingCamera.GetInstanceID();
                 cullShaderId = cullShader.GetInstanceID();
                 litShaderId = litShader.GetInstanceID();
                 layer = renderer.gameObject.layer;
@@ -52,6 +60,7 @@ namespace ClusterMesh
             {
                 return assetId == other.assetId
                     && cameraId == other.cameraId
+                    && cullingCameraId == other.cullingCameraId
                     && cullShaderId == other.cullShaderId
                     && litShaderId == other.litShaderId
                     && layer == other.layer
@@ -73,6 +82,7 @@ namespace ClusterMesh
                 {
                     int hash = assetId;
                     hash = (hash * 397) ^ cameraId;
+                    hash = (hash * 397) ^ cullingCameraId;
                     hash = (hash * 397) ^ cullShaderId;
                     hash = (hash * 397) ^ litShaderId;
                     hash = (hash * 397) ^ layer;
@@ -105,23 +115,43 @@ namespace ClusterMesh
                 && (cameraCullingMask & layerMask) != 0;
         }
 
-        public static void DrawAllSceneViews()
+        public static void RefreshAndRepaint()
         {
             ClusterMeshSceneBatcher.CollectRegisteredRenderersForEditor(Renderers);
             UsedContexts.Clear();
             StageHandle stage = StageUtility.GetCurrentStageHandle();
-            IList sceneViews = SceneView.sceneViews;
+            var sceneViews = SceneView.sceneViews;
             for (int i = 0; i < sceneViews.Count; i++)
             {
                 var sceneView = sceneViews[i] as SceneView;
                 Camera camera = sceneView != null ? sceneView.camera : null;
-                if (camera != null && camera.cameraType == CameraType.SceneView)
-                    DrawCamera(camera, stage);
+                if (camera == null || camera.cameraType != CameraType.SceneView)
+                    continue;
+
+                for (int j = 0; j < Renderers.Count; j++)
+                {
+                    ClusterMeshRenderer renderer = Renderers[j];
+                    if (renderer != null && TryGetBatchKey(renderer, camera, stage, out BatchKey key))
+                        UsedContexts.Add(key);
+                }
             }
 
             DisposeUnusedContexts();
             if (Renderers.Count > 0)
                 SceneView.RepaintAll();
+        }
+
+        public static void DrawSceneView(SceneView sceneView)
+        {
+            if (sceneView == null || Event.current == null || Event.current.type != EventType.Repaint)
+                return;
+
+            Camera camera = sceneView.camera;
+            if (camera == null || camera.cameraType != CameraType.SceneView)
+                return;
+
+            ClusterMeshSceneBatcher.CollectRegisteredRenderersForEditor(Renderers);
+            DrawCamera(camera, StageUtility.GetCurrentStageHandle());
         }
 
         public static void DisposeCachedContexts()
@@ -171,10 +201,13 @@ namespace ClusterMesh
 
                 context.EnableConeCull = key.enableConeCull;
                 context.EnableClusterColor = key.showClusterColors;
-                context.LodErrorThreshold = key.lodErrorThreshold;
+                // Scene view is a culling preview: keep leaf clusters so the compute
+                // shader applies cone culling whenever the renderer switch is enabled.
+                // Runtime/Game rendering keeps using the configured LOD threshold.
+                context.LodErrorThreshold = 0f;
                 context.EditorDrawLayer = key.layer;
-                context.Draw(
-                    Matrices, CpuCullFlags, camera,
+                context.DrawEditorPreview(
+                    Matrices, CpuCullFlags, key.cullingCamera, key.drawCamera,
                     key.castShadows, key.receiveShadows);
             }
         }
@@ -186,7 +219,8 @@ namespace ClusterMesh
             out BatchKey key)
         {
             key = default;
-            if (!IsSceneVisible(renderer, camera, stage))
+            Camera cullingCamera = renderer.targetCamera != null ? renderer.targetCamera : Camera.main;
+            if (cullingCamera == null || !IsSceneVisible(renderer, camera, cullingCamera, stage))
                 return false;
 
             ComputeShader cull = renderer.cullShader;
@@ -196,11 +230,15 @@ namespace ClusterMesh
             if (cull == null || lit == null)
                 return false;
 
-            key = new BatchKey(renderer, camera, cull, lit);
+            key = new BatchKey(renderer, camera, cullingCamera, cull, lit);
             return true;
         }
 
-        static bool IsSceneVisible(ClusterMeshRenderer renderer, Camera camera, StageHandle stage)
+        static bool IsSceneVisible(
+            ClusterMeshRenderer renderer,
+            Camera drawCamera,
+            Camera cullingCamera,
+            StageHandle stage)
         {
             if (renderer == null || !renderer.isActiveAndEnabled
                 || renderer.asset == null || renderer.asset.clusters == null
@@ -208,7 +246,8 @@ namespace ClusterMesh
                 return false;
             if (!renderer.gameObject.scene.IsValid() || !renderer.gameObject.scene.isLoaded)
                 return false;
-            if (!IsLayerVisible(renderer.gameObject.layer, Tools.visibleLayers, camera.cullingMask))
+            int combinedCameraMask = drawCamera.cullingMask & cullingCamera.cullingMask;
+            if (!IsLayerVisible(renderer.gameObject.layer, Tools.visibleLayers, combinedCameraMask))
                 return false;
             if (!stage.Contains(renderer.gameObject))
                 return false;

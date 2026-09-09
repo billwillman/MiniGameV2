@@ -41,11 +41,13 @@ namespace ClusterMesh
         public static void SyncSceneViewTick(bool enabled)
         {
             EditorApplication.update -= OnSceneViewUpdate;
+            SceneView.beforeSceneGui -= OnBeforeSceneGui;
             SceneViewTickActive = false;
             if (!enabled)
                 return;
 
             EditorApplication.update += OnSceneViewUpdate;
+            SceneView.beforeSceneGui += OnBeforeSceneGui;
             SceneViewTickActive = true;
         }
 
@@ -67,7 +69,15 @@ namespace ClusterMesh
             if (EditorApplication.isCompiling)
                 return;
 
-            ClusterMeshSceneViewRenderer.DrawAllSceneViews();
+            ClusterMeshSceneViewRenderer.RefreshAndRepaint();
+        }
+
+        static void OnBeforeSceneGui(SceneView sceneView)
+        {
+            if (EditorApplication.isCompiling)
+                return;
+
+            ClusterMeshSceneViewRenderer.DrawSceneView(sceneView);
         }
 
         static void OnPlayModeStateChanged(PlayModeStateChange state)
