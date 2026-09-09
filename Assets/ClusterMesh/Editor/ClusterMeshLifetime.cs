@@ -45,6 +45,7 @@ namespace ClusterMesh
             }
 
             ClusterMeshSceneBatcher.Flush();
+            ClusterMeshSceneViewRenderer.DrawAllSceneViews();
             if (ShouldQueuePlayerLoop(ClusterMeshSceneBatcher.RegisteredCount))
                 EditorApplication.QueuePlayerLoopUpdate();
         }
@@ -56,12 +57,14 @@ namespace ClusterMesh
                 case PlayModeStateChange.ExitingEditMode:
                     SyncEditModeTick(true);
                     ClusterMeshSceneBatcher.DisposeCachedContexts();
+                    ClusterMeshSceneViewRenderer.DisposeCachedContexts();
                     break;
                 case PlayModeStateChange.EnteredPlayMode:
                     SyncEditModeTick(true);
                     break;
                 case PlayModeStateChange.ExitingPlayMode:
                     ClusterMeshSceneBatcher.DisposeCachedContexts();
+                    ClusterMeshSceneViewRenderer.DisposeCachedContexts();
                     break;
                 case PlayModeStateChange.EnteredEditMode:
                     SyncEditModeTick(false);
@@ -73,12 +76,14 @@ namespace ClusterMesh
         {
             SyncEditModeTick(true);
             ClusterMeshSceneBatcher.DisposeCachedContexts();
+            ClusterMeshSceneViewRenderer.DisposeCachedContexts();
         }
 
         static void OnQuitting()
         {
             SyncEditModeTick(true);
             ClusterMeshSceneBatcher.DisposeCachedContexts();
+            ClusterMeshSceneViewRenderer.DisposeCachedContexts();
         }
     }
 }

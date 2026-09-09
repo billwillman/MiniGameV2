@@ -66,6 +66,9 @@ namespace ClusterMesh
         public bool EnableConeCull { get; set; } = true;
         public bool EnableClusterColor { get; set; }
         public float LodErrorThreshold { get; set; }
+#if UNITY_EDITOR
+        public int EditorDrawLayer { get; set; }
+#endif
 
         public ClusterMeshDrawContext(ClusterMeshAsset asset, ComputeShader cullShader, Shader litShader)
         {
@@ -280,7 +283,13 @@ namespace ClusterMesh
                     {
                         Graphics.DrawMeshInstancedIndirect(
                             _template, 0, colorMat, worldBounds, _argsBuffers[materialIndex], 0, null,
-                            ShadowCastingMode.Off, receiveShadows, 0, camera);
+                            ShadowCastingMode.Off, receiveShadows,
+#if UNITY_EDITOR
+                            EditorDrawLayer,
+#else
+                            0,
+#endif
+                            camera);
 
                         _shadowArgsBuffers[materialIndex].SetData(_argsSeed);
                         GraphicsBuffer.CopyCount(shadowVisible, _shadowArgsBuffers[materialIndex], 4);
@@ -288,14 +297,26 @@ namespace ClusterMesh
                         BindDrawMaterial(shadowMat, shadowVisible);
                         Graphics.DrawMeshInstancedIndirect(
                             _template, 0, shadowMat, worldBounds, _shadowArgsBuffers[materialIndex], 0, null,
-                            ShadowCastingMode.ShadowsOnly, false, 0, camera);
+                            ShadowCastingMode.ShadowsOnly, false,
+#if UNITY_EDITOR
+                            EditorDrawLayer,
+#else
+                            0,
+#endif
+                            camera);
                     }
                     else
                     {
                         Graphics.DrawMeshInstancedIndirect(
                             _template, 0, colorMat, worldBounds, _argsBuffers[materialIndex], 0, null,
                             castShadows ? ShadowCastingMode.On : ShadowCastingMode.Off,
-                            receiveShadows, 0, camera);
+                            receiveShadows,
+#if UNITY_EDITOR
+                            EditorDrawLayer,
+#else
+                            0,
+#endif
+                            camera);
                     }
                 }
             }

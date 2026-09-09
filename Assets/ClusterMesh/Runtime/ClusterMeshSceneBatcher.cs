@@ -184,6 +184,19 @@ namespace ClusterMesh
             CollectBatches(Renderers, dest);
         }
 
+#if UNITY_EDITOR
+        public static void CollectRegisteredRenderersForEditor(List<ClusterMeshRenderer> dest)
+        {
+            dest.Clear();
+            for (int i = 0; i < Renderers.Count; i++)
+            {
+                ClusterMeshRenderer renderer = Renderers[i];
+                if (renderer != null && renderer.isActiveAndEnabled)
+                    dest.Add(renderer);
+            }
+        }
+#endif
+
         public static void DisposeCachedContexts()
         {
             foreach (var kv in Contexts)

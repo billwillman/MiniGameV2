@@ -14,6 +14,7 @@ namespace ClusterMesh.Tests
         public void TearDown()
         {
             ClusterMeshSceneBatcher.ResetForTests();
+            ClusterMeshSceneViewRenderer.DisposeCachedContexts();
             ClusterMeshLifetime.SyncEditModeTick();
             for (int i = 0; i < _trash.Count; i++)
             {
@@ -60,6 +61,23 @@ namespace ClusterMesh.Tests
             ClusterMeshSceneBatcher.Register(renderer);
             Object.DestroyImmediate(renderer.gameObject);
             Assert.That(ClusterMeshSceneBatcher.RegisteredCount, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void SceneViewRenderer_DisposeEmptyCache_DoesNotThrow()
+        {
+            Assert.DoesNotThrow(ClusterMeshSceneViewRenderer.DisposeCachedContexts);
+            Assert.That(ClusterMeshSceneViewRenderer.CachedContextCount, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void IsLayerVisible_RequiresEditorAndCameraMasks()
+        {
+            int layer = 7;
+            int mask = 1 << layer;
+            Assert.That(ClusterMeshSceneViewRenderer.IsLayerVisible(layer, mask, mask), Is.True);
+            Assert.That(ClusterMeshSceneViewRenderer.IsLayerVisible(layer, 0, mask), Is.False);
+            Assert.That(ClusterMeshSceneViewRenderer.IsLayerVisible(layer, mask, 0), Is.False);
         }
 
         [Test]
