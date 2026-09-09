@@ -38,7 +38,14 @@ namespace ClusterMesh
         {
             if (camera == null || camera.cameraType != CameraType.Game)
                 return false;
+#if UNITY_EDITOR
+            // Keep Editor Play/Game views on the established Graphics.Draw path.
+            // The URP command path does not receive renderer-populated per-object
+            // lighting state and submits shadow casters after camera culling.
+            return false;
+#else
             return TryGetRendererData(camera, out ScriptableRendererData data) && HasActiveFeature(data);
+#endif
         }
 
         public static bool TryGetDefaultRendererData(out ScriptableRendererData data)

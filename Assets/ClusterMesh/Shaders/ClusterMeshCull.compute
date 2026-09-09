@@ -23,6 +23,7 @@ float _LodProjectionScale;
 float4 _Planes[6];
 float3 _WorldCameraPos;
 float4x4 _ObjectLocalToWorld[256];
+StructuredBuffer<uint> _ObjectCameraCullFlags;
 
 void TransformAabb(ClusterHeader h, float4x4 m, out float3 worldCenter, out float3 worldExtents)
 {
@@ -172,7 +173,7 @@ void CullClusters(uint3 id : SV_DispatchThreadID)
         return;
     float3 wc, we;
     TransformAabb(h, _ObjectLocalToWorld[objectIndex], wc, we);
-    bool inCamera = TestAabb(wc, we, false);
+    bool inCamera = _ObjectCameraCullFlags[objectIndex] == 0u || TestAabb(wc, we, false);
     bool inShadow = _EnableShadowList != 0 && TestAabb(wc, we, true);
     if (!inCamera && !inShadow)
         return;

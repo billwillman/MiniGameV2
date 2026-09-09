@@ -1,4 +1,6 @@
 using UnityEditor;
+using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace ClusterMesh
 {
@@ -41,13 +43,15 @@ namespace ClusterMesh
         public static void SyncSceneViewTick(bool enabled)
         {
             EditorApplication.update -= OnSceneViewUpdate;
-            SceneView.beforeSceneGui -= OnBeforeSceneGui;
+            RenderPipelineManager.beginCameraRendering -= OnBeginCameraRendering;
+            Camera.onPreCull -= OnBuiltInCameraPreCull;
             SceneViewTickActive = false;
             if (!enabled)
                 return;
 
             EditorApplication.update += OnSceneViewUpdate;
-            SceneView.beforeSceneGui += OnBeforeSceneGui;
+            RenderPipelineManager.beginCameraRendering += OnBeginCameraRendering;
+            Camera.onPreCull += OnBuiltInCameraPreCull;
             SceneViewTickActive = true;
         }
 
@@ -72,12 +76,20 @@ namespace ClusterMesh
             ClusterMeshSceneViewRenderer.RefreshAndRepaint();
         }
 
-        static void OnBeforeSceneGui(SceneView sceneView)
+        static void OnBeginCameraRendering(ScriptableRenderContext context, Camera camera)
         {
             if (EditorApplication.isCompiling)
                 return;
 
-            ClusterMeshSceneViewRenderer.DrawSceneView(sceneView);
+            ClusterMeshSceneViewRenderer.DrawSceneCamera(camera);
+        }
+
+        static void OnBuiltInCameraPreCull(Camera camera)
+        {
+            if (EditorApplication.isCompiling || GraphicsSettings.currentRenderPipeline != null)
+                return;
+
+            ClusterMeshSceneViewRenderer.DrawSceneCamera(camera);
         }
 
         static void OnPlayModeStateChanged(PlayModeStateChange state)

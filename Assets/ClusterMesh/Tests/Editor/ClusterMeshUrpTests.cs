@@ -55,14 +55,14 @@ namespace ClusterMesh.Tests
         }
 
         [Test]
-        public void ShouldSkipLegacyFlush_OverrideWithFeature_IsTrue()
+        public void EditorGameCamera_KeepsLegacyFlushWithActiveFeature()
         {
             var data = Track(ScriptableObject.CreateInstance<UniversalRendererData>());
             ClusterMeshUrpFeatureMenu.EnableOn(data);
             ClusterMeshUrpBridge.RendererDataOverrideForTests = data;
             var go = Track(new GameObject("CMUrpCam")).AddComponent<Camera>();
-            Assert.That(ClusterMeshUrpBridge.ShouldSkipLegacyFlush(go), Is.True);
-            Assert.That(ClusterMeshUrpBridge.ShouldSubmitUrp(go), Is.True);
+            Assert.That(ClusterMeshUrpBridge.ShouldSkipLegacyFlush(go), Is.False);
+            Assert.That(ClusterMeshUrpBridge.ShouldSubmitUrp(go), Is.False);
         }
 
         [Test]
@@ -91,12 +91,14 @@ namespace ClusterMesh.Tests
         }
 
         [Test]
-        public void Flush_WhenFeatureOwnsCamera_DoesNotThrow()
+        public void EditorLegacyFallback_WithActiveFeature_DoesNotThrow()
         {
             var data = Track(ScriptableObject.CreateInstance<UniversalRendererData>());
             ClusterMeshUrpFeatureMenu.EnableOn(data);
             ClusterMeshUrpBridge.RendererDataOverrideForTests = data;
             var cam = Track(new GameObject("CMUrpFlushCam")).AddComponent<Camera>();
+            Assert.That(ClusterMeshUrpBridge.HasActiveFeature(data), Is.True);
+            Assert.That(ClusterMeshUrpBridge.ShouldSubmitUrp(cam), Is.False);
             var mesh = ClusterMeshTestMeshes.Triangle();
             _trash.Add(mesh);
             var bake = ClusterMeshBaker.Bake(mesh, new Material[1], new ClusterMeshBakeSettings { buildLodHierarchy = false });

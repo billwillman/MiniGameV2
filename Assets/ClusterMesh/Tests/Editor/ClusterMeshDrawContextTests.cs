@@ -119,6 +119,48 @@ namespace ClusterMesh.Tests
         }
 
         [Test]
+        public void PrepareUrp_CameraCullFlagControlsGpuFrustum()
+        {
+            string unsupported = ClusterMeshCapability.GetUnsupportedReason();
+            if (unsupported != null)
+                Assert.Ignore(unsupported);
+
+            var mesh = ClusterMeshTestMeshes.Triangle();
+            var settings = new ClusterMeshBakeSettings { buildLodHierarchy = false };
+            var bake = ClusterMeshBaker.Bake(mesh, new Material[1], settings);
+            var asset = ScriptableObject.CreateInstance<ClusterMeshAsset>();
+            asset.CopyFrom(bake, mesh, settings);
+            var cameraObject = new GameObject("CMCameraCullGpuTest");
+            var camera = cameraObject.AddComponent<Camera>();
+            camera.nearClipPlane = 0.1f;
+            camera.farClipPlane = 100f;
+            camera.aspect = 1f;
+            Matrix4x4 behindCamera = Matrix4x4.Translate(new Vector3(0f, 0f, -5f));
+            var cull = AssetDatabase.LoadAssetAtPath<ComputeShader>(
+                "Assets/ClusterMesh/Shaders/ClusterMeshCull.compute");
+            var lit = Shader.Find("ClusterMesh/Lit");
+
+            using (var ctx = new ClusterMeshDrawContext(asset, cull, lit))
+            {
+                Assert.That(ctx.IsReady, Is.True, ctx.Error);
+                ctx.EnableConeCull = false;
+                Assert.That(ctx.PrepareUrp(
+                    new[] { behindCamera }, new[] { false }, new[] { true },
+                    camera, false, false), Is.True);
+                Assert.That(VisibleInstanceCount(ctx), Is.Zero);
+
+                Assert.That(ctx.PrepareUrp(
+                    new[] { behindCamera }, new[] { false }, new[] { false },
+                    camera, false, false), Is.True);
+                Assert.That(VisibleInstanceCount(ctx), Is.EqualTo(1u));
+            }
+
+            Object.DestroyImmediate(cameraObject);
+            Object.DestroyImmediate(asset);
+            Object.DestroyImmediate(mesh);
+        }
+
+        [Test]
         public void Renderer_OnEnableWithEmptyAsset_DoesNotThrow()
         {
             var go = new GameObject("CMRenderer");
@@ -136,5 +178,17 @@ namespace ClusterMesh.Tests
             Assert.That(renderer.receiveShadows, Is.True);
             Object.DestroyImmediate(go);
         }
+
+        static uint VisibleInstanceCount(ClusterMeshDrawContext context)
+        {
+            const System.Reflection.BindingFlags Flags =
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance;
+            var buffers = (GraphicsBuffer[])typeof(ClusterMeshDrawContext)
+                .GetField("_argsBuffers", Flags).GetValue(context);
+            var args = new uint[5];
+            buffers[0].GetData(args);
+            return args[1];
+        }
+
     }
 }

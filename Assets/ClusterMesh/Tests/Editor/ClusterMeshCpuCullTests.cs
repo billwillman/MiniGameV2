@@ -16,6 +16,15 @@ namespace ClusterMesh.Tests
         }
 
         [Test]
+        public void EnableCameraCull_DefaultsTrue()
+        {
+            var go = new GameObject("CMCameraCullFlag");
+            var renderer = go.AddComponent<ClusterMeshRenderer>();
+            Assert.That(renderer.enableCameraCull, Is.True);
+            Object.DestroyImmediate(go);
+        }
+
+        [Test]
         public void CountIndirectDraws_SplitsWhenRequested()
         {
             Assert.That(ClusterMeshSceneBatcher.CountDrawCalls(10, 1), Is.EqualTo(1));

@@ -103,6 +103,7 @@ namespace ClusterMesh
         static readonly List<BatchKey> StaleContexts = new List<BatchKey>();
         static readonly List<Matrix4x4> Matrices = new List<Matrix4x4>(64);
         static readonly List<bool> CpuCullFlags = new List<bool>(64);
+        static readonly List<bool> CameraCullFlags = new List<bool>(64);
 
         static readonly List<ClusterMeshRenderer> Renderers = new List<ClusterMeshRenderer>(64);
 
@@ -141,17 +142,13 @@ namespace ClusterMesh
                 SceneView.RepaintAll();
         }
 
-        public static void DrawSceneView(SceneView sceneView)
+        public static void DrawSceneCamera(Camera camera)
         {
-            if (sceneView == null || Event.current == null || Event.current.type != EventType.Repaint)
-                return;
-
-            Camera camera = sceneView.camera;
             if (camera == null || camera.cameraType != CameraType.SceneView)
                 return;
 
             ClusterMeshSceneBatcher.CollectRegisteredRenderersForEditor(Renderers);
-            DrawCamera(camera, StageUtility.GetCurrentStageHandle());
+            ProcessCamera(camera, StageUtility.GetCurrentStageHandle());
         }
 
         public static void DisposeCachedContexts()
@@ -164,10 +161,11 @@ namespace ClusterMesh
             SeenRenderers.Clear();
             Matrices.Clear();
             CpuCullFlags.Clear();
+            CameraCullFlags.Clear();
             Renderers.Clear();
         }
 
-        static void DrawCamera(Camera camera, StageHandle stage)
+        static void ProcessCamera(Camera camera, StageHandle stage)
         {
             SeenRenderers.Clear();
             for (int i = 0; i < Renderers.Count; i++)
@@ -180,6 +178,7 @@ namespace ClusterMesh
                 SeenRenderers.Add(seed.GetInstanceID());
                 Matrices.Clear();
                 CpuCullFlags.Clear();
+                CameraCullFlags.Clear();
                 AddRenderer(seed);
 
                 for (int j = i + 1; j < Renderers.Count; j++)
@@ -207,7 +206,7 @@ namespace ClusterMesh
                 context.LodErrorThreshold = 0f;
                 context.EditorDrawLayer = key.layer;
                 context.DrawEditorPreview(
-                    Matrices, CpuCullFlags, key.cullingCamera, key.drawCamera,
+                    Matrices, CpuCullFlags, CameraCullFlags, key.cullingCamera, key.drawCamera,
                     key.castShadows, key.receiveShadows);
             }
         }
@@ -258,6 +257,7 @@ namespace ClusterMesh
         {
             Matrices.Add(renderer.transform.localToWorldMatrix);
             CpuCullFlags.Add(renderer.enableCpuObjectCull);
+            CameraCullFlags.Add(renderer.enableCameraCull);
         }
 
         static ClusterMeshDrawContext GetOrCreateContext(BatchKey key)

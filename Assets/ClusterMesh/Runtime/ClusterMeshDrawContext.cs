@@ -30,6 +30,7 @@ namespace ClusterMesh
         static readonly int PlanesId = Shader.PropertyToID("_Planes");
         static readonly int WorldCameraPosId = Shader.PropertyToID("_WorldCameraPos");
         static readonly int ObjectLocalToWorldId = Shader.PropertyToID("_ObjectLocalToWorld");
+        static readonly int ObjectCameraCullFlagsId = Shader.PropertyToID("_ObjectCameraCullFlags");
         static readonly int ObjectWorldToLocalId = Shader.PropertyToID("_ObjectWorldToLocal");
 
         readonly ClusterMeshAsset _asset;
@@ -39,6 +40,7 @@ namespace ClusterMesh
         readonly GraphicsBuffer _clusterBuffer;
         readonly GraphicsBuffer _groupBuffer;
         readonly GraphicsBuffer _owningGroupBuffer;
+        readonly GraphicsBuffer _objectCameraCullFlagsBuffer;
         readonly Bounds _localBounds;
         readonly GraphicsBuffer _vertexBuffer;
         readonly GraphicsBuffer _indexBuffer;
@@ -58,6 +60,7 @@ namespace ClusterMesh
         readonly bool[] _singleCull = { true };
         readonly Matrix4x4[] _l2w = new Matrix4x4[ClusterMeshLimits.MaxBatchedObjects];
         readonly Matrix4x4[] _w2l = new Matrix4x4[ClusterMeshLimits.MaxBatchedObjects];
+        readonly uint[] _objectCameraCullFlags = new uint[ClusterMeshLimits.MaxBatchedObjects];
         readonly List<UrpChunk> _urpChunks = new List<UrpChunk>();
         readonly List<GraphicsBuffer> _extraArgs = new List<GraphicsBuffer>();
         readonly List<GraphicsBuffer> _extraVisible = new List<GraphicsBuffer>();
@@ -138,6 +141,8 @@ namespace ClusterMesh
                 _owningGroupBuffer.SetData(owning);
             else
                 _owningGroupBuffer.SetData(new[] { ClusterMeshLod.NoParent });
+            _objectCameraCullFlagsBuffer = new GraphicsBuffer(
+                GraphicsBuffer.Target.Structured, ClusterMeshLimits.MaxBatchedObjects, 4);
             _localBounds = ClusterMeshFrustum.AssetLocalBounds(asset);
             _vertexBuffer = new GraphicsBuffer(
                 GraphicsBuffer.Target.Structured,
@@ -187,14 +192,14 @@ namespace ClusterMesh
         public void Draw(Matrix4x4 localToWorld, Camera camera, bool castShadows = true, bool receiveShadows = true)
         {
             _single[0] = localToWorld;
-            Draw(_single, _singleCull, 1, camera, camera, castShadows, receiveShadows);
+            Draw(_single, _singleCull, null, 1, camera, camera, castShadows, receiveShadows);
         }
 
         public void Draw(IList<Matrix4x4> localToWorld, Camera camera, bool castShadows = true, bool receiveShadows = true)
         {
             if (localToWorld == null)
                 return;
-            Draw(localToWorld, null, localToWorld.Count, camera, camera, castShadows, receiveShadows);
+            Draw(localToWorld, null, null, localToWorld.Count, camera, camera, castShadows, receiveShadows);
         }
 
         public void Draw(
@@ -206,13 +211,28 @@ namespace ClusterMesh
         {
             if (localToWorld == null)
                 return;
-            Draw(localToWorld, enableCpuObjectCull, localToWorld.Count, camera, camera, castShadows, receiveShadows);
+            Draw(localToWorld, enableCpuObjectCull, null, localToWorld.Count, camera, camera, castShadows, receiveShadows);
+        }
+
+        public void Draw(
+            IList<Matrix4x4> localToWorld,
+            IList<bool> enableCpuObjectCull,
+            IList<bool> enableCameraCull,
+            Camera camera,
+            bool castShadows = true,
+            bool receiveShadows = true)
+        {
+            if (localToWorld == null)
+                return;
+            Draw(localToWorld, enableCpuObjectCull, enableCameraCull, localToWorld.Count,
+                camera, camera, castShadows, receiveShadows);
         }
 
 #if UNITY_EDITOR
         public void DrawEditorPreview(
             IList<Matrix4x4> localToWorld,
             IList<bool> enableCpuObjectCull,
+            IList<bool> enableCameraCull,
             Camera cullingCamera,
             Camera drawCamera,
             bool castShadows = true,
@@ -221,7 +241,7 @@ namespace ClusterMesh
             if (localToWorld == null)
                 return;
             Draw(
-                localToWorld, enableCpuObjectCull, localToWorld.Count,
+                localToWorld, enableCpuObjectCull, enableCameraCull, localToWorld.Count,
                 cullingCamera, drawCamera, castShadows, receiveShadows);
         }
 #endif
@@ -229,6 +249,7 @@ namespace ClusterMesh
         void Draw(
             IList<Matrix4x4> localToWorld,
             IList<bool> enableCpuObjectCull,
+            IList<bool> enableCameraCull,
             int count,
             Camera cullingCamera,
             Camera drawCamera,
@@ -237,7 +258,7 @@ namespace ClusterMesh
         {
             if (drawCamera == null)
                 return;
-            if (!PrepareChunks(localToWorld, enableCpuObjectCull, count, cullingCamera, castShadows, receiveShadows))
+            if (!PrepareChunks(localToWorld, enableCpuObjectCull, enableCameraCull, count, cullingCamera, castShadows, receiveShadows))
                 return;
             for (int i = 0; i < _urpChunks.Count; i++)
                 SubmitLegacy(_urpChunks[i], drawCamera);
@@ -250,9 +271,20 @@ namespace ClusterMesh
             bool castShadows,
             bool receiveShadows)
         {
+            return PrepareUrp(localToWorld, enableCpuObjectCull, null, camera, castShadows, receiveShadows);
+        }
+
+        public bool PrepareUrp(
+            IList<Matrix4x4> localToWorld,
+            IList<bool> enableCpuObjectCull,
+            IList<bool> enableCameraCull,
+            Camera camera,
+            bool castShadows,
+            bool receiveShadows)
+        {
             if (localToWorld == null)
                 return false;
-            if (!PrepareChunks(localToWorld, enableCpuObjectCull, localToWorld.Count, camera, castShadows, receiveShadows))
+            if (!PrepareChunks(localToWorld, enableCpuObjectCull, enableCameraCull, localToWorld.Count, camera, castShadows, receiveShadows))
                 return false;
             for (int i = 0; i < _urpChunks.Count; i++)
                 SubmitUrpShadows(_urpChunks[i], camera);
@@ -278,6 +310,7 @@ namespace ClusterMesh
         bool PrepareChunks(
             IList<Matrix4x4> localToWorld,
             IList<bool> enableCpuObjectCull,
+            IList<bool> enableCameraCull,
             int count,
             Camera camera,
             bool castShadows,
@@ -318,13 +351,17 @@ namespace ClusterMesh
                 {
                     Matrix4x4 l2w = localToWorld[start + i];
                     Bounds b = TransformBounds(l2w);
-                    bool enableCull = enableCpuObjectCull == null
+                    bool cameraCull = enableCameraCull == null
+                        || start + i >= enableCameraCull.Count
+                        || enableCameraCull[start + i];
+                    bool enableCull = cameraCull && (enableCpuObjectCull == null
                         || start + i >= enableCpuObjectCull.Count
-                        || enableCpuObjectCull[start + i];
+                        || enableCpuObjectCull[start + i]);
                     if (!failSafe && !ClusterMeshObjectCull.KeepObject(b, _planes, enableCull, splitShadows, _shadowPlanes))
                         continue;
                     _l2w[n] = l2w;
                     _w2l[n] = l2w.inverse;
+                    _objectCameraCullFlags[n] = cameraCull ? 1u : 0u;
                     if (!hasBounds)
                     {
                         worldBounds = b;
@@ -397,6 +434,8 @@ namespace ClusterMesh
             _cullShader.SetBuffer(_cullKernel, ClustersId, _clusterBuffer);
             _cullShader.SetBuffer(_cullKernel, GroupsId, _groupBuffer);
             _cullShader.SetBuffer(_cullKernel, OwningGroupsId, _owningGroupBuffer);
+            _objectCameraCullFlagsBuffer.SetData(_objectCameraCullFlags, 0, 0, n);
+            _cullShader.SetBuffer(_cullKernel, ObjectCameraCullFlagsId, _objectCameraCullFlagsBuffer);
             _cullShader.SetInt(ObjectCountId, n);
             _cullShader.SetInt(ClusterCountId, _asset.clusters.Length);
             _cullShader.SetInt(GroupCountId, _asset.groups != null ? _asset.groups.Length : 0);
@@ -558,6 +597,7 @@ namespace ClusterMesh
             _clusterBuffer?.Dispose();
             _groupBuffer?.Dispose();
             _owningGroupBuffer?.Dispose();
+            _objectCameraCullFlagsBuffer?.Dispose();
             _vertexBuffer?.Dispose();
             _indexBuffer?.Dispose();
             if (_visibleBuffers != null)

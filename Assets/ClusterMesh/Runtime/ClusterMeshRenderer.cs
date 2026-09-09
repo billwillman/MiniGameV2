@@ -13,6 +13,8 @@ namespace ClusterMesh
         public bool castShadows = true;
         [Tooltip("Receive shadows from other objects on this surface.")]
         public bool receiveShadows = true;
+        [Tooltip("Cull clusters outside the target camera frustum.")]
+        public bool enableCameraCull = true;
         public bool enableConeCull = true;
         [Tooltip("CPU object cull before dispatch. Off = this object is always submitted.")]
         public bool enableCpuObjectCull = true;
