@@ -107,9 +107,6 @@ namespace ClusterMesh
 
         public static void DrawAllSceneViews()
         {
-            if (Application.isPlaying || EditorApplication.isPlayingOrWillChangePlaymode)
-                return;
-
             ClusterMeshSceneBatcher.CollectRegisteredRenderersForEditor(Renderers);
             UsedContexts.Clear();
             StageHandle stage = StageUtility.GetCurrentStageHandle();

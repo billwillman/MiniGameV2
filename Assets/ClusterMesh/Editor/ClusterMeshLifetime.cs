@@ -6,12 +6,14 @@ namespace ClusterMesh
     public static class ClusterMeshLifetime
     {
         public static bool EditModeTickActive { get; private set; }
+        public static bool SceneViewTickActive { get; private set; }
 
         static ClusterMeshLifetime()
         {
             AssemblyReloadEvents.beforeAssemblyReload += OnBeforeAssemblyReload;
             EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
             EditorApplication.quitting += OnQuitting;
+            SyncSceneViewTick(true);
             SyncEditModeTick();
         }
 
@@ -36,6 +38,17 @@ namespace ClusterMesh
             EditModeTickActive = true;
         }
 
+        public static void SyncSceneViewTick(bool enabled)
+        {
+            EditorApplication.update -= OnSceneViewUpdate;
+            SceneViewTickActive = false;
+            if (!enabled)
+                return;
+
+            EditorApplication.update += OnSceneViewUpdate;
+            SceneViewTickActive = true;
+        }
+
         static void OnEditModeUpdate()
         {
             if (EditorApplication.isPlayingOrWillChangePlaymode)
@@ -45,9 +58,16 @@ namespace ClusterMesh
             }
 
             ClusterMeshSceneBatcher.Flush();
-            ClusterMeshSceneViewRenderer.DrawAllSceneViews();
             if (ShouldQueuePlayerLoop(ClusterMeshSceneBatcher.RegisteredCount))
                 EditorApplication.QueuePlayerLoopUpdate();
+        }
+
+        static void OnSceneViewUpdate()
+        {
+            if (EditorApplication.isCompiling)
+                return;
+
+            ClusterMeshSceneViewRenderer.DrawAllSceneViews();
         }
 
         static void OnPlayModeStateChanged(PlayModeStateChange state)
@@ -57,16 +77,17 @@ namespace ClusterMesh
                 case PlayModeStateChange.ExitingEditMode:
                     SyncEditModeTick(true);
                     ClusterMeshSceneBatcher.DisposeCachedContexts();
-                    ClusterMeshSceneViewRenderer.DisposeCachedContexts();
                     break;
                 case PlayModeStateChange.EnteredPlayMode:
                     SyncEditModeTick(true);
+                    SyncSceneViewTick(true);
                     break;
                 case PlayModeStateChange.ExitingPlayMode:
                     ClusterMeshSceneBatcher.DisposeCachedContexts();
                     ClusterMeshSceneViewRenderer.DisposeCachedContexts();
                     break;
                 case PlayModeStateChange.EnteredEditMode:
+                    SyncSceneViewTick(true);
                     SyncEditModeTick(false);
                     break;
             }
@@ -75,6 +96,7 @@ namespace ClusterMesh
         static void OnBeforeAssemblyReload()
         {
             SyncEditModeTick(true);
+            SyncSceneViewTick(false);
             ClusterMeshSceneBatcher.DisposeCachedContexts();
             ClusterMeshSceneViewRenderer.DisposeCachedContexts();
         }
@@ -82,6 +104,7 @@ namespace ClusterMesh
         static void OnQuitting()
         {
             SyncEditModeTick(true);
+            SyncSceneViewTick(false);
             ClusterMeshSceneBatcher.DisposeCachedContexts();
             ClusterMeshSceneViewRenderer.DisposeCachedContexts();
         }

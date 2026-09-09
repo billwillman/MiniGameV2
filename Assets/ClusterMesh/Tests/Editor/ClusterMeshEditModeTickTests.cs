@@ -15,6 +15,7 @@ namespace ClusterMesh.Tests
         {
             ClusterMeshSceneBatcher.ResetForTests();
             ClusterMeshSceneViewRenderer.DisposeCachedContexts();
+            ClusterMeshLifetime.SyncSceneViewTick(true);
             ClusterMeshLifetime.SyncEditModeTick();
             for (int i = 0; i < _trash.Count; i++)
             {
@@ -91,9 +92,20 @@ namespace ClusterMesh.Tests
         [Test]
         public void SyncEditModeTick_True_ClearsActive()
         {
+            ClusterMeshLifetime.SyncSceneViewTick(true);
             ClusterMeshLifetime.SyncEditModeTick(false);
             ClusterMeshLifetime.SyncEditModeTick(true);
             Assert.That(ClusterMeshLifetime.EditModeTickActive, Is.False);
+            Assert.That(ClusterMeshLifetime.SceneViewTickActive, Is.True);
+        }
+
+        [Test]
+        public void SyncSceneViewTick_TracksIndependentSubscription()
+        {
+            ClusterMeshLifetime.SyncSceneViewTick(false);
+            Assert.That(ClusterMeshLifetime.SceneViewTickActive, Is.False);
+            ClusterMeshLifetime.SyncSceneViewTick(true);
+            Assert.That(ClusterMeshLifetime.SceneViewTickActive, Is.True);
         }
 
         [Test]
