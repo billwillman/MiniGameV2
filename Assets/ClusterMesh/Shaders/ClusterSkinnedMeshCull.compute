@@ -1,0 +1,119 @@
+#pragma kernel CullSkinnedClusters
+
+#include "ClusterMeshBuffers.hlsl"
+
+struct ClusterSkinnedCullFrame
+{
+    float4 aabbCenter;
+    float4 aabbExtents;
+    float4 coneAxisCutoff;
+    float4 coneApex;
+};
+
+StructuredBuffer<ClusterHeader> _Clusters;
+StructuredBuffer<ClusterGroup> _Groups;
+StructuredBuffer<int> _OwningGroups;
+StructuredBuffer<ClusterSkinnedCullFrame> _CullFrames;
+StructuredBuffer<uint> _ObjectCullSegments;
+StructuredBuffer<uint> _ObjectCameraCullFlags;
+AppendStructuredBuffer<uint> _VisibleClusterIds;
+uint _ObjectCount, _ClusterCount, _MaterialIndex;
+uint _GroupCount;
+int _CullFrameOffset, _EnableConeCull;
+int _HierarchyVersion, _LodPerspective;
+float _LodErrorThreshold, _LodProjectionScale;
+float4 _Planes[6];
+float3 _WorldCameraPos;
+float4x4 _ObjectLocalToWorld[256];
+
+void TransformAabb(ClusterSkinnedCullFrame f, float4x4 m, out float3 c, out float3 e)
+{
+    c = mul(m, float4(f.aabbCenter.xyz, 1)).xyz;
+    float3 x = mul((float3x3)m, float3(f.aabbExtents.x, 0, 0));
+    float3 y = mul((float3x3)m, float3(0, f.aabbExtents.y, 0));
+    float3 z = mul((float3x3)m, float3(0, 0, f.aabbExtents.z));
+    e = abs(x) + abs(y) + abs(z);
+}
+bool TestAabb(float3 c, float3 e)
+{
+    [unroll] for (int i = 0; i < 6; i++)
+    {
+        float3 n = _Planes[i].xyz;
+        float radius = dot(e, abs(n));
+        if (dot(n, c) + _Planes[i].w + radius < 0) return false;
+    }
+    return true;
+}
+bool TestCone(ClusterSkinnedCullFrame f, float4x4 m, float3 e)
+{
+    // A negative cutoff is the baked 'invalid / no conservative cone' sentinel.
+    if (f.coneAxisCutoff.w < 0) return true;
+    float3 axis = mul((float3x3)m, f.coneAxisCutoff.xyz);
+    float axisLength = length(axis); if (axisLength < 1e-6) return true;
+    float3 apex = mul(m, float4(f.coneApex.xyz, 1)).xyz;
+    float3 view = _WorldCameraPos - apex; float distanceToApex = length(view);
+    float radius = length(e); if (distanceToApex <= max(radius, 1e-6)) return true;
+    axis /= axisLength; view /= distanceToApex;
+    float cosA = saturate(f.coneAxisCutoff.w);
+    float sinA = sqrt(max(0, 1 - cosA * cosA));
+    float sinB = saturate(radius / distanceToApex);
+    float cosB = sqrt(max(0, 1 - sinB * sinB));
+    return dot(view, axis) >= -(sinA * cosB + cosA * sinB);
+}
+float MaxAxisScale(float4x4 m)
+{
+    float sx=length(mul((float3x3)m,float3(1,0,0)));
+    float sy=length(mul((float3x3)m,float3(0,1,0)));
+    float sz=length(mul((float3x3)m,float3(0,0,1)));
+    return max(sx,max(sy,max(sz,1e-6)));
+}
+float ProjectedError(float error, float3 center, float4x4 m)
+{
+    float projected=error*MaxAxisScale(m)*_LodProjectionScale;
+    if(_LodPerspective!=0) projected/=max(length(_WorldCameraPos-center),1e-4);
+    return projected;
+}
+uint LodLevel(uint flags)
+{
+    uint packed=(flags>>8)&255u;
+    return packed>0u?packed:((flags&1u)!=0u?1u:0u);
+}
+bool TestLod(ClusterHeader h, uint clusterIndex, float3 center, float4x4 m)
+{
+    if(_HierarchyVersion<1) return true;
+    if(_LodErrorThreshold<=0) return LodLevel(h.flags)==0u;
+    if(_HierarchyVersion>=2)
+    {
+        int own=_OwningGroups[clusterIndex];
+        if(own>=0 && (uint)own<_GroupCount)
+        {
+            ClusterGroup g=_Groups[own];
+            if(ProjectedError(g.lodError,center,m)>=_LodErrorThreshold) return false;
+            if(g.parentGroupIndex<0 || (uint)g.parentGroupIndex>=_GroupCount) return true;
+            return ProjectedError(_Groups[g.parentGroupIndex].lodError,center,m)>=_LodErrorThreshold;
+        }
+        if(h.parentIndex<0 || (uint)h.parentIndex>=_GroupCount) return true;
+        return ProjectedError(_Groups[h.parentIndex].lodError,center,m)>=_LodErrorThreshold;
+    }
+    return LodLevel(h.flags)==0u;
+}
+
+[numthreads(64, 1, 1)]
+void CullSkinnedClusters(uint3 id : SV_DispatchThreadID)
+{
+    uint linear = id.x;
+    uint total = _ObjectCount * _ClusterCount;
+    if (linear >= total) return;
+    uint objectIndex = linear / _ClusterCount;
+    uint clusterIndex = linear % _ClusterCount;
+    ClusterHeader h = _Clusters[clusterIndex];
+    if (h.materialIndex != _MaterialIndex) return;
+    uint segment = _ObjectCullSegments[objectIndex];
+    ClusterSkinnedCullFrame f = _CullFrames[_CullFrameOffset + segment * _ClusterCount + clusterIndex];
+    float3 center, extents;
+    TransformAabb(f, _ObjectLocalToWorld[objectIndex], center, extents);
+    if (!TestLod(h, clusterIndex, center, _ObjectLocalToWorld[objectIndex])) return;
+    if (_ObjectCameraCullFlags[objectIndex] != 0 && !TestAabb(center, extents)) return;
+    if (_EnableConeCull != 0 && !TestCone(f, _ObjectLocalToWorld[objectIndex], extents)) return;
+    _VisibleClusterIds.Append((objectIndex << 16) | clusterIndex);
+}

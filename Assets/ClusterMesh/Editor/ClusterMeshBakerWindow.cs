@@ -8,6 +8,9 @@ namespace ClusterMesh
     {
         Mesh _mesh;
         GameObject _sourceObject;
+        bool _bakeSkinnedAnimation;
+        SkinnedMeshRenderer _skinnedRenderer;
+        AnimationClip _animationClip;
         DefaultAsset _outputFolder;
         string _assetName = "ClusterMeshAsset";
         ClusterMeshBakeSettings _settings = new ClusterMeshBakeSettings();
@@ -18,6 +21,11 @@ namespace ClusterMesh
         public static bool ShowsQemToggle(bool buildLodHierarchy)
         {
             return buildLodHierarchy;
+        }
+
+        public static bool ShowsQemToggle(bool buildLodHierarchy, bool bakeSkinnedAnimation)
+        {
+            return buildLodHierarchy && !bakeSkinnedAnimation;
         }
 
         [MenuItem("Tools/ClusterMesh/Baker")]
@@ -32,30 +40,69 @@ namespace ClusterMesh
             asset.CopyFrom(result, mesh, settings);
         }
 
+        public static void WriteSkinnedAsset(
+            ClusterSkinnedMeshAsset asset,
+            ClusterMeshAsset geometry,
+            SkinnedMeshRenderer renderer,
+            AnimationClip clip,
+            ClusterMeshBakeSettings settings)
+        {
+            if (asset == null || geometry == null)
+                throw new InvalidOperationException("Skinned ClusterMesh output assets are missing.");
+            settings = settings ?? new ClusterMeshBakeSettings();
+            settings.useQemSimplify = true;
+            ClusterSkinnedMeshBakeResult result = ClusterSkinnedMeshBaker.Bake(renderer, clip, settings);
+            geometry.CopyFrom(result.geometry, renderer.sharedMesh, settings);
+            asset.geometry = geometry;
+            asset.packedSkinWeights = ClusterSkinnedMeshBaker.PackSkinWeights(result.skinWeights);
+            asset.bindPoses = result.bindPoses;
+            asset.bonePaths = result.bonePaths;
+            asset.boneParentIndices = result.boneParentIndices;
+            asset.clips = result.clips;
+            asset.cullFrames = result.cullFrames;
+            asset.skinningVersion = ClusterSkinnedMeshAsset.CurrentSkinningVersion;
+            asset.skinVertexCount = result.skinWeights != null ? result.skinWeights.Length : 0;
+        }
+
         void OnGUI()
         {
             _scroll = EditorGUILayout.BeginScrollView(_scroll);
 
             EditorGUILayout.LabelField("怎么用", EditorStyles.boldLabel);
             EditorGUILayout.HelpBox(
-                "把一张静态 Mesh 拆成 cluster，存成 ClusterMeshAsset，给 ClusterMeshRenderer 或 Viewer 用。\n\n" +
-                "1. 拖一张 Mesh，或拖场景里带 MeshFilter 的物体（会用它的 Mesh 和材质）。\n" +
+                "普通模式把静态 Mesh 拆成 ClusterMeshAsset；勾选蒙皮动画后会生成独立的 ClusterSkinnedMeshAsset。\n\n" +
+                "1. 普通模式拖 Mesh/MeshFilter；蒙皮模式拖 SkinnedMeshRenderer 和 AnimationClip。\n" +
                 "2. 选输出目录。空着则写到 Assets/ClusterMesh/Samples。\n" +
                 "3. 填资产名，点 Bake。成功后 Project 会选中生成的 .asset。\n" +
-                "4. 选中生成的 .asset，用 GameObject/ClusterMesh/Cluster Mesh、Project 右键 ClusterMesh/Add to Scene，或 Inspector「加入场景」。\n" +
-                "5. 看效果：打开 Tools/ClusterMesh/Viewer 拖同一个资产；或 Tools/ClusterMesh/Create Demo Scene。\n\n" +
-                "限制：只要 MeshFilter，不要 SkinnedMesh。默认每 cluster 最多 64 顶点 / 124 三角。\n" +
+                "4. 普通资产使用 ClusterMeshRenderer；蒙皮资产使用 ClusterSkinnedMeshRenderer。\n\n" +
+                "蒙皮模式使用曲线拟合动画、VTF 蒙皮和 Skinning-Aware QEM，不使用 LODGroup。默认每 cluster 最多 64 顶点 / 124 三角。\n" +
                 "Stats 里 SetPass/Batches 会含阴影、Depth、多相机。合批看 Frame Debugger 的 DrawMeshInstancedIndirect。投射/接收阴影可在 ClusterMeshRenderer 上分开关。",
                 MessageType.Info);
 
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("输入", EditorStyles.boldLabel);
-            _mesh = (Mesh)EditorGUILayout.ObjectField(
-                new GUIContent("Mesh", "直接指定要拆的网格。和下面的物体二选一，物体优先。"),
-                _mesh, typeof(Mesh), false);
-            _sourceObject = (GameObject)EditorGUILayout.ObjectField(
-                new GUIContent("MeshFilter 物体", "从场景/预制体拖一个带 MeshFilter 的物体，自动取 Mesh 和材质。"),
-                _sourceObject, typeof(GameObject), true);
+            _bakeSkinnedAnimation = EditorGUILayout.Toggle(
+                new GUIContent("Bake Skinned Animation", "勾选后烘焙骨骼曲线、蒙皮权重和动画分段 Cull 数据。"),
+                _bakeSkinnedAnimation);
+            if (_bakeSkinnedAnimation)
+            {
+                _settings.useQemSimplify = true;
+                _skinnedRenderer = (SkinnedMeshRenderer)EditorGUILayout.ObjectField(
+                    new GUIContent("Skinned Renderer", "场景或预制体中的 SkinnedMeshRenderer。"),
+                    _skinnedRenderer, typeof(SkinnedMeshRenderer), true);
+                _animationClip = (AnimationClip)EditorGUILayout.ObjectField(
+                    new GUIContent("Animation Clip", "要进行曲线拟合并烘焙 Cull 数据的动画。"),
+                    _animationClip, typeof(AnimationClip), false);
+            }
+            else
+            {
+                _mesh = (Mesh)EditorGUILayout.ObjectField(
+                    new GUIContent("Mesh", "直接指定要拆的网格。和下面的物体二选一，物体优先。"),
+                    _mesh, typeof(Mesh), false);
+                _sourceObject = (GameObject)EditorGUILayout.ObjectField(
+                    new GUIContent("MeshFilter 物体", "从场景/预制体拖一个带 MeshFilter 的物体，自动取 Mesh 和材质。"),
+                    _sourceObject, typeof(GameObject), true);
+            }
 
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("输出", EditorStyles.boldLabel);
@@ -87,7 +134,7 @@ namespace ClusterMesh
                     ? "会分组、锁边、减半再切开，尽量收到根。重 Bake 后 Viewer / Renderer 拉阈值才能看到换层。"
                     : "只切叶子。资产大约能小一半，运行时始终画细块。",
                 MessageType.None);
-            if (ShowsQemToggle(_settings.buildLodHierarchy))
+            if (ShowsQemToggle(_settings.buildLodHierarchy, _bakeSkinnedAnimation))
             {
                 _settings.useQemSimplify = EditorGUILayout.Toggle(
                     new GUIContent(
@@ -114,6 +161,12 @@ namespace ClusterMesh
             _info = null;
             try
             {
+                if (_bakeSkinnedAnimation)
+                {
+                    BakeSkinned();
+                    return;
+                }
+
                 Mesh mesh = _mesh;
                 Material[] materials = null;
                 if (_sourceObject != null)
@@ -160,6 +213,44 @@ namespace ClusterMesh
             {
                 _error = ex.Message;
             }
+        }
+
+        void BakeSkinned()
+        {
+            if (_skinnedRenderer == null || _skinnedRenderer.sharedMesh == null)
+                throw new InvalidOperationException("请指定一个带 sharedMesh 的 SkinnedMeshRenderer。");
+            if (_animationClip == null)
+                throw new InvalidOperationException("请指定要烘焙的 AnimationClip。");
+
+            _settings.useQemSimplify = true;
+            string folder = ResolveOutputFolder();
+            var asset = ScriptableObject.CreateInstance<ClusterSkinnedMeshAsset>();
+            var geometry = ScriptableObject.CreateInstance<ClusterMeshAsset>();
+            geometry.name = "Geometry";
+            WriteSkinnedAsset(asset, geometry, _skinnedRenderer, _animationClip, _settings);
+            string path = AssetDatabase.GenerateUniqueAssetPath(folder + "/" + _assetName + ".asset");
+            AssetDatabase.CreateAsset(asset, path);
+            AssetDatabase.AddObjectToAsset(geometry, asset);
+            AssetDatabase.SaveAssets();
+            int clusterCount = geometry.clusters != null ? geometry.clusters.Length : 0;
+            int groupCount = geometry.groups != null ? geometry.groups.Length : 0;
+            _info = "已写入 " + path + "，共 " + clusterCount + " 个蒙皮 cluster，" +
+                groupCount + " 个 Skinning-Aware QEM LOD 组，" + asset.clips.Length + " 段动画。";
+            Selection.activeObject = asset;
+        }
+
+        string ResolveOutputFolder()
+        {
+            string folder = _outputFolder != null
+                ? AssetDatabase.GetAssetPath(_outputFolder)
+                : "Assets/ClusterMesh/Samples";
+            if (AssetDatabase.IsValidFolder(folder))
+                return folder;
+            if (!AssetDatabase.IsValidFolder("Assets/ClusterMesh"))
+                AssetDatabase.CreateFolder("Assets", "ClusterMesh");
+            if (!AssetDatabase.IsValidFolder("Assets/ClusterMesh/Samples"))
+                AssetDatabase.CreateFolder("Assets/ClusterMesh", "Samples");
+            return "Assets/ClusterMesh/Samples";
         }
     }
 }
