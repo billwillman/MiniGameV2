@@ -29,12 +29,19 @@ CBUFFER_END
 struct Attributes { uint vertexID : SV_VertexID; uint instanceID : SV_InstanceID; };
 struct Varyings { float4 positionCS : SV_POSITION; float3 positionWS : TEXCOORD0; float3 normalWS : TEXCOORD1; float4 tangentWS : TEXCOORD2; float2 uv : TEXCOORD3; };
 
-void ClusterSkinnedSetup()
+void ApplyClusterSkinnedInstance(uint instanceID)
 {
-    uint objectIndex = _VisibleClusterIds[unity_InstanceID] >> 16;
+    uint objectIndex = _VisibleClusterIds[instanceID] >> 16;
     unity_ObjectToWorld = _ObjectLocalToWorld[objectIndex];
     unity_WorldToObject = _ObjectWorldToLocal[objectIndex];
 }
+
+#if defined(UNITY_PROCEDURAL_INSTANCING_ENABLED)
+void ClusterSkinnedSetup()
+{
+    ApplyClusterSkinnedInstance(unity_InstanceID);
+}
+#endif
 float2 UnpackHalf2(uint v) { return float2(f16tof32(v & 0xffffu), f16tof32(v >> 16)); }
 void FetchBaseVertex(uint vertexID, uint instanceID, out float3 p, out float3 n, out float4 t, out float2 uv, out uint vertexIndex)
 {
@@ -75,7 +82,7 @@ void SkinVertex(uint objectIndex, uint index, inout float3 p, inout float3 n, in
 Varyings ClusterSkinnedVert(Attributes input)
 {
     uint objectIndex=_VisibleClusterIds[input.instanceID]>>16, vertexIndex; float3 p,n; float4 t; float2 uv;
-    ClusterSkinnedSetup(); FetchBaseVertex(input.vertexID,input.instanceID,p,n,t,uv,vertexIndex); SkinVertex(objectIndex,vertexIndex,p,n,t);
+    ApplyClusterSkinnedInstance(input.instanceID); FetchBaseVertex(input.vertexID,input.instanceID,p,n,t,uv,vertexIndex); SkinVertex(objectIndex,vertexIndex,p,n,t);
     VertexPositionInputs pos=GetVertexPositionInputs(p); VertexNormalInputs normal=GetVertexNormalInputs(n,t);
     Varyings o; o.positionCS=pos.positionCS; o.positionWS=pos.positionWS; o.normalWS=normal.normalWS; o.tangentWS=float4(normal.tangentWS,t.w); o.uv=TRANSFORM_TEX(uv,_BaseMap); return o;
 }
@@ -89,7 +96,7 @@ half4 ClusterSkinnedFrag(Varyings i):SV_Target
 Varyings ClusterSkinnedShadowVert(Attributes input)
 {
     uint objectIndex=_VisibleClusterIds[input.instanceID]>>16, vertexIndex; float3 p,n; float4 t; float2 uv;
-    ClusterSkinnedSetup(); FetchBaseVertex(input.vertexID,input.instanceID,p,n,t,uv,vertexIndex); SkinVertex(objectIndex,vertexIndex,p,n,t);
+    ApplyClusterSkinnedInstance(input.instanceID); FetchBaseVertex(input.vertexID,input.instanceID,p,n,t,uv,vertexIndex); SkinVertex(objectIndex,vertexIndex,p,n,t);
     float3 ws=TransformObjectToWorld(p), nw=TransformObjectToWorldNormal(n);
     #if _CASTING_PUNCTUAL_LIGHT_SHADOW
     float3 ld=normalize(_LightPosition-ws);
@@ -107,7 +114,7 @@ Varyings ClusterSkinnedShadowVert(Attributes input)
 Varyings ClusterSkinnedDepthVert(Attributes input)
 {
     uint objectIndex=_VisibleClusterIds[input.instanceID]>>16, vertexIndex; float3 p,n; float4 t; float2 uv;
-    ClusterSkinnedSetup(); FetchBaseVertex(input.vertexID,input.instanceID,p,n,t,uv,vertexIndex); SkinVertex(objectIndex,vertexIndex,p,n,t);
+    ApplyClusterSkinnedInstance(input.instanceID); FetchBaseVertex(input.vertexID,input.instanceID,p,n,t,uv,vertexIndex); SkinVertex(objectIndex,vertexIndex,p,n,t);
     Varyings o=(Varyings)0; o.positionCS=TransformObjectToHClip(p); o.uv=TRANSFORM_TEX(uv,_BaseMap); return o;
 }
 half4 ClusterSkinnedShadowFrag(Varyings i):SV_Target { half a=SAMPLE_TEXTURE2D(_BaseMap,sampler_BaseMap,i.uv).a*_BaseColor.a; clip(a-_Cutoff); return 0; }

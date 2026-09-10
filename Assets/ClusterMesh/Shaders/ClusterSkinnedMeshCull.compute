@@ -101,11 +101,11 @@ bool TestLod(ClusterHeader h, uint clusterIndex, float3 center, float4x4 m)
 [numthreads(64, 1, 1)]
 void CullSkinnedClusters(uint3 id : SV_DispatchThreadID)
 {
-    uint linear = id.x;
+    uint i = id.x;
     uint total = _ObjectCount * _ClusterCount;
-    if (linear >= total) return;
-    uint objectIndex = linear / _ClusterCount;
-    uint clusterIndex = linear % _ClusterCount;
+    if (i >= total) return;
+    uint objectIndex = i / _ClusterCount;
+    uint clusterIndex = i % _ClusterCount;
     ClusterHeader h = _Clusters[clusterIndex];
     if (h.materialIndex != _MaterialIndex) return;
     uint segment = _ObjectCullSegments[objectIndex];

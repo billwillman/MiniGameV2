@@ -80,10 +80,19 @@ namespace ClusterMesh
                 MessageType.Info);
 
             EditorGUILayout.Space();
+            EditorGUILayout.LabelField("烘焙模式", EditorStyles.boldLabel);
+            int mode = GUILayout.Toolbar(
+                _bakeSkinnedAnimation ? 1 : 0,
+                new[] { "静态 Mesh", "蒙皮动画" });
+            _bakeSkinnedAnimation = mode == 1;
+            EditorGUILayout.HelpBox(
+                _bakeSkinnedAnimation
+                    ? "当前：蒙皮。拖 SkinnedMeshRenderer + AnimationClip，生成 ClusterSkinnedMeshAsset。"
+                    : "当前：静态。拖 Mesh / MeshFilter，生成 ClusterMeshAsset。",
+                MessageType.None);
+
+            EditorGUILayout.Space();
             EditorGUILayout.LabelField("输入", EditorStyles.boldLabel);
-            _bakeSkinnedAnimation = EditorGUILayout.Toggle(
-                new GUIContent("Bake Skinned Animation", "勾选后烘焙骨骼曲线、蒙皮权重和动画分段 Cull 数据。"),
-                _bakeSkinnedAnimation);
             if (_bakeSkinnedAnimation)
             {
                 _settings.useQemSimplify = true;
