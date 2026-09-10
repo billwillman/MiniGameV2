@@ -51,6 +51,7 @@ namespace ClusterMesh
                 Add(seed, Application.isPlaying ? Time.time : Time.realtimeSinceStartup);
                 ClusterSkinnedMeshDrawContext ctx = GetOrCreate(seed);
                 if (ctx == null) continue;
+                ctx.EnableClusterColor = seed.showClusterColors;
                 ctx.Draw(Matrices, CpuCull, CameraCull, Times, seed.clipIndex, seed.enableConeCull,
                     seed.lodErrorThreshold, camera, camera, seed.castShadows, seed.receiveShadows, seed.gameObject.layer);
             }

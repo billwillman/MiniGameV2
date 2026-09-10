@@ -25,9 +25,33 @@ CBUFFER_START(ClusterSkinnedBatch)
 float4x4 _ObjectLocalToWorld[256];
 float4x4 _ObjectWorldToLocal[256];
 CBUFFER_END
+float _EnableClusterColor;
 
 struct Attributes { uint vertexID : SV_VertexID; uint instanceID : SV_InstanceID; };
-struct Varyings { float4 positionCS : SV_POSITION; float3 positionWS : TEXCOORD0; float3 normalWS : TEXCOORD1; float4 tangentWS : TEXCOORD2; float2 uv : TEXCOORD3; };
+struct Varyings { float4 positionCS : SV_POSITION; float3 positionWS : TEXCOORD0; float3 normalWS : TEXCOORD1; float4 tangentWS : TEXCOORD2; float2 uv : TEXCOORD3; nointerpolation uint clusterId : TEXCOORD4; };
+
+float3 ClusterSkinnedHsvToRgb(float h, float s, float v)
+{
+    if (s <= 0.0f) return v;
+    float num = h * 6.0f;
+    int sector = (int)floor(num);
+    float f = num - sector;
+    float p = v * (1.0f - s);
+    float q = v * (1.0f - s * f);
+    float t = v * (1.0f - s * (1.0f - f));
+    if (sector == 0 || sector == 6) return float3(v, t, p);
+    if (sector == 1) return float3(q, v, p);
+    if (sector == 2) return float3(p, v, t);
+    if (sector == 3) return float3(p, q, v);
+    if (sector == 4) return float3(t, p, v);
+    return float3(v, p, q);
+}
+
+float3 ClusterSkinnedDebugRgb(uint clusterId)
+{
+    float hue = frac((clusterId + 1.0f) * 0.6180339887f);
+    return ClusterSkinnedHsvToRgb(hue, 0.72f, 0.95f);
+}
 
 void ApplyClusterSkinnedInstance(uint instanceID)
 {
@@ -84,11 +108,12 @@ Varyings ClusterSkinnedVert(Attributes input)
     uint objectIndex=_VisibleClusterIds[input.instanceID]>>16, vertexIndex; float3 p,n; float4 t; float2 uv;
     ApplyClusterSkinnedInstance(input.instanceID); FetchBaseVertex(input.vertexID,input.instanceID,p,n,t,uv,vertexIndex); SkinVertex(objectIndex,vertexIndex,p,n,t);
     VertexPositionInputs pos=GetVertexPositionInputs(p); VertexNormalInputs normal=GetVertexNormalInputs(n,t);
-    Varyings o; o.positionCS=pos.positionCS; o.positionWS=pos.positionWS; o.normalWS=normal.normalWS; o.tangentWS=float4(normal.tangentWS,t.w); o.uv=TRANSFORM_TEX(uv,_BaseMap); return o;
+    Varyings o; o.positionCS=pos.positionCS; o.positionWS=pos.positionWS; o.normalWS=normal.normalWS; o.tangentWS=float4(normal.tangentWS,t.w); o.uv=TRANSFORM_TEX(uv,_BaseMap); o.clusterId=_VisibleClusterIds[input.instanceID]&0xffffu; return o;
 }
 half4 ClusterSkinnedFrag(Varyings i):SV_Target
 {
     half4 albedo=SAMPLE_TEXTURE2D(_BaseMap,sampler_BaseMap,i.uv)*_BaseColor; clip(albedo.a-_Cutoff);
+    if (_EnableClusterColor > 0.5f) return half4(ClusterSkinnedDebugRgb(i.clusterId), albedo.a);
     float3 nts=UnpackNormalScale(SAMPLE_TEXTURE2D(_BumpMap,sampler_BumpMap,i.uv),_BumpScale); float3 t=normalize(i.tangentWS.xyz),n=normalize(i.normalWS),b=cross(n,t)*i.tangentWS.w;
     InputData d=(InputData)0; d.positionWS=i.positionWS; d.normalWS=normalize(mul(nts,float3x3(t,b,n))); d.viewDirectionWS=GetWorldSpaceNormalizeViewDir(i.positionWS); d.shadowCoord=TransformWorldToShadowCoord(i.positionWS); d.bakedGI=SampleSH(d.normalWS);
     SurfaceData s=(SurfaceData)0; s.albedo=albedo.rgb;s.metallic=_Metallic;s.smoothness=_Smoothness;s.normalTS=nts;s.occlusion=1;s.alpha=albedo.a; return UniversalFragmentPBR(d,s);

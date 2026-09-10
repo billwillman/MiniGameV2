@@ -32,6 +32,7 @@ namespace ClusterMesh
         static readonly int LodPerspectiveId = Shader.PropertyToID("_LodPerspective");
         static readonly int LodErrorThresholdId = Shader.PropertyToID("_LodErrorThreshold");
         static readonly int LodProjectionScaleId = Shader.PropertyToID("_LodProjectionScale");
+        static readonly int EnableClusterColorId = Shader.PropertyToID("_EnableClusterColor");
         static readonly int PlanesId = Shader.PropertyToID("_Planes");
         static readonly int WorldCameraPosId = Shader.PropertyToID("_WorldCameraPos");
         static readonly int ObjectLocalToWorldId = Shader.PropertyToID("_ObjectLocalToWorld");
@@ -76,6 +77,7 @@ namespace ClusterMesh
 
         public bool IsReady { get; private set; }
         public string Error { get; private set; }
+        public bool EnableClusterColor { get; set; }
 
         public ClusterSkinnedMeshDrawContext(ClusterSkinnedMeshAsset asset, ComputeShader cullShader, Shader litShader)
         {
@@ -247,6 +249,7 @@ namespace ClusterMesh
             m.SetBuffer(SkinWeightsId, _weights); m.SetBuffer(VisibleId, visible);
             m.SetMatrixArray(ObjectLocalToWorldId, _l2w); m.SetMatrixArray(ObjectWorldToLocalId, _w2l);
             m.SetTexture(SkinPaletteTexId, _paletteTexture); m.SetInt(PaletteWidthId, _paletteWidth);
+            m.SetFloat(EnableClusterColorId, EnableClusterColor ? 1f : 0f);
         }
 
         static Bounds BuildAnimationBounds(ClusterSkinnedMeshAsset a)

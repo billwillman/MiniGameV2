@@ -16,8 +16,14 @@ namespace ClusterMesh
         [Tooltip("Only used when the baked animation cone for this cluster is conservative.")]
         public bool enableConeCull = true;
         public bool enableCpuObjectCull = true;
+        [Tooltip("Replace lighting with a solid color per cluster.")]
+        public bool showClusterColors;
+        [Tooltip("Draw the current animated cluster AABBs while this object is selected.")]
+        public bool showClusterAabb;
         [Tooltip("Screen-pixel error for the baked skinning-aware hierarchy. 0 draws leaf clusters only.")]
         public float lodErrorThreshold;
+        [Tooltip("Draw the current animated LOD level and AABB for each selected cluster.")]
+        public bool showLodLevels;
         public int clipIndex;
         [Range(0f, 1f)] public float normalizedTime;
         public float speed = 1f;
