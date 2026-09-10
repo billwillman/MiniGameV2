@@ -150,7 +150,9 @@ namespace ClusterMesh
             if (!string.IsNullOrEmpty(_error))
                 EditorGUILayout.HelpBox(_error, MessageType.Error);
             if (!string.IsNullOrEmpty(_info))
-                EditorGUILayout.HelpBox(_info + "\n下一步：选中这个资产 → 加到 ClusterMeshRenderer.asset，或打开 Tools/ClusterMesh/Viewer。", MessageType.Info);
+                EditorGUILayout.HelpBox(_info + (_bakeSkinnedAnimation
+                    ? "\n下一步：选中资产，在 Inspector 点「加入场景」，然后在 ClusterSkinnedMeshRenderer 上预览动画/Cull。"
+                    : "\n下一步：选中这个资产 → 加到 ClusterMeshRenderer.asset，或打开 Tools/ClusterMesh/Viewer。"), MessageType.Info);
 
             EditorGUILayout.EndScrollView();
         }

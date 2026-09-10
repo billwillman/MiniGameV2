@@ -10,7 +10,17 @@ namespace ClusterMesh
     public static class ClusterSkinnedMeshSceneViewRenderer
     {
         static readonly List<ClusterSkinnedMeshRenderer> Renderers = new List<ClusterSkinnedMeshRenderer>();
-        static readonly Dictionary<int, ClusterSkinnedMeshDrawContext> Contexts = new Dictionary<int, ClusterSkinnedMeshDrawContext>();
+        sealed class PreviewEntry
+        {
+            public ClusterSkinnedMeshAsset asset;
+            public ComputeShader cullShader;
+            public Shader litShader;
+            public ClusterSkinnedMeshDrawContext context;
+        }
+
+        static readonly Dictionary<int, PreviewEntry> Contexts = new Dictionary<int, PreviewEntry>();
+        static readonly HashSet<int> ActiveRendererIds = new HashSet<int>();
+        static readonly List<int> StaleContextIds = new List<int>();
         static readonly List<Matrix4x4> Matrices = new List<Matrix4x4>(64);
         static readonly List<bool> CpuCull = new List<bool>(64);
         static readonly List<bool> CameraCull = new List<bool>(64);
@@ -34,6 +44,18 @@ namespace ClusterMesh
         {
             if (EditorApplication.isCompiling) return;
             ClusterSkinnedMeshSceneBatcher.CollectRegisteredForEditor(Renderers);
+            ActiveRendererIds.Clear();
+            for (int i = 0; i < Renderers.Count; i++)
+                if (Renderers[i] != null) ActiveRendererIds.Add(Renderers[i].GetInstanceID());
+            StaleContextIds.Clear();
+            foreach (KeyValuePair<int, PreviewEntry> pair in Contexts)
+                if (!ActiveRendererIds.Contains(pair.Key)) StaleContextIds.Add(pair.Key);
+            for (int i = 0; i < StaleContextIds.Count; i++)
+            {
+                int id = StaleContextIds[i];
+                Contexts[id].context?.Dispose();
+                Contexts.Remove(id);
+            }
             if (Renderers.Count > 0) SceneView.RepaintAll();
         }
 
@@ -49,18 +71,27 @@ namespace ClusterMesh
                 if (!Visible(r, drawCamera, stage)) continue;
                 // Deliberately one renderer at a time: clip/cull switches stay exact in the preview.
                 int key = r.GetInstanceID();
-                if (!Contexts.TryGetValue(key, out ClusterSkinnedMeshDrawContext ctx))
+                if (!Contexts.TryGetValue(key, out PreviewEntry entry) || entry.asset != r.asset ||
+                    entry.cullShader != r.cullShader || entry.litShader != r.litShader)
                 {
-                    ctx = ClusterSkinnedMeshSceneBatcher.CreatePreviewContext(r);
+                    entry?.context?.Dispose();
+                    ClusterSkinnedMeshDrawContext ctx = ClusterSkinnedMeshSceneBatcher.CreatePreviewContext(r);
                     if (ctx == null || !ctx.IsReady) { ctx?.Dispose(); continue; }
-                    Contexts.Add(key, ctx);
+                    entry = new PreviewEntry
+                    {
+                        asset = r.asset,
+                        cullShader = r.cullShader,
+                        litShader = r.litShader,
+                        context = ctx
+                    };
+                    Contexts[key] = entry;
                 }
                 Camera cullCamera = r.targetCamera != null ? r.targetCamera : Camera.main;
                 if (cullCamera == null) continue;
                 Matrices.Clear(); CpuCull.Clear(); CameraCull.Clear(); Times.Clear();
                 Matrices.Add(r.transform.localToWorldMatrix); CpuCull.Add(r.enableCpuObjectCull); CameraCull.Add(r.enableCameraCull);
                 Times.Add(r.CurrentNormalizedTime(Application.isPlaying ? Time.time : (float)editorTime));
-                ctx.Draw(Matrices, CpuCull, CameraCull, Times, r.clipIndex, r.enableConeCull,
+                entry.context.Draw(Matrices, CpuCull, CameraCull, Times, r.clipIndex, r.enableConeCull,
                     r.lodErrorThreshold, cullCamera, drawCamera, r.castShadows, r.receiveShadows, r.gameObject.layer);
             }
         }
@@ -77,7 +108,7 @@ namespace ClusterMesh
 
         static void Dispose()
         {
-            foreach (var pair in Contexts) pair.Value?.Dispose();
+            foreach (var pair in Contexts) pair.Value.context?.Dispose();
             Contexts.Clear();
         }
     }
