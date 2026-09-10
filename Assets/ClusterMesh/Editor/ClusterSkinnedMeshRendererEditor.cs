@@ -34,6 +34,22 @@ namespace ClusterMesh
             }
 
             serializedObject.ApplyModifiedProperties();
+            if (renderer.animationEvaluation == ClusterSkinnedAnimationEvaluation.GpuTexture &&
+                renderer.asset != null && renderer.asset.clips != null && renderer.asset.clips.Length > 0 &&
+                !renderer.asset.HasGpuPalette(Mathf.Clamp(renderer.clipIndex, 0, renderer.asset.clips.Length - 1)))
+            {
+                EditorGUILayout.HelpBox(
+                    "当前资产没有可用的 GPU Palette Atlas，将自动回退 CPU Curves。重新 Baker 后可启用真正的 GPU Texture 动画。",
+                    MessageType.Warning);
+            }
+            if (renderer.animationEvaluation == ClusterSkinnedAnimationEvaluation.CpuCurves &&
+                renderer.asset != null && renderer.asset.clips != null && renderer.asset.clips.Length > 0 &&
+                !renderer.asset.HasCpuBurstCurves(Mathf.Clamp(renderer.clipIndex, 0, renderer.asset.clips.Length - 1)))
+            {
+                EditorGUILayout.HelpBox(
+                    "当前资产没有可用的 Burst 曲线数据，将使用旧版兼容路径。重新 Baker 后，CPU Curves 会由 Job System + Burst 计算。",
+                    MessageType.Warning);
+            }
             if (renderer.asset != null &&
                 renderer.asset.animationSamplingVersion != ClusterSkinnedMeshAsset.CurrentAnimationSamplingVersion)
             {

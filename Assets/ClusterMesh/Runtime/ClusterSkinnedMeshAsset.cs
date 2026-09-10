@@ -10,6 +10,8 @@ namespace ClusterMesh
     {
         public const int CurrentSkinningVersion = 1;
         public const int CurrentAnimationSamplingVersion = 1;
+        public const int CurrentGpuAnimationVersion = 1;
+        public const int CurrentCpuBurstAnimationVersion = 1;
         public const int PackedSkinWeightStride = 16;
 
         public ClusterMeshAsset geometry;
@@ -18,10 +20,41 @@ namespace ClusterMesh
         public string[] bonePaths;
         public int[] boneParentIndices;
         public ClusterSkinnedClip[] clips;
+        [Tooltip("Optional per-clip palette atlases used by GPU Texture animation evaluation.")]
+        public Texture2D[] gpuPaletteTextures;
+        public ClusterSkinnedCurveHeader[] cpuCurveHeaders;
+        public ClusterSkinnedCurveSegment[] cpuCurveSegments;
+        public int[] boneEvaluationOrder;
         public ClusterSkinnedCullFrame[] cullFrames;
         public int skinningVersion;
         public int animationSamplingVersion;
+        public int gpuAnimationVersion;
+        public int cpuBurstAnimationVersion;
         public int skinVertexCount;
+
+        public bool HasGpuPalette(int clipIndex)
+        {
+            if (gpuAnimationVersion != CurrentGpuAnimationVersion || clips == null ||
+                gpuPaletteTextures == null || clipIndex < 0 || clipIndex >= clips.Length ||
+                clipIndex >= gpuPaletteTextures.Length || bindPoses == null)
+                return false;
+            Texture2D texture = gpuPaletteTextures[clipIndex];
+            return texture != null && texture.width == bindPoses.Length * 3 && texture.height >= 1;
+        }
+
+        public bool HasCpuBurstCurves(int clipIndex)
+        {
+            if (cpuBurstAnimationVersion != CurrentCpuBurstAnimationVersion || clips == null ||
+                bindPoses == null || boneParentIndices == null || boneEvaluationOrder == null ||
+                cpuCurveHeaders == null || cpuCurveSegments == null || clipIndex < 0 ||
+                clipIndex >= clips.Length || bindPoses.Length == 0 ||
+                boneParentIndices.Length != bindPoses.Length || boneEvaluationOrder.Length != bindPoses.Length)
+                return false;
+            ClusterSkinnedClip clip = clips[clipIndex];
+            int requiredHeaders = bindPoses.Length * 10;
+            return clip != null && clip.cpuCurveHeaderOffset >= 0 &&
+                clip.cpuCurveHeaderOffset + requiredHeaders <= cpuCurveHeaders.Length;
+        }
 
         public bool TryReadSkinWeights(out ClusterPackedSkinWeight[] weights, out string error)
         {

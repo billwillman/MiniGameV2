@@ -12,7 +12,10 @@ CBUFFER_END
 TEXTURE2D(_BaseMap); SAMPLER(sampler_BaseMap);
 TEXTURE2D(_BumpMap); SAMPLER(sampler_BumpMap);
 Texture2D<float4> _SkinPaletteTex;
+Texture2D<float4> _SkinAnimationTex;
 int _SkinPaletteWidth;
+int _UseGpuAnimationTexture;
+int _SkinAnimationFrameCount;
 float3 _LightDirection, _LightPosition;
 
 struct ClusterPackedSkinWeight { uint boneIndices01, boneIndices23, boneWeights01, boneWeights23; };
@@ -21,6 +24,7 @@ StructuredBuffer<ClusterVertex> _Vertices;
 StructuredBuffer<uint> _Indices;
 StructuredBuffer<ClusterPackedSkinWeight> _SkinWeights;
 StructuredBuffer<uint> _VisibleClusterIds;
+StructuredBuffer<float> _ObjectAnimationTimes;
 CBUFFER_START(ClusterSkinnedBatch)
 float4x4 _ObjectLocalToWorld[256];
 float4x4 _ObjectWorldToLocal[256];
@@ -84,7 +88,21 @@ void FetchBaseVertex(uint vertexID, uint instanceID, out float3 p, out float3 n,
     uv = UnpackHalf2(v.uv);
 }
 float4 PaletteRow(uint objectIndex, uint bone, uint row)
-{ return _SkinPaletteTex.Load(int3(bone * 3u + row, objectIndex, 0)); }
+{
+    uint x = bone * 3u + row;
+    if (_UseGpuAnimationTexture != 0)
+    {
+        uint lastFrame = (uint)max(_SkinAnimationFrameCount - 1, 0);
+        float frame = saturate(_ObjectAnimationTimes[objectIndex]) * lastFrame;
+        uint frame0 = min((uint)floor(frame), lastFrame);
+        uint frame1 = min(frame0 + 1u, lastFrame);
+        return lerp(
+            _SkinAnimationTex.Load(int3(x, frame0, 0)),
+            _SkinAnimationTex.Load(int3(x, frame1, 0)),
+            frac(frame));
+    }
+    return _SkinPaletteTex.Load(int3(x, objectIndex, 0));
+}
 float3 TransformPalettePoint(uint objectIndex, uint bone, float3 p)
 {
     float4 v=float4(p,1); return float3(dot(PaletteRow(objectIndex,bone,0),v),dot(PaletteRow(objectIndex,bone,1),v),dot(PaletteRow(objectIndex,bone,2),v));

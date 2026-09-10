@@ -4,6 +4,12 @@ using UnityEngine;
 
 namespace ClusterMesh
 {
+    public enum ClusterSkinnedAnimationEvaluation
+    {
+        GpuTexture = 0,
+        CpuCurves = 1
+    }
+
     [Serializable]
     public struct ClusterSkinWeight
     {
@@ -46,6 +52,23 @@ namespace ClusterMesh
         public uint boneIndices23;
         public uint boneWeights01;
         public uint boneWeights23;
+    }
+
+    [Serializable]
+    [StructLayout(LayoutKind.Sequential)]
+    public struct ClusterSkinnedCurveHeader
+    {
+        public int segmentOffset;
+        public int segmentCount;
+    }
+
+    [Serializable]
+    [StructLayout(LayoutKind.Sequential)]
+    public struct ClusterSkinnedCurveSegment
+    {
+        public Vector4 coefficients;
+        public float startTime;
+        public float inverseDuration;
     }
 
     [Serializable]
@@ -93,6 +116,7 @@ namespace ClusterMesh
         public float frameRate;
         public int segmentCount;
         public int cullFrameOffset;
+        public int cpuCurveHeaderOffset;
         public ClusterSkinnedBoneCurves[] boneCurves;
     }
 

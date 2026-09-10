@@ -208,7 +208,8 @@ namespace ClusterMesh.Tests
                 Assert.That(ctx.CanDraw, Is.False);
                 Assert.DoesNotThrow(() => ctx.Draw(
                     new[] { Matrix4x4.identity }, null, null, new[] { 0f },
-                    0, false, 0f, Camera.main, Camera.main, true, true, 0));
+                    0, ClusterSkinnedAnimationEvaluation.GpuTexture,
+                    false, 0f, Camera.main, Camera.main, true, true, 0));
             }
         }
 
@@ -221,6 +222,94 @@ namespace ClusterMesh.Tests
                 ClusterSkinnedMeshSceneBatcher.DisposeCachedContexts();
             });
             Assert.That(ClusterSkinnedMeshSceneBatcher.CachedContextCount, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void GpuPalette_DefaultModeAndVersionedTexture_AreRecognized()
+        {
+            var go = new GameObject("GpuPaletteDefault");
+            var asset = ScriptableObject.CreateInstance<ClusterSkinnedMeshAsset>();
+            var texture = new Texture2D(3, 2, TextureFormat.RGBAHalf, false, true);
+            try
+            {
+                var renderer = go.AddComponent<ClusterSkinnedMeshRenderer>();
+                Assert.That(renderer.animationEvaluation,
+                    Is.EqualTo(ClusterSkinnedAnimationEvaluation.GpuTexture));
+
+                asset.bindPoses = new[] { Matrix4x4.identity };
+                asset.clips = new[] { new ClusterSkinnedClip() };
+                asset.gpuPaletteTextures = new[] { texture };
+                asset.gpuAnimationVersion = ClusterSkinnedMeshAsset.CurrentGpuAnimationVersion;
+                Assert.That(asset.HasGpuPalette(0), Is.True);
+
+                asset.gpuAnimationVersion = 0;
+                Assert.That(asset.HasGpuPalette(0), Is.False);
+            }
+            finally
+            {
+                Object.DestroyImmediate(go);
+                Object.DestroyImmediate(texture);
+                Object.DestroyImmediate(asset);
+            }
+        }
+
+        [Test]
+        public void CpuBurstCurve_HermiteCoefficients_MatchAnimationCurve()
+        {
+            var a = new Keyframe(0f, 1.25f, 0f, 0.75f);
+            var b = new Keyframe(2f, 4.5f, -0.25f, 0f);
+            var curve = new AnimationCurve(a, b);
+            var headers = new List<ClusterSkinnedCurveHeader>();
+            var segments = new List<ClusterSkinnedCurveSegment>();
+            var method = typeof(ClusterSkinnedMeshBaker).GetMethod(
+                "AddCpuCurve",
+                System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
+
+            Assert.That(method, Is.Not.Null);
+            method.Invoke(null, new object[] { curve, headers, segments });
+            Assert.That(headers.Count, Is.EqualTo(1));
+            Assert.That(segments.Count, Is.EqualTo(1));
+            ClusterSkinnedCurveSegment segment = segments[0];
+            for (int i = 0; i <= 8; i++)
+            {
+                float time = i * 0.25f;
+                float u = Mathf.Clamp01((time - segment.startTime) * segment.inverseDuration);
+                Vector4 c = segment.coefficients;
+                float packedValue = ((c.w * u + c.z) * u + c.y) * u + c.x;
+                Assert.That(packedValue, Is.EqualTo(curve.Evaluate(time)).Within(1e-5f));
+            }
+        }
+
+        [Test]
+        public void CpuBurstCurve_VersionedData_IsRecognized()
+        {
+            var asset = ScriptableObject.CreateInstance<ClusterSkinnedMeshAsset>();
+            try
+            {
+                asset.bindPoses = new[] { Matrix4x4.identity };
+                asset.boneParentIndices = new[] { -1 };
+                asset.boneEvaluationOrder = new[] { 0 };
+                asset.clips = new[] { new ClusterSkinnedClip { cpuCurveHeaderOffset = 0 } };
+                asset.cpuCurveHeaders = new ClusterSkinnedCurveHeader[10];
+                asset.cpuCurveSegments = new ClusterSkinnedCurveSegment[10];
+                for (int i = 0; i < 10; i++)
+                {
+                    asset.cpuCurveHeaders[i] = new ClusterSkinnedCurveHeader
+                    {
+                        segmentOffset = i,
+                        segmentCount = 1
+                    };
+                }
+                asset.cpuBurstAnimationVersion = ClusterSkinnedMeshAsset.CurrentCpuBurstAnimationVersion;
+                Assert.That(asset.HasCpuBurstCurves(0), Is.True);
+
+                asset.cpuBurstAnimationVersion = 0;
+                Assert.That(asset.HasCpuBurstCurves(0), Is.False);
+            }
+            finally
+            {
+                Object.DestroyImmediate(asset);
+            }
         }
     }
 }

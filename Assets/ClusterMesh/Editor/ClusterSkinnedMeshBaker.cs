@@ -16,6 +16,10 @@ namespace ClusterMesh
         public string[] bonePaths;
         public int[] boneParentIndices;
         public ClusterSkinnedClip[] clips;
+        public Texture2D[] gpuPaletteTextures;
+        public ClusterSkinnedCurveHeader[] cpuCurveHeaders;
+        public ClusterSkinnedCurveSegment[] cpuCurveSegments;
+        public int[] boneEvaluationOrder;
         public ClusterSkinnedCullFrame[] cullFrames;
     }
 
@@ -78,12 +82,19 @@ namespace ClusterMesh
 
             var allCullFrames = new List<ClusterSkinnedCullFrame>();
             var clips = new ClusterSkinnedClip[sampledClips.Length];
+            var gpuPaletteTextures = new Texture2D[sampledClips.Length];
+            var cpuCurveHeaders = new List<ClusterSkinnedCurveHeader>();
+            var cpuCurveSegments = new List<ClusterSkinnedCurveSegment>();
+            int[] boneEvaluationOrder = BuildBoneEvaluationOrder(parentIndices);
             for (int i = 0; i < sampledClips.Length; i++)
             {
                 SampledClip sampled = sampledClips[i];
                 sampled.clip.cullFrameOffset = allCullFrames.Count;
+                sampled.clip.cpuCurveHeaderOffset = cpuCurveHeaders.Count;
+                BuildCpuBurstCurves(sampled.clip, cpuCurveHeaders, cpuCurveSegments);
                 BuildCullFrames(geometry, outputSkin, sampled, allCullFrames);
                 clips[i] = sampled.clip;
+                gpuPaletteTextures[i] = BuildGpuPaletteTexture(sampled, bindPoses, parentIndices, i);
             }
 
             return new ClusterSkinnedMeshBakeResult
@@ -94,8 +105,155 @@ namespace ClusterMesh
                 bonePaths = bonePaths,
                 boneParentIndices = parentIndices,
                 clips = clips,
+                gpuPaletteTextures = gpuPaletteTextures,
+                cpuCurveHeaders = cpuCurveHeaders.ToArray(),
+                cpuCurveSegments = cpuCurveSegments.ToArray(),
+                boneEvaluationOrder = boneEvaluationOrder,
                 cullFrames = allCullFrames.ToArray()
             };
+        }
+
+        static int[] BuildBoneEvaluationOrder(int[] parentIndices)
+        {
+            var order = new int[parentIndices.Length];
+            var added = new bool[parentIndices.Length];
+            int count = 0;
+            while (count < order.Length)
+            {
+                bool progressed = false;
+                for (int bone = 0; bone < parentIndices.Length; bone++)
+                {
+                    if (added[bone])
+                        continue;
+                    int parent = parentIndices[bone];
+                    if (parent < -1 || parent >= parentIndices.Length)
+                        throw new InvalidOperationException("SkinnedMesh contains an invalid bone parent index.");
+                    if (parent >= 0 && !added[parent])
+                        continue;
+                    added[bone] = true;
+                    order[count++] = bone;
+                    progressed = true;
+                }
+                if (!progressed)
+                    throw new InvalidOperationException("SkinnedMesh bone hierarchy contains a cycle.");
+            }
+            return order;
+        }
+
+        static void BuildCpuBurstCurves(ClusterSkinnedClip clip,
+            List<ClusterSkinnedCurveHeader> headers, List<ClusterSkinnedCurveSegment> segments)
+        {
+            for (int bone = 0; bone < clip.boneCurves.Length; bone++)
+            {
+                ClusterSkinnedBoneCurves curves = clip.boneCurves[bone];
+                AddCpuCurve(curves.positionX, headers, segments);
+                AddCpuCurve(curves.positionY, headers, segments);
+                AddCpuCurve(curves.positionZ, headers, segments);
+                AddCpuCurve(curves.rotationX, headers, segments);
+                AddCpuCurve(curves.rotationY, headers, segments);
+                AddCpuCurve(curves.rotationZ, headers, segments);
+                AddCpuCurve(curves.rotationW, headers, segments);
+                AddCpuCurve(curves.scaleX, headers, segments);
+                AddCpuCurve(curves.scaleY, headers, segments);
+                AddCpuCurve(curves.scaleZ, headers, segments);
+            }
+        }
+
+        static void AddCpuCurve(AnimationCurve curve, List<ClusterSkinnedCurveHeader> headers,
+            List<ClusterSkinnedCurveSegment> segments)
+        {
+            int offset = segments.Count;
+            Keyframe[] keys = curve != null ? curve.keys : Array.Empty<Keyframe>();
+            if (keys.Length <= 1)
+            {
+                float value = keys.Length == 1 ? keys[0].value : 0f;
+                float time = keys.Length == 1 ? keys[0].time : 0f;
+                segments.Add(new ClusterSkinnedCurveSegment
+                {
+                    coefficients = new Vector4(value, 0f, 0f, 0f),
+                    startTime = time,
+                    inverseDuration = 0f
+                });
+            }
+            else
+            {
+                for (int i = 0; i + 1 < keys.Length; i++)
+                {
+                    Keyframe a = keys[i];
+                    Keyframe b = keys[i + 1];
+                    float duration = Mathf.Max(0f, b.time - a.time);
+                    float outTangent = float.IsNaN(a.outTangent) || float.IsInfinity(a.outTangent) ? 0f : a.outTangent;
+                    float inTangent = float.IsNaN(b.inTangent) || float.IsInfinity(b.inTangent) ? 0f : b.inTangent;
+                    float m0 = outTangent * duration;
+                    float m1 = inTangent * duration;
+                    float c0 = a.value;
+                    float c1 = m0;
+                    float c2 = -3f * a.value + 3f * b.value - 2f * m0 - m1;
+                    float c3 = 2f * a.value - 2f * b.value + m0 + m1;
+                    segments.Add(new ClusterSkinnedCurveSegment
+                    {
+                        coefficients = new Vector4(c0, c1, c2, c3),
+                        startTime = a.time,
+                        inverseDuration = duration > 1e-8f ? 1f / duration : 0f
+                    });
+                }
+            }
+            headers.Add(new ClusterSkinnedCurveHeader
+            {
+                segmentOffset = offset,
+                segmentCount = segments.Count - offset
+            });
+        }
+
+        static Texture2D BuildGpuPaletteTexture(SampledClip sampled, Matrix4x4[] bindPoses,
+            int[] parentIndices, int clipIndex)
+        {
+            int boneCount = bindPoses.Length;
+            int width = boneCount * 3;
+            int frameCount = sampled.times.Length;
+            if (width > SystemInfo.maxTextureSize || frameCount > SystemInfo.maxTextureSize)
+                throw new InvalidOperationException(
+                    "Animation clip '" + sampled.clip.name + "' exceeds the GPU palette texture size limit.");
+
+            var temporaryAsset = ScriptableObject.CreateInstance<ClusterSkinnedMeshAsset>();
+            temporaryAsset.bindPoses = bindPoses;
+            temporaryAsset.boneParentIndices = parentIndices;
+            temporaryAsset.clips = new[] { sampled.clip };
+            var palette = new Matrix4x4[boneCount];
+            var pixels = new Color[width * frameCount];
+            try
+            {
+                for (int frame = 0; frame < frameCount; frame++)
+                {
+                    if (!ClusterSkinnedAnimation.EvaluatePaletteAtTime(
+                            temporaryAsset, 0, sampled.times[frame], palette))
+                        throw new InvalidOperationException(
+                            "Could not build GPU palette texture for clip '" + sampled.clip.name + "'.");
+                    int row = frame * width;
+                    for (int bone = 0; bone < boneCount; bone++)
+                    {
+                        Matrix4x4 matrix = palette[bone];
+                        int pixel = row + bone * 3;
+                        pixels[pixel] = new Color(matrix.m00, matrix.m01, matrix.m02, matrix.m03);
+                        pixels[pixel + 1] = new Color(matrix.m10, matrix.m11, matrix.m12, matrix.m13);
+                        pixels[pixel + 2] = new Color(matrix.m20, matrix.m21, matrix.m22, matrix.m23);
+                    }
+                }
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(temporaryAsset);
+            }
+
+            var texture = new Texture2D(width, frameCount, TextureFormat.RGBAHalf, false, true)
+            {
+                name = clipIndex.ToString("D2") + "_" + sampled.clip.name + "_GpuPalette",
+                filterMode = FilterMode.Point,
+                wrapMode = TextureWrapMode.Clamp
+            };
+            texture.SetPixels(pixels);
+            texture.Apply(false, true);
+            return texture;
         }
 
         public static byte[] PackSkinWeights(ClusterSkinWeight[] weights)

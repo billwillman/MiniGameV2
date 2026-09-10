@@ -24,6 +24,8 @@ namespace ClusterMesh
         public float lodErrorThreshold;
         [Tooltip("Draw the current animated LOD level and AABB for each selected cluster.")]
         public bool showLodLevels;
+        [Tooltip("GPU Texture is the default and performs no per-frame CPU curve evaluation. CPU Curves keeps the compact curve path and is used as an automatic fallback for old assets or unsupported texture formats.")]
+        public ClusterSkinnedAnimationEvaluation animationEvaluation = ClusterSkinnedAnimationEvaluation.GpuTexture;
         public int clipIndex;
         [Range(0f, 1f)] public float normalizedTime;
         public float speed = 1f;

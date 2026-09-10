@@ -80,6 +80,20 @@ namespace ClusterMesh
                 "横向每个骨骼占 3 个像素，分别保存 3×4 蒙皮矩阵的 Row 0/1/2。下面显示当前 Clip 与时间的一条实例纹理行；负值和大于 1 的值在预览窗口中会被颜色显示范围截断，但底层像素仍是原始 float。",
                 MessageType.None);
 
+            if (asset.HasGpuPalette(_previewClip))
+            {
+                Texture2D atlas = asset.gpuPaletteTextures[_previewClip];
+                EditorGUILayout.LabelField("Baked GPU Atlas",
+                    atlas.width + " × " + atlas.height + " · " + atlas.format + " · " + atlas.filterMode);
+                Rect atlasRect = GUILayoutUtility.GetRect(64f, 96f, GUILayout.ExpandWidth(true));
+                GUI.DrawTexture(atlasRect, atlas, ScaleMode.StretchToFill, false);
+                EditorGUILayout.ObjectField("GPU Texture Asset", atlas, typeof(Texture2D), false);
+            }
+            else
+            {
+                EditorGUILayout.HelpBox("该 Clip 没有 GPU Palette Atlas；GPU 模式会自动回退 CPU。请重新 Baker。", MessageType.Warning);
+            }
+
             EnsurePalettePreview(asset, boneCount, width);
             if (_palettePreview == null)
                 return;

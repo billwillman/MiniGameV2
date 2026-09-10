@@ -1,14 +1,17 @@
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
+using Unity.Collections;
+using Unity.Jobs;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Rendering;
 
 namespace ClusterMesh
 {
     /// <summary>
-    /// Per-asset GPU resources. Curves are evaluated once per bone/object on CPU in v1,
-    /// then uploaded as a float palette texture; the vertex shader only performs VTF/LBS.
+    /// Per-asset GPU resources. GPU Texture mode reads a baked palette atlas directly;
+    /// CPU Curves mode evaluates curves and uploads the current float palette row.
+    /// Both modes share the same vertex VTF/LBS path.
     /// </summary>
     public sealed class ClusterSkinnedMeshDrawContext : IDisposable
     {
@@ -38,7 +41,11 @@ namespace ClusterMesh
         static readonly int ObjectLocalToWorldId = Shader.PropertyToID("_ObjectLocalToWorld");
         static readonly int ObjectWorldToLocalId = Shader.PropertyToID("_ObjectWorldToLocal");
         static readonly int SkinPaletteTexId = Shader.PropertyToID("_SkinPaletteTex");
+        static readonly int SkinAnimationTexId = Shader.PropertyToID("_SkinAnimationTex");
         static readonly int PaletteWidthId = Shader.PropertyToID("_SkinPaletteWidth");
+        static readonly int UseGpuAnimationTextureId = Shader.PropertyToID("_UseGpuAnimationTexture");
+        static readonly int SkinAnimationFrameCountId = Shader.PropertyToID("_SkinAnimationFrameCount");
+        static readonly int ObjectAnimationTimesId = Shader.PropertyToID("_ObjectAnimationTimes");
 
         readonly ClusterSkinnedMeshAsset _asset;
         readonly ComputeShader _cullShader;
@@ -53,6 +60,7 @@ namespace ClusterMesh
         readonly GraphicsBuffer _cullFrames;
         readonly GraphicsBuffer _segments;
         readonly GraphicsBuffer _cameraCull;
+        readonly GraphicsBuffer _animationTimes;
         readonly GraphicsBuffer[] _visible;
         readonly GraphicsBuffer[] _shadowVisible;
         readonly GraphicsBuffer[] _args;
@@ -67,12 +75,22 @@ namespace ClusterMesh
         readonly uint[] _segmentData = new uint[ClusterMeshLimits.MaxBatchedObjects];
         readonly uint[] _cameraCullData = new uint[ClusterMeshLimits.MaxBatchedObjects];
         readonly uint[] _noCameraCullData = new uint[ClusterMeshLimits.MaxBatchedObjects];
+        readonly float[] _animationTimeData = new float[ClusterMeshLimits.MaxBatchedObjects];
         readonly Vector4[] _planes = new Vector4[6];
         readonly Plane[] _planeScratch = new Plane[6];
         readonly uint[] _argsSeed = new uint[5];
         readonly Bounds _localAnimationBounds;
         readonly int _boneCount;
         readonly int _paletteWidth;
+        NativeArray<ClusterSkinnedCurveHeader> _burstCurveHeaders;
+        NativeArray<ClusterSkinnedCurveSegment> _burstCurveSegments;
+        NativeArray<int> _burstParents;
+        NativeArray<int> _burstEvaluationOrder;
+        NativeArray<float4x4> _burstBindPoses;
+        NativeArray<float> _burstTimes;
+        NativeArray<float4x4> _burstGlobalScratch;
+        NativeArray<float4> _burstPalettePixels;
+        bool _hasBurstCpuData;
         bool _disposed;
 
         public bool IsReady { get; private set; }
@@ -134,6 +152,7 @@ namespace ClusterMesh
             _cullFrames.SetData(asset.cullFrames);
             _segments = new GraphicsBuffer(GraphicsBuffer.Target.Structured, ClusterMeshLimits.MaxBatchedObjects, 4);
             _cameraCull = new GraphicsBuffer(GraphicsBuffer.Target.Structured, ClusterMeshLimits.MaxBatchedObjects, 4);
+            _animationTimes = new GraphicsBuffer(GraphicsBuffer.Target.Structured, ClusterMeshLimits.MaxBatchedObjects, 4);
 
             int materialCount = Mathf.Max(1, asset.geometry.materials != null ? asset.geometry.materials.Length : 1);
             int capacity = Mathf.Max(1, asset.geometry.clusters.Length * ClusterMeshLimits.MaxBatchedObjects);
@@ -157,12 +176,14 @@ namespace ClusterMesh
             { name = "ClusterSkinnedMesh Palette", filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp, hideFlags = HideFlags.HideAndDontSave };
             _palettePixels = new Color[_paletteWidth * ClusterMeshLimits.MaxBatchedObjects];
             _paletteScratch = new Matrix4x4[_boneCount];
+            InitializeBurstCpuData(asset);
             _localAnimationBounds = BuildAnimationBounds(asset);
             IsReady = true;
         }
 
         public void Draw(IList<Matrix4x4> matrices, IList<bool> cpuCull, IList<bool> cameraCull, IList<float> times,
-            int clipIndex, bool enableConeCull, float lodErrorThreshold, Camera cullingCamera, Camera drawCamera,
+            int clipIndex, ClusterSkinnedAnimationEvaluation animationEvaluation,
+            bool enableConeCull, float lodErrorThreshold, Camera cullingCamera, Camera drawCamera,
             bool castShadows, bool receiveShadows, int drawLayer)
         {
             if (!CanDraw || matrices == null || cullingCamera == null || drawCamera == null) return;
@@ -170,6 +191,14 @@ namespace ClusterMesh
             if (sourceCount <= 0) return;
             int clip = Mathf.Clamp(clipIndex, 0, _asset.clips.Length - 1);
             ClusterSkinnedClip clipData = _asset.clips[clip];
+            Texture2D gpuAnimationTexture = animationEvaluation == ClusterSkinnedAnimationEvaluation.GpuTexture &&
+                _asset.HasGpuPalette(clip) && SystemInfo.SupportsTextureFormat(TextureFormat.RGBAHalf)
+                    ? _asset.gpuPaletteTextures[clip] : null;
+            bool useGpuAnimationTexture = gpuAnimationTexture != null;
+            // Burst evaluation is an explicit CPU-mode cost. GPU mode never schedules this job;
+            // an old GPU asset without an atlas keeps the legacy managed fallback until rebaked.
+            bool useBurstCpu = animationEvaluation == ClusterSkinnedAnimationEvaluation.CpuCurves &&
+                _hasBurstCpuData && _asset.HasCpuBurstCurves(clip);
             ClusterMeshFrustum.WorldPlanes(cullingCamera, _planeScratch);
             for (int i = 0; i < _planeScratch.Length; i++)
                 CopyPlane(i, _planeScratch[i]);
@@ -185,14 +214,44 @@ namespace ClusterMesh
                 _w2l[count] = m.inverse;
                 _cameraCullData[count] = cameraCull == null || i >= cameraCull.Count || cameraCull[i] ? 1u : 0u;
                 float t = times != null && i < times.Count ? times[i] : 0f;
+                _animationTimeData[count] = Mathf.Repeat(t, 1f);
+                if (useBurstCpu)
+                    _burstTimes[count] = _animationTimeData[count];
                 int segmentCount = Mathf.Max(1, clipData.segmentCount);
                 _segmentData[count] = (uint)Mathf.Clamp(
-                    Mathf.FloorToInt(Mathf.Repeat(t, 1f) * segmentCount), 0, segmentCount - 1);
-                UploadPaletteRow(count, clip, t);
+                    Mathf.FloorToInt(_animationTimeData[count] * segmentCount), 0, segmentCount - 1);
+                if (!useGpuAnimationTexture && !useBurstCpu)
+                    UploadPaletteRow(count, clip, t);
                 count++;
             }
             if (count <= 0) return;
-            _paletteTexture.SetPixels(_palettePixels); _paletteTexture.Apply(false, false);
+            if (useBurstCpu)
+            {
+                ClusterSkinnedPaletteJob paletteJob = new ClusterSkinnedPaletteJob
+                {
+                    headers = _burstCurveHeaders,
+                    segments = _burstCurveSegments,
+                    parents = _burstParents,
+                    evaluationOrder = _burstEvaluationOrder,
+                    bindPoses = _burstBindPoses,
+                    normalizedTimes = _burstTimes,
+                    globalScratch = _burstGlobalScratch,
+                    palettePixels = _burstPalettePixels,
+                    curveHeaderOffset = clipData.cpuCurveHeaderOffset,
+                    boneCount = _boneCount,
+                    paletteWidth = _paletteWidth,
+                    duration = clipData.duration
+                };
+                paletteJob.Schedule(count, 1).Complete();
+                _paletteTexture.SetPixelData(_burstPalettePixels, 0);
+                _paletteTexture.Apply(false, false);
+            }
+            else if (!useGpuAnimationTexture)
+            {
+                _paletteTexture.SetPixels(_palettePixels);
+                _paletteTexture.Apply(false, false);
+            }
+            _animationTimes.SetData(_animationTimeData, 0, 0, count);
             _segments.SetData(_segmentData, 0, 0, count); _cameraCull.SetData(_cameraCullData, 0, 0, count);
             Bounds worldBounds = ClusterMeshFrustum.TransformLocalBounds(_localAnimationBounds, _l2w[0]);
             for (int i = 1; i < count; i++) worldBounds.Encapsulate(ClusterMeshFrustum.TransformLocalBounds(_localAnimationBounds, _l2w[i]));
@@ -220,7 +279,7 @@ namespace ClusterMesh
                 _cullShader.SetMatrixArray(ObjectLocalToWorldId, _l2w);
                 _cullShader.Dispatch(_kernel, groups, 1, 1);
                 _args[material].SetData(_argsSeed); GraphicsBuffer.CopyCount(_visible[material], _args[material], 4);
-                Bind(_materials[material], _visible[material]);
+                Bind(_materials[material], _visible[material], gpuAnimationTexture, useGpuAnimationTexture);
                 Graphics.DrawMeshInstancedIndirect(_template, 0, _materials[material], worldBounds, _args[material], 0, null,
                     ShadowCastingMode.Off, receiveShadows, drawLayer, drawCamera);
                 if (castShadows)
@@ -233,7 +292,7 @@ namespace ClusterMesh
                     _cullShader.Dispatch(_kernel, groups, 1, 1);
                     _shadowArgs[material].SetData(_argsSeed);
                     GraphicsBuffer.CopyCount(_shadowVisible[material], _shadowArgs[material], 4);
-                    Bind(_shadowMaterials[material], _shadowVisible[material]);
+                    Bind(_shadowMaterials[material], _shadowVisible[material], gpuAnimationTexture, useGpuAnimationTexture);
                     Graphics.DrawMeshInstancedIndirect(_template, 0, _shadowMaterials[material], worldBounds,
                         _shadowArgs[material], 0, null, ShadowCastingMode.ShadowsOnly, false, drawLayer, drawCamera);
                 }
@@ -255,14 +314,84 @@ namespace ClusterMesh
             }
         }
 
-        void Bind(Material m, GraphicsBuffer visible)
+        void InitializeBurstCpuData(ClusterSkinnedMeshAsset asset)
+        {
+            if (!ValidateBurstCpuData(asset))
+                return;
+
+            _burstCurveHeaders = new NativeArray<ClusterSkinnedCurveHeader>(asset.cpuCurveHeaders, Allocator.Persistent);
+            _burstCurveSegments = new NativeArray<ClusterSkinnedCurveSegment>(asset.cpuCurveSegments, Allocator.Persistent);
+            _burstParents = new NativeArray<int>(asset.boneParentIndices, Allocator.Persistent);
+            _burstEvaluationOrder = new NativeArray<int>(asset.boneEvaluationOrder, Allocator.Persistent);
+            _burstBindPoses = new NativeArray<float4x4>(_boneCount, Allocator.Persistent);
+            for (int i = 0; i < _boneCount; i++)
+                _burstBindPoses[i] = ToFloat4x4(asset.bindPoses[i]);
+            _burstTimes = new NativeArray<float>(ClusterMeshLimits.MaxBatchedObjects, Allocator.Persistent);
+            _burstGlobalScratch = new NativeArray<float4x4>(
+                _boneCount * ClusterMeshLimits.MaxBatchedObjects, Allocator.Persistent);
+            _burstPalettePixels = new NativeArray<float4>(
+                _paletteWidth * ClusterMeshLimits.MaxBatchedObjects, Allocator.Persistent);
+            _hasBurstCpuData = true;
+        }
+
+        static bool ValidateBurstCpuData(ClusterSkinnedMeshAsset asset)
+        {
+            if (asset == null || asset.cpuBurstAnimationVersion != ClusterSkinnedMeshAsset.CurrentCpuBurstAnimationVersion ||
+                asset.bindPoses == null || asset.boneParentIndices == null || asset.boneEvaluationOrder == null ||
+                asset.cpuCurveHeaders == null || asset.cpuCurveSegments == null)
+                return false;
+            int boneCount = asset.bindPoses.Length;
+            if (boneCount <= 0 || asset.boneParentIndices.Length != boneCount ||
+                asset.boneEvaluationOrder.Length != boneCount || asset.cpuCurveSegments.Length == 0)
+                return false;
+
+            bool[] seen = new bool[boneCount];
+            for (int i = 0; i < boneCount; i++)
+            {
+                int bone = asset.boneEvaluationOrder[i];
+                if (bone < 0 || bone >= boneCount || seen[bone])
+                    return false;
+                int parent = asset.boneParentIndices[bone];
+                if (parent < -1 || parent >= boneCount || (parent >= 0 && !seen[parent]))
+                    return false;
+                seen[bone] = true;
+            }
+            for (int i = 0; i < asset.cpuCurveHeaders.Length; i++)
+            {
+                ClusterSkinnedCurveHeader header = asset.cpuCurveHeaders[i];
+                if (header.segmentCount <= 0 || header.segmentOffset < 0 ||
+                    header.segmentOffset > asset.cpuCurveSegments.Length - header.segmentCount)
+                    return false;
+            }
+            return true;
+        }
+
+        static float4x4 ToFloat4x4(Matrix4x4 matrix)
+        {
+            Vector4 c0 = matrix.GetColumn(0);
+            Vector4 c1 = matrix.GetColumn(1);
+            Vector4 c2 = matrix.GetColumn(2);
+            Vector4 c3 = matrix.GetColumn(3);
+            return new float4x4(
+                new float4(c0.x, c0.y, c0.z, c0.w),
+                new float4(c1.x, c1.y, c1.z, c1.w),
+                new float4(c2.x, c2.y, c2.z, c2.w),
+                new float4(c3.x, c3.y, c3.z, c3.w));
+        }
+
+        void Bind(Material m, GraphicsBuffer visible, Texture2D gpuAnimationTexture,
+            bool useGpuAnimationTexture)
         {
             if (m == null || visible == null)
                 return;
             m.SetBuffer(ClustersId, _clusters); m.SetBuffer(VerticesId, _vertices); m.SetBuffer(IndicesId, _indices);
             m.SetBuffer(SkinWeightsId, _weights); m.SetBuffer(VisibleId, visible);
+            m.SetBuffer(ObjectAnimationTimesId, _animationTimes);
             m.SetMatrixArray(ObjectLocalToWorldId, _l2w); m.SetMatrixArray(ObjectWorldToLocalId, _w2l);
             m.SetTexture(SkinPaletteTexId, _paletteTexture); m.SetInt(PaletteWidthId, _paletteWidth);
+            m.SetTexture(SkinAnimationTexId, gpuAnimationTexture != null ? gpuAnimationTexture : _paletteTexture);
+            m.SetInt(UseGpuAnimationTextureId, useGpuAnimationTexture ? 1 : 0);
+            m.SetInt(SkinAnimationFrameCountId, gpuAnimationTexture != null ? gpuAnimationTexture.height : 1);
             m.SetFloat(EnableClusterColorId, EnableClusterColor ? 1f : 0f);
         }
 
@@ -291,6 +420,15 @@ namespace ClusterMesh
             if (_disposed) return; _disposed = true; IsReady = false;
             _clusters?.Dispose(); _groups?.Dispose(); _owningGroups?.Dispose(); _vertices?.Dispose(); _indices?.Dispose();
             _weights?.Dispose(); _cullFrames?.Dispose(); _segments?.Dispose(); _cameraCull?.Dispose();
+            _animationTimes?.Dispose();
+            if (_burstCurveHeaders.IsCreated) _burstCurveHeaders.Dispose();
+            if (_burstCurveSegments.IsCreated) _burstCurveSegments.Dispose();
+            if (_burstParents.IsCreated) _burstParents.Dispose();
+            if (_burstEvaluationOrder.IsCreated) _burstEvaluationOrder.Dispose();
+            if (_burstBindPoses.IsCreated) _burstBindPoses.Dispose();
+            if (_burstTimes.IsCreated) _burstTimes.Dispose();
+            if (_burstGlobalScratch.IsCreated) _burstGlobalScratch.Dispose();
+            if (_burstPalettePixels.IsCreated) _burstPalettePixels.Dispose();
             if (_visible != null) foreach (var b in _visible) b?.Dispose();
             if (_shadowVisible != null) foreach (var b in _shadowVisible) b?.Dispose();
             if (_args != null) foreach (var b in _args) b?.Dispose();

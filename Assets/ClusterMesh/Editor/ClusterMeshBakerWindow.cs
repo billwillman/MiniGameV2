@@ -72,9 +72,15 @@ namespace ClusterMesh
             asset.bonePaths = result.bonePaths;
             asset.boneParentIndices = result.boneParentIndices;
             asset.clips = result.clips;
+            asset.gpuPaletteTextures = result.gpuPaletteTextures;
+            asset.cpuCurveHeaders = result.cpuCurveHeaders;
+            asset.cpuCurveSegments = result.cpuCurveSegments;
+            asset.boneEvaluationOrder = result.boneEvaluationOrder;
             asset.cullFrames = result.cullFrames;
             asset.skinningVersion = ClusterSkinnedMeshAsset.CurrentSkinningVersion;
             asset.animationSamplingVersion = ClusterSkinnedMeshAsset.CurrentAnimationSamplingVersion;
+            asset.gpuAnimationVersion = ClusterSkinnedMeshAsset.CurrentGpuAnimationVersion;
+            asset.cpuBurstAnimationVersion = ClusterSkinnedMeshAsset.CurrentCpuBurstAnimationVersion;
             asset.skinVertexCount = result.skinWeights != null ? result.skinWeights.Length : 0;
         }
 
@@ -332,6 +338,14 @@ namespace ClusterMesh
             string path = AssetDatabase.GenerateUniqueAssetPath(folder + "/" + _assetName + ".asset");
             AssetDatabase.CreateAsset(asset, path);
             AssetDatabase.AddObjectToAsset(geometry, asset);
+            if (asset.gpuPaletteTextures != null)
+            {
+                for (int i = 0; i < asset.gpuPaletteTextures.Length; i++)
+                {
+                    if (asset.gpuPaletteTextures[i] != null)
+                        AssetDatabase.AddObjectToAsset(asset.gpuPaletteTextures[i], asset);
+                }
+            }
             AssetDatabase.SaveAssets();
             int clusterCount = geometry.clusters != null ? geometry.clusters.Length : 0;
             int groupCount = geometry.groups != null ? geometry.groups.Length : 0;
