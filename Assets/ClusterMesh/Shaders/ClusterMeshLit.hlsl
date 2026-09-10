@@ -19,6 +19,11 @@ SAMPLER(sampler_BaseMap);
 TEXTURE2D(_BumpMap);
 SAMPLER(sampler_BumpMap);
 
+// Populated by URP while rendering a shadow-caster pass. Directional lights
+// use _LightDirection; punctual lights use _LightPosition per vertex.
+float3 _LightDirection;
+float3 _LightPosition;
+
 StructuredBuffer<ClusterHeader> _Clusters;
 StructuredBuffer<ClusterVertex> _Vertices;
 StructuredBuffer<uint> _Indices;
@@ -174,8 +179,17 @@ Varyings ClusterMeshShadowVert(Attributes input)
     uint clusterId;
     ApplyClusterMeshInstance(input.instanceID);
     FetchClusterVertex(input.vertexID, input.instanceID, positionOS, normalOS, tangentOS, uv, clusterId);
+
+    float3 positionWS = TransformObjectToWorld(positionOS);
+    float3 normalWS = TransformObjectToWorldNormal(normalOS);
+#if _CASTING_PUNCTUAL_LIGHT_SHADOW
+    float3 lightDirectionWS = normalize(_LightPosition - positionWS);
+#else
+    float3 lightDirectionWS = _LightDirection;
+#endif
+
     Varyings o;
-    o.positionCS = TransformWorldToHClip(TransformObjectToWorld(positionOS));
+    o.positionCS = TransformWorldToHClip(ApplyShadowBias(positionWS, normalWS, lightDirectionWS));
 #if UNITY_REVERSED_Z
     o.positionCS.z = min(o.positionCS.z, UNITY_NEAR_CLIP_VALUE);
 #else
