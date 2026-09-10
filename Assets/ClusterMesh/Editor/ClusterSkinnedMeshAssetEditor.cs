@@ -6,6 +6,22 @@ namespace ClusterMesh
     [CustomEditor(typeof(ClusterSkinnedMeshAsset))]
     public sealed class ClusterSkinnedMeshAssetEditor : UnityEditor.Editor
     {
+        int _previewClip;
+        float _previewTime;
+        Texture2D _palettePreview;
+        Matrix4x4[] _paletteScratch;
+        Color[] _palettePixels;
+        ClusterSkinnedMeshAsset _lastPreviewAsset;
+        int _lastPreviewClip = -1;
+        float _lastPreviewTime = -1f;
+
+        void OnDisable()
+        {
+            if (_palettePreview != null)
+                DestroyImmediate(_palettePreview);
+            _palettePreview = null;
+        }
+
         public override void OnInspectorGUI()
         {
             DrawDefaultInspector();
@@ -25,9 +41,98 @@ namespace ClusterMesh
             EditorGUILayout.LabelField("Vertices", geometry != null ? geometry.vertexCount.ToString() : "0");
             EditorGUILayout.LabelField("Bones", asset.bindPoses != null ? asset.bindPoses.Length.ToString() : "0");
             EditorGUILayout.LabelField("Clips", asset.clips != null ? asset.clips.Length.ToString() : "0");
+            DrawPalettePreview(asset);
             EditorGUILayout.Space();
             if (GUILayout.Button("加入场景"))
                 Selection.activeGameObject = ClusterSkinnedMeshPlaceMenu.CreateInScene(asset);
+        }
+
+        void DrawPalettePreview(ClusterSkinnedMeshAsset asset)
+        {
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("VTF Palette Texture", EditorStyles.boldLabel);
+            int boneCount = asset.bindPoses != null ? asset.bindPoses.Length : 0;
+            ClusterSkinnedClip[] clips = asset.clips;
+            if (boneCount <= 0 || clips == null || clips.Length == 0)
+            {
+                EditorGUILayout.HelpBox("没有可预览的骨骼动画数据。", MessageType.Info);
+                return;
+            }
+
+            var labels = new string[clips.Length];
+            for (int i = 0; i < clips.Length; i++)
+            {
+                string clipName = clips[i] != null && !string.IsNullOrEmpty(clips[i].name)
+                    ? clips[i].name : "<Missing>";
+                labels[i] = i + ": " + clipName;
+            }
+            _previewClip = EditorGUILayout.Popup("Animation Clip", Mathf.Clamp(_previewClip, 0, clips.Length - 1), labels);
+            _previewTime = EditorGUILayout.Slider("Normalized Time", _previewTime, 0f, 1f);
+
+            int width = boneCount * 3;
+            if (width > SystemInfo.maxTextureSize)
+            {
+                EditorGUILayout.HelpBox("骨骼 Palette 宽度超过当前设备的最大纹理尺寸，无法创建 VTF 预览。", MessageType.Error);
+                return;
+            }
+            EditorGUILayout.LabelField("Runtime Layout", width + " × instance count · RGBAFloat · Point");
+            EditorGUILayout.HelpBox(
+                "横向每个骨骼占 3 个像素，分别保存 3×4 蒙皮矩阵的 Row 0/1/2。下面显示当前 Clip 与时间的一条实例纹理行；负值和大于 1 的值在预览窗口中会被颜色显示范围截断，但底层像素仍是原始 float。",
+                MessageType.None);
+
+            EnsurePalettePreview(asset, boneCount, width);
+            if (_palettePreview == null)
+                return;
+            Rect previewRect = GUILayoutUtility.GetRect(64f, 72f, GUILayout.ExpandWidth(true));
+            GUI.DrawTexture(previewRect, _palettePreview, ScaleMode.StretchToFill, false);
+            using (new EditorGUI.DisabledScope(true))
+                EditorGUILayout.ObjectField("Current Palette Row", _palettePreview, typeof(Texture2D), false);
+        }
+
+        void EnsurePalettePreview(ClusterSkinnedMeshAsset asset, int boneCount, int width)
+        {
+            bool textureChanged = _palettePreview == null || _palettePreview.width != width;
+            if (textureChanged)
+            {
+                if (_palettePreview != null)
+                    DestroyImmediate(_palettePreview);
+                _palettePreview = new Texture2D(width, 1, TextureFormat.RGBAFloat, false, true)
+                {
+                    name = "ClusterSkinnedMesh VTF Preview (Editor Only)",
+                    filterMode = FilterMode.Point,
+                    wrapMode = TextureWrapMode.Clamp,
+                    hideFlags = HideFlags.HideAndDontSave
+                };
+                _paletteScratch = new Matrix4x4[boneCount];
+                _palettePixels = new Color[width];
+            }
+            else if (_paletteScratch == null || _paletteScratch.Length != boneCount)
+            {
+                _paletteScratch = new Matrix4x4[boneCount];
+                _palettePixels = new Color[width];
+                textureChanged = true;
+            }
+
+            bool poseChanged = textureChanged || _lastPreviewAsset != asset ||
+                _lastPreviewClip != _previewClip || !Mathf.Approximately(_lastPreviewTime, _previewTime);
+            if (!poseChanged)
+                return;
+            if (!ClusterSkinnedAnimation.EvaluatePalette(asset, _previewClip, _previewTime, _paletteScratch))
+                return;
+
+            for (int bone = 0; bone < boneCount; bone++)
+            {
+                Matrix4x4 matrix = _paletteScratch[bone];
+                int pixel = bone * 3;
+                _palettePixels[pixel] = new Color(matrix.m00, matrix.m01, matrix.m02, matrix.m03);
+                _palettePixels[pixel + 1] = new Color(matrix.m10, matrix.m11, matrix.m12, matrix.m13);
+                _palettePixels[pixel + 2] = new Color(matrix.m20, matrix.m21, matrix.m22, matrix.m23);
+            }
+            _palettePreview.SetPixels(_palettePixels);
+            _palettePreview.Apply(false, false);
+            _lastPreviewAsset = asset;
+            _lastPreviewClip = _previewClip;
+            _lastPreviewTime = _previewTime;
         }
     }
 
