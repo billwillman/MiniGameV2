@@ -1,5 +1,6 @@
 using Unity.Burst;
 using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using Unity.Mathematics;
 
@@ -14,7 +15,11 @@ namespace ClusterMesh
         [ReadOnly] public NativeArray<int> evaluationOrder;
         [ReadOnly] public NativeArray<float4x4> bindPoses;
         [ReadOnly] public NativeArray<float> normalizedTimes;
+        // Each parallel index owns [objectIndex * stride, (objectIndex + 1) * stride).
+        // The ranges never overlap, but IJobParallelFor cannot infer this ownership.
+        [NativeDisableParallelForRestriction]
         public NativeArray<float4x4> globalScratch;
+        [NativeDisableParallelForRestriction]
         public NativeArray<float4> palettePixels;
         public int curveHeaderOffset;
         public int boneCount;
