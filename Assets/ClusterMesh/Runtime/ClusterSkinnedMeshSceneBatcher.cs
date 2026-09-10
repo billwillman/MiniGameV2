@@ -14,6 +14,8 @@ namespace ClusterMesh
         static readonly List<float> Times = new List<float>(64);
         static int _flushedFrame = int.MinValue;
 
+        public static int CachedContextCount => Contexts.Count;
+
         public static void Register(ClusterSkinnedMeshRenderer renderer)
         {
             if (renderer != null && renderer.asset != null && !Renderers.Contains(renderer))

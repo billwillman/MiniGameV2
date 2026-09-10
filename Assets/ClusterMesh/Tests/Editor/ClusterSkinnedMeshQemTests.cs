@@ -195,5 +195,16 @@ namespace ClusterMesh.Tests
                 Object.DestroyImmediate(asset);
             }
         }
+
+        [Test]
+        public void DisposeCachedContexts_Twice_DoesNotThrow()
+        {
+            Assert.DoesNotThrow(() =>
+            {
+                ClusterSkinnedMeshSceneBatcher.DisposeCachedContexts();
+                ClusterSkinnedMeshSceneBatcher.DisposeCachedContexts();
+            });
+            Assert.That(ClusterSkinnedMeshSceneBatcher.CachedContextCount, Is.EqualTo(0));
+        }
     }
 }
