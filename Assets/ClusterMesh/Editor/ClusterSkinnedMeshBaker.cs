@@ -21,6 +21,9 @@ namespace ClusterMesh
 
     public static class ClusterSkinnedMeshBaker
     {
+        // Tiny influences still affect profile distance, but do not create a strong bone region.
+        const float StrongBoneWeightThreshold = 1f / 255f;
+
         sealed class SampledClip
         {
             public ClusterSkinnedClip clip;
@@ -270,14 +273,26 @@ namespace ClusterMesh
                 int seed = Array.FindIndex(unused, value => value);
                 var clusterTriangles = new List<int>();
                 var usedVertices = new HashSet<int>();
-                AddTriangle(seed, triangleList, unused, clusterTriangles, usedVertices);
+                var frontier = new HashSet<int>();
+                var usedBones = new HashSet<int>();
+                var boneMass = new Dictionary<int, float>();
+                var candidateBones = new int[12];
+                var candidateMass = new float[12];
+                var candidateStrong = new bool[12];
+                AddTriangle(seed, triangleList, unused, clusterTriangles, usedVertices,
+                    sourceSkin, vertexToTriangles, frontier, usedBones, boneMass);
                 remaining--;
                 while (true)
                 {
-                    int candidate = FindCandidate(clusterTriangles, triangleList, unused, vertexToTriangles, usedVertices, settings);
+                    if (clusterTriangles.Count >= settings.maxTrianglesPerCluster)
+                        break;
+                    int candidate = FindCandidate(frontier, triangleList, unused, usedVertices,
+                        sourceSkin, usedBones, boneMass, settings,
+                        candidateBones, candidateMass, candidateStrong);
                     if (candidate < 0)
                         break;
-                    AddTriangle(candidate, triangleList, unused, clusterTriangles, usedVertices);
+                    AddTriangle(candidate, triangleList, unused, clusterTriangles, usedVertices,
+                        sourceSkin, vertexToTriangles, frontier, usedBones, boneMass);
                     remaining--;
                 }
                 EmitCluster(materialIndex, clusterTriangles, triangleList, positions, normals, tangents, uvs, sourceSkin,
@@ -285,39 +300,140 @@ namespace ClusterMesh
             }
         }
 
-        static int FindCandidate(List<int> clusterTriangles, List<int> triangles, bool[] unused,
-            Dictionary<int, List<int>> adjacency, HashSet<int> usedVertices, ClusterMeshBakeSettings settings)
+        static int FindCandidate(HashSet<int> frontier, List<int> triangles, bool[] unused,
+            HashSet<int> usedVertices, ClusterSkinWeight[] sourceSkin, HashSet<int> usedBones,
+            Dictionary<int, float> boneMass, ClusterMeshBakeSettings settings,
+            int[] candidateBones, float[] candidateMass, bool[] candidateStrong)
         {
-            foreach (int triangle in clusterTriangles)
+            int best = -1;
+            float bestCost = float.MaxValue;
+            foreach (int candidate in frontier)
             {
-                for (int k = 0; k < 3; k++)
+                if (!unused[candidate])
+                    continue;
+                int added = 0;
+                for (int n = 0; n < 3; n++)
                 {
-                    int vertex = triangles[triangle * 3 + k];
-                    foreach (int candidate in adjacency[vertex])
-                    {
-                        if (!unused[candidate])
-                            continue;
-                        int added = 0;
-                        for (int n = 0; n < 3; n++)
-                        {
-                            if (!usedVertices.Contains(triangles[candidate * 3 + n]))
-                                added++;
-                        }
-                        if (clusterTriangles.Count + 1 <= settings.maxTrianglesPerCluster &&
-                            usedVertices.Count + added <= settings.maxVerticesPerCluster)
-                            return candidate;
-                    }
+                    if (!usedVertices.Contains(triangles[candidate * 3 + n]))
+                        added++;
+                }
+                if (usedVertices.Count + added > settings.maxVerticesPerCluster)
+                    continue;
+
+                float cost = BoneAffinityCost(candidate, triangles, sourceSkin, usedBones, boneMass,
+                    added, usedVertices.Count, candidateBones, candidateMass, candidateStrong);
+                if (float.IsNaN(cost) || float.IsInfinity(cost))
+                    cost = 1e30f;
+                if (best < 0 || cost < bestCost - 1e-6f ||
+                    (Mathf.Abs(cost - bestCost) <= 1e-6f && candidate < best))
+                {
+                    best = candidate;
+                    bestCost = cost;
                 }
             }
-            return -1;
+            return best;
         }
 
-        static void AddTriangle(int triangle, List<int> triangles, bool[] unused, List<int> clusterTriangles, HashSet<int> usedVertices)
+        static float BoneAffinityCost(int triangle, List<int> triangles, ClusterSkinWeight[] sourceSkin,
+            HashSet<int> usedBones, Dictionary<int, float> clusterBoneMass, int addedVertices,
+            int usedVertexCount, int[] candidateBones, float[] candidateMass, bool[] candidateStrong)
+        {
+            // A triangle has at most twelve influences; scratch arrays are reused for
+            // every frontier candidate and remain independent of skeleton size.
+            int candidateBoneCount = 0;
+            float candidateTotal = 0f;
+            for (int corner = 0; corner < 3; corner++)
+            {
+                ClusterSkinWeight skin = sourceSkin[triangles[triangle * 3 + corner]];
+                for (int influence = 0; influence < 4; influence++)
+                {
+                    float weight = Mathf.Max(0f, skin.GetWeight(influence));
+                    if (weight <= 0f || float.IsNaN(weight) || float.IsInfinity(weight))
+                        continue;
+                    int bone = skin.GetBoneIndex(influence);
+                    int slot = -1;
+                    for (int i = 0; i < candidateBoneCount; i++)
+                    {
+                        if (candidateBones[i] == bone)
+                        {
+                            slot = i;
+                            break;
+                        }
+                    }
+                    if (slot < 0)
+                    {
+                        slot = candidateBoneCount++;
+                        candidateBones[slot] = bone;
+                        candidateMass[slot] = 0f;
+                        candidateStrong[slot] = false;
+                    }
+                    candidateMass[slot] += weight;
+                    candidateStrong[slot] |= weight >= StrongBoneWeightThreshold;
+                    candidateTotal += weight;
+                }
+            }
+
+            float clusterTotal = Mathf.Max(1, usedVertexCount);
+            float inverseCandidateTotal = candidateTotal > 1e-8f ? 1f / candidateTotal : 0f;
+            float overlap = 0f;
+            float outsideWeight = 0f;
+            int newStrongBones = 0;
+            for (int i = 0; i < candidateBoneCount; i++)
+            {
+                int bone = candidateBones[i];
+                float candidateWeight = candidateMass[i] * inverseCandidateTotal;
+                clusterBoneMass.TryGetValue(bone, out float clusterWeight);
+                clusterWeight /= clusterTotal;
+                overlap += Mathf.Min(candidateWeight, clusterWeight);
+                if (!usedBones.Contains(bone))
+                {
+                    outsideWeight += candidateWeight;
+                    if (candidateStrong[i])
+                        newStrongBones++;
+                }
+            }
+
+            float profileDistance = 1f - Mathf.Clamp01(overlap);
+            int sharedVertices = 3 - addedVertices;
+            return newStrongBones * 16f + outsideWeight * 6f + profileDistance * 4f
+                + addedVertices * 2f - sharedVertices;
+        }
+
+        static void AddTriangle(int triangle, List<int> triangles, bool[] unused,
+            List<int> clusterTriangles, HashSet<int> usedVertices, ClusterSkinWeight[] sourceSkin,
+            Dictionary<int, List<int>> adjacency, HashSet<int> frontier, HashSet<int> usedBones,
+            Dictionary<int, float> boneMass)
         {
             unused[triangle] = false;
+            frontier.Remove(triangle);
             clusterTriangles.Add(triangle);
             for (int i = 0; i < 3; i++)
-                usedVertices.Add(triangles[triangle * 3 + i]);
+            {
+                int vertex = triangles[triangle * 3 + i];
+                if (usedVertices.Add(vertex))
+                    AccumulateBoneProfile(sourceSkin[vertex], usedBones, boneMass);
+                foreach (int adjacent in adjacency[vertex])
+                {
+                    if (unused[adjacent])
+                        frontier.Add(adjacent);
+                }
+            }
+        }
+
+        static void AccumulateBoneProfile(in ClusterSkinWeight skin, HashSet<int> usedBones,
+            Dictionary<int, float> boneMass)
+        {
+            for (int influence = 0; influence < 4; influence++)
+            {
+                float weight = Mathf.Max(0f, skin.GetWeight(influence));
+                if (weight <= 0f || float.IsNaN(weight) || float.IsInfinity(weight))
+                    continue;
+                int bone = skin.GetBoneIndex(influence);
+                boneMass.TryGetValue(bone, out float mass);
+                boneMass[bone] = mass + weight;
+                if (weight >= StrongBoneWeightThreshold)
+                    usedBones.Add(bone);
+            }
         }
 
         static void EmitCluster(
@@ -492,6 +608,9 @@ namespace ClusterMesh
                     animator.enabled = true;
                     animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
                     animator.applyRootMotion = false;
+                    // Baking only needs the sampled pose. Suppress gameplay AnimationEvents
+                    // such as footsteps on the temporary clone to avoid missing-receiver warnings.
+                    animator.fireEvents = false;
                     animator.runtimeAnimatorController = null;
                     animator.Rebind();
                     animator.Update(0f);

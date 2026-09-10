@@ -73,6 +73,95 @@ namespace ClusterMesh.Tests
         }
 
         [Test]
+        public void ClusterTriangles_PrefersBoneAffineCandidateOverTriangleOrder()
+        {
+            var positions = new[]
+            {
+                new Vector3(0f, 0f, 0f), new Vector3(1f, 0f, 0f), new Vector3(0f, 1f, 0f),
+                new Vector3(-1f, 0f, 0f), new Vector3(0f, -1f, 0f),
+                new Vector3(2f, 0f, 0f), new Vector3(1f, 1f, 0f)
+            };
+            var normals = new Vector3[positions.Length];
+            var tangents = new Vector4[positions.Length];
+            var uvs = new Vector2[positions.Length];
+            var skin = new ClusterSkinWeight[positions.Length];
+            for (int i = 0; i < positions.Length; i++)
+            {
+                normals[i] = Vector3.forward;
+                tangents[i] = new Vector4(1f, 0f, 0f, 1f);
+                skin[i] = new ClusterSkinWeight { boneIndex0 = 0, weight0 = 1f };
+            }
+            skin[3] = new ClusterSkinWeight { boneIndex0 = 1, weight0 = 1f };
+            skin[4] = new ClusterSkinWeight { boneIndex0 = 1, weight0 = 1f };
+
+            // t1 is encountered first through vertex 0 but crosses into bone 1.
+            // t2 is encountered later through vertex 1 and remains entirely on bone 0.
+            var triangles = new List<int> { 0, 1, 2, 0, 3, 4, 1, 5, 6 };
+            var settings = new ClusterMeshBakeSettings
+            {
+                maxVerticesPerCluster = 5,
+                maxTrianglesPerCluster = 2,
+                buildLodHierarchy = false
+            };
+            var clusters = new List<ClusterHeader>();
+            var vertices = new List<ClusterVertex>();
+            var outputSkin = new List<ClusterSkinWeight>();
+            var indices = new List<uint>();
+            var method = typeof(ClusterSkinnedMeshBaker).GetMethod(
+                "ClusterTriangles",
+                System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
+
+            Assert.That(method, Is.Not.Null);
+            method.Invoke(null, new object[]
+            {
+                0u, triangles, positions, normals, tangents, uvs, skin, settings,
+                clusters, vertices, outputSkin, indices, 0f, 0u
+            });
+
+            Assert.That(clusters.Count, Is.EqualTo(2));
+            Assert.That(clusters[0].triangleCount, Is.EqualTo(2u));
+            for (int i = 0; i < clusters[0].vertexCount; i++)
+            {
+                ClusterSkinWeight weight = outputSkin[(int)clusters[0].vertexOffset + i];
+                Assert.That(weight.boneIndex0, Is.EqualTo(0));
+                Assert.That(weight.weight0, Is.EqualTo(1f));
+            }
+            int bakedTriangleCount = 0;
+            for (int i = 0; i < clusters.Count; i++)
+                bakedTriangleCount += (int)clusters[i].triangleCount;
+            Assert.That(bakedTriangleCount, Is.EqualTo(3));
+
+            var crossOnlyClusters = new List<ClusterHeader>();
+            var crossOnlyVertices = new List<ClusterVertex>();
+            var crossOnlySkin = new List<ClusterSkinWeight>();
+            var crossOnlyIndices = new List<uint>();
+            method.Invoke(null, new object[]
+            {
+                0u, new List<int> { 0, 1, 2, 0, 3, 4 }, positions, normals, tangents, uvs, skin, settings,
+                crossOnlyClusters, crossOnlyVertices, crossOnlySkin, crossOnlyIndices, 0f, 0u
+            });
+            Assert.That(crossOnlyClusters.Count, Is.EqualTo(1), "bone affinity must remain a soft preference");
+            Assert.That(crossOnlyClusters[0].triangleCount, Is.EqualTo(2u));
+
+            var repeatedClusters = new List<ClusterHeader>();
+            var repeatedVertices = new List<ClusterVertex>();
+            var repeatedSkin = new List<ClusterSkinWeight>();
+            var repeatedIndices = new List<uint>();
+            method.Invoke(null, new object[]
+            {
+                0u, triangles, positions, normals, tangents, uvs, skin, settings,
+                repeatedClusters, repeatedVertices, repeatedSkin, repeatedIndices, 0f, 0u
+            });
+            Assert.That(repeatedIndices, Is.EqualTo(indices), "cluster output must be deterministic");
+            Assert.That(repeatedClusters.Count, Is.EqualTo(clusters.Count));
+            for (int i = 0; i < clusters.Count; i++)
+            {
+                Assert.That(repeatedClusters[i].vertexCount, Is.EqualTo(clusters[i].vertexCount));
+                Assert.That(repeatedClusters[i].triangleCount, Is.EqualTo(clusters[i].triangleCount));
+            }
+        }
+
+        [Test]
         public void EvaluatePalette_UsesNormalizedClipTime()
         {
             var asset = ScriptableObject.CreateInstance<ClusterSkinnedMeshAsset>();
