@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
@@ -10,7 +11,7 @@ namespace ClusterMesh
         GameObject _sourceObject;
         bool _bakeSkinnedAnimation;
         SkinnedMeshRenderer _skinnedRenderer;
-        AnimationClip _animationClip;
+        [SerializeField] List<AnimationClip> _animationClips = new List<AnimationClip> { null };
         DefaultAsset _outputFolder;
         string _assetName = "ClusterMeshAsset";
         ClusterMeshBakeSettings _settings = new ClusterMeshBakeSettings();
@@ -47,11 +48,23 @@ namespace ClusterMesh
             AnimationClip clip,
             ClusterMeshBakeSettings settings)
         {
+            if (clip == null)
+                throw new InvalidOperationException("Skinned ClusterMesh requires an AnimationClip.");
+            WriteSkinnedAsset(asset, geometry, renderer, new[] { clip }, settings);
+        }
+
+        public static void WriteSkinnedAsset(
+            ClusterSkinnedMeshAsset asset,
+            ClusterMeshAsset geometry,
+            SkinnedMeshRenderer renderer,
+            AnimationClip[] clips,
+            ClusterMeshBakeSettings settings)
+        {
             if (asset == null || geometry == null)
                 throw new InvalidOperationException("Skinned ClusterMesh output assets are missing.");
             settings = settings ?? new ClusterMeshBakeSettings();
             settings.useQemSimplify = true;
-            ClusterSkinnedMeshBakeResult result = ClusterSkinnedMeshBaker.Bake(renderer, clip, settings);
+            ClusterSkinnedMeshBakeResult result = ClusterSkinnedMeshBaker.Bake(renderer, clips, settings);
             geometry.CopyFrom(result.geometry, renderer.sharedMesh, settings);
             asset.geometry = geometry;
             asset.packedSkinWeights = ClusterSkinnedMeshBaker.PackSkinWeights(result.skinWeights);
@@ -72,7 +85,7 @@ namespace ClusterMesh
             EditorGUILayout.LabelField("怎么用", EditorStyles.boldLabel);
             EditorGUILayout.HelpBox(
                 "普通模式把静态 Mesh 拆成 ClusterMeshAsset；勾选蒙皮动画后会生成独立的 ClusterSkinnedMeshAsset。\n\n" +
-                "1. 普通模式拖 Mesh/MeshFilter；蒙皮模式拖 SkinnedMeshRenderer 和 AnimationClip。\n" +
+                "1. 普通模式拖 Mesh/MeshFilter；蒙皮模式拖 SkinnedMeshRenderer 并添加一个或多个 AnimationClip。\n" +
                 "2. 选输出目录。空着则写到 Assets/ClusterMesh/Samples。\n" +
                 "3. 填资产名，点 Bake。成功后 Project 会选中生成的 .asset。\n" +
                 "4. 普通资产使用 ClusterMeshRenderer；蒙皮资产使用 ClusterSkinnedMeshRenderer。\n\n" +
@@ -88,7 +101,7 @@ namespace ClusterMesh
             _bakeSkinnedAnimation = mode == 1;
             EditorGUILayout.HelpBox(
                 _bakeSkinnedAnimation
-                    ? "当前：蒙皮。拖 SkinnedMeshRenderer + AnimationClip，生成 ClusterSkinnedMeshAsset。"
+                    ? "当前：蒙皮。拖 SkinnedMeshRenderer + AnimationClip 列表，生成 ClusterSkinnedMeshAsset。"
                     : "当前：静态。拖 Mesh / MeshFilter，生成 ClusterMeshAsset。",
                 MessageType.None);
 
@@ -100,14 +113,7 @@ namespace ClusterMesh
                 _skinnedRenderer = (SkinnedMeshRenderer)EditorGUILayout.ObjectField(
                     new GUIContent("Skinned Renderer", "场景或预制体中的 SkinnedMeshRenderer。"),
                     _skinnedRenderer, typeof(SkinnedMeshRenderer), true);
-                _animationClip = (AnimationClip)EditorGUILayout.ObjectField(
-                    new GUIContent("Animation Clip", "支持 Humanoid、Generic 和 Legacy。Humanoid 需要 Renderer 上级存在有效 Animator/Avatar。"),
-                    _animationClip, typeof(AnimationClip), false);
-                if (_animationClip != null)
-                {
-                    string rig = _animationClip.isHumanMotion ? "Humanoid" : (_animationClip.legacy ? "Legacy" : "Generic");
-                    EditorGUILayout.LabelField("Animation Rig", rig);
-                }
+                DrawAnimationClipList();
             }
             else
             {
@@ -170,6 +176,85 @@ namespace ClusterMesh
                     : "\n下一步：选中这个资产 → 加到 ClusterMeshRenderer.asset，或打开 Tools/ClusterMesh/Viewer。"), MessageType.Info);
 
             EditorGUILayout.EndScrollView();
+        }
+
+        void DrawAnimationClipList()
+        {
+            if (_animationClips == null)
+                _animationClips = new List<AnimationClip>();
+
+            EditorGUILayout.LabelField("Animation Clips", EditorStyles.boldLabel);
+            int remove = -1;
+            int moveFrom = -1;
+            int moveTo = -1;
+            for (int i = 0; i < _animationClips.Count; i++)
+            {
+                EditorGUILayout.BeginHorizontal();
+                _animationClips[i] = (AnimationClip)EditorGUILayout.ObjectField(
+                    new GUIContent("Clip " + i, "顺序对应 ClusterSkinnedMeshRenderer.clipIndex。"),
+                    _animationClips[i], typeof(AnimationClip), false);
+                using (new EditorGUI.DisabledScope(i == 0))
+                {
+                    if (GUILayout.Button("Up", GUILayout.Width(34f)))
+                    {
+                        moveFrom = i;
+                        moveTo = i - 1;
+                    }
+                }
+                using (new EditorGUI.DisabledScope(i + 1 >= _animationClips.Count))
+                {
+                    if (GUILayout.Button("Down", GUILayout.Width(44f)))
+                    {
+                        moveFrom = i;
+                        moveTo = i + 1;
+                    }
+                }
+                if (GUILayout.Button("X", GUILayout.Width(24f)))
+                    remove = i;
+                EditorGUILayout.EndHorizontal();
+
+                AnimationClip clip = _animationClips[i];
+                if (clip != null)
+                {
+                    string rig = clip.isHumanMotion ? "Humanoid" : (clip.legacy ? "Legacy" : "Generic");
+                    EditorGUILayout.LabelField("", clip.name + " · " + rig + " · " + clip.length.ToString("0.###") + "s");
+                }
+            }
+
+            if (moveFrom >= 0)
+            {
+                AnimationClip clip = _animationClips[moveFrom];
+                _animationClips.RemoveAt(moveFrom);
+                _animationClips.Insert(moveTo, clip);
+            }
+            else if (remove >= 0)
+            {
+                _animationClips.RemoveAt(remove);
+            }
+
+            if (GUILayout.Button("Add Animation Clip"))
+                _animationClips.Add(null);
+            EditorGUILayout.HelpBox(
+                "每个 Clip 会保存独立的拟合曲线与分段 Cull 数据；列表顺序就是运行时 Clip Index。",
+                MessageType.None);
+        }
+
+        AnimationClip[] ValidatedAnimationClips()
+        {
+            if (_animationClips == null || _animationClips.Count == 0)
+                throw new InvalidOperationException("请至少添加一个 AnimationClip。");
+            var result = new AnimationClip[_animationClips.Count];
+            var unique = new HashSet<AnimationClip>();
+            for (int i = 0; i < _animationClips.Count; i++)
+            {
+                AnimationClip clip = _animationClips[i];
+                if (clip == null)
+                    throw new InvalidOperationException("Animation Clip 列表第 " + i + " 项为空。");
+                if (!unique.Add(clip))
+                    throw new InvalidOperationException("Animation Clip 列表包含重复项：" + clip.name);
+                result[i] = clip;
+            }
+            return result;
         }
 
         void Bake()
@@ -236,15 +321,14 @@ namespace ClusterMesh
         {
             if (_skinnedRenderer == null || _skinnedRenderer.sharedMesh == null)
                 throw new InvalidOperationException("请指定一个带 sharedMesh 的 SkinnedMeshRenderer。");
-            if (_animationClip == null)
-                throw new InvalidOperationException("请指定要烘焙的 AnimationClip。");
+            AnimationClip[] clips = ValidatedAnimationClips();
 
             _settings.useQemSimplify = true;
             string folder = ResolveOutputFolder();
             var asset = ScriptableObject.CreateInstance<ClusterSkinnedMeshAsset>();
             var geometry = ScriptableObject.CreateInstance<ClusterMeshAsset>();
             geometry.name = "Geometry";
-            WriteSkinnedAsset(asset, geometry, _skinnedRenderer, _animationClip, _settings);
+            WriteSkinnedAsset(asset, geometry, _skinnedRenderer, clips, _settings);
             string path = AssetDatabase.GenerateUniqueAssetPath(folder + "/" + _assetName + ".asset");
             AssetDatabase.CreateAsset(asset, path);
             AssetDatabase.AddObjectToAsset(geometry, asset);
@@ -252,7 +336,7 @@ namespace ClusterMesh
             int clusterCount = geometry.clusters != null ? geometry.clusters.Length : 0;
             int groupCount = geometry.groups != null ? geometry.groups.Length : 0;
             _info = "已写入 " + path + "，共 " + clusterCount + " 个蒙皮 cluster，" +
-                groupCount + " 个 Skinning-Aware QEM LOD 组，" + asset.clips.Length + " 段动画。";
+                groupCount + " 个 Skinning-Aware QEM LOD 组，" + asset.clips.Length + " 个动画 Clip。";
             Selection.activeObject = asset;
         }
 

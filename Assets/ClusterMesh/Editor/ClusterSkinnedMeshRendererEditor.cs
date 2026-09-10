@@ -11,6 +11,7 @@ namespace ClusterMesh
 
         public override void OnInspectorGUI()
         {
+            var renderer = (ClusterSkinnedMeshRenderer)target;
             serializedObject.Update();
             SerializedProperty prop = serializedObject.GetIterator();
             bool enterChildren = true;
@@ -26,12 +27,13 @@ namespace ClusterMesh
 
                 if (prop.propertyPath == "lodErrorThreshold")
                     DrawLodErrorThreshold(prop);
+                else if (prop.propertyPath == "clipIndex")
+                    DrawClipIndex(prop, renderer.asset);
                 else
                     EditorGUILayout.PropertyField(prop, true);
             }
 
             serializedObject.ApplyModifiedProperties();
-            var renderer = (ClusterSkinnedMeshRenderer)target;
             if (renderer.asset != null &&
                 renderer.asset.animationSamplingVersion != ClusterSkinnedMeshAsset.CurrentAnimationSamplingVersion)
             {
@@ -43,6 +45,27 @@ namespace ClusterMesh
             }
             if (renderer.playAutomatically)
                 EditorGUILayout.HelpBox("自动播放开启时，Normalized Time 是播放相位偏移；需要手动定格拖动时请关闭 Play Automatically。", MessageType.Info);
+        }
+
+        static void DrawClipIndex(SerializedProperty prop, ClusterSkinnedMeshAsset asset)
+        {
+            ClusterSkinnedClip[] clips = asset != null ? asset.clips : null;
+            if (clips == null || clips.Length == 0)
+            {
+                EditorGUILayout.PropertyField(prop, true);
+                return;
+            }
+
+            var labels = new string[clips.Length];
+            for (int i = 0; i < clips.Length; i++)
+            {
+                string name = clips[i] != null && !string.IsNullOrEmpty(clips[i].name)
+                    ? clips[i].name : "<Missing>";
+                labels[i] = i + ": " + name;
+            }
+            prop.intValue = EditorGUILayout.Popup(
+                new GUIContent(prop.displayName, "选择 Baker 列表中对应序号的动画 Clip。"),
+                Mathf.Clamp(prop.intValue, 0, clips.Length - 1), labels);
         }
 
         static void DrawLodErrorThreshold(SerializedProperty prop)
