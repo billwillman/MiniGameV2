@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Animations;
+using UnityEngine.Playables;
 
 namespace ClusterMesh
 {
@@ -468,6 +470,41 @@ namespace ClusterMesh
                         throw new InvalidOperationException("Could not locate bone '" + path + "' in the animation sampling clone.");
                 }
 
+                Animator animator = FindSamplingAnimator(sourceRenderer, sourceRoot.transform, clone.transform);
+                if (sourceClip.isHumanMotion &&
+                    (animator == null || animator.avatar == null || !animator.avatar.isValid || !animator.avatar.isHuman))
+                {
+                    throw new InvalidOperationException(
+                        "Humanoid clip '" + sourceClip.name + "' requires a valid Humanoid Animator/Avatar " +
+                        "above the selected SkinnedMeshRenderer.");
+                }
+
+                PlayableGraph graph = default;
+                AnimationClipPlayable playable = default;
+                // Humanoid clips contain muscle curves and must be retargeted by an Animator.
+                // Generic and Legacy clips contain Transform bindings and are sampled directly.
+                bool usePlayable = sourceClip.isHumanMotion;
+                GameObject directSampleTarget = usePlayable
+                    ? null
+                    : FindDirectSampleTarget(sourceRenderer, sourceRoot.transform, clone.transform, sourceClip);
+                if (usePlayable)
+                {
+                    animator.enabled = true;
+                    animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+                    animator.applyRootMotion = false;
+                    animator.runtimeAnimatorController = null;
+                    animator.Rebind();
+                    animator.Update(0f);
+                    graph = PlayableGraph.Create("ClusterSkinnedMeshBaker");
+                    graph.SetTimeUpdateMode(DirectorUpdateMode.Manual);
+                    playable = AnimationClipPlayable.Create(graph, sourceClip);
+                    playable.SetApplyFootIK(false);
+                    playable.SetApplyPlayableIK(false);
+                    AnimationPlayableOutput output = AnimationPlayableOutput.Create(graph, "Animation", animator);
+                    output.SetSourcePlayable(playable);
+                    graph.Play();
+                }
+
                 float frameRate = Mathf.Clamp(sourceClip.frameRate > 0f ? sourceClip.frameRate : 30f, 1f, 60f);
                 float duration = Mathf.Max(0f, sourceClip.length);
                 int frameCount = Mathf.Max(2, Mathf.CeilToInt(duration * frameRate) + 1);
@@ -482,26 +519,50 @@ namespace ClusterMesh
                     rotations[b] = new Quaternion[frameCount];
                     scales[b] = new Vector3[frameCount];
                 }
-                for (int frame = 0; frame < frameCount; frame++)
+                try
                 {
-                    float time = frameCount > 1 ? duration * frame / (frameCount - 1f) : 0f;
-                    times[frame] = time;
-                    sourceClip.SampleAnimation(clone, time);
-                    palettes[frame] = new Matrix4x4[sourceBones.Length];
-                    for (int bone = 0; bone < sourceBones.Length; bone++)
+                    for (int frame = 0; frame < frameCount; frame++)
                     {
-                        Transform parent = parentIndices[bone] >= 0 ? bones[parentIndices[bone]] : null;
-                        Matrix4x4 local = parent != null
-                            ? parent.worldToLocalMatrix * bones[bone].localToWorldMatrix
-                            : renderer.transform.worldToLocalMatrix * bones[bone].localToWorldMatrix;
-                        Decompose(local, out positions[bone][frame], out rotations[bone][frame], out scales[bone][frame]);
-                        if (frame > 0 && Quaternion.Dot(rotations[bone][frame - 1], rotations[bone][frame]) < 0f)
+                        float time = frameCount > 1 ? duration * frame / (frameCount - 1f) : 0f;
+                        times[frame] = time;
+                        if (usePlayable)
                         {
-                            Quaternion q = rotations[bone][frame];
-                            rotations[bone][frame] = new Quaternion(-q.x, -q.y, -q.z, -q.w);
+                            playable.SetTime(time);
+                            graph.Evaluate(0f);
                         }
-                        palettes[frame][bone] = renderer.transform.worldToLocalMatrix * bones[bone].localToWorldMatrix * bindPoses[bone];
+                        else
+                        {
+                            sourceClip.SampleAnimation(directSampleTarget, time);
+                        }
+                        palettes[frame] = new Matrix4x4[sourceBones.Length];
+                        for (int bone = 0; bone < sourceBones.Length; bone++)
+                        {
+                            Transform parent = parentIndices[bone] >= 0 ? bones[parentIndices[bone]] : null;
+                            Matrix4x4 local = parent != null
+                                ? parent.worldToLocalMatrix * bones[bone].localToWorldMatrix
+                                : renderer.transform.worldToLocalMatrix * bones[bone].localToWorldMatrix;
+                            Decompose(local, out positions[bone][frame], out rotations[bone][frame], out scales[bone][frame]);
+                            if (frame > 0 && Quaternion.Dot(rotations[bone][frame - 1], rotations[bone][frame]) < 0f)
+                            {
+                                Quaternion q = rotations[bone][frame];
+                                rotations[bone][frame] = new Quaternion(-q.x, -q.y, -q.z, -q.w);
+                            }
+                            palettes[frame][bone] = renderer.transform.worldToLocalMatrix * bones[bone].localToWorldMatrix * bindPoses[bone];
+                        }
                     }
+                }
+                finally
+                {
+                    if (graph.IsValid())
+                        graph.Destroy();
+                }
+                if (!sourceClip.empty && duration > 0f && !HasSampledMotion(palettes))
+                {
+                    throw new InvalidOperationException(
+                        "Animation clip '" + sourceClip.name + "' produced no bone motion. " +
+                        (sourceClip.isHumanMotion
+                            ? "Check that the Humanoid Animator Avatar matches the selected SkinnedMeshRenderer."
+                            : "Check that the Generic/Legacy clip binding root matches the selected SkinnedMeshRenderer hierarchy."));
                 }
                 var curves = new ClusterSkinnedBoneCurves[sourceBones.Length];
                 for (int bone = 0; bone < sourceBones.Length; bone++)
@@ -522,6 +583,83 @@ namespace ClusterMesh
             {
                 UnityEngine.Object.DestroyImmediate(clone);
             }
+        }
+
+        static Animator FindSamplingAnimator(
+            SkinnedMeshRenderer sourceRenderer,
+            Transform sourceRoot,
+            Transform cloneRoot)
+        {
+            Animator sourceAnimator = sourceRenderer.GetComponentInParent<Animator>();
+            if (sourceAnimator == null)
+                return null;
+            string path = AnimationUtility.CalculateTransformPath(sourceAnimator.transform, sourceRoot);
+            Transform animatorTransform = string.IsNullOrEmpty(path) ? cloneRoot : cloneRoot.Find(path);
+            return animatorTransform != null ? animatorTransform.GetComponent<Animator>() : null;
+        }
+
+        static GameObject FindDirectSampleTarget(
+            SkinnedMeshRenderer sourceRenderer,
+            Transform sourceRoot,
+            Transform cloneRoot,
+            AnimationClip clip)
+        {
+            Animation sourceAnimation = sourceRenderer.GetComponentInParent<Animation>();
+            if (sourceAnimation != null)
+            {
+                string animationPath = AnimationUtility.CalculateTransformPath(sourceAnimation.transform, sourceRoot);
+                Transform animationTransform = string.IsNullOrEmpty(animationPath)
+                    ? cloneRoot
+                    : cloneRoot.Find(animationPath);
+                if (animationTransform != null)
+                    return animationTransform.gameObject;
+            }
+
+            EditorCurveBinding[] bindings = AnimationUtility.GetCurveBindings(clip);
+            Transform[] candidates = cloneRoot.GetComponentsInChildren<Transform>(true);
+            Transform best = cloneRoot;
+            int bestMatches = -1;
+            for (int candidateIndex = 0; candidateIndex < candidates.Length; candidateIndex++)
+            {
+                Transform candidate = candidates[candidateIndex];
+                int matches = 0;
+                for (int bindingIndex = 0; bindingIndex < bindings.Length; bindingIndex++)
+                {
+                    EditorCurveBinding binding = bindings[bindingIndex];
+                    if (binding.type != typeof(Transform))
+                        continue;
+                    if (string.IsNullOrEmpty(binding.path) || candidate.Find(binding.path) != null)
+                        matches++;
+                }
+                if (matches > bestMatches)
+                {
+                    bestMatches = matches;
+                    best = candidate;
+                }
+            }
+            return best.gameObject;
+        }
+
+        static bool HasSampledMotion(Matrix4x4[][] palettes)
+        {
+            if (palettes == null || palettes.Length < 2 || palettes[0] == null)
+                return false;
+            Matrix4x4[] first = palettes[0];
+            for (int frame = 1; frame < palettes.Length; frame++)
+            {
+                Matrix4x4[] current = palettes[frame];
+                if (current == null || current.Length != first.Length)
+                    continue;
+                for (int bone = 0; bone < first.Length; bone++)
+                {
+                    for (int element = 0; element < 16; element++)
+                    {
+                        if (Mathf.Abs(first[bone][element] - current[bone][element]) > 1e-5f)
+                            return true;
+                    }
+                }
+            }
+            return false;
         }
 
         static void AddRepresentativePalettes(SampledClip[] clips, ClusterSkinnedQemContext context)

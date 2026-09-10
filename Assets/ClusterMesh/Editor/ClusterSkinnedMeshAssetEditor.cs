@@ -10,6 +10,14 @@ namespace ClusterMesh
         {
             DrawDefaultInspector();
             var asset = (ClusterSkinnedMeshAsset)target;
+            if (asset.animationSamplingVersion != ClusterSkinnedMeshAsset.CurrentAnimationSamplingVersion)
+            {
+                EditorGUILayout.HelpBox(
+                    "该资产使用旧的动画采样数据，请使用 Tools/ClusterMesh/Baker 重新烘焙。",
+                    MessageType.Error);
+                if (GUILayout.Button("打开 ClusterMesh Baker"))
+                    ClusterMeshBakerWindow.Open();
+            }
             ClusterMeshAsset geometry = asset.geometry;
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Clusters", geometry != null && geometry.clusters != null

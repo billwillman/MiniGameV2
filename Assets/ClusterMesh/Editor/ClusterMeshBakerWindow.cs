@@ -61,6 +61,7 @@ namespace ClusterMesh
             asset.clips = result.clips;
             asset.cullFrames = result.cullFrames;
             asset.skinningVersion = ClusterSkinnedMeshAsset.CurrentSkinningVersion;
+            asset.animationSamplingVersion = ClusterSkinnedMeshAsset.CurrentAnimationSamplingVersion;
             asset.skinVertexCount = result.skinWeights != null ? result.skinWeights.Length : 0;
         }
 
@@ -100,8 +101,13 @@ namespace ClusterMesh
                     new GUIContent("Skinned Renderer", "场景或预制体中的 SkinnedMeshRenderer。"),
                     _skinnedRenderer, typeof(SkinnedMeshRenderer), true);
                 _animationClip = (AnimationClip)EditorGUILayout.ObjectField(
-                    new GUIContent("Animation Clip", "要进行曲线拟合并烘焙 Cull 数据的动画。"),
+                    new GUIContent("Animation Clip", "支持 Humanoid、Generic 和 Legacy。Humanoid 需要 Renderer 上级存在有效 Animator/Avatar。"),
                     _animationClip, typeof(AnimationClip), false);
+                if (_animationClip != null)
+                {
+                    string rig = _animationClip.isHumanMotion ? "Humanoid" : (_animationClip.legacy ? "Legacy" : "Generic");
+                    EditorGUILayout.LabelField("Animation Rig", rig);
+                }
             }
             else
             {

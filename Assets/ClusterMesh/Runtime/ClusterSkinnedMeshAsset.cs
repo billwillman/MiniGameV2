@@ -9,6 +9,7 @@ namespace ClusterMesh
     public sealed class ClusterSkinnedMeshAsset : ScriptableObject
     {
         public const int CurrentSkinningVersion = 1;
+        public const int CurrentAnimationSamplingVersion = 1;
         public const int PackedSkinWeightStride = 16;
 
         public ClusterMeshAsset geometry;
@@ -19,6 +20,7 @@ namespace ClusterMesh
         public ClusterSkinnedClip[] clips;
         public ClusterSkinnedCullFrame[] cullFrames;
         public int skinningVersion;
+        public int animationSamplingVersion;
         public int skinVertexCount;
 
         public bool TryReadSkinWeights(out ClusterPackedSkinWeight[] weights, out string error)

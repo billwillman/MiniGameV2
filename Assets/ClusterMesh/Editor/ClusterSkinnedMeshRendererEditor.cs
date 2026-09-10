@@ -31,6 +31,18 @@ namespace ClusterMesh
             }
 
             serializedObject.ApplyModifiedProperties();
+            var renderer = (ClusterSkinnedMeshRenderer)target;
+            if (renderer.asset != null &&
+                renderer.asset.animationSamplingVersion != ClusterSkinnedMeshAsset.CurrentAnimationSamplingVersion)
+            {
+                EditorGUILayout.HelpBox(
+                    "该 Skinned ClusterMesh 使用旧的动画采样数据，请在 Baker 中重新烘焙后再播放。",
+                    MessageType.Error);
+                if (GUILayout.Button("打开 ClusterMesh Baker"))
+                    ClusterMeshBakerWindow.Open();
+            }
+            if (renderer.playAutomatically)
+                EditorGUILayout.HelpBox("自动播放开启时，Normalized Time 是播放相位偏移；需要手动定格拖动时请关闭 Play Automatically。", MessageType.Info);
         }
 
         static void DrawLodErrorThreshold(SerializedProperty prop)
