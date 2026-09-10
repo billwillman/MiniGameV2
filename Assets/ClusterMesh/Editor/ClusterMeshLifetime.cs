@@ -31,28 +31,36 @@ namespace ClusterMesh
 
         public static void SyncEditModeTick(bool playingOverride)
         {
-            EditorApplication.update -= OnEditModeUpdate;
-            EditModeTickActive = false;
-            if (playingOverride)
-                return;
-
-            EditorApplication.update += OnEditModeUpdate;
-            EditModeTickActive = true;
+            EditModeTickActive = !playingOverride;
+            SyncEditorUpdateSubscription();
         }
 
         public static void SyncSceneViewTick(bool enabled)
         {
-            EditorApplication.update -= OnSceneViewUpdate;
             RenderPipelineManager.beginCameraRendering -= OnBeginCameraRendering;
             Camera.onPreCull -= OnBuiltInCameraPreCull;
-            SceneViewTickActive = false;
-            if (!enabled)
-                return;
+            SceneViewTickActive = enabled;
+            if (enabled)
+            {
+                RenderPipelineManager.beginCameraRendering += OnBeginCameraRendering;
+                Camera.onPreCull += OnBuiltInCameraPreCull;
+            }
+            SyncEditorUpdateSubscription();
+        }
 
-            EditorApplication.update += OnSceneViewUpdate;
-            RenderPipelineManager.beginCameraRendering += OnBeginCameraRendering;
-            Camera.onPreCull += OnBuiltInCameraPreCull;
-            SceneViewTickActive = true;
+        static void SyncEditorUpdateSubscription()
+        {
+            EditorApplication.update -= OnEditorUpdate;
+            if (EditModeTickActive || SceneViewTickActive)
+                EditorApplication.update += OnEditorUpdate;
+        }
+
+        static void OnEditorUpdate()
+        {
+            if (EditModeTickActive)
+                OnEditModeUpdate();
+            if (SceneViewTickActive)
+                OnSceneViewUpdate();
         }
 
         static void OnEditModeUpdate()
@@ -64,7 +72,9 @@ namespace ClusterMesh
             }
 
             ClusterMeshSceneBatcher.Flush();
-            if (ShouldQueuePlayerLoop(ClusterMeshSceneBatcher.RegisteredCount))
+            ClusterSkinnedMeshSceneBatcher.Flush();
+            if (ShouldQueuePlayerLoop(ClusterMeshSceneBatcher.RegisteredCount) ||
+                ShouldQueuePlayerLoop(ClusterSkinnedMeshSceneBatcher.RegisteredCount))
                 EditorApplication.QueuePlayerLoopUpdate();
         }
 
@@ -74,6 +84,7 @@ namespace ClusterMesh
                 return;
 
             ClusterMeshSceneViewRenderer.RefreshAndRepaint();
+            ClusterSkinnedMeshSceneViewRenderer.RefreshAndRepaint();
         }
 
         static void OnBeginCameraRendering(ScriptableRenderContext context, Camera camera)
@@ -82,6 +93,7 @@ namespace ClusterMesh
                 return;
 
             ClusterMeshSceneViewRenderer.DrawSceneCamera(camera);
+            ClusterSkinnedMeshSceneViewRenderer.DrawSceneCamera(camera);
         }
 
         static void OnBuiltInCameraPreCull(Camera camera)
@@ -90,6 +102,7 @@ namespace ClusterMesh
                 return;
 
             ClusterMeshSceneViewRenderer.DrawSceneCamera(camera);
+            ClusterSkinnedMeshSceneViewRenderer.DrawSceneCamera(camera);
         }
 
         static void OnPlayModeStateChanged(PlayModeStateChange state)
@@ -109,6 +122,7 @@ namespace ClusterMesh
                     ClusterMeshSceneBatcher.DisposeCachedContexts();
                     ClusterMeshSceneViewRenderer.DisposeCachedContexts();
                     ClusterSkinnedMeshSceneBatcher.DisposeCachedContexts();
+                    ClusterSkinnedMeshSceneViewRenderer.DisposeCachedContexts();
                     break;
                 case PlayModeStateChange.EnteredEditMode:
                     SyncSceneViewTick(true);
@@ -124,6 +138,7 @@ namespace ClusterMesh
             ClusterMeshSceneBatcher.DisposeCachedContexts();
             ClusterMeshSceneViewRenderer.DisposeCachedContexts();
             ClusterSkinnedMeshSceneBatcher.DisposeCachedContexts();
+            ClusterSkinnedMeshSceneViewRenderer.DisposeCachedContexts();
         }
 
         static void OnQuitting()
@@ -133,6 +148,7 @@ namespace ClusterMesh
             ClusterMeshSceneBatcher.DisposeCachedContexts();
             ClusterMeshSceneViewRenderer.DisposeCachedContexts();
             ClusterSkinnedMeshSceneBatcher.DisposeCachedContexts();
+            ClusterSkinnedMeshSceneViewRenderer.DisposeCachedContexts();
         }
     }
 }

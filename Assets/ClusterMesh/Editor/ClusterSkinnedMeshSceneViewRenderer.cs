@@ -6,7 +6,8 @@ using UnityEngine;
 namespace ClusterMesh
 {
     /// <summary>Editor-only SceneView bridge for the isolated skinned ClusterMesh path.</summary>
-    [InitializeOnLoad]
+    // Passive editor renderer. ClusterMeshLifetime owns the single global editor/camera callbacks
+    // and dispatches to both static and skinned preview paths.
     public static class ClusterSkinnedMeshSceneViewRenderer
     {
         static readonly List<ClusterSkinnedMeshRenderer> Renderers = new List<ClusterSkinnedMeshRenderer>();
@@ -25,20 +26,6 @@ namespace ClusterMesh
         static readonly List<bool> CpuCull = new List<bool>(64);
         static readonly List<bool> CameraCull = new List<bool>(64);
         static readonly List<float> Times = new List<float>(64);
-
-        static ClusterSkinnedMeshSceneViewRenderer()
-        {
-            EditorApplication.update += RefreshAndRepaint;
-            UnityEngine.Rendering.RenderPipelineManager.beginCameraRendering += OnBeginCameraRendering;
-            Camera.onPreCull += OnBuiltInPreCull;
-            AssemblyReloadEvents.beforeAssemblyReload += Dispose;
-        }
-
-        static void OnBeginCameraRendering(UnityEngine.Rendering.ScriptableRenderContext context, Camera camera) => DrawSceneCamera(camera);
-        static void OnBuiltInPreCull(Camera camera)
-        {
-            if (UnityEngine.Rendering.GraphicsSettings.currentRenderPipeline == null) DrawSceneCamera(camera);
-        }
 
         public static void RefreshAndRepaint()
         {
@@ -109,10 +96,13 @@ namespace ClusterMesh
                    stage.Contains(r.gameObject) && !SceneVisibilityManager.instance.IsHidden(r.gameObject);
         }
 
-        static void Dispose()
+        public static void DisposeCachedContexts()
         {
             foreach (var pair in Contexts) pair.Value.context?.Dispose();
             Contexts.Clear();
+            ActiveRendererIds.Clear();
+            StaleContextIds.Clear();
+            Renderers.Clear();
         }
     }
 }

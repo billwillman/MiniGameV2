@@ -15,6 +15,17 @@ namespace ClusterMesh
         static int _flushedFrame = int.MinValue;
 
         public static int CachedContextCount => Contexts.Count;
+        public static int RegisteredCount
+        {
+            get
+            {
+                int count = 0;
+                for (int i = 0; i < Renderers.Count; i++)
+                    if (Renderers[i] != null)
+                        count++;
+                return count;
+            }
+        }
 
         public static void Register(ClusterSkinnedMeshRenderer renderer)
         {
