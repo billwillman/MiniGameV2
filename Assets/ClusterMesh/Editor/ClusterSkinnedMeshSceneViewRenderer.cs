@@ -72,7 +72,8 @@ namespace ClusterMesh
                 // Deliberately one renderer at a time: clip/cull switches stay exact in the preview.
                 int key = r.GetInstanceID();
                 if (!Contexts.TryGetValue(key, out PreviewEntry entry) || entry.asset != r.asset ||
-                    entry.cullShader != r.cullShader || entry.litShader != r.litShader)
+                    entry.cullShader != r.cullShader || entry.litShader != r.litShader ||
+                    entry.context == null || !entry.context.CanDraw)
                 {
                     entry?.context?.Dispose();
                     ClusterSkinnedMeshDrawContext ctx = ClusterSkinnedMeshSceneBatcher.CreatePreviewContext(r);

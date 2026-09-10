@@ -197,6 +197,22 @@ namespace ClusterMesh.Tests
         }
 
         [Test]
+        public void DrawContext_NullAsset_CannotDraw()
+        {
+            var cull = UnityEditor.AssetDatabase.LoadAssetAtPath<ComputeShader>(
+                "Assets/ClusterMesh/Shaders/ClusterSkinnedMeshCull.compute");
+            var lit = Shader.Find("ClusterMesh/SkinnedLit");
+            using (var ctx = new ClusterSkinnedMeshDrawContext(null, cull, lit))
+            {
+                Assert.That(ctx.IsReady, Is.False);
+                Assert.That(ctx.CanDraw, Is.False);
+                Assert.DoesNotThrow(() => ctx.Draw(
+                    new[] { Matrix4x4.identity }, null, null, new[] { 0f },
+                    0, false, 0f, Camera.main, Camera.main, true, true, 0));
+            }
+        }
+
+        [Test]
         public void DisposeCachedContexts_Twice_DoesNotThrow()
         {
             Assert.DoesNotThrow(() =>

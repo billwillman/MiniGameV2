@@ -79,6 +79,18 @@ namespace ClusterMesh
         public string Error { get; private set; }
         public bool EnableClusterColor { get; set; }
 
+        public bool CanDraw
+        {
+            get
+            {
+                if (!IsReady || _disposed)
+                    return false;
+                if (_paletteTexture == null || _template == null)
+                    return false;
+                return MaterialsAlive(_materials) && MaterialsAlive(_shadowMaterials);
+            }
+        }
+
         public ClusterSkinnedMeshDrawContext(ClusterSkinnedMeshAsset asset, ComputeShader cullShader, Shader litShader)
         {
             _asset = asset;
@@ -153,7 +165,7 @@ namespace ClusterMesh
             int clipIndex, bool enableConeCull, float lodErrorThreshold, Camera cullingCamera, Camera drawCamera,
             bool castShadows, bool receiveShadows, int drawLayer)
         {
-            if (!IsReady || matrices == null || cullingCamera == null || drawCamera == null) return;
+            if (!CanDraw || matrices == null || cullingCamera == null || drawCamera == null) return;
             int sourceCount = Mathf.Min(ClusterMeshLimits.MaxBatchedObjects, matrices.Count);
             if (sourceCount <= 0) return;
             int clip = Mathf.Clamp(clipIndex, 0, _asset.clips.Length - 1);
@@ -245,11 +257,25 @@ namespace ClusterMesh
 
         void Bind(Material m, GraphicsBuffer visible)
         {
+            if (m == null || visible == null)
+                return;
             m.SetBuffer(ClustersId, _clusters); m.SetBuffer(VerticesId, _vertices); m.SetBuffer(IndicesId, _indices);
             m.SetBuffer(SkinWeightsId, _weights); m.SetBuffer(VisibleId, visible);
             m.SetMatrixArray(ObjectLocalToWorldId, _l2w); m.SetMatrixArray(ObjectWorldToLocalId, _w2l);
             m.SetTexture(SkinPaletteTexId, _paletteTexture); m.SetInt(PaletteWidthId, _paletteWidth);
             m.SetFloat(EnableClusterColorId, EnableClusterColor ? 1f : 0f);
+        }
+
+        static bool MaterialsAlive(Material[] materials)
+        {
+            if (materials == null || materials.Length == 0)
+                return false;
+            for (int i = 0; i < materials.Length; i++)
+            {
+                if (materials[i] == null)
+                    return false;
+            }
+            return true;
         }
 
         static Bounds BuildAnimationBounds(ClusterSkinnedMeshAsset a)

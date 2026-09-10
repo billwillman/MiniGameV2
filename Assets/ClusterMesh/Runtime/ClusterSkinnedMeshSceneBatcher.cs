@@ -82,7 +82,13 @@ namespace ClusterMesh
 
         static ClusterSkinnedMeshDrawContext GetOrCreate(ClusterSkinnedMeshRenderer r)
         {
-            if (Contexts.TryGetValue(r.asset, out ClusterSkinnedMeshDrawContext ctx)) return ctx;
+            if (Contexts.TryGetValue(r.asset, out ClusterSkinnedMeshDrawContext ctx))
+            {
+                if (ctx != null && ctx.CanDraw)
+                    return ctx;
+                ctx?.Dispose();
+                Contexts.Remove(r.asset);
+            }
             ctx = new ClusterSkinnedMeshDrawContext(r.asset, r.cullShader, r.litShader);
             if (!ctx.IsReady) { ctx.Dispose(); return null; }
             Contexts.Add(r.asset, ctx);
