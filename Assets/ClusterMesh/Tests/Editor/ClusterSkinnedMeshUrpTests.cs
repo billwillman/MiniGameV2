@@ -14,7 +14,6 @@ namespace ClusterMesh.Tests
         [TearDown]
         public void TearDown()
         {
-            ClusterMeshUrpBridge.AllowEditorUrpSubmitForTests = false;
             ClusterMeshUrpBridge.RendererDataOverrideForTests = null;
             ClusterSkinnedMeshSceneBatcher.ResetForTests();
             ClusterMeshSceneBatcher.ResetForTests();
@@ -28,10 +27,9 @@ namespace ClusterMesh.Tests
         }
 
         [Test]
-        public void Flush_EditorDefaultWithFeature_StillCountsLegacySubmit()
+        public void Flush_GameCameraWithoutFeature_CountsLegacySubmit()
         {
             var data = Track(ScriptableObject.CreateInstance<UniversalRendererData>());
-            ClusterMeshUrpFeatureMenu.EnableOn(data);
             ClusterMeshUrpBridge.RendererDataOverrideForTests = data;
             ClusterSkinnedMeshRenderer renderer = CreateRegisteredRenderer();
             Assert.That(ClusterMeshUrpBridge.ShouldSkipLegacyFlush(renderer.targetCamera), Is.False);
@@ -40,24 +38,21 @@ namespace ClusterMesh.Tests
         }
 
         [Test]
-        public void Flush_UnlockedUrpGameCamera_SkipsLegacySubmit()
+        public void Flush_GameCameraWithFeature_SkipsLegacySubmit()
         {
             var data = Track(ScriptableObject.CreateInstance<UniversalRendererData>());
             ClusterMeshUrpFeatureMenu.EnableOn(data);
             ClusterMeshUrpBridge.RendererDataOverrideForTests = data;
-            ClusterMeshUrpBridge.AllowEditorUrpSubmitForTests = true;
             ClusterSkinnedMeshRenderer renderer = CreateRegisteredRenderer();
             Assert.That(ClusterMeshUrpBridge.ShouldSkipLegacyFlush(renderer.targetCamera), Is.True);
             Assert.DoesNotThrow(() => ClusterSkinnedMeshSceneBatcher.Flush());
             Assert.That(ClusterSkinnedMeshSceneBatcher.LegacyFlushBatchCountForTests, Is.EqualTo(0));
-            Assert.That(ClusterSkinnedMeshSceneBatcher.CachedContextCount, Is.GreaterThanOrEqualTo(0));
         }
 
         [Test]
-        public void PrepareAndSubmitUrpShadows_WithoutUnlock_DoesNotPrepare()
+        public void PrepareAndSubmitUrpShadows_WithoutFeature_DoesNotPrepare()
         {
             var data = Track(ScriptableObject.CreateInstance<UniversalRendererData>());
-            ClusterMeshUrpFeatureMenu.EnableOn(data);
             ClusterMeshUrpBridge.RendererDataOverrideForTests = data;
             ClusterSkinnedMeshRenderer renderer = CreateRegisteredRenderer();
             ClusterSkinnedMeshSceneBatcher.PrepareAndSubmitUrpShadows(renderer.targetCamera);
@@ -93,12 +88,11 @@ namespace ClusterMesh.Tests
         }
 
         [Test]
-        public void Feature_UnlockedGameCamera_PreparesSkinnedAndStaticTogether()
+        public void Feature_GameCamera_PreparesSkinnedAndStaticTogether()
         {
             var data = Track(ScriptableObject.CreateInstance<UniversalRendererData>());
             ClusterMeshUrpFeatureMenu.EnableOn(data);
             ClusterMeshUrpBridge.RendererDataOverrideForTests = data;
-            ClusterMeshUrpBridge.AllowEditorUrpSubmitForTests = true;
             ClusterSkinnedMeshRenderer skinned = CreateRegisteredRenderer();
             ClusterMeshRenderer staticRenderer = CreateRegisteredStaticRenderer(skinned.targetCamera);
             ClusterMeshSceneBatcher.PrepareAndSubmitUrpShadows(skinned.targetCamera);
