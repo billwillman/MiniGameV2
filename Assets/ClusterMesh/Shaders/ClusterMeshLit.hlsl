@@ -9,7 +9,7 @@
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/UnityGBuffer.hlsl"
 #endif
 #if defined(CLUSTERMESH_MOTION_VECTOR_PASS)
-#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/MotionVectorsCommon.hlsl"
+#include "ClusterMeshMotionVectors.hlsl"
 #endif
 #include "ClusterMeshBuffers.hlsl"
 

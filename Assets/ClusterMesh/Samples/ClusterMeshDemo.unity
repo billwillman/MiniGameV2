@@ -162,6 +162,7 @@ MonoBehaviour:
   receiveShadows: 1
   enableCameraCull: 1
   enableConeCull: 1
+  enableMotionVectors: 0
   enableCpuObjectCull: 1
   showClusterColors: 0
   showClusterAabb: 0
@@ -227,6 +228,7 @@ MonoBehaviour:
   receiveShadows: 1
   enableCameraCull: 1
   enableConeCull: 1
+  enableMotionVectors: 0
   enableCpuObjectCull: 1
   showClusterColors: 0
   showClusterAabb: 0
@@ -545,6 +547,7 @@ MonoBehaviour:
   receiveShadows: 1
   enableCameraCull: 1
   enableConeCull: 1
+  enableMotionVectors: 0
   enableCpuObjectCull: 1
   showClusterColors: 0
   showClusterAabb: 0

@@ -135,6 +135,12 @@ namespace ClusterMesh.Tests
             Assert.That(
                 System.IO.File.ReadAllText("Assets/ClusterMesh/Shaders/ClusterSkinnedMeshLit.hlsl"),
                 Does.Contain("#pragma editor_sync_compilation"));
+            string staticHlsl = System.IO.File.ReadAllText("Assets/ClusterMesh/Shaders/ClusterMeshLit.hlsl");
+            string skinnedHlsl = System.IO.File.ReadAllText("Assets/ClusterMesh/Shaders/ClusterSkinnedMeshLit.hlsl");
+            Assert.That(staticHlsl, Does.Not.Contain("MotionVectorsCommon.hlsl"));
+            Assert.That(skinnedHlsl, Does.Not.Contain("MotionVectorsCommon.hlsl"));
+            Assert.That(staticHlsl, Does.Contain("ClusterMeshMotionVectors.hlsl"));
+            Assert.That(skinnedHlsl, Does.Contain("ClusterMeshMotionVectors.hlsl"));
         }
 
         [Test]
