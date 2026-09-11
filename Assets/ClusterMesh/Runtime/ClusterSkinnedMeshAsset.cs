@@ -19,6 +19,7 @@ namespace ClusterMesh
         public Matrix4x4[] bindPoses;
         public string[] bonePaths;
         public int[] boneParentIndices;
+        public int skinBoneCount;
         public ClusterSkinnedClip[] clips;
         [Tooltip("Optional per-clip palette atlases used by GPU Texture animation evaluation.")]
         public Texture2D[] gpuPaletteTextures;
@@ -48,20 +49,21 @@ namespace ClusterMesh
 
         public bool HasManagedCurves(int clipIndex)
         {
-            if (clips == null || bindPoses == null || clipIndex < 0 || clipIndex >= clips.Length)
+            if (!AllowsCpuAnimation || clips == null || skinBoneCount <= 0 ||
+                clipIndex < 0 || clipIndex >= clips.Length)
                 return false;
             ClusterSkinnedClip clip = clips[clipIndex];
-            return clip != null && clip.boneCurves != null && clip.boneCurves.Length == bindPoses.Length;
+            return clip != null && clip.boneCurves != null && clip.boneCurves.Length == skinBoneCount;
         }
 
         public bool HasGpuPalette(int clipIndex)
         {
             if (!AllowsGpuAnimation || gpuAnimationVersion != CurrentGpuAnimationVersion || clips == null ||
                 gpuPaletteTextures == null || clipIndex < 0 || clipIndex >= clips.Length ||
-                clipIndex >= gpuPaletteTextures.Length || bindPoses == null)
+                clipIndex >= gpuPaletteTextures.Length || skinBoneCount <= 0)
                 return false;
             Texture2D texture = gpuPaletteTextures[clipIndex];
-            return texture != null && texture.width == bindPoses.Length * 3 && texture.height >= 1;
+            return texture != null && texture.width == skinBoneCount * 3 && texture.height >= 1;
         }
 
         public bool HasCpuBurstCurves(int clipIndex)
@@ -70,6 +72,7 @@ namespace ClusterMesh
                 bindPoses == null || boneParentIndices == null || boneEvaluationOrder == null ||
                 cpuCurveHeaders == null || cpuCurveSegments == null || clipIndex < 0 ||
                 clipIndex >= clips.Length || bindPoses.Length == 0 ||
+                skinBoneCount != bindPoses.Length ||
                 boneParentIndices.Length != bindPoses.Length || boneEvaluationOrder.Length != bindPoses.Length)
                 return false;
             ClusterSkinnedClip clip = clips[clipIndex];

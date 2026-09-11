@@ -39,7 +39,7 @@ namespace ClusterMesh
             EditorGUILayout.LabelField("Clusters", geometry != null && geometry.clusters != null
                 ? geometry.clusters.Length.ToString() : "0");
             EditorGUILayout.LabelField("Vertices", geometry != null ? geometry.vertexCount.ToString() : "0");
-            EditorGUILayout.LabelField("Bones", asset.bindPoses != null ? asset.bindPoses.Length.ToString() : "0");
+            EditorGUILayout.LabelField("Bones", asset.skinBoneCount.ToString());
             EditorGUILayout.LabelField("Clips", asset.clips != null ? asset.clips.Length.ToString() : "0");
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Animation Data", EditorStyles.boldLabel);
@@ -59,7 +59,7 @@ namespace ClusterMesh
         {
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Animation Data Preview", EditorStyles.boldLabel);
-            int boneCount = asset.bindPoses != null ? asset.bindPoses.Length : 0;
+            int boneCount = asset.skinBoneCount;
             ClusterSkinnedClip[] clips = asset.clips;
             if (boneCount <= 0 || clips == null || clips.Length == 0)
             {

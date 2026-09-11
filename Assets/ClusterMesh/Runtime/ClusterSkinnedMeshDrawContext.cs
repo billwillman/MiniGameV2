@@ -117,8 +117,8 @@ namespace ClusterMesh
             _cullShader = cullShader;
             if (asset == null || asset.geometry == null || asset.geometry.clusters == null || asset.geometry.clusters.Length == 0)
             { Error = "ClusterSkinnedMesh asset is missing geometry."; return; }
-            if (asset.bindPoses == null || asset.bindPoses.Length == 0)
-            { Error = "ClusterSkinnedMesh asset has no bind poses."; return; }
+            if (asset.skinBoneCount <= 0)
+            { Error = "ClusterSkinnedMesh asset has no baked bone count."; return; }
             if (asset.clips == null || asset.clips.Length == 0 || asset.cullFrames == null)
             { Error = "ClusterSkinnedMesh asset has no baked clip bounds."; return; }
             if (!ClusterMeshGeometry.TryReadGpuGeometry(asset.geometry, out ClusterPackedVertex[] verts, out uint[] indices, out string error))
@@ -130,7 +130,7 @@ namespace ClusterMesh
             if (!SystemInfo.supportsComputeShaders)
             { Error = "ClusterSkinnedMesh requires compute shaders and vertex texture fetch."; return; }
 
-            _boneCount = asset.bindPoses.Length;
+            _boneCount = asset.skinBoneCount;
             _paletteWidth = _boneCount * 3;
             if (_paletteWidth > SystemInfo.maxTextureSize)
             { Error = "ClusterSkinnedMesh has too many bones for the palette texture."; return; }
