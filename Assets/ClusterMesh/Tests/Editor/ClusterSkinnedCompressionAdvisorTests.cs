@@ -86,6 +86,15 @@ namespace ClusterMesh.Tests
         }
 
         [Test]
+        public void AdviseTightRestVertices_NullMesh_UnknownForStatic()
+        {
+            ClusterCompressionAdvice advice = ClusterSkinnedCompressionAdvisor.AdviseTightRestVertices(null);
+            Assert.That(advice.kind, Is.EqualTo(ClusterCompressionAdviceKind.Unknown));
+            Assert.That(advice.reason, Does.Contain("Mesh"));
+            Assert.That(ClusterSkinnedCompressionAdvisor.Label(advice), Does.Contain("待分析"));
+        }
+
+        [Test]
         public void AdviseTightRest_VertexCountGatesRecommendation()
         {
             Mesh small = SkinnedGrid(3, 2, Matrix4x4.identity);

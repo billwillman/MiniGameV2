@@ -62,6 +62,7 @@ namespace ClusterMesh
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Clusters", asset.clusters != null ? asset.clusters.Length.ToString() : "0");
             EditorGUILayout.LabelField("Vertices", asset.vertexCount.ToString());
+            EditorGUILayout.LabelField("Vertex Stride", asset.ResolvedVertexStride + " bytes");
             EditorGUILayout.LabelField("Indices", asset.indexCount.ToString());
             EditorGUILayout.Space();
             if (GUILayout.Button("加入场景"))

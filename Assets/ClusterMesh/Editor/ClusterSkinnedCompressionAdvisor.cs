@@ -84,10 +84,23 @@ namespace ClusterMesh
 
             set.packSkinWeights8 = AdviseSkinWeights8(mesh, boneCount);
             set.gpuCompactPalette = AdviseCompactPalette(mesh, bones, clips);
-            set.packTightRestVertices = AdviseTightRest(mesh);
+            set.packTightRestVertices = AdviseTightRestVertices(mesh);
             set.compressCullFrames = AdviseCullCompress(mesh, clips, settings);
             set.gpuFramesPerSecond = AdviseGpuFps(clips);
             return set;
+        }
+
+        public static ClusterCompressionAdvice AdviseTightRestVertices(Mesh mesh)
+        {
+            if (mesh == null)
+                return ClusterCompressionAdvice.Unknown("先拖 Mesh / MeshFilter");
+            int vertices = mesh.vertexCount;
+            if (vertices <= 0)
+                return ClusterCompressionAdvice.Unknown("网格没有顶点");
+            if (vertices >= TightRestRecommendVertices)
+                return ClusterCompressionAdvice.Recommend("顶点 " + vertices + "，32→24 值得减");
+            return ClusterCompressionAdvice.NotRecommend(
+                "顶点 " + vertices + " < " + TightRestRecommendVertices + "，收益小，保持 32 字节更稳");
         }
 
         public static string Label(ClusterCompressionAdvice advice)
@@ -269,16 +282,6 @@ namespace ClusterMesh
                 max = Mathf.Max(max, v);
             }
             return Mathf.Abs(max) > Mathf.Abs(min) ? max : min;
-        }
-
-        static ClusterCompressionAdvice AdviseTightRest(Mesh mesh)
-        {
-            int vertices = mesh.vertexCount;
-            if (vertices <= 0)
-                return ClusterCompressionAdvice.Unknown("网格没有顶点");
-            if (vertices >= TightRestRecommendVertices)
-                return ClusterCompressionAdvice.Recommend("顶点 " + vertices + "，32→24 值得减");
-            return ClusterCompressionAdvice.NotRecommend("顶点 " + vertices + " < " + TightRestRecommendVertices + "，收益小，保持 32 字节更稳");
         }
 
         static ClusterCompressionAdvice AdviseCullCompress(

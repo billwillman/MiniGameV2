@@ -92,6 +92,29 @@ namespace ClusterMesh.Tests
         }
 
         [Test]
+        public void Constructor_TightRest_ReadyIffCapabilityAllows()
+        {
+            var mesh = ClusterMeshTestMeshes.Triangle();
+            var settings = new ClusterMeshBakeSettings { packTightRestVertices = true };
+            var bake = ClusterMeshBaker.Bake(mesh, new Material[1], settings);
+            var asset = ScriptableObject.CreateInstance<ClusterMeshAsset>();
+            asset.CopyFrom(bake, mesh, settings);
+
+            var cull = AssetDatabase.LoadAssetAtPath<ComputeShader>("Assets/ClusterMesh/Shaders/ClusterMeshCull.compute");
+            var lit = Shader.Find("ClusterMesh/Lit");
+            using (var ctx = new ClusterMeshDrawContext(asset, cull, lit))
+            {
+                Assert.That(asset.ResolvedVertexStride, Is.EqualTo(ClusterMeshLimits.TightVertexStride));
+                Assert.That(ctx.IsReady, Is.EqualTo(ClusterMeshCapability.IsSupported()));
+                if (!ctx.IsReady)
+                    Assert.That(ctx.Error, Is.Not.Null);
+            }
+
+            Object.DestroyImmediate(asset);
+            Object.DestroyImmediate(mesh);
+        }
+
+        [Test]
         public void Dispose_Twice_DoesNotThrow()
         {
             var cull = AssetDatabase.LoadAssetAtPath<ComputeShader>("Assets/ClusterMesh/Shaders/ClusterMeshCull.compute");

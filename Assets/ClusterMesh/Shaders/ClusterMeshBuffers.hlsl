@@ -50,6 +50,50 @@ void ClusterMeshUnpackVertex(ClusterVertex v, out float3 positionOS, out float3 
     tangentOS = float4(t, nztw.y);
 }
 
+// 6 uints = 24 bytes. Do not use float3 — HLSL pads it to 16.
+struct ClusterVertexTight
+{
+    uint px;
+    uint py;
+    uint pz;
+    uint nrmOct;
+    uint tanOctTanW;
+    uint uv;
+};
+
+float3 ClusterMeshOctDecode16(uint packed)
+{
+    float ox = ((packed & 0xffffu) / 65535.0) * 2.0 - 1.0;
+    float oy = ((packed >> 16) / 65535.0) * 2.0 - 1.0;
+    float3 n = float3(ox, oy, 1.0 - abs(ox) - abs(oy));
+    float t = max(-n.z, 0.0);
+    n.x += n.x >= 0.0 ? -t : t;
+    n.y += n.y >= 0.0 ? -t : t;
+    return normalize(n);
+}
+
+void ClusterMeshOctDecodeTan(uint packed, out float3 t, out float tanW)
+{
+    uint x = packed & 0xffffu;
+    uint y = (packed >> 16) & 0x7fffu;
+    tanW = (packed & 0x80000000u) != 0u ? 1.0 : -1.0;
+    uint oct = x | ((uint)round(y * (65535.0 / 32767.0)) << 16);
+    t = ClusterMeshOctDecode16(oct);
+}
+
+void ClusterMeshUnpackVertexTight(ClusterVertexTight v, out float3 positionOS, out float3 normalOS, out float4 tangentOS, out float2 uv)
+{
+    positionOS = float3(asfloat(v.px), asfloat(v.py), asfloat(v.pz));
+    float3 n = ClusterMeshOctDecode16(v.nrmOct);
+    float3 tt;
+    float tanW;
+    ClusterMeshOctDecodeTan(v.tanOctTanW, tt, tanW);
+    tt = normalize(tt - n * dot(n, tt));
+    normalOS = n;
+    tangentOS = float4(tt, tanW);
+    uv = ClusterMeshUnpackHalf2(v.uv);
+}
+
 struct ClusterGroup
 {
     int clusterStart;

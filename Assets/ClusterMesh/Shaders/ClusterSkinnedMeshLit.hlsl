@@ -22,7 +22,6 @@ int _GpuPalettePixelsPerBone;
 float3 _LightDirection, _LightPosition;
 
 struct ClusterPackedSkinWeight { uint boneIndices01, boneIndices23, boneWeights01, boneWeights23; };
-struct ClusterVertexTight { uint px, py, pz, nrmOct, tanOctTanW, uv; };
 StructuredBuffer<ClusterHeader> _Clusters;
 StructuredBuffer<ClusterVertex> _Vertices;
 StructuredBuffer<ClusterVertexTight> _VerticesTight;
@@ -76,25 +75,7 @@ void ClusterSkinnedSetup()
     ApplyClusterSkinnedInstance(unity_InstanceID);
 }
 #endif
-float2 UnpackHalf2(uint v) { return float2(f16tof32(v & 0xffffu), f16tof32(v >> 16)); }
-float3 OctDecode16(uint packed)
-{
-    float ox = ((packed & 0xffffu) / 65535.0) * 2.0 - 1.0;
-    float oy = ((packed >> 16) / 65535.0) * 2.0 - 1.0;
-    float3 n = float3(ox, oy, 1.0 - abs(ox) - abs(oy));
-    float t = max(-n.z, 0.0);
-    n.x += n.x >= 0.0 ? -t : t;
-    n.y += n.y >= 0.0 ? -t : t;
-    return normalize(n);
-}
-void OctDecodeTan(uint packed, out float3 t, out float tanW)
-{
-    uint x = packed & 0xffffu;
-    uint y = (packed >> 16) & 0x7fffu;
-    tanW = (packed & 0x80000000u) != 0u ? 1.0 : -1.0;
-    uint oct = x | ((uint)round(y * (65535.0 / 32767.0)) << 16);
-    t = OctDecode16(oct);
-}
+float2 UnpackHalf2(uint v) { return ClusterMeshUnpackHalf2(v); }
 float3x3 QuatToMat(float4 q)
 {
     q = normalize(q);
@@ -118,14 +99,7 @@ void FetchBaseVertex(uint vertexID, uint instanceID, out float3 p, out float3 n,
     vertexIndex = h.vertexOffset + local;
     if (_RestVertexTight != 0)
     {
-        ClusterVertexTight tv = _VerticesTight[vertexIndex];
-        p = float3(asfloat(tv.px), asfloat(tv.py), asfloat(tv.pz));
-        n = OctDecode16(tv.nrmOct);
-        float3 tt; float tanW;
-        OctDecodeTan(tv.tanOctTanW, tt, tanW);
-        tt = normalize(tt - n * dot(n, tt));
-        t = float4(tt, tanW);
-        uv = UnpackHalf2(tv.uv);
+        ClusterMeshUnpackVertexTight(_VerticesTight[vertexIndex], p, n, t, uv);
         return;
     }
     ClusterVertex v = _Vertices[vertexIndex];

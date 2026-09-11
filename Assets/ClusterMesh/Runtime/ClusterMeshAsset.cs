@@ -25,7 +25,7 @@ namespace ClusterMesh
 
         public void CopyFrom(ClusterMeshBakeResult result, Mesh source, ClusterMeshBakeSettings settings)
         {
-            CopyFrom(result, source, settings, false);
+            CopyFrom(result, source, settings, settings != null && settings.packTightRestVertices);
         }
 
         public void CopyFrom(

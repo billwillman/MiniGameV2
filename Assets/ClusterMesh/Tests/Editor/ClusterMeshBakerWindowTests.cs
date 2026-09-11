@@ -35,5 +35,40 @@ namespace ClusterMesh.Tests
             Object.DestroyImmediate(asset);
             Object.DestroyImmediate(mesh);
         }
+
+        [Test]
+        public void WriteAsset_Default_Keeps32ByteStride()
+        {
+            var mesh = ClusterMeshTestMeshes.Triangle();
+            var asset = ScriptableObject.CreateInstance<ClusterMeshAsset>();
+            ClusterMeshBakerWindow.WriteAsset(asset, mesh, new Material[1], new ClusterMeshBakeSettings());
+            Assert.That(asset.ResolvedVertexStride, Is.EqualTo(ClusterMeshLimits.ClusterVertexStride));
+            Assert.That(ClusterMeshGeometry.TryReadGpuGeometry(asset, out _, out _, out string error), Is.True);
+            Assert.That(error, Is.Null);
+            Object.DestroyImmediate(asset);
+            Object.DestroyImmediate(mesh);
+        }
+
+        [Test]
+        public void WriteAsset_TightRestOn_Writes24ByteStride()
+        {
+            var mesh = ClusterMeshTestMeshes.Triangle();
+            var asset = ScriptableObject.CreateInstance<ClusterMeshAsset>();
+            ClusterMeshBakerWindow.WriteAsset(
+                asset,
+                mesh,
+                new Material[1],
+                new ClusterMeshBakeSettings { packTightRestVertices = true });
+            Assert.That(asset.ResolvedVertexStride, Is.EqualTo(ClusterMeshLimits.TightVertexStride));
+            Assert.That(ClusterMeshGeometry.TryReadGpuGeometry(asset, out _, out _, out string gpuError), Is.False);
+            Assert.That(gpuError, Does.Contain("tight"));
+            Assert.That(
+                ClusterMeshGeometry.TryReadTightVertices(asset, out ClusterPackedVertexTight[] tight, out string tightError),
+                Is.True);
+            Assert.That(tightError, Is.Null);
+            Assert.That(tight.Length, Is.EqualTo(asset.vertexCount));
+            Object.DestroyImmediate(asset);
+            Object.DestroyImmediate(mesh);
+        }
     }
 }

@@ -219,6 +219,8 @@ namespace ClusterMesh
 
             if (_bakeSkinnedAnimation)
                 DrawSkinnedOptimizationGroup();
+            else
+                DrawStaticOptimizationGroup();
 
             EditorGUILayout.Space();
             if (GUILayout.Button("Bake", GUILayout.Height(28)))
@@ -442,6 +444,38 @@ namespace ClusterMesh
             Selection.activeObject = asset;
         }
 
+        void DrawStaticOptimizationGroup()
+        {
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("高级压缩（默认关闭）", EditorStyles.boldLabel);
+            EditorGUILayout.HelpBox(
+                "建议来自当前拖入的 Mesh / MeshFilter，只做参考，不会自动勾选。静态没有逐帧 Cull 表，不能压 Cull。",
+                MessageType.None);
+            _settings.packTightRestVertices = EditorGUILayout.Toggle(
+                new GUIContent(
+                    "紧凑 Rest 顶点",
+                    "默认关闭。顶点从 32 字节改为 24 字节（位置仍 float，法线/切线改 oct）。旧资产保持 32 字节，不必重烤。"),
+                _settings.packTightRestVertices);
+            DrawCompressionAdvice(ClusterSkinnedCompressionAdvisor.AdviseTightRestVertices(ResolveStaticAdviceMesh()));
+            EditorGUILayout.HelpBox(
+                _settings.packTightRestVertices
+                    ? "已开启：静态网格 GPU 更瘦。法线/切线是 oct 量化，法线贴图可能略有误差。\n优点：顶点显存约少 25%。缺点：改顶点格式，shader 走紧凑分支。"
+                    : "默认关闭：顶点仍是 32 字节，和现有 ClusterMeshAsset 一致。",
+                MessageType.None);
+        }
+
+        Mesh ResolveStaticAdviceMesh()
+        {
+            if (_sourceObject != null)
+            {
+                var filter = _sourceObject.GetComponent<MeshFilter>();
+                if (filter != null && filter.sharedMesh != null)
+                    return filter.sharedMesh;
+            }
+
+            return _mesh;
+        }
+
         void DrawSkinnedOptimizationGroup()
         {
             if (_skinnedBakeOptions == null)
@@ -566,13 +600,13 @@ namespace ClusterMesh
             _skinnedBakeOptions.packTightRestVertices = EditorGUILayout.Toggle(
                 new GUIContent(
                     "紧凑 Rest 顶点",
-                    "默认关闭。只改蒙皮 geometry：顶点从 32 字节改为 24 字节（位置仍 float，法线/切线改 oct）。静态 ClusterMesh Baker 不受影响。"),
+                    "默认关闭。只改这份蒙皮 geometry：顶点从 32 字节改为 24 字节（位置仍 float，法线/切线改 oct）。静态 Baker 有独立开关。"),
                 _skinnedBakeOptions.packTightRestVertices);
             DrawCompressionAdvice(_compressionAdvice.packTightRestVertices);
             EditorGUILayout.HelpBox(
                 _skinnedBakeOptions.packTightRestVertices
-                    ? "已开启：蒙皮 rest 网格 GPU 更瘦。法线/切线是 oct 量化，法线贴图可能略有误差。静态 MeshRenderer 路径读不了这份 geometry。\n优点：顶点显存约少 25%。缺点：改蒙皮顶点格式，必须走蒙皮 shader。"
-                    : "默认关闭：rest 顶点仍是 32 字节，和静态 ClusterMesh 同一套打包。",
+                    ? "已开启：蒙皮 rest 网格 GPU 更瘦。法线/切线是 oct 量化，法线贴图可能略有误差。\n优点：顶点显存约少 25%。缺点：改顶点格式，shader 走紧凑分支。"
+                    : "默认关闭：rest 顶点仍是 32 字节。",
                 MessageType.None);
 
             EditorGUILayout.EndVertical();

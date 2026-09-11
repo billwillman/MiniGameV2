@@ -10,6 +10,7 @@ namespace ClusterMesh.Tests
         public void Settings_Default_UseQemSimplifyIsTrue()
         {
             Assert.That(new ClusterMeshBakeSettings().useQemSimplify, Is.True);
+            Assert.That(new ClusterMeshBakeSettings().packTightRestVertices, Is.False);
         }
 
         [Test]

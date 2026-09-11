@@ -12,6 +12,8 @@ namespace ClusterMesh
         static readonly int OwningGroupsId = Shader.PropertyToID("_OwningGroups");
         static readonly int GroupCountId = Shader.PropertyToID("_GroupCount");
         static readonly int VerticesId = Shader.PropertyToID("_Vertices");
+        static readonly int VerticesTightId = Shader.PropertyToID("_VerticesTight");
+        static readonly int RestVertexTightId = Shader.PropertyToID("_RestVertexTight");
         static readonly int IndicesId = Shader.PropertyToID("_Indices");
         static readonly int VisibleId = Shader.PropertyToID("_VisibleClusterIds");
         static readonly int ShadowVisibleId = Shader.PropertyToID("_ShadowClusterIds");
@@ -43,7 +45,9 @@ namespace ClusterMesh
         readonly GraphicsBuffer _objectCameraCullFlagsBuffer;
         readonly Bounds _localBounds;
         readonly GraphicsBuffer _vertexBuffer;
+        readonly GraphicsBuffer _vertexTightBuffer;
         readonly GraphicsBuffer _indexBuffer;
+        readonly bool _restVertexTight;
         readonly GraphicsBuffer[] _visibleBuffers;
         readonly GraphicsBuffer[] _shadowVisibleBuffers;
         readonly GraphicsBuffer[] _argsBuffers;
@@ -105,7 +109,25 @@ namespace ClusterMesh
                 return;
             }
 
-            if (!ClusterMeshGeometry.TryReadGpuGeometry(asset, out ClusterPackedVertex[] packedVerts, out uint[] packedIndices, out string geoError))
+            bool tightRest = asset.ResolvedVertexStride == ClusterMeshLimits.TightVertexStride;
+            ClusterPackedVertex[] packedVerts = Array.Empty<ClusterPackedVertex>();
+            ClusterPackedVertexTight[] tightVerts = Array.Empty<ClusterPackedVertexTight>();
+            uint[] packedIndices;
+            if (tightRest)
+            {
+                if (!ClusterMeshGeometry.TryReadTightVertices(asset, out tightVerts, out string tightError))
+                {
+                    Error = tightError;
+                    return;
+                }
+
+                if (!ClusterMeshGeometry.TryReadPackedIndices(asset, out packedIndices, out string indexError))
+                {
+                    Error = indexError;
+                    return;
+                }
+            }
+            else if (!ClusterMeshGeometry.TryReadGpuGeometry(asset, out packedVerts, out packedIndices, out string geoError))
             {
                 Error = geoError;
                 return;
@@ -144,12 +166,30 @@ namespace ClusterMesh
             _objectCameraCullFlagsBuffer = new GraphicsBuffer(
                 GraphicsBuffer.Target.Structured, ClusterMeshLimits.MaxBatchedObjects, 4);
             _localBounds = ClusterMeshFrustum.AssetLocalBounds(asset);
-            _vertexBuffer = new GraphicsBuffer(
-                GraphicsBuffer.Target.Structured,
-                Mathf.Max(1, packedVerts.Length),
-                ClusterMeshLimits.ClusterVertexStride);
-            if (packedVerts.Length > 0)
-                _vertexBuffer.SetData(packedVerts);
+            _restVertexTight = tightRest;
+            if (tightRest)
+            {
+                _vertexBuffer = new GraphicsBuffer(
+                    GraphicsBuffer.Target.Structured, 1, ClusterMeshLimits.ClusterVertexStride);
+                _vertexBuffer.SetData(new ClusterPackedVertex[1]);
+                _vertexTightBuffer = new GraphicsBuffer(
+                    GraphicsBuffer.Target.Structured,
+                    Mathf.Max(1, tightVerts.Length),
+                    ClusterMeshLimits.TightVertexStride);
+                _vertexTightBuffer.SetData(tightVerts);
+            }
+            else
+            {
+                _vertexBuffer = new GraphicsBuffer(
+                    GraphicsBuffer.Target.Structured,
+                    Mathf.Max(1, packedVerts.Length),
+                    ClusterMeshLimits.ClusterVertexStride);
+                if (packedVerts.Length > 0)
+                    _vertexBuffer.SetData(packedVerts);
+                _vertexTightBuffer = new GraphicsBuffer(
+                    GraphicsBuffer.Target.Structured, 1, ClusterMeshLimits.TightVertexStride);
+                _vertexTightBuffer.SetData(new ClusterPackedVertexTight[1]);
+            }
             _indexBuffer = new GraphicsBuffer(
                 GraphicsBuffer.Target.Structured,
                 Mathf.Max(1, packedIndices.Length),
@@ -568,6 +608,8 @@ namespace ClusterMesh
         {
             mat.SetBuffer(ClustersId, _clusterBuffer);
             mat.SetBuffer(VerticesId, _vertexBuffer);
+            mat.SetBuffer(VerticesTightId, _vertexTightBuffer);
+            mat.SetInt(RestVertexTightId, _restVertexTight ? 1 : 0);
             mat.SetBuffer(IndicesId, _indexBuffer);
             mat.SetBuffer(VisibleId, visible);
             mat.SetMatrixArray(ObjectLocalToWorldId, _l2w);
@@ -599,6 +641,7 @@ namespace ClusterMesh
             _owningGroupBuffer?.Dispose();
             _objectCameraCullFlagsBuffer?.Dispose();
             _vertexBuffer?.Dispose();
+            _vertexTightBuffer?.Dispose();
             _indexBuffer?.Dispose();
             if (_visibleBuffers != null)
             {
