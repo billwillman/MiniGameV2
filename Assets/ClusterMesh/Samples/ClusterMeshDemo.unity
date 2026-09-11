@@ -124,7 +124,7 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &572061381
+--- !u!1 &89467274
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -132,8 +132,8 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 7
   m_Component:
-  - component: {fileID: 572061383}
-  - component: {fileID: 572061382}
+  - component: {fileID: 89467276}
+  - component: {fileID: 89467275}
   m_Layer: 0
   m_HasEditorInfo: 1
   m_Name: Skin
@@ -142,23 +142,23 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &572061382
+--- !u!114 &89467275
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 572061381}
+  m_GameObject: {fileID: 89467274}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 45c05344dd2242c9813f9e326c42a8a2, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
+  m_Name: 
+  m_EditorClassIdentifier: 
   asset: {fileID: 11400000, guid: 1983dc27c4407474cbd6c920d67033d4, type: 2}
   targetCamera: {fileID: 0}
   cullShader: {fileID: 7200000, guid: 67e9ad7397cf482dbf420bcf156fb0bd, type: 3}
   litShader: {fileID: 4800000, guid: e263d15d1a7d4b5b87827d47f96c84a2, type: 3}
-  castShadows: 0
+  castShadows: 1
   receiveShadows: 1
   enableCameraCull: 1
   enableConeCull: 1
@@ -174,16 +174,16 @@ MonoBehaviour:
   speed: 1
   playAutomatically: 1
   playInEditMode: 1
---- !u!4 &572061383
+--- !u!4 &89467276
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 572061381}
+  m_GameObject: {fileID: 89467274}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 1, z: 0, w: 0}
-  m_LocalPosition: {x: 0, y: 0, z: 25}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -337,7 +337,7 @@ Transform:
   m_GameObject: {fileID: 1046207190}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1.07, z: 17.71}
+  m_LocalPosition: {x: 0, y: 1.07, z: -9.1}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -572,5 +572,5 @@ SceneRoots:
   - {fileID: 1046207193}
   - {fileID: 1418559709}
   - {fileID: 847463242}
-  - {fileID: 572061383}
   - {fileID: 1802021705}
+  - {fileID: 89467276}
