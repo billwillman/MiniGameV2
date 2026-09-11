@@ -12,6 +12,7 @@ namespace ClusterMesh
         bool _bakeSkinnedAnimation;
         SkinnedMeshRenderer _skinnedRenderer;
         [SerializeField] List<AnimationClip> _animationClips = new List<AnimationClip> { null };
+        [SerializeField] DefaultAsset _animationClipFolder;
         DefaultAsset _outputFolder;
         string _assetName = "ClusterMeshAsset";
         ClusterMeshBakeSettings _settings = new ClusterMeshBakeSettings();
@@ -91,7 +92,7 @@ namespace ClusterMesh
             EditorGUILayout.LabelField("怎么用", EditorStyles.boldLabel);
             EditorGUILayout.HelpBox(
                 "普通模式把静态 Mesh 拆成 ClusterMeshAsset；勾选蒙皮动画后会生成独立的 ClusterSkinnedMeshAsset。\n\n" +
-                "1. 普通模式拖 Mesh/MeshFilter；蒙皮模式拖 SkinnedMeshRenderer 并添加一个或多个 AnimationClip。\n" +
+                "1. 普通模式拖 Mesh/MeshFilter；蒙皮模式拖 SkinnedMeshRenderer，并逐条添加 AnimationClip，或选动画目录点「从目录追加」。\n" +
                 "2. 选输出目录。空着则写到 Assets/ClusterMesh/Samples。\n" +
                 "3. 填资产名，点 Bake。成功后 Project 会选中生成的 .asset。\n" +
                 "4. 普通资产使用 ClusterMeshRenderer；蒙皮资产使用 ClusterSkinnedMeshRenderer。\n\n" +
@@ -107,7 +108,7 @@ namespace ClusterMesh
             _bakeSkinnedAnimation = mode == 1;
             EditorGUILayout.HelpBox(
                 _bakeSkinnedAnimation
-                    ? "当前：蒙皮。拖 SkinnedMeshRenderer + AnimationClip 列表，生成 ClusterSkinnedMeshAsset。"
+                    ? "当前：蒙皮。拖 SkinnedMeshRenderer + AnimationClip 列表（可从目录追加），生成 ClusterSkinnedMeshAsset。"
                     : "当前：静态。拖 Mesh / MeshFilter，生成 ClusterMeshAsset。",
                 MessageType.None);
 
@@ -177,9 +178,14 @@ namespace ClusterMesh
             if (!string.IsNullOrEmpty(_error))
                 EditorGUILayout.HelpBox(_error, MessageType.Error);
             if (!string.IsNullOrEmpty(_info))
-                EditorGUILayout.HelpBox(_info + (_bakeSkinnedAnimation
-                    ? "\n下一步：选中资产，在 Inspector 点「加入场景」，然后在 ClusterSkinnedMeshRenderer 上预览动画/Cull。"
-                    : "\n下一步：选中这个资产 → 加到 ClusterMeshRenderer.asset，或打开 Tools/ClusterMesh/Viewer。"), MessageType.Info);
+            {
+                string next = _info.StartsWith("已写入", StringComparison.Ordinal)
+                    ? (_bakeSkinnedAnimation
+                        ? "\n下一步：选中资产，在 Inspector 点「加入场景」，然后在 ClusterSkinnedMeshRenderer 上预览动画/Cull。"
+                        : "\n下一步：选中这个资产 → 加到 ClusterMeshRenderer.asset，或打开 Tools/ClusterMesh/Viewer。")
+                    : "";
+                EditorGUILayout.HelpBox(_info + next, MessageType.Info);
+            }
 
             EditorGUILayout.EndScrollView();
         }
@@ -189,6 +195,7 @@ namespace ClusterMesh
             if (_animationClips == null)
                 _animationClips = new List<AnimationClip>();
 
+            DrawAnimationClipFolder();
             EditorGUILayout.LabelField("Animation Clips", EditorStyles.boldLabel);
             int remove = -1;
             int moveFrom = -1;
@@ -243,6 +250,38 @@ namespace ClusterMesh
             EditorGUILayout.HelpBox(
                 "每个 Clip 会保存独立的拟合曲线与分段 Cull 数据；列表顺序就是运行时 Clip Index。",
                 MessageType.None);
+        }
+
+        void DrawAnimationClipFolder()
+        {
+            _animationClipFolder = (DefaultAsset)EditorGUILayout.ObjectField(
+                new GUIContent("动画目录", "必须是 Project 里的文件夹。递归扫描其中的 AnimationClip 和 Prefab 内部 Clip。"),
+                _animationClipFolder, typeof(DefaultAsset), false);
+            if (GUILayout.Button("从目录追加"))
+                AppendClipsFromFolder();
+            EditorGUILayout.HelpBox(
+                "递归扫描该目录及子目录。同时收集其中的 AnimationClip 资产，以及每个 Prefab 资产内部的 AnimationClip 子对象。两种都做，不用选择。结果追加到列表，已有的跳过。仍可一条条添加。",
+                MessageType.None);
+        }
+
+        void AppendClipsFromFolder()
+        {
+            _error = null;
+            _info = null;
+            string folder = _animationClipFolder != null
+                ? AssetDatabase.GetAssetPath(_animationClipFolder)
+                : null;
+            if (string.IsNullOrEmpty(folder) || !AssetDatabase.IsValidFolder(folder))
+            {
+                _error = "请指定 Project 内文件夹。";
+                return;
+            }
+
+            AnimationClip[] found = ClusterSkinnedAnimationClipFolderScan.Collect(folder);
+            int added = ClusterSkinnedAnimationClipFolderScan.AppendUnique(_animationClips, found);
+            _info = added == 0
+                ? "目录里没有可追加的新 AnimationClip（已扫描 AnimationClip 资产与 Prefab 内部子对象）。"
+                : "已追加 " + added + " 个 AnimationClip。";
         }
 
         AnimationClip[] ValidatedAnimationClips()

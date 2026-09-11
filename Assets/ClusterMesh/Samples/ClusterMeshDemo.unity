@@ -235,7 +235,7 @@ Camera:
     height: 1
   near clip plane: 0.3
   far clip plane: 1000
-  field of view: 36.2
+  field of view: 30.3
   orthographic: 0
   orthographic size: 5
   m_Depth: -1
@@ -272,7 +272,7 @@ Transform:
   m_GameObject: {fileID: 1046207190}
   serializedVersion: 2
   m_LocalRotation: {x: 0.13505942, y: 0, z: 0, w: 0.9908375}
-  m_LocalPosition: {x: 0.47, y: 1.92, z: -4.49}
+  m_LocalPosition: {x: 0.96, y: 1.92, z: -13.26}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -356,7 +356,7 @@ MonoBehaviour:
   targetCamera: {fileID: 0}
   cullShader: {fileID: 7200000, guid: 67e9ad7397cf482dbf420bcf156fb0bd, type: 3}
   litShader: {fileID: 4800000, guid: e263d15d1a7d4b5b87827d47f96c84a2, type: 3}
-  castShadows: 0
+  castShadows: 1
   receiveShadows: 1
   enableCameraCull: 1
   enableConeCull: 1
@@ -366,7 +366,8 @@ MonoBehaviour:
   lodErrorThreshold: 1
   showLodLevels: 0
   animationEvaluation: 0
-  clipIndex: 1
+  enableParallelBonePrefix: 0
+  clipIndex: 6
   normalizedTime: 0
   speed: 1
   playAutomatically: 1
@@ -540,7 +541,7 @@ MonoBehaviour:
   targetCamera: {fileID: 0}
   cullShader: {fileID: 7200000, guid: 67e9ad7397cf482dbf420bcf156fb0bd, type: 3}
   litShader: {fileID: 4800000, guid: e263d15d1a7d4b5b87827d47f96c84a2, type: 3}
-  castShadows: 0
+  castShadows: 1
   receiveShadows: 1
   enableCameraCull: 1
   enableConeCull: 1
@@ -550,6 +551,7 @@ MonoBehaviour:
   lodErrorThreshold: 1
   showLodLevels: 0
   animationEvaluation: 0
+  enableParallelBonePrefix: 0
   clipIndex: 3
   normalizedTime: 0
   speed: 1
