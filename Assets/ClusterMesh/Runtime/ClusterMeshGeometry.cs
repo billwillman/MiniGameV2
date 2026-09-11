@@ -21,6 +21,90 @@ namespace ClusterMesh
             y = Mathf.HalfToFloat((ushort)(packed >> 16));
         }
 
+        public static uint PackOct16(Vector3 n)
+        {
+            if (n.sqrMagnitude < 1e-12f)
+                n = Vector3.up;
+            else
+                n.Normalize();
+            float sum = Mathf.Abs(n.x) + Mathf.Abs(n.y) + Mathf.Abs(n.z);
+            float ox = n.x / sum;
+            float oy = n.y / sum;
+            if (n.z < 0f)
+            {
+                float tx = ox;
+                ox = (1f - Mathf.Abs(oy)) * (tx >= 0f ? 1f : -1f);
+                oy = (1f - Mathf.Abs(tx)) * (oy >= 0f ? 1f : -1f);
+            }
+            uint x = (uint)Mathf.Clamp(Mathf.RoundToInt((ox * 0.5f + 0.5f) * 65535f), 0, 65535);
+            uint y = (uint)Mathf.Clamp(Mathf.RoundToInt((oy * 0.5f + 0.5f) * 65535f), 0, 65535);
+            return x | (y << 16);
+        }
+
+        public static Vector3 UnpackOct16(uint packed)
+        {
+            float ox = ((packed & 0xFFFFu) / 65535f) * 2f - 1f;
+            float oy = ((packed >> 16) / 65535f) * 2f - 1f;
+            Vector3 n = new Vector3(ox, oy, 1f - Mathf.Abs(ox) - Mathf.Abs(oy));
+            float t = Mathf.Max(-n.z, 0f);
+            n.x += n.x >= 0f ? -t : t;
+            n.y += n.y >= 0f ? -t : t;
+            return n.sqrMagnitude > 1e-12f ? n.normalized : Vector3.up;
+        }
+
+        public static uint PackOct15TanW(Vector3 t, float tanW)
+        {
+            uint oct = PackOct16(t);
+            uint x = oct & 0xFFFFu;
+            uint y = (oct >> 16) & 0x7FFFu;
+            uint sign = tanW >= 0f ? 0x80000000u : 0u;
+            return x | (y << 16) | sign;
+        }
+
+        public static void UnpackOct15TanW(uint packed, out Vector3 t, out float tanW)
+        {
+            uint x = packed & 0xFFFFu;
+            uint y = (packed >> 16) & 0x7FFFu;
+            tanW = (packed & 0x80000000u) != 0u ? 1f : -1f;
+            uint oct = x | ((uint)Mathf.RoundToInt(y * (65535f / 32767f)) << 16);
+            t = UnpackOct16(oct);
+        }
+
+        public static ClusterPackedVertexTight PackVertexTight(in ClusterVertex v)
+        {
+            ClusterPackedVertex wide = PackVertex(v);
+            ClusterVertex rebuilt = UnpackVertex(wide);
+            Vector3 n = (Vector3)rebuilt.normal;
+            Vector3 t = (Vector3)rebuilt.tangent;
+            return new ClusterPackedVertexTight
+            {
+                px = rebuilt.position.x,
+                py = rebuilt.position.y,
+                pz = rebuilt.position.z,
+                nrmOct = PackOct16(n),
+                tanOctTanW = PackOct15TanW(t, rebuilt.tangent.w),
+                uv = wide.uv
+            };
+        }
+
+        public static ClusterVertex UnpackVertexTight(in ClusterPackedVertexTight p)
+        {
+            Vector3 n = UnpackOct16(p.nrmOct);
+            UnpackOct15TanW(p.tanOctTanW, out Vector3 t, out float tanW);
+            t -= n * Vector3.Dot(n, t);
+            if (t.sqrMagnitude < 1e-12f)
+                t = Vector3.Cross(n, Mathf.Abs(n.y) < 0.99f ? Vector3.up : Vector3.right);
+            t.Normalize();
+            UnpackHalf2(p.uv, out float u, out float v);
+            return new ClusterVertex
+            {
+                position = new Vector4(p.px, p.py, p.pz, 0f),
+                normal = n,
+                tangent = new Vector4(t.x, t.y, t.z, tanW),
+                uv = new Vector4(u, v, 0f, 0f)
+            };
+        }
+
         public static ClusterPackedVertex PackVertex(in ClusterVertex v)
         {
             Vector3 n = ((Vector3)v.normal).normalized;
@@ -159,6 +243,11 @@ namespace ClusterMesh
 
         public static void WritePacked(ClusterMeshAsset asset, ClusterMeshBakeResult result)
         {
+            WritePacked(asset, result, false);
+        }
+
+        public static void WritePacked(ClusterMeshAsset asset, ClusterMeshBakeResult result, bool tightRest)
+        {
             if (asset == null)
                 throw new ArgumentNullException(nameof(asset));
             if (result == null)
@@ -166,15 +255,27 @@ namespace ClusterMesh
 
             ClusterVertex[] verts = result.vertices ?? Array.Empty<ClusterVertex>();
             uint[] inds = result.indices ?? Array.Empty<uint>();
-            var packedVerts = new ClusterPackedVertex[verts.Length];
-            for (int i = 0; i < verts.Length; i++)
-                packedVerts[i] = PackVertex(verts[i]);
-
             uint[] packedInds = PackIndices(inds);
             asset.geometryVersion = ClusterMeshLimits.GeometryVersion;
             asset.vertexCount = verts.Length;
             asset.indexCount = inds.Length;
-            asset.packedVertices = Deflate(StructsToBytes(packedVerts));
+            asset.vertexStride = tightRest
+                ? ClusterMeshLimits.TightVertexStride
+                : ClusterMeshLimits.ClusterVertexStride;
+            if (tightRest)
+            {
+                var packedTight = new ClusterPackedVertexTight[verts.Length];
+                for (int i = 0; i < verts.Length; i++)
+                    packedTight[i] = PackVertexTight(verts[i]);
+                asset.packedVertices = Deflate(StructsToBytes(packedTight));
+            }
+            else
+            {
+                var packedVerts = new ClusterPackedVertex[verts.Length];
+                for (int i = 0; i < verts.Length; i++)
+                    packedVerts[i] = PackVertex(verts[i]);
+                asset.packedVertices = Deflate(StructsToBytes(packedVerts));
+            }
             asset.packedIndices = Deflate(StructsToBytes(packedInds));
         }
 
@@ -200,6 +301,12 @@ namespace ClusterMesh
                 return false;
             }
 
+            if (asset.ResolvedVertexStride != ClusterMeshLimits.ClusterVertexStride)
+            {
+                error = "ClusterMesh asset uses a tight vertex pack that this path does not read.";
+                return false;
+            }
+
             if (!TryInflate(asset.packedVertices, out byte[] vertBytes) ||
                 !TryInflate(asset.packedIndices, out byte[] indexBytes))
             {
@@ -222,6 +329,75 @@ namespace ClusterMesh
             return true;
         }
 
+        public static bool TryReadPackedIndices(
+            ClusterMeshAsset asset,
+            out uint[] packedIndices,
+            out string error)
+        {
+            packedIndices = Array.Empty<uint>();
+            error = null;
+            if (asset == null)
+            {
+                error = "ClusterMesh asset is missing or empty.";
+                return false;
+            }
+            if (asset.geometryVersion != ClusterMeshLimits.GeometryVersion)
+            {
+                error = "ClusterMesh asset needs a rebake (packed geometry).";
+                return false;
+            }
+            if (!TryInflate(asset.packedIndices, out byte[] indexBytes))
+            {
+                error = "ClusterMesh asset packed geometry is corrupt.";
+                return false;
+            }
+            int packedIndexCount = (asset.indexCount + 1) / 2;
+            if (asset.indexCount < 0 || indexBytes.Length != packedIndexCount * 4)
+            {
+                error = "ClusterMesh asset packed geometry is corrupt.";
+                return false;
+            }
+            packedIndices = BytesToStructs<uint>(indexBytes, packedIndexCount);
+            return true;
+        }
+
+        public static bool TryReadTightVertices(
+            ClusterMeshAsset asset,
+            out ClusterPackedVertexTight[] vertices,
+            out string error)
+        {
+            vertices = Array.Empty<ClusterPackedVertexTight>();
+            error = null;
+            if (asset == null)
+            {
+                error = "ClusterMesh asset is missing or empty.";
+                return false;
+            }
+            if (asset.geometryVersion != ClusterMeshLimits.GeometryVersion)
+            {
+                error = "ClusterMesh asset needs a rebake (packed geometry).";
+                return false;
+            }
+            if (asset.ResolvedVertexStride != ClusterMeshLimits.TightVertexStride)
+            {
+                error = "ClusterMesh asset is not a tight vertex pack.";
+                return false;
+            }
+            if (!TryInflate(asset.packedVertices, out byte[] vertBytes))
+            {
+                error = "ClusterMesh asset packed geometry is corrupt.";
+                return false;
+            }
+            int expectedVert = asset.vertexCount * ClusterMeshLimits.TightVertexStride;
+            if (asset.vertexCount < 0 || vertBytes.Length != expectedVert)
+            {
+                error = "ClusterMesh asset packed geometry is corrupt.";
+                return false;
+            }
+            vertices = BytesToStructs<ClusterPackedVertexTight>(vertBytes, asset.vertexCount);
+            return true;
+        }
+
         public static bool TryReadWorkingGeometry(
             ClusterMeshAsset asset,
             out ClusterVertex[] vertices,
@@ -230,6 +406,28 @@ namespace ClusterMesh
         {
             vertices = Array.Empty<ClusterVertex>();
             indices = Array.Empty<uint>();
+            if (asset != null && asset.ResolvedVertexStride == ClusterMeshLimits.TightVertexStride)
+            {
+                if (!TryReadTightVertices(asset, out ClusterPackedVertexTight[] tight, out error))
+                    return false;
+                if (!TryInflate(asset.packedIndices, out byte[] indexBytes))
+                {
+                    error = "ClusterMesh asset packed geometry is corrupt.";
+                    return false;
+                }
+                int packedIndexCount = (asset.indexCount + 1) / 2;
+                if (indexBytes.Length != packedIndexCount * 4)
+                {
+                    error = "ClusterMesh asset packed geometry is corrupt.";
+                    return false;
+                }
+                vertices = new ClusterVertex[tight.Length];
+                for (int i = 0; i < tight.Length; i++)
+                    vertices[i] = UnpackVertexTight(tight[i]);
+                indices = UnpackIndices(BytesToStructs<uint>(indexBytes, packedIndexCount), asset.indexCount);
+                return true;
+            }
+
             if (!TryReadGpuGeometry(asset, out ClusterPackedVertex[] packedVerts, out uint[] packedInds, out error))
                 return false;
 

@@ -26,12 +26,15 @@ namespace ClusterMesh
             Matrix4x4 localToWorld = renderer.transform.localToWorldMatrix;
             Handles.matrix = localToWorld;
 
+            if (!renderer.asset.TryGetCullFrames(out ClusterSkinnedCullFrame[] cullFrames, out _) ||
+                cullFrames == null)
+                return;
             for (int i = 0; i < clusters.Length; i++)
             {
                 int frameIndex = frameStart + i;
-                if (frameIndex < 0 || frameIndex >= renderer.asset.cullFrames.Length)
+                if (frameIndex < 0 || frameIndex >= cullFrames.Length)
                     break;
-                ClusterSkinnedCullFrame frame = renderer.asset.cullFrames[frameIndex];
+                ClusterSkinnedCullFrame frame = cullFrames[frameIndex];
                 Vector3 center = frame.aabbCenter;
                 Vector3 size = (Vector3)frame.aabbExtents * 2f;
 
@@ -62,7 +65,9 @@ namespace ClusterMesh
         {
             frameStart = 0;
             ClusterSkinnedMeshAsset asset = renderer.asset;
-            if (asset.clips == null || asset.clips.Length == 0 || asset.cullFrames == null)
+            if (asset.clips == null || asset.clips.Length == 0 ||
+                !asset.TryGetCullFrames(out ClusterSkinnedCullFrame[] cullFrames, out _) ||
+                cullFrames == null)
                 return false;
             int clipIndex = Mathf.Clamp(renderer.clipIndex, 0, asset.clips.Length - 1);
             ClusterSkinnedClip clip = asset.clips[clipIndex];
@@ -73,7 +78,7 @@ namespace ClusterMesh
             int segmentCount = Mathf.Max(1, clip.segmentCount);
             int segment = Mathf.Clamp(Mathf.FloorToInt(Mathf.Repeat(normalized, 1f) * segmentCount), 0, segmentCount - 1);
             frameStart = clip.cullFrameOffset + segment * clusterCount;
-            return frameStart >= 0 && frameStart + clusterCount <= asset.cullFrames.Length;
+            return frameStart >= 0 && frameStart + clusterCount <= cullFrames.Length;
         }
 
         static bool IsLodVisible(

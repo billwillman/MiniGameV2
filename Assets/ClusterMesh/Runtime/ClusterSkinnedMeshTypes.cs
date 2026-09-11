@@ -24,6 +24,10 @@ namespace ClusterMesh
         public bool retainAnimationCurves;
         [Range(1f, 60f)] public float gpuFramesPerSecond = 30f;
         [Range(0.000001f, 0.01f)] public float cpuCurveTolerance = 0.0001f;
+        public bool packSkinWeights8;
+        public bool gpuCompactPalette;
+        public bool compressCullFrames;
+        public bool packTightRestVertices;
 
         public bool IncludesGpu => animationDataMode != ClusterSkinnedAnimationDataMode.CpuOnly;
         public bool IncludesCpu => animationDataMode != ClusterSkinnedAnimationDataMode.GpuOnly;
@@ -71,6 +75,13 @@ namespace ClusterMesh
         public uint boneIndices23;
         public uint boneWeights01;
         public uint boneWeights23;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct ClusterPackedSkinWeight8
+    {
+        public uint boneIndices;
+        public uint boneWeights;
     }
 
     [Serializable]

@@ -49,6 +49,10 @@ namespace ClusterMesh
                 EditorGUILayout.LabelField("VTF Bake FPS", asset.bakedGpuFramesPerSecond.ToString("0.##"));
             if (asset.AllowsCpuAnimation)
                 EditorGUILayout.LabelField("CPU Curve Tolerance", asset.bakedCpuCurveTolerance.ToString("0.######"));
+            EditorGUILayout.LabelField("Skin Weight Stride", asset.ResolvedSkinWeightStride + " bytes");
+            EditorGUILayout.LabelField("GPU Palette Pixels / Bone", asset.GpuPalettePixelsPerBone.ToString());
+            EditorGUILayout.LabelField("Cull Frames", asset.cullFramesCompressed ? "Deflate + 2 segments/s" : "Uncompressed");
+            EditorGUILayout.LabelField("Rest Vertices", asset.tightRestVertices ? "24-byte tight" : "32-byte");
             DrawPalettePreview(asset);
             EditorGUILayout.Space();
             if (GUILayout.Button("加入场景"))

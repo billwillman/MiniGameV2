@@ -16,13 +16,19 @@ Texture2D<float4> _SkinAnimationTex;
 int _SkinPaletteWidth;
 int _UseGpuAnimationTexture;
 int _SkinAnimationFrameCount;
+int _SkinWeightPacked8;
+int _RestVertexTight;
+int _GpuPalettePixelsPerBone;
 float3 _LightDirection, _LightPosition;
 
 struct ClusterPackedSkinWeight { uint boneIndices01, boneIndices23, boneWeights01, boneWeights23; };
+struct ClusterVertexTight { uint px, py, pz, nrmOct, tanOctTanW, uv; };
 StructuredBuffer<ClusterHeader> _Clusters;
 StructuredBuffer<ClusterVertex> _Vertices;
+StructuredBuffer<ClusterVertexTight> _VerticesTight;
 StructuredBuffer<uint> _Indices;
 StructuredBuffer<ClusterPackedSkinWeight> _SkinWeights;
+StructuredBuffer<uint> _SkinWeights8;
 StructuredBuffer<uint> _VisibleClusterIds;
 StructuredBuffer<float> _ObjectAnimationTimes;
 CBUFFER_START(ClusterSkinnedBatch)
@@ -71,6 +77,37 @@ void ClusterSkinnedSetup()
 }
 #endif
 float2 UnpackHalf2(uint v) { return float2(f16tof32(v & 0xffffu), f16tof32(v >> 16)); }
+float3 OctDecode16(uint packed)
+{
+    float ox = ((packed & 0xffffu) / 65535.0) * 2.0 - 1.0;
+    float oy = ((packed >> 16) / 65535.0) * 2.0 - 1.0;
+    float3 n = float3(ox, oy, 1.0 - abs(ox) - abs(oy));
+    float t = max(-n.z, 0.0);
+    n.x += n.x >= 0.0 ? -t : t;
+    n.y += n.y >= 0.0 ? -t : t;
+    return normalize(n);
+}
+void OctDecodeTan(uint packed, out float3 t, out float tanW)
+{
+    uint x = packed & 0xffffu;
+    uint y = (packed >> 16) & 0x7fffu;
+    tanW = (packed & 0x80000000u) != 0u ? 1.0 : -1.0;
+    uint oct = x | ((uint)round(y * (65535.0 / 32767.0)) << 16);
+    t = OctDecode16(oct);
+}
+float3x3 QuatToMat(float4 q)
+{
+    q = normalize(q);
+    float x = q.x, y = q.y, z = q.z, w = q.w;
+    float x2 = x + x, y2 = y + y, z2 = z + z;
+    float xx = x * x2, xy = x * y2, xz = x * z2;
+    float yy = y * y2, yz = y * z2, zz = z * z2;
+    float wx = w * x2, wy = w * y2, wz = w * z2;
+    return float3x3(
+        1.0 - (yy + zz), xy - wz, xz + wy,
+        xy + wz, 1.0 - (xx + zz), yz - wx,
+        xz - wy, yz + wx, 1.0 - (xx + yy));
+}
 void FetchBaseVertex(uint vertexID, uint instanceID, out float3 p, out float3 n, out float4 t, out float2 uv, out uint vertexIndex)
 {
     uint cluster = _VisibleClusterIds[instanceID] & 0xffffu;
@@ -79,6 +116,18 @@ void FetchBaseVertex(uint vertexID, uint instanceID, out float3 p, out float3 n,
     uint raw = _Indices[(h.indexOffset + vertexID) >> 1];
     uint local = ((h.indexOffset + vertexID) & 1u) == 0 ? raw & 0xffffu : raw >> 16;
     vertexIndex = h.vertexOffset + local;
+    if (_RestVertexTight != 0)
+    {
+        ClusterVertexTight tv = _VerticesTight[vertexIndex];
+        p = float3(asfloat(tv.px), asfloat(tv.py), asfloat(tv.pz));
+        n = OctDecode16(tv.nrmOct);
+        float3 tt; float tanW;
+        OctDecodeTan(tv.tanOctTanW, tt, tanW);
+        tt = normalize(tt - n * dot(n, tt));
+        t = float4(tt, tanW);
+        uv = UnpackHalf2(tv.uv);
+        return;
+    }
     ClusterVertex v = _Vertices[vertexIndex];
     p = v.position.xyz;
     float2 nxy = UnpackHalf2(v.nrmXY), nztw = UnpackHalf2(v.nrmZ_tanW), txy = UnpackHalf2(v.tanXY);
@@ -87,8 +136,31 @@ void FetchBaseVertex(uint vertexID, uint instanceID, out float3 p, out float3 n,
     t = float4(normalize(float3(txy.x,txy.y,tz)-n*dot(n,float3(txy.x,txy.y,tz))), nztw.y);
     uv = UnpackHalf2(v.uv);
 }
+float4 CompactPaletteRow(uint objectIndex, uint bone, uint row)
+{
+    uint lastFrame = (uint)max(_SkinAnimationFrameCount - 1, 0);
+    float frame = saturate(_ObjectAnimationTimes[objectIndex]) * lastFrame;
+    uint frame0 = min((uint)floor(frame), lastFrame);
+    uint frame1 = min(frame0 + 1u, lastFrame);
+    float blend = frac(frame);
+    uint xq = bone * 2u;
+    float4 q0 = _SkinAnimationTex.Load(int3(xq, frame0, 0));
+    float4 q1 = _SkinAnimationTex.Load(int3(xq, frame1, 0));
+    if (dot(q0, q1) < 0.0) q1 = -q1;
+    float4 q = normalize(lerp(q0, q1, blend));
+    float4 ts = lerp(
+        _SkinAnimationTex.Load(int3(xq + 1u, frame0, 0)),
+        _SkinAnimationTex.Load(int3(xq + 1u, frame1, 0)),
+        blend);
+    float3x3 r = QuatToMat(q) * ts.w;
+    if (row == 0u) return float4(r[0][0], r[0][1], r[0][2], ts.x);
+    if (row == 1u) return float4(r[1][0], r[1][1], r[1][2], ts.y);
+    return float4(r[2][0], r[2][1], r[2][2], ts.z);
+}
 float4 PaletteRow(uint objectIndex, uint bone, uint row)
 {
+    if (_UseGpuAnimationTexture != 0 && _GpuPalettePixelsPerBone == 2)
+        return CompactPaletteRow(objectIndex, bone, row);
     uint x = bone * 3u + row;
     if (_UseGpuAnimationTexture != 0)
     {
@@ -113,9 +185,22 @@ float3 TransformPaletteVector(uint objectIndex, uint bone, float3 p)
 }
 void SkinVertex(uint objectIndex, uint index, inout float3 p, inout float3 n, inout float4 t)
 {
-    ClusterPackedSkinWeight w = _SkinWeights[index];
-    uint4 bones=uint4(w.boneIndices01 & 0xffffu,w.boneIndices01>>16,w.boneIndices23 & 0xffffu,w.boneIndices23>>16);
-    float4 weights=float4(w.boneWeights01 & 0xffffu,w.boneWeights01>>16,w.boneWeights23 & 0xffffu,w.boneWeights23>>16)/65535.0;
+    uint4 bones;
+    float4 weights;
+    if (_SkinWeightPacked8 != 0)
+    {
+        uint base = index * 2u;
+        uint bi = _SkinWeights8[base];
+        uint bw = _SkinWeights8[base + 1u];
+        bones = uint4(bi & 255u, (bi >> 8) & 255u, (bi >> 16) & 255u, bi >> 24);
+        weights = float4(bw & 255u, (bw >> 8) & 255u, (bw >> 16) & 255u, bw >> 24) / 255.0;
+    }
+    else
+    {
+        ClusterPackedSkinWeight w = _SkinWeights[index];
+        bones=uint4(w.boneIndices01 & 0xffffu,w.boneIndices01>>16,w.boneIndices23 & 0xffffu,w.boneIndices23>>16);
+        weights=float4(w.boneWeights01 & 0xffffu,w.boneWeights01>>16,w.boneWeights23 & 0xffffu,w.boneWeights23>>16)/65535.0;
+    }
     float sum=max(dot(weights,1),1e-6); weights/=sum;
     float3 sp=0,sn=0,st=0;
     [unroll] for(uint i=0;i<4;i++) { sp+=TransformPalettePoint(objectIndex,bones[i],p)*weights[i]; sn+=TransformPaletteVector(objectIndex,bones[i],n)*weights[i]; st+=TransformPaletteVector(objectIndex,bones[i],t.xyz)*weights[i]; }

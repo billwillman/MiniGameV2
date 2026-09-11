@@ -13,6 +13,7 @@ namespace ClusterMesh
         public const int CurrentGpuAnimationVersion = 1;
         public const int CurrentCpuBurstAnimationVersion = 1;
         public const int PackedSkinWeightStride = 16;
+        public const int PackedSkinWeightStride8 = 8;
 
         public ClusterMeshAsset geometry;
         public byte[] packedSkinWeights;
@@ -26,6 +27,7 @@ namespace ClusterMesh
         public ClusterSkinnedCurveSegment[] cpuCurveSegments;
         public int[] boneEvaluationOrder;
         public ClusterSkinnedCullFrame[] cullFrames;
+        public byte[] packedCullFrames;
         [HideInInspector]
         public ClusterSkinnedAnimationDataMode animationDataMode = ClusterSkinnedAnimationDataMode.GpuOnly;
         [HideInInspector]
@@ -34,6 +36,14 @@ namespace ClusterMesh
         public float bakedGpuFramesPerSecond;
         [HideInInspector]
         public float bakedCpuCurveTolerance;
+        [HideInInspector]
+        public int skinWeightStride;
+        [HideInInspector]
+        public bool gpuCompactPalette;
+        [HideInInspector]
+        public bool cullFramesCompressed;
+        [HideInInspector]
+        public bool tightRestVertices;
         public int skinningVersion;
         public int animationSamplingVersion;
         public int gpuAnimationVersion;
@@ -45,6 +55,12 @@ namespace ClusterMesh
 
         public bool AllowsCpuAnimation =>
             animationDataMode != ClusterSkinnedAnimationDataMode.GpuOnly;
+
+        public int ResolvedSkinWeightStride =>
+            skinWeightStride == PackedSkinWeightStride8 ? PackedSkinWeightStride8 : PackedSkinWeightStride;
+
+        public int GpuPalettePixelsPerBone =>
+            gpuCompactPalette && AllowsGpuAnimation ? 2 : 3;
 
         public bool HasManagedCurves(int clipIndex)
         {
@@ -61,7 +77,9 @@ namespace ClusterMesh
                 clipIndex >= gpuPaletteTextures.Length || bindPoses == null)
                 return false;
             Texture2D texture = gpuPaletteTextures[clipIndex];
-            return texture != null && texture.width == bindPoses.Length * 3 && texture.height >= 1;
+            return texture != null &&
+                texture.width == bindPoses.Length * GpuPalettePixelsPerBone &&
+                texture.height >= 1;
         }
 
         public bool HasCpuBurstCurves(int clipIndex)
@@ -93,12 +111,75 @@ namespace ClusterMesh
                 return false;
             }
             if (!ClusterMeshGeometry.TryInflate(packedSkinWeights, out byte[] raw) ||
-                raw.Length != skinVertexCount * PackedSkinWeightStride)
+                raw.Length != skinVertexCount * ResolvedSkinWeightStride)
             {
                 error = "ClusterSkinnedMesh packed skinning data is corrupt.";
                 return false;
             }
+            if (ResolvedSkinWeightStride != PackedSkinWeightStride)
+            {
+                error = "ClusterSkinnedMesh packed skinning data is 8-byte; use TryReadSkinWeights8.";
+                return false;
+            }
             weights = BytesToStructs<ClusterPackedSkinWeight>(raw);
+            return true;
+        }
+
+        public bool TryReadSkinWeights8(out ClusterPackedSkinWeight8[] weights, out string error)
+        {
+            weights = Array.Empty<ClusterPackedSkinWeight8>();
+            error = null;
+            if (skinningVersion != CurrentSkinningVersion)
+            {
+                error = "ClusterSkinnedMesh asset needs a rebake (skinning data).";
+                return false;
+            }
+            if (geometry == null || skinVertexCount != geometry.vertexCount || packedSkinWeights == null)
+            {
+                error = "ClusterSkinnedMesh skinning data is missing or does not match its geometry.";
+                return false;
+            }
+            if (ResolvedSkinWeightStride != PackedSkinWeightStride8)
+            {
+                error = "ClusterSkinnedMesh packed skinning data is not 8-byte.";
+                return false;
+            }
+            if (!ClusterMeshGeometry.TryInflate(packedSkinWeights, out byte[] raw) ||
+                raw.Length != skinVertexCount * PackedSkinWeightStride8)
+            {
+                error = "ClusterSkinnedMesh packed skinning data is corrupt.";
+                return false;
+            }
+            weights = BytesToStructs<ClusterPackedSkinWeight8>(raw);
+            return true;
+        }
+
+        public bool TryGetCullFrames(out ClusterSkinnedCullFrame[] frames, out string error)
+        {
+            frames = Array.Empty<ClusterSkinnedCullFrame>();
+            error = null;
+            if (packedCullFrames != null && packedCullFrames.Length > 0)
+            {
+                if (!ClusterMeshGeometry.TryInflate(packedCullFrames, out byte[] raw))
+                {
+                    error = "ClusterSkinnedMesh packed cull frames are corrupt.";
+                    return false;
+                }
+                int stride = Marshal.SizeOf<ClusterSkinnedCullFrame>();
+                if (raw.Length <= 0 || raw.Length % stride != 0)
+                {
+                    error = "ClusterSkinnedMesh packed cull frames are corrupt.";
+                    return false;
+                }
+                frames = BytesToStructs<ClusterSkinnedCullFrame>(raw);
+                return true;
+            }
+            if (cullFrames == null)
+            {
+                error = "ClusterSkinnedMesh asset has no baked clip bounds.";
+                return false;
+            }
+            frames = cullFrames;
             return true;
         }
 

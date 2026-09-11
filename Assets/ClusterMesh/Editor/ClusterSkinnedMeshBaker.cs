@@ -85,7 +85,8 @@ namespace ClusterMesh
                 sampledClips[i] = SampleClip(renderer, animationClips[i], bones, parentIndices, bindPoses,
                     Mathf.Clamp(bakeOptions.cpuCurveTolerance, 0.000001f, 0.01f),
                     bakeOptions.IncludesGpu ? Mathf.Clamp(bakeOptions.gpuFramesPerSecond, 1f, 60f) : 0f,
-                    bakeOptions.IncludesCpu);
+                    bakeOptions.IncludesCpu,
+                    bakeOptions.compressCullFrames);
             }
 
             ClusterSkinWeight[] sourceSkin = ReadSourceWeights(mesh, bones.Length);
@@ -118,7 +119,8 @@ namespace ClusterMesh
                 if (bakeOptions.IncludesGpu)
                 {
                     gpuPaletteTextures[i] = BuildGpuPaletteTexture(sampled, bindPoses.Length, i,
-                        Mathf.Clamp(bakeOptions.gpuFramesPerSecond, 1f, 60f));
+                        Mathf.Clamp(bakeOptions.gpuFramesPerSecond, 1f, 60f),
+                        bakeOptions.gpuCompactPalette);
                 }
                 if (!bakeOptions.IncludesCpu || !bakeOptions.retainAnimationCurves)
                     sampled.clip.boneCurves = null;
@@ -232,10 +234,43 @@ namespace ClusterMesh
             });
         }
 
-        static Texture2D BuildGpuPaletteTexture(SampledClip sampled, int boneCount,
-            int clipIndex, float framesPerSecond)
+        public static int CullSegmentCount(float duration, float frameRate, bool compress)
         {
-            int width = boneCount * 3;
+            float safeRate = Mathf.Max(1f, frameRate);
+            float segmentsPerSecond = compress ? 2f : 4f;
+            return Mathf.Max(1, Mathf.CeilToInt(Mathf.Max(duration, 1f / safeRate) * segmentsPerSecond));
+        }
+
+        public static void MatrixToCompact(Matrix4x4 matrix, out Quaternion rotation, out Vector3 translation, out float scale)
+        {
+            Vector3 x = new Vector3(matrix.m00, matrix.m10, matrix.m20);
+            Vector3 y = new Vector3(matrix.m01, matrix.m11, matrix.m21);
+            Vector3 z = new Vector3(matrix.m02, matrix.m12, matrix.m22);
+            scale = (x.magnitude + y.magnitude + z.magnitude) * (1f / 3f);
+            if (scale < 1e-8f)
+                scale = 1f;
+            rotation = matrix.rotation;
+            if (rotation.x * rotation.x + rotation.y * rotation.y + rotation.z * rotation.z + rotation.w * rotation.w < 1e-12f)
+                rotation = Quaternion.identity;
+            else
+                rotation.Normalize();
+            translation = new Vector3(matrix.m03, matrix.m13, matrix.m23);
+        }
+
+        public static Matrix4x4 CompactToMatrix(Quaternion rotation, Vector3 translation, float scale)
+        {
+            if (rotation.x * rotation.x + rotation.y * rotation.y + rotation.z * rotation.z + rotation.w * rotation.w < 1e-12f)
+                rotation = Quaternion.identity;
+            else
+                rotation.Normalize();
+            return Matrix4x4.TRS(translation, rotation, Vector3.one * Mathf.Max(scale, 1e-8f));
+        }
+
+        static Texture2D BuildGpuPaletteTexture(SampledClip sampled, int boneCount,
+            int clipIndex, float framesPerSecond, bool compact)
+        {
+            int pixelsPerBone = compact ? 2 : 3;
+            int width = boneCount * pixelsPerBone;
             int frameCount = Mathf.Max(2,
                 Mathf.CeilToInt(Mathf.Max(0f, sampled.clip.duration) * framesPerSecond) + 1);
             if (width > SystemInfo.maxTextureSize || frameCount > SystemInfo.maxTextureSize)
@@ -252,12 +287,28 @@ namespace ClusterMesh
                 int row = frame * width;
                 for (int bone = 0; bone < boneCount; bone++)
                 {
-                    Matrix4x4 matrix = LerpMatrix(
-                        sampled.palettes[frameA][bone], sampled.palettes[frameB][bone], blend);
-                    int pixel = row + bone * 3;
-                    pixels[pixel] = new Color(matrix.m00, matrix.m01, matrix.m02, matrix.m03);
-                    pixels[pixel + 1] = new Color(matrix.m10, matrix.m11, matrix.m12, matrix.m13);
-                    pixels[pixel + 2] = new Color(matrix.m20, matrix.m21, matrix.m22, matrix.m23);
+                    if (compact)
+                    {
+                        MatrixToCompact(sampled.palettes[frameA][bone], out Quaternion q0, out Vector3 t0, out float s0);
+                        MatrixToCompact(sampled.palettes[frameB][bone], out Quaternion q1, out Vector3 t1, out float s1);
+                        if (Quaternion.Dot(q0, q1) < 0f)
+                            q1 = new Quaternion(-q1.x, -q1.y, -q1.z, -q1.w);
+                        Quaternion q = Quaternion.SlerpUnclamped(q0, q1, blend);
+                        Vector3 t = Vector3.LerpUnclamped(t0, t1, blend);
+                        float s = Mathf.LerpUnclamped(s0, s1, blend);
+                        int pixel = row + bone * 2;
+                        pixels[pixel] = new Color(q.x, q.y, q.z, q.w);
+                        pixels[pixel + 1] = new Color(t.x, t.y, t.z, s);
+                    }
+                    else
+                    {
+                        Matrix4x4 matrix = LerpMatrix(
+                            sampled.palettes[frameA][bone], sampled.palettes[frameB][bone], blend);
+                        int pixel = row + bone * 3;
+                        pixels[pixel] = new Color(matrix.m00, matrix.m01, matrix.m02, matrix.m03);
+                        pixels[pixel + 1] = new Color(matrix.m10, matrix.m11, matrix.m12, matrix.m13);
+                        pixels[pixel + 2] = new Color(matrix.m20, matrix.m21, matrix.m22, matrix.m23);
+                    }
                 }
             }
 
@@ -300,14 +351,59 @@ namespace ClusterMesh
 
         public static byte[] PackSkinWeights(ClusterSkinWeight[] weights)
         {
+            return PackSkinWeights(weights, ClusterSkinnedMeshAsset.PackedSkinWeightStride);
+        }
+
+        public static byte[] PackSkinWeights(ClusterSkinWeight[] weights, int stride)
+        {
             if (weights == null || weights.Length == 0)
                 return Array.Empty<byte>();
+            if (stride == ClusterSkinnedMeshAsset.PackedSkinWeightStride8)
+            {
+                var packed8 = new ClusterPackedSkinWeight8[weights.Length];
+                for (int i = 0; i < weights.Length; i++)
+                    packed8[i] = PackSkinWeight8(weights[i]);
+                return DeflateStructs(packed8);
+            }
             var packed = new ClusterPackedSkinWeight[weights.Length];
             for (int i = 0; i < weights.Length; i++)
                 packed[i] = PackSkinWeight(weights[i]);
-            int size = Marshal.SizeOf<ClusterPackedSkinWeight>();
-            var bytes = new byte[packed.Length * size];
-            GCHandle handle = GCHandle.Alloc(packed, GCHandleType.Pinned);
+            return DeflateStructs(packed);
+        }
+
+        public static byte[] PackCullFrames(ClusterSkinnedCullFrame[] frames)
+        {
+            if (frames == null || frames.Length == 0)
+                return Array.Empty<byte>();
+            return DeflateStructs(frames);
+        }
+
+        public static bool CanPackSkinWeights8(ClusterSkinWeight[] weights)
+        {
+            if (weights == null)
+                return false;
+            for (int i = 0; i < weights.Length; i++)
+            {
+                ClusterSkinWeight weight = weights[i];
+                if (UsedBoneExceeds255(weight.boneIndex0, weight.weight0) ||
+                    UsedBoneExceeds255(weight.boneIndex1, weight.weight1) ||
+                    UsedBoneExceeds255(weight.boneIndex2, weight.weight2) ||
+                    UsedBoneExceeds255(weight.boneIndex3, weight.weight3))
+                    return false;
+            }
+            return true;
+        }
+
+        static bool UsedBoneExceeds255(int index, float weight)
+        {
+            return weight > 0f && (index < 0 || index > 255);
+        }
+
+        static byte[] DeflateStructs<T>(T[] items) where T : struct
+        {
+            int size = Marshal.SizeOf<T>();
+            var bytes = new byte[items.Length * size];
+            GCHandle handle = GCHandle.Alloc(items, GCHandleType.Pinned);
             try
             {
                 Marshal.Copy(handle.AddrOfPinnedObject(), bytes, 0, bytes.Length);
@@ -358,6 +454,55 @@ namespace ClusterMesh
                 boneWeights01 = quantized[0] | ((uint)quantized[1] << 16),
                 boneWeights23 = quantized[2] | ((uint)quantized[3] << 16)
             };
+        }
+
+        public static ClusterPackedSkinWeight8 PackSkinWeight8(in ClusterSkinWeight weight)
+        {
+            byte i0 = CheckedBoneIndex8(weight.boneIndex0, weight.weight0);
+            byte i1 = CheckedBoneIndex8(weight.boneIndex1, weight.weight1);
+            byte i2 = CheckedBoneIndex8(weight.boneIndex2, weight.weight2);
+            byte i3 = CheckedBoneIndex8(weight.boneIndex3, weight.weight3);
+            float sum = Mathf.Max(0f, weight.weight0) + Mathf.Max(0f, weight.weight1)
+                + Mathf.Max(0f, weight.weight2) + Mathf.Max(0f, weight.weight3);
+            float inv = sum > 1e-8f ? 1f / sum : 0f;
+            int[] quantized =
+            {
+                Mathf.RoundToInt(Mathf.Max(0f, weight.weight0) * inv * 255f),
+                Mathf.RoundToInt(Mathf.Max(0f, weight.weight1) * inv * 255f),
+                Mathf.RoundToInt(Mathf.Max(0f, weight.weight2) * inv * 255f),
+                Mathf.RoundToInt(Mathf.Max(0f, weight.weight3) * inv * 255f)
+            };
+            if (sum <= 1e-8f)
+            {
+                i0 = 0;
+                quantized[0] = 255;
+            }
+            else
+            {
+                int total = quantized[0] + quantized[1] + quantized[2] + quantized[3];
+                int largest = 0;
+                for (int i = 1; i < 4; i++)
+                {
+                    if (quantized[i] > quantized[largest])
+                        largest = i;
+                }
+                quantized[largest] = Mathf.Clamp(quantized[largest] + (255 - total), 0, 255);
+            }
+            return new ClusterPackedSkinWeight8
+            {
+                boneIndices = i0 | ((uint)i1 << 8) | ((uint)i2 << 16) | ((uint)i3 << 24),
+                boneWeights = (uint)quantized[0] | ((uint)quantized[1] << 8) |
+                    ((uint)quantized[2] << 16) | ((uint)quantized[3] << 24)
+            };
+        }
+
+        static byte CheckedBoneIndex8(int index, float weight)
+        {
+            if (weight <= 0f)
+                return 0;
+            if (index < 0 || index > 255)
+                throw new InvalidOperationException("A skin weight contains a bone index outside the 8-bit range.");
+            return (byte)index;
         }
 
         static ushort CheckedBoneIndex(int index, float weight)
@@ -766,7 +911,7 @@ namespace ClusterMesh
 
         static SampledClip SampleClip(SkinnedMeshRenderer sourceRenderer, AnimationClip sourceClip, Transform[] sourceBones,
             int[] parentIndices, Matrix4x4[] bindPoses, float curveTolerance, float minimumSampleRate,
-            bool buildCpuCurves)
+            bool buildCpuCurves, bool compressCullFrames)
         {
             GameObject sourceRoot = sourceRenderer.transform.root.gameObject;
             GameObject clone = UnityEngine.Object.Instantiate(sourceRoot);
@@ -899,7 +1044,7 @@ namespace ClusterMesh
                         curves[bone] = FitBoneCurves(
                             times, positions[bone], rotations[bone], scales[bone], curveTolerance);
                 }
-                int segmentCount = Mathf.Max(1, Mathf.CeilToInt(Mathf.Max(duration, 1f / frameRate) * 4f));
+                int segmentCount = CullSegmentCount(duration, frameRate, compressCullFrames);
                 return new SampledClip
                 {
                     clip = new ClusterSkinnedClip
