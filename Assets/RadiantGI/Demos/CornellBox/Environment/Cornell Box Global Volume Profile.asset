@@ -1,5 +1,5 @@
 %YAML 1.1
-%TAG !u! tag:unity3d.com,2011:
+%TAG !u! tag:yousandi.cn,2023:
 --- !u!114 &-1813115743806086268
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -124,6 +124,9 @@ MonoBehaviour:
   raytracerAccuracy:
     m_OverrideState: 1
     m_Value: 8
+  depthPrecision:
+    m_OverrideState: 0
+    m_Value: 1
   temporalFilter:
     m_OverrideState: 0
     m_Value: 1

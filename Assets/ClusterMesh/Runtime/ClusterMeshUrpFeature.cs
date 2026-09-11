@@ -48,7 +48,10 @@ namespace ClusterMesh
                 return;
 
             ClusterMeshUrpBridge.SubmitUrpShadowsBeforeCull(camera);
-            renderer.EnqueuePass(_depthPass);
+            // One shading raster only. A DepthOnly pass plus Forward/GBuffer writes the
+            // same clusters twice (often onto the camera target). Scene View is a single
+            // Graphics.Draw; the extra prepass showed up as stacked / broken silhouettes
+            // in Game View. Color and GBuffer already ZWrite.
             if (ClusterMeshUrpBridge.IsDeferred(renderer))
             {
                 _gbufferPass.Setup(renderer);

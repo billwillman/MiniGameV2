@@ -176,6 +176,16 @@ namespace ClusterMesh.Tests
         }
 
         [Test]
+        public void AddRenderPasses_Forward_DoesNotEnqueueDepthPrepass()
+        {
+            var feature = Track(ScriptableObject.CreateInstance<ClusterMeshUrpFeature>());
+            feature.Create();
+            Assert.That(
+                System.IO.File.ReadAllText("Assets/ClusterMesh/Runtime/ClusterMeshUrpFeature.cs"),
+                Does.Not.Contain("renderer.EnqueuePass(_depthPass)"));
+        }
+
+        [Test]
         public void ShouldSubmitUrp_SceneCamera_IsFalse()
         {
             var data = Track(ScriptableObject.CreateInstance<UniversalRendererData>());
