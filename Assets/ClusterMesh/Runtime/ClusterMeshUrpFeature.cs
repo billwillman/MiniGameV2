@@ -22,6 +22,7 @@ namespace ClusterMesh
                 return;
 
             ClusterMeshSceneBatcher.PrepareAndSubmitUrpShadows(camera);
+            ClusterSkinnedMeshSceneBatcher.PrepareAndSubmitUrpShadows(camera);
             renderer.EnqueuePass(_depthPass);
             renderer.EnqueuePass(_colorPass);
         }
@@ -50,9 +51,15 @@ namespace ClusterMesh
                 ? "ClusterMesh Depth"
                 : "ClusterMesh Color");
             if (_phase == ClusterMeshUrpPhase.Depth)
+            {
                 ClusterMeshSceneBatcher.SubmitUrpDepth(camera, cmd);
+                ClusterSkinnedMeshSceneBatcher.SubmitUrpDepth(camera, cmd);
+            }
             else
+            {
                 ClusterMeshSceneBatcher.SubmitUrpColor(camera, cmd);
+                ClusterSkinnedMeshSceneBatcher.SubmitUrpColor(camera, cmd);
+            }
             context.ExecuteCommandBuffer(cmd);
             CommandBufferPool.Release(cmd);
         }

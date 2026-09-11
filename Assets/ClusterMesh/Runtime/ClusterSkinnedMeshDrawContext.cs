@@ -103,7 +103,17 @@ namespace ClusterMesh
         NativeArray<int> _burstAncestorsB;
         int _burstMaxBoneDepth;
         bool _hasBurstCpuData;
+        bool _prepared;
+        bool _preparedCast;
+        bool _preparedReceive;
+        bool _preparedUseGpuAnimationTexture;
+        int _preparedDrawLayer;
+        Bounds _preparedBounds;
+        Texture2D _preparedGpuAnimationTexture;
         bool _disposed;
+
+        const int ForwardShaderPass = 0;
+        const int DepthShaderPass = 2;
 
         public bool IsReady { get; private set; }
         public string Error { get; private set; }
@@ -162,8 +172,11 @@ namespace ClusterMesh
             { Error = skinError; return; }
             if (cullShader == null || litShader == null)
             { Error = "ClusterSkinnedMesh cull/lit shader is missing."; return; }
-            if (!SystemInfo.supportsComputeShaders)
-            { Error = "ClusterSkinnedMesh requires compute shaders and vertex texture fetch."; return; }
+            string unsupported = ClusterMeshCapability.GetUnsupportedReason();
+            if (unsupported != null)
+            { Error = unsupported; return; }
+            if (!cullShader.HasKernel("CullSkinnedClusters"))
+            { Error = "ClusterSkinnedMesh cull kernel is missing."; return; }
 
             _boneCount = asset.bindPoses.Length;
             _paletteWidth = _boneCount * 3;
@@ -262,9 +275,49 @@ namespace ClusterMesh
             Camera cullingCamera, Camera drawCamera,
             bool castShadows, bool receiveShadows, int drawLayer)
         {
-            if (!CanDraw || matrices == null || cullingCamera == null || drawCamera == null) return;
+            if (drawCamera == null)
+                return;
+            if (!TryPrepare(matrices, cpuCull, cameraCull, times, clipIndex, animationEvaluation,
+                    enableParallelBonePrefix, enableConeCull, lodErrorThreshold,
+                    cullingCamera, castShadows, receiveShadows, drawLayer))
+                return;
+            SubmitLegacy(drawCamera);
+        }
+
+        public bool PrepareUrp(IList<Matrix4x4> matrices, IList<bool> cpuCull, IList<bool> cameraCull, IList<float> times,
+            int clipIndex, ClusterSkinnedAnimationEvaluation animationEvaluation,
+            bool enableParallelBonePrefix, bool enableConeCull, float lodErrorThreshold,
+            Camera camera, bool castShadows, bool receiveShadows, int drawLayer)
+        {
+            if (!TryPrepare(matrices, cpuCull, cameraCull, times, clipIndex, animationEvaluation,
+                    enableParallelBonePrefix, enableConeCull, lodErrorThreshold,
+                    camera, castShadows, receiveShadows, drawLayer))
+                return false;
+            SubmitUrpShadows(camera);
+            return true;
+        }
+
+        public void SubmitUrpDepth(CommandBuffer cmd)
+        {
+            SubmitUrpCmd(cmd, DepthShaderPass);
+        }
+
+        public void SubmitUrpColor(CommandBuffer cmd)
+        {
+            SubmitUrpCmd(cmd, ForwardShaderPass);
+        }
+
+        bool TryPrepare(IList<Matrix4x4> matrices, IList<bool> cpuCull, IList<bool> cameraCull, IList<float> times,
+            int clipIndex, ClusterSkinnedAnimationEvaluation animationEvaluation,
+            bool enableParallelBonePrefix, bool enableConeCull, float lodErrorThreshold,
+            Camera cullingCamera, bool castShadows, bool receiveShadows, int drawLayer)
+        {
+            _prepared = false;
+            if (!CanDraw || matrices == null || cullingCamera == null)
+                return false;
             int sourceCount = Mathf.Min(ClusterMeshLimits.MaxBatchedObjects, matrices.Count);
-            if (sourceCount <= 0) return;
+            if (sourceCount <= 0)
+                return false;
             int clip = Mathf.Clamp(clipIndex, 0, _asset.clips.Length - 1);
             ClusterSkinnedClip clipData = _asset.clips[clip];
             Texture2D availableGpuTexture = _asset.HasGpuPalette(clip) &&
@@ -278,14 +331,14 @@ namespace ClusterMesh
             if (_asset.animationDataMode == ClusterSkinnedAnimationDataMode.GpuOnly)
             {
                 if (availableGpuTexture == null)
-                    return;
+                    return false;
                 useGpuAnimationTexture = true;
                 useBurstCpu = false;
             }
             else if (_asset.animationDataMode == ClusterSkinnedAnimationDataMode.CpuOnly)
             {
                 if (!cpuAvailable)
-                    return;
+                    return false;
                 useGpuAnimationTexture = false;
                 useBurstCpu = true;
             }
@@ -297,7 +350,7 @@ namespace ClusterMesh
                 else if (!requestGpu && availableGpuTexture != null)
                     useGpuAnimationTexture = true;
                 else
-                    return;
+                    return false;
             }
             Texture2D gpuAnimationTexture = useGpuAnimationTexture ? availableGpuTexture : null;
             bool useParallelPrefix = useBurstCpu && enableParallelBonePrefix;
@@ -324,7 +377,8 @@ namespace ClusterMesh
                     Mathf.FloorToInt(_animationTimeData[count] * segmentCount), 0, segmentCount - 1);
                 count++;
             }
-            if (count <= 0) return;
+            if (count <= 0)
+                return false;
             if (useBurstCpu)
             {
                 if (useParallelPrefix)
@@ -352,9 +406,11 @@ namespace ClusterMesh
                 _paletteTexture.Apply(false, false);
             }
             _animationTimes.SetData(_animationTimeData, 0, 0, count);
-            _segments.SetData(_segmentData, 0, 0, count); _cameraCull.SetData(_cameraCullData, 0, 0, count);
+            _segments.SetData(_segmentData, 0, 0, count);
+            _cameraCull.SetData(_cameraCullData, 0, 0, count);
             Bounds worldBounds = ClusterMeshFrustum.TransformLocalBounds(_localAnimationBounds, _l2w[0]);
-            for (int i = 1; i < count; i++) worldBounds.Encapsulate(ClusterMeshFrustum.TransformLocalBounds(_localAnimationBounds, _l2w[i]));
+            for (int i = 1; i < count; i++)
+                worldBounds.Encapsulate(ClusterMeshFrustum.TransformLocalBounds(_localAnimationBounds, _l2w[i]));
             int groups = Mathf.Max(1, Mathf.CeilToInt(count * _asset.geometry.clusters.Length / 64f));
             for (int material = 0; material < _materials.Length; material++)
             {
@@ -367,21 +423,22 @@ namespace ClusterMesh
                 _cullShader.SetBuffer(_kernel, ObjectSegmentsId, _segments);
                 _cullShader.SetBuffer(_kernel, ObjectCameraCullId, _cameraCull);
                 _cullShader.SetBuffer(_kernel, VisibleId, _visible[material]);
-                _cullShader.SetInt(ObjectCountId, count); _cullShader.SetInt(ClusterCountId, _asset.geometry.clusters.Length);
+                _cullShader.SetInt(ObjectCountId, count);
+                _cullShader.SetInt(ClusterCountId, _asset.geometry.clusters.Length);
                 _cullShader.SetInt(GroupCountId, _asset.geometry.groups != null ? _asset.geometry.groups.Length : 0);
-                _cullShader.SetInt(MaterialIndexId, material); _cullShader.SetInt(CullFrameOffsetId, clipData.cullFrameOffset);
+                _cullShader.SetInt(MaterialIndexId, material);
+                _cullShader.SetInt(CullFrameOffsetId, clipData.cullFrameOffset);
                 _cullShader.SetInt(EnableConeCullId, enableConeCull ? 1 : 0);
                 _cullShader.SetInt(HierarchyVersionId, _asset.geometry.hierarchyVersion);
                 _cullShader.SetInt(LodPerspectiveId, cullingCamera.orthographic ? 0 : 1);
                 _cullShader.SetFloat(LodErrorThresholdId, Mathf.Max(0f, lodErrorThreshold));
                 _cullShader.SetFloat(LodProjectionScaleId, ClusterMeshLod.ProjectionScale(cullingCamera));
-                _cullShader.SetVectorArray(PlanesId, _planes); _cullShader.SetVector(WorldCameraPosId, cullingCamera.transform.position);
+                _cullShader.SetVectorArray(PlanesId, _planes);
+                _cullShader.SetVector(WorldCameraPosId, cullingCamera.transform.position);
                 _cullShader.SetMatrixArray(ObjectLocalToWorldId, _l2w);
                 _cullShader.Dispatch(_kernel, groups, 1, 1);
-                _args[material].SetData(_argsSeed); GraphicsBuffer.CopyCount(_visible[material], _args[material], 4);
-                Bind(_materials[material], _visible[material], gpuAnimationTexture, useGpuAnimationTexture);
-                Graphics.DrawMeshInstancedIndirect(_template, 0, _materials[material], worldBounds, _args[material], 0, null,
-                    ShadowCastingMode.Off, receiveShadows, drawLayer, drawCamera);
+                _args[material].SetData(_argsSeed);
+                GraphicsBuffer.CopyCount(_visible[material], _args[material], 4);
                 if (castShadows)
                 {
                     _shadowVisible[material].SetCounterValue(0);
@@ -392,10 +449,57 @@ namespace ClusterMesh
                     _cullShader.Dispatch(_kernel, groups, 1, 1);
                     _shadowArgs[material].SetData(_argsSeed);
                     GraphicsBuffer.CopyCount(_shadowVisible[material], _shadowArgs[material], 4);
-                    Bind(_shadowMaterials[material], _shadowVisible[material], gpuAnimationTexture, useGpuAnimationTexture);
-                    Graphics.DrawMeshInstancedIndirect(_template, 0, _shadowMaterials[material], worldBounds,
-                        _shadowArgs[material], 0, null, ShadowCastingMode.ShadowsOnly, false, drawLayer, drawCamera);
                 }
+            }
+
+            _preparedCast = castShadows;
+            _preparedReceive = receiveShadows;
+            _preparedDrawLayer = drawLayer;
+            _preparedBounds = worldBounds;
+            _preparedGpuAnimationTexture = gpuAnimationTexture;
+            _preparedUseGpuAnimationTexture = useGpuAnimationTexture;
+            _prepared = true;
+            return true;
+        }
+
+        void SubmitLegacy(Camera drawCamera)
+        {
+            if (!_prepared || drawCamera == null)
+                return;
+            for (int material = 0; material < _materials.Length; material++)
+            {
+                Bind(_materials[material], _visible[material], _preparedGpuAnimationTexture, _preparedUseGpuAnimationTexture);
+                Graphics.DrawMeshInstancedIndirect(_template, 0, _materials[material], _preparedBounds, _args[material], 0, null,
+                    ShadowCastingMode.Off, _preparedReceive, _preparedDrawLayer, drawCamera);
+                if (_preparedCast)
+                {
+                    Bind(_shadowMaterials[material], _shadowVisible[material], _preparedGpuAnimationTexture, _preparedUseGpuAnimationTexture);
+                    Graphics.DrawMeshInstancedIndirect(_template, 0, _shadowMaterials[material], _preparedBounds,
+                        _shadowArgs[material], 0, null, ShadowCastingMode.ShadowsOnly, false, _preparedDrawLayer, drawCamera);
+                }
+            }
+        }
+
+        void SubmitUrpShadows(Camera camera)
+        {
+            if (!_prepared || !_preparedCast || camera == null)
+                return;
+            for (int material = 0; material < _materials.Length; material++)
+            {
+                Bind(_shadowMaterials[material], _shadowVisible[material], _preparedGpuAnimationTexture, _preparedUseGpuAnimationTexture);
+                Graphics.DrawMeshInstancedIndirect(_template, 0, _shadowMaterials[material], _preparedBounds,
+                    _shadowArgs[material], 0, null, ShadowCastingMode.ShadowsOnly, false, _preparedDrawLayer, camera);
+            }
+        }
+
+        void SubmitUrpCmd(CommandBuffer cmd, int shaderPass)
+        {
+            if (!_prepared || cmd == null)
+                return;
+            for (int material = 0; material < _materials.Length; material++)
+            {
+                Bind(_materials[material], _visible[material], _preparedGpuAnimationTexture, _preparedUseGpuAnimationTexture);
+                cmd.DrawMeshInstancedIndirect(_template, 0, _materials[material], shaderPass, _args[material]);
             }
         }
 

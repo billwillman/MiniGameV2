@@ -14,6 +14,7 @@ namespace ClusterMesh
             .GetField("m_DefaultRendererIndex", BindingFlags.Instance | BindingFlags.NonPublic);
 
         public static ScriptableRendererData RendererDataOverrideForTests;
+        public static bool AllowEditorUrpSubmitForTests;
 
         public static bool HasActiveFeature(ScriptableRendererData data)
         {
@@ -42,10 +43,10 @@ namespace ClusterMesh
             // Keep Editor Play/Game views on the established Graphics.Draw path.
             // The URP command path does not receive renderer-populated per-object
             // lighting state and submits shadow casters after camera culling.
-            return false;
-#else
-            return TryGetRendererData(camera, out ScriptableRendererData data) && HasActiveFeature(data);
+            if (!AllowEditorUrpSubmitForTests)
+                return false;
 #endif
+            return TryGetRendererData(camera, out ScriptableRendererData data) && HasActiveFeature(data);
         }
 
         public static bool TryGetDefaultRendererData(out ScriptableRendererData data)

@@ -13,8 +13,10 @@ namespace ClusterMesh.Tests
         [TearDown]
         public void TearDown()
         {
+            ClusterMeshUrpBridge.AllowEditorUrpSubmitForTests = false;
             ClusterMeshUrpBridge.RendererDataOverrideForTests = null;
             ClusterMeshSceneBatcher.ResetForTests();
+            ClusterSkinnedMeshSceneBatcher.ResetForTests();
             for (int i = 0; i < _trash.Count; i++)
             {
                 if (_trash[i] != null)
@@ -88,6 +90,31 @@ namespace ClusterMesh.Tests
             reflection.cameraType = CameraType.Reflection;
             Assert.That(ClusterMeshUrpBridge.ShouldSubmitUrp(preview), Is.False);
             Assert.That(ClusterMeshUrpBridge.ShouldSubmitUrp(reflection), Is.False);
+        }
+
+        [Test]
+        public void ShouldSubmitUrp_GameCameraWithFeatureAndTestUnlock_IsTrue()
+        {
+            var data = Track(ScriptableObject.CreateInstance<UniversalRendererData>());
+            ClusterMeshUrpFeatureMenu.EnableOn(data);
+            ClusterMeshUrpBridge.RendererDataOverrideForTests = data;
+            ClusterMeshUrpBridge.AllowEditorUrpSubmitForTests = true;
+            var go = Track(new GameObject("CMUrpUnlockCam")).AddComponent<Camera>();
+            go.cameraType = CameraType.Game;
+            Assert.That(ClusterMeshUrpBridge.ShouldSubmitUrp(go), Is.True);
+            Assert.That(ClusterMeshUrpBridge.ShouldSkipLegacyFlush(go), Is.True);
+        }
+
+        [Test]
+        public void ShouldSubmitUrp_SceneCameraWithTestUnlock_IsFalse()
+        {
+            var data = Track(ScriptableObject.CreateInstance<UniversalRendererData>());
+            ClusterMeshUrpFeatureMenu.EnableOn(data);
+            ClusterMeshUrpBridge.RendererDataOverrideForTests = data;
+            ClusterMeshUrpBridge.AllowEditorUrpSubmitForTests = true;
+            var go = Track(new GameObject("CMUrpUnlockScene")).AddComponent<Camera>();
+            go.cameraType = CameraType.SceneView;
+            Assert.That(ClusterMeshUrpBridge.ShouldSubmitUrp(go), Is.False);
         }
 
         [Test]

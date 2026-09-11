@@ -158,14 +158,14 @@ MonoBehaviour:
   targetCamera: {fileID: 0}
   cullShader: {fileID: 7200000, guid: 67e9ad7397cf482dbf420bcf156fb0bd, type: 3}
   litShader: {fileID: 4800000, guid: e263d15d1a7d4b5b87827d47f96c84a2, type: 3}
-  castShadows: 1
+  castShadows: 0
   receiveShadows: 1
   enableCameraCull: 1
   enableConeCull: 1
   enableCpuObjectCull: 1
   showClusterColors: 0
   showClusterAabb: 0
-  lodErrorThreshold: 0
+  lodErrorThreshold: 1
   showLodLevels: 0
   animationEvaluation: 0
   enableParallelBonePrefix: 0
@@ -182,13 +182,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 572061381}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalRotation: {x: 0, y: 1, z: 0, w: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 25}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
 --- !u!1 &847463240
 GameObject:
   m_ObjectHideFlags: 0
@@ -300,7 +300,7 @@ Camera:
     height: 1
   near clip plane: 0.3
   far clip plane: 1000
-  field of view: 30.3
+  field of view: 23.1
   orthographic: 0
   orthographic size: 5
   m_Depth: -1
@@ -336,8 +336,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1046207190}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.13505942, y: 0, z: 0, w: 0.9908375}
-  m_LocalPosition: {x: 0.96, y: 2.68, z: -7.6}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 1.07, z: 17.71}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
