@@ -36,7 +36,8 @@ Baker、DAG、QEM、合批键、cull kernel、64/124、header 96、组 48 **不�
 | 改现有游戏 Universal Renderer（无菜单） | 全工程默默切路径，FogOfWar / 玩法场景会中招 |
 | 扫工程里所有 Renderer | T1 只动 Default，避免误改 2D / 叠相机 Renderer |
 | 按 cascade 精剔、附加灯体积 | 已在 CPU 剔规格 Non-goals |
-| 时域 LOD 滞回、Hi-Z、蒙皮 | 另条 TODO |
+| 时域 LOD 滞回、Hi-Z | 另条 TODO |
+| 蒙皮接同一 Feature | 2026-09-11 已做：`2026-09-11-clustermesh-skinned-urp-feature-design.md` |
 | 改 64/124、header 96、合批键、FogOfWar、Packages | 全期锁定 |
 
 ## 3. 不接 URP 的缺陷（为何要做 R1）
@@ -71,9 +72,10 @@ R1 **不解决** 探针和雾。那是 P3。
 
 `LateUpdate` 早于 `AddRenderPasses`，不能靠「本帧 Feature 跑过了」，也不能在 `Create` 里登记 live `ScriptableRenderer`（那时 Flush 已经决定过了）。
 
-- `ShouldSubmitUrp`：`CameraType.Game` 且该相机对应的 `ScriptableRendererData.rendererFeatures` 里有激活的 `ClusterMeshUrpFeature`
+- `ShouldSubmitUrp`：`CameraType.Game` 且该相机对应的 `ScriptableRendererData.rendererFeatures` 里有激活的 `ClusterMeshUrpFeature`。编辑器 Play / 非 Play Game View 与 Player 相同
 - 相机 → Renderer Data：URP Asset `m_RendererDataList` + 相机 `m_RendererIndex`（`-1` 用 Default）；测试用 `RendererDataOverrideForTests`
 - `ShouldSkipLegacyFlush` ≡ `ShouldSubmitUrp`，避免 Scene / Preview / 反射探针被跳过 Flush 又不出 Feature
+- Scene View 仍是 `ClusterMeshLifetime` Update + `SceneViewRenderer.Draw`，不进 Feature
 - 没挂、没激活、不是 Game、不是 URP → 老路径
 
 同一帧只许一条路径出画。

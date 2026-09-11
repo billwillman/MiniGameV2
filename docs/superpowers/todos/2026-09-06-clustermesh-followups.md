@@ -53,7 +53,8 @@ Branch: `feat/clustermesh-lod`
   现在只有每物体 `enableCpuObjectCull`。规格写了「总闸以后再加」。
 
 - [x] **URP Feature R1（保留老管线）**  
-  规格：`2026-09-07-clustermesh-urp-feature-design.md`。Game 相机且 Renderer 有激活 Feature：Depth/Forward 走 `cmd`，阴影仍 `Graphics.ShadowsOnly`；否则 `LateUpdate` Flush。菜单 `Tools/ClusterMesh/Enable|Disable URP Feature` 只动当前 URP Asset 的 Default Renderer。默认不改工程资产。
+  规格：`2026-09-07-clustermesh-urp-feature-design.md`。Game 相机且 Renderer 有激活 Feature：Depth/Forward 走 `cmd`，阴影仍 `Graphics.ShadowsOnly`；否则 `LateUpdate` Flush。菜单 `Tools/ClusterMesh/Enable|Disable URP Feature` 只动当前 URP Asset 的 Default Renderer。默认不改工程资产。  
+  蒙皮已接同一 Feature / 同一 `ShouldSubmitUrp`：`2026-09-11-clustermesh-skinned-urp-feature-design.md`。
 
 R1 **没做**、且不要混进已勾选项的：P3 照明对齐、R2 自绑阴影 atlas、MotionVectors。见下方 D。
 
@@ -89,7 +90,7 @@ Profiler 打到对应热点再讨论 + spec。不要为「感觉该上」开工�
 | NativeList / NativeArray 换现有复用数组 | 消不掉 `SetMatrixArray` GC |
 | Nanite VSM / 多阴影视图 | 另一条管线 |
 | Hi-Z / 软件光栅 / 流式 | 第 1 期 + DAG 非目标 |
-| 蒙皮 | 只要静态 `MeshFilter` |
+| 蒙皮 | 已做独立资产 / Renderer / Baker；URP 与静态同一 Feature 开关 |
 | URP Renderer Feature / 接游戏场景 | R1 已做；P3 / R2 / MotionVectors 见下方 |
 | GLES 降级绘制 | 无 Compute / Indirect 报错不画 |
 | METIS / meshoptimizer | DAG 非目标 |
