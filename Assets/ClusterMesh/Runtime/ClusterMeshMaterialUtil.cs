@@ -1,9 +1,42 @@
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace ClusterMesh
 {
     public static class ClusterMeshMaterialUtil
     {
+#if UNITY_EDITOR
+        static readonly System.Reflection.MethodInfo SetAsyncCompilationMethod =
+            System.Type.GetType("UnityEditor.ShaderUtil, UnityEditor")
+                ?.GetMethod("SetAsyncCompilation", new[] { typeof(CommandBuffer), typeof(bool) });
+        static readonly System.Reflection.MethodInfo RestoreAsyncCompilationMethod =
+            System.Type.GetType("UnityEditor.ShaderUtil, UnityEditor")
+                ?.GetMethod("RestoreAsyncCompilation", new[] { typeof(CommandBuffer) });
+#endif
+
+        public static bool CanSubmitShaderPass(Material material, int shaderPass)
+        {
+            return material != null && shaderPass >= 0 && shaderPass < material.passCount;
+        }
+
+        public static void BeginEditorSyncCompilation(CommandBuffer cmd)
+        {
+#if UNITY_EDITOR
+            if (cmd == null || SetAsyncCompilationMethod == null)
+                return;
+            SetAsyncCompilationMethod.Invoke(null, new object[] { cmd, false });
+#endif
+        }
+
+        public static void EndEditorSyncCompilation(CommandBuffer cmd)
+        {
+#if UNITY_EDITOR
+            if (cmd == null || RestoreAsyncCompilationMethod == null)
+                return;
+            RestoreAsyncCompilationMethod.Invoke(null, new object[] { cmd });
+#endif
+        }
+
         public static Material CreateRuntimeMaterial(Material source, Shader lit)
         {
             if (lit == null)

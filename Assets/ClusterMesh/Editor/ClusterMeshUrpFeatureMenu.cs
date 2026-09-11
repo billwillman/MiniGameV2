@@ -135,7 +135,7 @@ namespace ClusterMesh
                 string path = AssetDatabase.GetAssetPath(feature);
                 if (!string.IsNullOrEmpty(path))
                     AssetDatabase.RemoveObjectFromAsset(feature);
-                Object.DestroyImmediate(feature, true);
+                UnityEngine.Object.DestroyImmediate(feature, true);
             }
 
             data.SetDirty();

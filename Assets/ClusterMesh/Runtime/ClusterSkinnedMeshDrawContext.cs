@@ -507,6 +507,8 @@ namespace ClusterMesh
                 return;
             for (int material = 0; material < _materials.Length; material++)
             {
+                if (!ClusterMeshMaterialUtil.CanSubmitShaderPass(_materials[material], shaderPass))
+                    continue;
                 Bind(_materials[material], _visible[material], _preparedGpuAnimationTexture, _preparedUseGpuAnimationTexture);
                 cmd.DrawMeshInstancedIndirect(_template, 0, _materials[material], shaderPass, _args[material]);
             }

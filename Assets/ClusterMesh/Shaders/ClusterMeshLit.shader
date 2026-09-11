@@ -21,6 +21,7 @@ Shader "ClusterMesh/Lit"
             Name "ForwardLit"
             Tags { "LightMode"="UniversalForward" }
             HLSLPROGRAM
+            #pragma editor_sync_compilation
             #pragma vertex ClusterMeshVert
             #pragma fragment ClusterMeshFrag
             #pragma target 4.5
@@ -40,6 +41,7 @@ Shader "ClusterMesh/Lit"
             ZWrite On
             ColorMask 0
             HLSLPROGRAM
+            #pragma editor_sync_compilation
             #pragma vertex ClusterMeshShadowVert
             #pragma fragment ClusterMeshShadowFrag
             #pragma target 4.5
@@ -57,6 +59,7 @@ Shader "ClusterMesh/Lit"
             ZWrite On
             ColorMask 0
             HLSLPROGRAM
+            #pragma editor_sync_compilation
             #pragma vertex ClusterMeshShadowVert
             #pragma fragment ClusterMeshShadowFrag
             #pragma target 4.5
@@ -75,6 +78,7 @@ Shader "ClusterMesh/Lit"
             ZTest LEqual
             Stencil { Ref 32 ReadMask 96 WriteMask 96 Comp Always Pass Replace }
             HLSLPROGRAM
+            #pragma editor_sync_compilation
             #pragma target 4.5
             #pragma exclude_renderers gles3 glcore
             #pragma vertex ClusterMeshVert

@@ -15,6 +15,7 @@ Shader "ClusterMesh/SkinnedLit"
         Tags { "RenderPipeline"="UniversalPipeline" "RenderType"="Opaque" "Queue"="Geometry" }
         Pass { Name "ForwardLit" Tags { "LightMode"="UniversalForward" }
             HLSLPROGRAM
+            #pragma editor_sync_compilation
             #pragma target 4.5
             #pragma vertex ClusterSkinnedVert
             #pragma fragment ClusterSkinnedFrag
@@ -26,6 +27,7 @@ Shader "ClusterMesh/SkinnedLit"
             ENDHLSL }
         Pass { Name "ShadowCaster" Tags { "LightMode"="ShadowCaster" } ZWrite On ColorMask 0
             HLSLPROGRAM
+            #pragma editor_sync_compilation
             #pragma target 4.5
             #pragma vertex ClusterSkinnedShadowVert
             #pragma fragment ClusterSkinnedShadowFrag
@@ -36,6 +38,7 @@ Shader "ClusterMesh/SkinnedLit"
             ENDHLSL }
         Pass { Name "DepthOnly" Tags { "LightMode"="DepthOnly" } ZWrite On ColorMask 0
             HLSLPROGRAM
+            #pragma editor_sync_compilation
             #pragma target 4.5
             #pragma vertex ClusterSkinnedDepthVert
             #pragma fragment ClusterSkinnedShadowFrag
@@ -48,6 +51,7 @@ Shader "ClusterMesh/SkinnedLit"
             ZWrite On ZTest LEqual
             Stencil { Ref 32 ReadMask 96 WriteMask 96 Comp Always Pass Replace }
             HLSLPROGRAM
+            #pragma editor_sync_compilation
             #pragma target 4.5
             #pragma exclude_renderers gles3 glcore
             #pragma vertex ClusterSkinnedVert

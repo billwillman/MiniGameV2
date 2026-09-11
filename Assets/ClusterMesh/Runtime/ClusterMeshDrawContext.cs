@@ -580,6 +580,8 @@ namespace ClusterMesh
             for (int materialIndex = 0; materialIndex < _materials.Length; materialIndex++)
             {
                 Material colorMat = _materials[materialIndex];
+                if (!ClusterMeshMaterialUtil.CanSubmitShaderPass(colorMat, shaderPass))
+                    continue;
                 BindDrawMaterial(colorMat, chunk.visible[materialIndex]);
                 cmd.DrawMeshInstancedIndirect(
                     _template, 0, colorMat, shaderPass, chunk.colorArgs[materialIndex]);

@@ -26,7 +26,7 @@ namespace ClusterMesh
         public static ScriptableRendererData RendererDataOverrideForTests;
 
         public const string DeferredSupportDescription =
-            "ClusterMesh deferred rendering is supported only by URP Deferred/Deferred+; Built-in and HDRP deferred are not supported.";
+            "ClusterMesh deferred rendering is supported only by URP Deferred; Built-in and HDRP deferred are not supported.";
 
         public static bool IsDeferred(ScriptableRenderer renderer)
         {
@@ -35,8 +35,12 @@ namespace ClusterMesh
             try
             {
                 object value = RenderingModeActualProperty.GetValue(renderer);
-                return value is RenderingMode mode &&
-                       (mode == RenderingMode.Deferred || mode == RenderingMode.DeferredPlus);
+                if (value == null)
+                    return false;
+                // Tuanjie URP 14 has Forward / ForwardPlus / Deferred only.
+                // Compare by name so a later DeferredPlus member is optional.
+                string name = value.ToString();
+                return name == "Deferred" || name == "DeferredPlus";
             }
             catch
             {

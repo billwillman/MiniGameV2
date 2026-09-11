@@ -70,10 +70,10 @@ namespace ClusterMesh
             if (_phase != ClusterMeshUrpPhase.GBuffer)
                 return;
             _deferredTargetsReady = ClusterMeshUrpBridge.TryGetDeferredTargets(
-                    _renderer, out RTHandle[] colors, out RTHandle depth, out UnityEngine.Experimental.Rendering.GraphicsFormat[] formats);
+                    _renderer, out RTHandle[] colors, out RTHandle depth, out _);
             if (_deferredTargetsReady)
             {
-                ConfigureTarget(colors, depth, formats);
+                ConfigureTarget(colors, depth);
                 ConfigureClear(ClearFlag.None, Color.black);
             }
         }
@@ -85,6 +85,7 @@ namespace ClusterMesh
                 ? "ClusterMesh Depth"
                 : (_phase == ClusterMeshUrpPhase.GBuffer ? "ClusterMesh URP GBuffer" : "ClusterMesh Color");
             CommandBuffer cmd = CommandBufferPool.Get(passName);
+            ClusterMeshMaterialUtil.BeginEditorSyncCompilation(cmd);
             if (_phase == ClusterMeshUrpPhase.Depth)
             {
                 ClusterMeshSceneBatcher.SubmitUrpDepth(camera, cmd);
@@ -100,6 +101,7 @@ namespace ClusterMesh
                 ClusterMeshSceneBatcher.SubmitUrpGBuffer(camera, cmd);
                 ClusterSkinnedMeshSceneBatcher.SubmitUrpGBuffer(camera, cmd);
             }
+            ClusterMeshMaterialUtil.EndEditorSyncCompilation(cmd);
             context.ExecuteCommandBuffer(cmd);
             CommandBufferPool.Release(cmd);
         }

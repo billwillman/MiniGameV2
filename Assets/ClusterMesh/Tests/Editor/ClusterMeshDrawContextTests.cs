@@ -1,6 +1,8 @@
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Rendering;
+using UnityEngine.TestTools;
 
 namespace ClusterMesh.Tests
 {
@@ -148,6 +150,63 @@ namespace ClusterMesh.Tests
             Object.DestroyImmediate(camGo);
             Object.DestroyImmediate(asset);
             Object.DestroyImmediate(mesh);
+        }
+
+        [Test]
+        public void SubmitUrpDepth_WhenShaderIsInternalLoading_DoesNotLogInvalidPass()
+        {
+            string unsupported = ClusterMeshCapability.GetUnsupportedReason();
+            if (unsupported != null)
+                Assert.Ignore(unsupported);
+
+            Shader loading = Shader.Find("Hidden/Internal-Loading");
+            Assert.That(loading, Is.Not.Null);
+            var mesh = ClusterMeshTestMeshes.Triangle();
+            var bake = ClusterMeshBaker.Bake(mesh, new Material[1], new ClusterMeshBakeSettings { buildLodHierarchy = false });
+            var asset = ScriptableObject.CreateInstance<ClusterMeshAsset>();
+            asset.CopyFrom(bake, mesh, new ClusterMeshBakeSettings { buildLodHierarchy = false });
+            var cull = AssetDatabase.LoadAssetAtPath<ComputeShader>("Assets/ClusterMesh/Shaders/ClusterMeshCull.compute");
+            var lit = Shader.Find("ClusterMesh/Lit");
+            var camGo = new GameObject("CMLoadingShaderCam");
+            var cam = camGo.AddComponent<Camera>();
+            cam.nearClipPlane = 0.1f;
+            cam.farClipPlane = 100f;
+            using (var ctx = new ClusterMeshDrawContext(asset, cull, lit))
+            {
+                if (!ctx.IsReady)
+                {
+                    Object.DestroyImmediate(camGo);
+                    Object.DestroyImmediate(asset);
+                    Object.DestroyImmediate(mesh);
+                    Assert.Ignore(ctx.Error);
+                    return;
+                }
+
+                var flags = System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance;
+                var color = (Material[])typeof(ClusterMeshDrawContext).GetField("_materials", flags).GetValue(ctx);
+                color[0].shader = loading;
+                Assert.That(ClusterMeshMaterialUtil.CanSubmitShaderPass(color[0], 2), Is.False);
+                Assert.That(ctx.PrepareUrp(
+                    new[] { Matrix4x4.identity }, new[] { false }, new[] { false },
+                    cam, false, false), Is.True);
+
+                var cmd = new CommandBuffer { name = "CMLoadingShaderDepth" };
+                try
+                {
+                    Assert.DoesNotThrow(() => ctx.SubmitUrpDepth(cmd));
+                    Assert.DoesNotThrow(() => ctx.SubmitUrpGBuffer(cmd));
+                    Graphics.ExecuteCommandBuffer(cmd);
+                }
+                finally
+                {
+                    cmd.Release();
+                }
+            }
+
+            Object.DestroyImmediate(camGo);
+            Object.DestroyImmediate(asset);
+            Object.DestroyImmediate(mesh);
+            LogAssert.NoUnexpectedReceived();
         }
 
         [Test]

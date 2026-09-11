@@ -1,6 +1,8 @@
 #ifndef CLUSTER_SKINNED_MESH_LIT_INCLUDED
 #define CLUSTER_SKINNED_MESH_LIT_INCLUDED
 
+#pragma editor_sync_compilation
+
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
 #if defined(CLUSTERMESH_GBUFFER_PASS)
