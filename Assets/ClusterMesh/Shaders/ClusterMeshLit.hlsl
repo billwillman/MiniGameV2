@@ -8,6 +8,9 @@
 #if defined(CLUSTERMESH_GBUFFER_PASS)
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/UnityGBuffer.hlsl"
 #endif
+#if defined(CLUSTERMESH_MOTION_VECTOR_PASS)
+#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/MotionVectorsCommon.hlsl"
+#endif
 #include "ClusterMeshBuffers.hlsl"
 
 CBUFFER_START(UnityPerMaterial)
@@ -39,7 +42,9 @@ int _RestVertexTight;
 
 CBUFFER_START(ClusterMeshBatch)
     float4x4 _ObjectLocalToWorld[256];
+    float4x4 _ObjectPreviousLocalToWorld[256];
     float4x4 _ObjectWorldToLocal[256];
+    float _ObjectMotionVectorEnabled[256];
 CBUFFER_END
 
 void ApplyClusterMeshInstance(uint instanceID)
@@ -254,4 +259,51 @@ half4 ClusterMeshShadowFrag(Varyings input) : SV_Target
 {
     return 0;
 }
+
+#if defined(CLUSTERMESH_MOTION_VECTOR_PASS)
+struct ClusterMeshMotionVaryings
+{
+    float4 positionCS : SV_POSITION;
+    float4 positionCSNoJitter : TEXCOORD0;
+    float4 previousPositionCSNoJitter : TEXCOORD1;
+    float2 uv : TEXCOORD2;
+    nointerpolation float motionEnabled : TEXCOORD3;
+};
+
+ClusterMeshMotionVaryings ClusterMeshMotionVert(Attributes input)
+{
+    float3 positionOS;
+    float3 normalOS;
+    float4 tangentOS;
+    float2 uv;
+    uint clusterId;
+    FetchClusterVertex(input.vertexID, input.instanceID, positionOS, normalOS, tangentOS, uv, clusterId);
+
+    uint objectIndex = _VisibleClusterIds[input.instanceID] >> 16;
+    float4 currentWS = mul(_ObjectLocalToWorld[objectIndex], float4(positionOS, 1.0));
+    float4 previousWS = mul(_ObjectPreviousLocalToWorld[objectIndex], float4(positionOS, 1.0));
+
+    ClusterMeshMotionVaryings output;
+    output.positionCS = mul(UNITY_MATRIX_VP, currentWS);
+#if defined(UNITY_REVERSED_Z)
+    output.positionCS.z -= unity_MotionVectorsParams.z * output.positionCS.w;
+#else
+    output.positionCS.z += unity_MotionVectorsParams.z * output.positionCS.w;
+#endif
+    output.positionCSNoJitter = mul(_NonJitteredViewProjMatrix, currentWS);
+    output.previousPositionCSNoJitter = mul(_PrevViewProjMatrix, previousWS);
+    output.uv = TRANSFORM_TEX(uv, _BaseMap);
+    output.motionEnabled = _ObjectMotionVectorEnabled[objectIndex];
+    return output;
+}
+
+half4 ClusterMeshMotionFrag(ClusterMeshMotionVaryings input) : SV_Target
+{
+    clip(input.motionEnabled - 0.5);
+    half alpha = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, input.uv).a * _BaseColor.a;
+    clip(alpha - _Cutoff);
+    return half4(CalcNdcMotionVectorFromCsPositions(
+        input.positionCSNoJitter, input.previousPositionCSNoJitter), 0, 0);
+}
+#endif
 #endif

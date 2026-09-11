@@ -33,6 +33,8 @@ namespace ClusterMesh
         static readonly int PlanesId = Shader.PropertyToID("_Planes");
         static readonly int WorldCameraPosId = Shader.PropertyToID("_WorldCameraPos");
         static readonly int ObjectLocalToWorldId = Shader.PropertyToID("_ObjectLocalToWorld");
+        static readonly int ObjectPreviousLocalToWorldId = Shader.PropertyToID("_ObjectPreviousLocalToWorld");
+        static readonly int ObjectMotionVectorEnabledId = Shader.PropertyToID("_ObjectMotionVectorEnabled");
         static readonly int ObjectCameraCullFlagsId = Shader.PropertyToID("_ObjectCameraCullFlags");
         static readonly int ObjectWorldToLocalId = Shader.PropertyToID("_ObjectWorldToLocal");
 
@@ -64,7 +66,9 @@ namespace ClusterMesh
         readonly Matrix4x4[] _single = new Matrix4x4[1];
         readonly bool[] _singleCull = { true };
         readonly Matrix4x4[] _l2w = new Matrix4x4[ClusterMeshLimits.MaxBatchedObjects];
+        readonly Matrix4x4[] _previousL2w = new Matrix4x4[ClusterMeshLimits.MaxBatchedObjects];
         readonly Matrix4x4[] _w2l = new Matrix4x4[ClusterMeshLimits.MaxBatchedObjects];
+        readonly float[] _motionVectorEnabled = new float[ClusterMeshLimits.MaxBatchedObjects];
         readonly uint[] _objectCameraCullFlags = new uint[ClusterMeshLimits.MaxBatchedObjects];
         readonly List<UrpChunk> _urpChunks = new List<UrpChunk>();
         readonly List<GraphicsBuffer> _extraArgs = new List<GraphicsBuffer>();
@@ -73,18 +77,23 @@ namespace ClusterMesh
         bool _preparedSplit;
         bool _preparedCast;
         bool _preparedReceive;
+        bool _preparedHasMotionVectors;
         bool _disposed;
 
         const int ForwardShaderPass = 0;
         const int DepthShaderPass = 2;
         const int GBufferShaderPass = 3;
+        const int MotionVectorShaderPass = 4;
 
         sealed class UrpChunk
         {
             public int n;
+            public bool hasMotionVectors;
             public Bounds bounds;
             public Matrix4x4[] l2w;
+            public Matrix4x4[] previousL2w;
             public Matrix4x4[] w2l;
+            public float[] motionVectorEnabled;
             public GraphicsBuffer[] colorArgs;
             public GraphicsBuffer[] shadowArgs;
             public GraphicsBuffer[] visible;
@@ -245,14 +254,14 @@ namespace ClusterMesh
         public void Draw(Matrix4x4 localToWorld, Camera camera, bool castShadows = true, bool receiveShadows = true)
         {
             _single[0] = localToWorld;
-            Draw(_single, _singleCull, null, 1, camera, camera, castShadows, receiveShadows);
+            Draw(_single, null, null, _singleCull, null, 1, camera, camera, castShadows, receiveShadows);
         }
 
         public void Draw(IList<Matrix4x4> localToWorld, Camera camera, bool castShadows = true, bool receiveShadows = true)
         {
             if (localToWorld == null)
                 return;
-            Draw(localToWorld, null, null, localToWorld.Count, camera, camera, castShadows, receiveShadows);
+            Draw(localToWorld, null, null, null, null, localToWorld.Count, camera, camera, castShadows, receiveShadows);
         }
 
         public void Draw(
@@ -264,7 +273,7 @@ namespace ClusterMesh
         {
             if (localToWorld == null)
                 return;
-            Draw(localToWorld, enableCpuObjectCull, null, localToWorld.Count, camera, camera, castShadows, receiveShadows);
+            Draw(localToWorld, null, null, enableCpuObjectCull, null, localToWorld.Count, camera, camera, castShadows, receiveShadows);
         }
 
         public void Draw(
@@ -277,7 +286,24 @@ namespace ClusterMesh
         {
             if (localToWorld == null)
                 return;
-            Draw(localToWorld, enableCpuObjectCull, enableCameraCull, localToWorld.Count,
+            Draw(localToWorld, null, null, enableCpuObjectCull, enableCameraCull, localToWorld.Count,
+                camera, camera, castShadows, receiveShadows);
+        }
+
+        public void DrawMotion(
+            IList<Matrix4x4> localToWorld,
+            IList<Matrix4x4> previousLocalToWorld,
+            IList<bool> enableMotionVectors,
+            IList<bool> enableCpuObjectCull,
+            IList<bool> enableCameraCull,
+            Camera camera,
+            bool castShadows = true,
+            bool receiveShadows = true)
+        {
+            if (localToWorld == null)
+                return;
+            Draw(localToWorld, previousLocalToWorld, enableMotionVectors,
+                enableCpuObjectCull, enableCameraCull, localToWorld.Count,
                 camera, camera, castShadows, receiveShadows);
         }
 
@@ -294,13 +320,34 @@ namespace ClusterMesh
             if (localToWorld == null)
                 return;
             Draw(
-                localToWorld, enableCpuObjectCull, enableCameraCull, localToWorld.Count,
+                localToWorld, null, null, enableCpuObjectCull, enableCameraCull, localToWorld.Count,
+                cullingCamera, drawCamera, castShadows, receiveShadows);
+        }
+
+        public void DrawEditorPreviewMotion(
+            IList<Matrix4x4> localToWorld,
+            IList<Matrix4x4> previousLocalToWorld,
+            IList<bool> enableMotionVectors,
+            IList<bool> enableCpuObjectCull,
+            IList<bool> enableCameraCull,
+            Camera cullingCamera,
+            Camera drawCamera,
+            bool castShadows = true,
+            bool receiveShadows = true)
+        {
+            if (localToWorld == null)
+                return;
+            Draw(
+                localToWorld, previousLocalToWorld, enableMotionVectors,
+                enableCpuObjectCull, enableCameraCull, localToWorld.Count,
                 cullingCamera, drawCamera, castShadows, receiveShadows);
         }
 #endif
 
         void Draw(
             IList<Matrix4x4> localToWorld,
+            IList<Matrix4x4> previousLocalToWorld,
+            IList<bool> enableMotionVectors,
             IList<bool> enableCpuObjectCull,
             IList<bool> enableCameraCull,
             int count,
@@ -311,7 +358,8 @@ namespace ClusterMesh
         {
             if (drawCamera == null || !CanDraw)
                 return;
-            if (!PrepareChunks(localToWorld, enableCpuObjectCull, enableCameraCull, count, cullingCamera, castShadows, receiveShadows))
+            if (!PrepareChunks(localToWorld, previousLocalToWorld, enableMotionVectors,
+                    enableCpuObjectCull, enableCameraCull, count, cullingCamera, castShadows, receiveShadows))
                 return;
             for (int i = 0; i < _urpChunks.Count; i++)
                 SubmitLegacy(_urpChunks[i], drawCamera);
@@ -337,7 +385,29 @@ namespace ClusterMesh
         {
             if (localToWorld == null)
                 return false;
-            if (!PrepareChunks(localToWorld, enableCpuObjectCull, enableCameraCull, localToWorld.Count, camera, castShadows, receiveShadows))
+            if (!PrepareChunks(localToWorld, null, null, enableCpuObjectCull, enableCameraCull,
+                    localToWorld.Count, camera, castShadows, receiveShadows))
+                return false;
+            for (int i = 0; i < _urpChunks.Count; i++)
+                SubmitUrpShadows(_urpChunks[i], camera);
+            return true;
+        }
+
+        public bool PrepareUrpMotion(
+            IList<Matrix4x4> localToWorld,
+            IList<Matrix4x4> previousLocalToWorld,
+            IList<bool> enableMotionVectors,
+            IList<bool> enableCpuObjectCull,
+            IList<bool> enableCameraCull,
+            Camera camera,
+            bool castShadows,
+            bool receiveShadows)
+        {
+            if (localToWorld == null)
+                return false;
+            if (!PrepareChunks(localToWorld, previousLocalToWorld, enableMotionVectors,
+                    enableCpuObjectCull, enableCameraCull, localToWorld.Count,
+                    camera, castShadows, receiveShadows))
                 return false;
             for (int i = 0; i < _urpChunks.Count; i++)
                 SubmitUrpShadows(_urpChunks[i], camera);
@@ -368,8 +438,21 @@ namespace ClusterMesh
                 SubmitCmd(_urpChunks[i], cmd, GBufferShaderPass);
         }
 
+        public void SubmitUrpMotionVectors(CommandBuffer cmd)
+        {
+            if (cmd == null || !_preparedHasMotionVectors)
+                return;
+            for (int i = 0; i < _urpChunks.Count; i++)
+            {
+                if (_urpChunks[i].hasMotionVectors)
+                    SubmitCmd(_urpChunks[i], cmd, MotionVectorShaderPass);
+            }
+        }
+
         bool PrepareChunks(
             IList<Matrix4x4> localToWorld,
+            IList<Matrix4x4> previousLocalToWorld,
+            IList<bool> enableMotionVectors,
             IList<bool> enableCpuObjectCull,
             IList<bool> enableCameraCull,
             int count,
@@ -398,6 +481,7 @@ namespace ClusterMesh
             _preparedSplit = splitShadows;
             _preparedCast = castShadows;
             _preparedReceive = receiveShadows;
+            _preparedHasMotionVectors = false;
             bool failSafe = castShadows && !splitShadows;
             int chunkSize = ClusterMeshLimits.MaxBatchedObjects;
             int chunks = Mathf.CeilToInt(count / (float)chunkSize);
@@ -407,6 +491,7 @@ namespace ClusterMesh
                 int raw = Mathf.Min(chunkSize, count - start);
                 Bounds worldBounds = new Bounds();
                 bool hasBounds = false;
+                bool chunkHasMotionVectors = false;
                 int n = 0;
                 for (int i = 0; i < raw; i++)
                 {
@@ -421,7 +506,14 @@ namespace ClusterMesh
                     if (!failSafe && !ClusterMeshObjectCull.KeepObject(b, _planes, enableCull, splitShadows, _shadowPlanes))
                         continue;
                     _l2w[n] = l2w;
+                    _previousL2w[n] = previousLocalToWorld != null && start + i < previousLocalToWorld.Count
+                        ? previousLocalToWorld[start + i]
+                        : l2w;
                     _w2l[n] = l2w.inverse;
+                    _motionVectorEnabled[n] = enableMotionVectors != null &&
+                        start + i < enableMotionVectors.Count && enableMotionVectors[start + i] ? 1f : 0f;
+                    _preparedHasMotionVectors |= _motionVectorEnabled[n] > 0.5f;
+                    chunkHasMotionVectors |= _motionVectorEnabled[n] > 0.5f;
                     _objectCameraCullFlags[n] = cameraCull ? 1u : 0u;
                     if (!hasBounds)
                     {
@@ -439,9 +531,12 @@ namespace ClusterMesh
                 var stored = new UrpChunk
                 {
                     n = n,
+                    hasMotionVectors = chunkHasMotionVectors,
                     bounds = worldBounds,
                     l2w = new Matrix4x4[n],
+                    previousL2w = chunkHasMotionVectors ? new Matrix4x4[n] : null,
                     w2l = new Matrix4x4[n],
+                    motionVectorEnabled = chunkHasMotionVectors ? new float[n] : null,
                     colorArgs = new GraphicsBuffer[_materials.Length],
                     shadowArgs = new GraphicsBuffer[_materials.Length],
                     visible = new GraphicsBuffer[_materials.Length],
@@ -449,6 +544,11 @@ namespace ClusterMesh
                 };
                 Array.Copy(_l2w, stored.l2w, n);
                 Array.Copy(_w2l, stored.w2l, n);
+                if (chunkHasMotionVectors)
+                {
+                    Array.Copy(_previousL2w, stored.previousL2w, n);
+                    Array.Copy(_motionVectorEnabled, stored.motionVectorEnabled, n);
+                }
                 bool primary = chunk == 0;
                 for (int materialIndex = 0; materialIndex < _materials.Length; materialIndex++)
                 {
@@ -582,7 +682,7 @@ namespace ClusterMesh
                 Material colorMat = _materials[materialIndex];
                 if (!ClusterMeshMaterialUtil.CanSubmitShaderPass(colorMat, shaderPass))
                     continue;
-                BindDrawMaterial(colorMat, chunk.visible[materialIndex]);
+                BindDrawMaterial(colorMat, chunk.visible[materialIndex], shaderPass == MotionVectorShaderPass);
                 cmd.DrawMeshInstancedIndirect(
                     _template, 0, colorMat, shaderPass, chunk.colorArgs[materialIndex]);
             }
@@ -601,6 +701,11 @@ namespace ClusterMesh
         {
             Array.Copy(chunk.l2w, _l2w, chunk.n);
             Array.Copy(chunk.w2l, _w2l, chunk.n);
+            if (chunk.hasMotionVectors)
+            {
+                Array.Copy(chunk.previousL2w, _previousL2w, chunk.n);
+                Array.Copy(chunk.motionVectorEnabled, _motionVectorEnabled, chunk.n);
+            }
         }
 
         GraphicsBuffer AllocExtraArgs()
@@ -631,7 +736,7 @@ namespace ClusterMesh
             _extraVisible.Clear();
         }
 
-        void BindDrawMaterial(Material mat, GraphicsBuffer visible)
+        void BindDrawMaterial(Material mat, GraphicsBuffer visible, bool bindMotion = false)
         {
             if (mat == null)
                 return;
@@ -643,6 +748,11 @@ namespace ClusterMesh
             mat.SetBuffer(VisibleId, visible);
             mat.SetMatrixArray(ObjectLocalToWorldId, _l2w);
             mat.SetMatrixArray(ObjectWorldToLocalId, _w2l);
+            if (bindMotion)
+            {
+                mat.SetMatrixArray(ObjectPreviousLocalToWorldId, _previousL2w);
+                mat.SetFloatArray(ObjectMotionVectorEnabledId, _motionVectorEnabled);
+            }
             mat.SetFloat(EnableClusterColorId, EnableClusterColor ? 1f : 0f);
             if (_preparedReceive)
                 mat.DisableKeyword(ReceiveShadowsOffKeyword);

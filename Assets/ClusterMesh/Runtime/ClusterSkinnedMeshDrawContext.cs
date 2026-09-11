@@ -41,8 +41,11 @@ namespace ClusterMesh
         static readonly int PlanesId = Shader.PropertyToID("_Planes");
         static readonly int WorldCameraPosId = Shader.PropertyToID("_WorldCameraPos");
         static readonly int ObjectLocalToWorldId = Shader.PropertyToID("_ObjectLocalToWorld");
+        static readonly int ObjectPreviousLocalToWorldId = Shader.PropertyToID("_ObjectPreviousLocalToWorld");
+        static readonly int ObjectMotionVectorEnabledId = Shader.PropertyToID("_ObjectMotionVectorEnabled");
         static readonly int ObjectWorldToLocalId = Shader.PropertyToID("_ObjectWorldToLocal");
         static readonly int SkinPaletteTexId = Shader.PropertyToID("_SkinPaletteTex");
+        static readonly int SkinPreviousPaletteTexId = Shader.PropertyToID("_SkinPreviousPaletteTex");
         static readonly int SkinAnimationTexId = Shader.PropertyToID("_SkinAnimationTex");
         static readonly int PaletteWidthId = Shader.PropertyToID("_SkinPaletteWidth");
         static readonly int UseGpuAnimationTextureId = Shader.PropertyToID("_UseGpuAnimationTexture");
@@ -51,6 +54,7 @@ namespace ClusterMesh
         static readonly int RestVertexTightId = Shader.PropertyToID("_RestVertexTight");
         static readonly int GpuPalettePixelsPerBoneId = Shader.PropertyToID("_GpuPalettePixelsPerBone");
         static readonly int ObjectAnimationTimesId = Shader.PropertyToID("_ObjectAnimationTimes");
+        static readonly int PreviousObjectAnimationTimesId = Shader.PropertyToID("_PreviousObjectAnimationTimes");
 
         readonly ClusterSkinnedMeshAsset _asset;
         readonly ComputeShader _cullShader;
@@ -68,6 +72,7 @@ namespace ClusterMesh
         readonly GraphicsBuffer _segments;
         readonly GraphicsBuffer _cameraCull;
         readonly GraphicsBuffer _animationTimes;
+        GraphicsBuffer _previousAnimationTimes;
         readonly GraphicsBuffer[] _visible;
         readonly GraphicsBuffer[] _shadowVisible;
         readonly GraphicsBuffer[] _args;
@@ -75,12 +80,16 @@ namespace ClusterMesh
         readonly Material[] _materials;
         readonly Material[] _shadowMaterials;
         readonly Texture2D _paletteTexture;
+        Texture2D _previousPaletteTexture;
         readonly Matrix4x4[] _l2w = new Matrix4x4[ClusterMeshLimits.MaxBatchedObjects];
+        readonly Matrix4x4[] _previousL2w = new Matrix4x4[ClusterMeshLimits.MaxBatchedObjects];
         readonly Matrix4x4[] _w2l = new Matrix4x4[ClusterMeshLimits.MaxBatchedObjects];
         readonly uint[] _segmentData = new uint[ClusterMeshLimits.MaxBatchedObjects];
         readonly uint[] _cameraCullData = new uint[ClusterMeshLimits.MaxBatchedObjects];
         readonly uint[] _noCameraCullData = new uint[ClusterMeshLimits.MaxBatchedObjects];
         readonly float[] _animationTimeData = new float[ClusterMeshLimits.MaxBatchedObjects];
+        readonly float[] _previousAnimationTimeData = new float[ClusterMeshLimits.MaxBatchedObjects];
+        readonly float[] _motionVectorEnabled = new float[ClusterMeshLimits.MaxBatchedObjects];
         readonly Vector4[] _planes = new Vector4[6];
         readonly Plane[] _planeScratch = new Plane[6];
         readonly uint[] _argsSeed = new uint[5];
@@ -107,6 +116,7 @@ namespace ClusterMesh
         bool _preparedCast;
         bool _preparedReceive;
         bool _preparedUseGpuAnimationTexture;
+        bool _preparedHasMotionVectors;
         int _preparedDrawLayer;
         Bounds _preparedBounds;
         Texture2D _preparedGpuAnimationTexture;
@@ -115,6 +125,7 @@ namespace ClusterMesh
         const int ForwardShaderPass = 0;
         const int DepthShaderPass = 2;
         const int GBufferShaderPass = 3;
+        const int MotionVectorShaderPass = 4;
         const string ReceiveShadowsOffKeyword = "_RECEIVE_SHADOWS_OFF";
 
         public bool IsReady { get; private set; }
@@ -281,7 +292,37 @@ namespace ClusterMesh
         {
             if (drawCamera == null)
                 return;
-            if (!TryPrepare(matrices, cpuCull, cameraCull, times, clipIndex, animationEvaluation,
+            if (!TryPrepare(matrices, null, cpuCull, cameraCull, times, null, null,
+                    clipIndex, animationEvaluation,
+                    enableParallelBonePrefix, enableConeCull, lodErrorThreshold,
+                    cullingCamera, castShadows, receiveShadows, drawLayer))
+                return;
+            SubmitLegacy(drawCamera);
+        }
+
+        public void DrawMotion(
+            IList<Matrix4x4> matrices,
+            IList<Matrix4x4> previousMatrices,
+            IList<bool> cpuCull,
+            IList<bool> cameraCull,
+            IList<float> times,
+            IList<float> previousTimes,
+            IList<bool> enableMotionVectors,
+            int clipIndex,
+            ClusterSkinnedAnimationEvaluation animationEvaluation,
+            bool enableParallelBonePrefix,
+            bool enableConeCull,
+            float lodErrorThreshold,
+            Camera cullingCamera,
+            Camera drawCamera,
+            bool castShadows,
+            bool receiveShadows,
+            int drawLayer)
+        {
+            if (drawCamera == null)
+                return;
+            if (!TryPrepare(matrices, previousMatrices, cpuCull, cameraCull, times, previousTimes,
+                    enableMotionVectors, clipIndex, animationEvaluation,
                     enableParallelBonePrefix, enableConeCull, lodErrorThreshold,
                     cullingCamera, castShadows, receiveShadows, drawLayer))
                 return;
@@ -293,7 +334,35 @@ namespace ClusterMesh
             bool enableParallelBonePrefix, bool enableConeCull, float lodErrorThreshold,
             Camera camera, bool castShadows, bool receiveShadows, int drawLayer)
         {
-            if (!TryPrepare(matrices, cpuCull, cameraCull, times, clipIndex, animationEvaluation,
+            if (!TryPrepare(matrices, null, cpuCull, cameraCull, times, null, null,
+                    clipIndex, animationEvaluation,
+                    enableParallelBonePrefix, enableConeCull, lodErrorThreshold,
+                    camera, castShadows, receiveShadows, drawLayer))
+                return false;
+            SubmitUrpShadows(camera);
+            return true;
+        }
+
+        public bool PrepareUrpMotion(
+            IList<Matrix4x4> matrices,
+            IList<Matrix4x4> previousMatrices,
+            IList<bool> cpuCull,
+            IList<bool> cameraCull,
+            IList<float> times,
+            IList<float> previousTimes,
+            IList<bool> enableMotionVectors,
+            int clipIndex,
+            ClusterSkinnedAnimationEvaluation animationEvaluation,
+            bool enableParallelBonePrefix,
+            bool enableConeCull,
+            float lodErrorThreshold,
+            Camera camera,
+            bool castShadows,
+            bool receiveShadows,
+            int drawLayer)
+        {
+            if (!TryPrepare(matrices, previousMatrices, cpuCull, cameraCull, times, previousTimes,
+                    enableMotionVectors, clipIndex, animationEvaluation,
                     enableParallelBonePrefix, enableConeCull, lodErrorThreshold,
                     camera, castShadows, receiveShadows, drawLayer))
                 return false;
@@ -316,7 +385,20 @@ namespace ClusterMesh
             SubmitUrpCmd(cmd, GBufferShaderPass);
         }
 
-        bool TryPrepare(IList<Matrix4x4> matrices, IList<bool> cpuCull, IList<bool> cameraCull, IList<float> times,
+        public void SubmitUrpMotionVectors(CommandBuffer cmd)
+        {
+            if (_preparedHasMotionVectors)
+                SubmitUrpCmd(cmd, MotionVectorShaderPass);
+        }
+
+        bool TryPrepare(
+            IList<Matrix4x4> matrices,
+            IList<Matrix4x4> previousMatrices,
+            IList<bool> cpuCull,
+            IList<bool> cameraCull,
+            IList<float> times,
+            IList<float> previousTimes,
+            IList<bool> enableMotionVectors,
             int clipIndex, ClusterSkinnedAnimationEvaluation animationEvaluation,
             bool enableParallelBonePrefix, bool enableConeCull, float lodErrorThreshold,
             Camera cullingCamera, bool castShadows, bool receiveShadows, int drawLayer)
@@ -367,6 +449,7 @@ namespace ClusterMesh
             for (int i = 0; i < _planeScratch.Length; i++)
                 CopyPlane(i, _planeScratch[i]);
             int count = 0;
+            bool hasMotionVectors = false;
             for (int i = 0; i < sourceCount; i++)
             {
                 Matrix4x4 m = matrices[i];
@@ -375,10 +458,21 @@ namespace ClusterMesh
                         _planeScratch, ClusterMeshFrustum.TransformLocalBounds(_localAnimationBounds, m)))
                     continue;
                 _l2w[count] = m;
+                _previousL2w[count] = previousMatrices != null && i < previousMatrices.Count
+                    ? previousMatrices[i]
+                    : m;
                 _w2l[count] = m.inverse;
                 _cameraCullData[count] = cameraCull == null || i >= cameraCull.Count || cameraCull[i] ? 1u : 0u;
                 float t = times != null && i < times.Count ? times[i] : 0f;
                 _animationTimeData[count] = Mathf.Repeat(t, 1f);
+                float previousTime = previousTimes != null && i < previousTimes.Count
+                    ? previousTimes[i]
+                    : _animationTimeData[count];
+                _previousAnimationTimeData[count] = Mathf.Repeat(previousTime, 1f);
+                bool motionEnabled = enableMotionVectors != null && i < enableMotionVectors.Count &&
+                    enableMotionVectors[i];
+                _motionVectorEnabled[count] = motionEnabled ? 1f : 0f;
+                hasMotionVectors |= motionEnabled;
                 if (useBurstCpu)
                     _burstTimes[count] = _animationTimeData[count];
                 int segmentCount = Mathf.Max(1, clipData.segmentCount);
@@ -390,31 +484,21 @@ namespace ClusterMesh
                 return false;
             if (useBurstCpu)
             {
-                if (useParallelPrefix)
-                    EvaluateParallelPrefixPalette(count, clipData);
-                else
+                EvaluateCpuPalette(count, clipData, useParallelPrefix, _paletteTexture);
+                if (hasMotionVectors)
                 {
-                    ClusterSkinnedPaletteJob paletteJob = new ClusterSkinnedPaletteJob
-                    {
-                        headers = _burstCurveHeaders,
-                        segments = _burstCurveSegments,
-                        parents = _burstParents,
-                        evaluationOrder = _burstEvaluationOrder,
-                        bindPoses = _burstBindPoses,
-                        normalizedTimes = _burstTimes,
-                        globalScratch = _burstGlobalScratch,
-                        palettePixels = _burstPalettePixels,
-                        curveHeaderOffset = clipData.cpuCurveHeaderOffset,
-                        boneCount = _boneCount,
-                        paletteWidth = _paletteWidth,
-                        duration = clipData.duration
-                    };
-                    paletteJob.Schedule(count, 1).Complete();
+                    EnsureMotionResources(true);
+                    for (int i = 0; i < count; i++)
+                        _burstTimes[i] = _previousAnimationTimeData[i];
+                    EvaluateCpuPalette(count, clipData, useParallelPrefix, _previousPaletteTexture);
                 }
-                _paletteTexture.SetPixelData(_burstPalettePixels, 0);
-                _paletteTexture.Apply(false, false);
             }
             _animationTimes.SetData(_animationTimeData, 0, 0, count);
+            if (hasMotionVectors)
+            {
+                EnsureMotionResources(false);
+                _previousAnimationTimes.SetData(_previousAnimationTimeData, 0, 0, count);
+            }
             _segments.SetData(_segmentData, 0, 0, count);
             _cameraCull.SetData(_cameraCullData, 0, 0, count);
             Bounds worldBounds = ClusterMeshFrustum.TransformLocalBounds(_localAnimationBounds, _l2w[0]);
@@ -467,6 +551,7 @@ namespace ClusterMesh
             _preparedBounds = worldBounds;
             _preparedGpuAnimationTexture = gpuAnimationTexture;
             _preparedUseGpuAnimationTexture = useGpuAnimationTexture;
+            _preparedHasMotionVectors = hasMotionVectors;
             _prepared = true;
             return true;
         }
@@ -509,8 +594,64 @@ namespace ClusterMesh
             {
                 if (!ClusterMeshMaterialUtil.CanSubmitShaderPass(_materials[material], shaderPass))
                     continue;
-                Bind(_materials[material], _visible[material], _preparedGpuAnimationTexture, _preparedUseGpuAnimationTexture);
+                Bind(_materials[material], _visible[material], _preparedGpuAnimationTexture,
+                    _preparedUseGpuAnimationTexture, shaderPass == MotionVectorShaderPass);
                 cmd.DrawMeshInstancedIndirect(_template, 0, _materials[material], shaderPass, _args[material]);
+            }
+        }
+
+        void EvaluateCpuPalette(
+            int objectCount,
+            ClusterSkinnedClip clip,
+            bool useParallelPrefix,
+            Texture2D target)
+        {
+            if (useParallelPrefix)
+            {
+                EvaluateParallelPrefixPalette(objectCount, clip);
+            }
+            else
+            {
+                ClusterSkinnedPaletteJob paletteJob = new ClusterSkinnedPaletteJob
+                {
+                    headers = _burstCurveHeaders,
+                    segments = _burstCurveSegments,
+                    parents = _burstParents,
+                    evaluationOrder = _burstEvaluationOrder,
+                    bindPoses = _burstBindPoses,
+                    normalizedTimes = _burstTimes,
+                    globalScratch = _burstGlobalScratch,
+                    palettePixels = _burstPalettePixels,
+                    curveHeaderOffset = clip.cpuCurveHeaderOffset,
+                    boneCount = _boneCount,
+                    paletteWidth = _paletteWidth,
+                    duration = clip.duration
+                };
+                paletteJob.Schedule(objectCount, 1).Complete();
+            }
+
+            target.SetPixelData(_burstPalettePixels, 0);
+            target.Apply(false, false);
+        }
+
+        void EnsureMotionResources(bool needsPreviousCpuPalette)
+        {
+            if (_previousAnimationTimes == null)
+            {
+                _previousAnimationTimes = new GraphicsBuffer(
+                    GraphicsBuffer.Target.Structured, ClusterMeshLimits.MaxBatchedObjects, 4);
+            }
+            if (needsPreviousCpuPalette && _previousPaletteTexture == null)
+            {
+                _previousPaletteTexture = new Texture2D(
+                    _paletteWidth, ClusterMeshLimits.MaxBatchedObjects,
+                    TextureFormat.RGBAFloat, false, true)
+                {
+                    name = "ClusterSkinnedMesh Previous Palette",
+                    filterMode = FilterMode.Point,
+                    wrapMode = TextureWrapMode.Clamp,
+                    hideFlags = HideFlags.HideAndDontSave
+                };
             }
         }
 
@@ -649,7 +790,7 @@ namespace ClusterMesh
         }
 
         void Bind(Material m, GraphicsBuffer visible, Texture2D gpuAnimationTexture,
-            bool useGpuAnimationTexture)
+            bool useGpuAnimationTexture, bool bindMotion = false)
         {
             if (m == null || visible == null)
                 return;
@@ -657,8 +798,17 @@ namespace ClusterMesh
             m.SetBuffer(IndicesId, _indices);
             m.SetBuffer(SkinWeightsId, _weights); m.SetBuffer(SkinWeights8Id, _weights8); m.SetBuffer(VisibleId, visible);
             m.SetBuffer(ObjectAnimationTimesId, _animationTimes);
-            m.SetMatrixArray(ObjectLocalToWorldId, _l2w); m.SetMatrixArray(ObjectWorldToLocalId, _w2l);
+            m.SetMatrixArray(ObjectLocalToWorldId, _l2w);
+            m.SetMatrixArray(ObjectWorldToLocalId, _w2l);
             m.SetTexture(SkinPaletteTexId, _paletteTexture); m.SetInt(PaletteWidthId, _paletteWidth);
+            if (bindMotion)
+            {
+                m.SetBuffer(PreviousObjectAnimationTimesId, _previousAnimationTimes);
+                m.SetMatrixArray(ObjectPreviousLocalToWorldId, _previousL2w);
+                m.SetFloatArray(ObjectMotionVectorEnabledId, _motionVectorEnabled);
+                m.SetTexture(SkinPreviousPaletteTexId,
+                    _previousPaletteTexture != null ? _previousPaletteTexture : _paletteTexture);
+            }
             m.SetTexture(SkinAnimationTexId, gpuAnimationTexture != null ? gpuAnimationTexture : _paletteTexture);
             m.SetInt(UseGpuAnimationTextureId, useGpuAnimationTexture ? 1 : 0);
             m.SetInt(SkinAnimationFrameCountId, gpuAnimationTexture != null ? gpuAnimationTexture.height : 1);
@@ -728,6 +878,7 @@ namespace ClusterMesh
             _clusters?.Dispose(); _groups?.Dispose(); _owningGroups?.Dispose(); _vertices?.Dispose(); _verticesTight?.Dispose(); _indices?.Dispose();
             _weights?.Dispose(); _weights8?.Dispose(); _cullFrames?.Dispose(); _segments?.Dispose(); _cameraCull?.Dispose();
             _animationTimes?.Dispose();
+            _previousAnimationTimes?.Dispose();
             if (_burstCurveHeaders.IsCreated) _burstCurveHeaders.Dispose();
             if (_burstCurveSegments.IsCreated) _burstCurveSegments.Dispose();
             if (_burstParents.IsCreated) _burstParents.Dispose();
@@ -744,7 +895,7 @@ namespace ClusterMesh
             if (_args != null) foreach (var b in _args) b?.Dispose();
             if (_shadowArgs != null) foreach (var b in _shadowArgs) b?.Dispose();
             if (_materials != null) foreach (var m in _materials) DestroyObject(m); if (_shadowMaterials != null) foreach (var m in _shadowMaterials) DestroyObject(m);
-            DestroyObject(_paletteTexture); DestroyObject(_template);
+            DestroyObject(_paletteTexture); DestroyObject(_previousPaletteTexture); DestroyObject(_template);
         }
         static void DestroyObject(UnityEngine.Object o) { if (o == null) return; if (Application.isPlaying) UnityEngine.Object.Destroy(o); else UnityEngine.Object.DestroyImmediate(o); }
     }

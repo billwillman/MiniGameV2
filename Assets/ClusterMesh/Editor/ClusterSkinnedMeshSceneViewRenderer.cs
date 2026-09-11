@@ -23,9 +23,12 @@ namespace ClusterMesh
         static readonly HashSet<int> ActiveRendererIds = new HashSet<int>();
         static readonly List<int> StaleContextIds = new List<int>();
         static readonly List<Matrix4x4> Matrices = new List<Matrix4x4>(64);
+        static readonly List<Matrix4x4> PreviousMatrices = new List<Matrix4x4>(64);
         static readonly List<bool> CpuCull = new List<bool>(64);
         static readonly List<bool> CameraCull = new List<bool>(64);
         static readonly List<float> Times = new List<float>(64);
+        static readonly List<float> PreviousTimes = new List<float>(64);
+        static readonly List<bool> MotionVectorFlags = new List<bool>(64);
 
         public static void RefreshAndRepaint()
         {
@@ -76,11 +79,18 @@ namespace ClusterMesh
                 }
                 Camera cullCamera = r.targetCamera != null ? r.targetCamera : Camera.main;
                 if (cullCamera == null) continue;
-                Matrices.Clear(); CpuCull.Clear(); CameraCull.Clear(); Times.Clear();
-                Matrices.Add(r.transform.localToWorldMatrix); CpuCull.Add(r.enableCpuObjectCull); CameraCull.Add(r.enableCameraCull);
-                Times.Add(r.CurrentNormalizedTime(Application.isPlaying ? Time.time : (float)editorTime));
+                Matrices.Clear(); PreviousMatrices.Clear(); CpuCull.Clear(); CameraCull.Clear();
+                Times.Clear(); PreviousTimes.Clear(); MotionVectorFlags.Clear();
+                Matrix4x4 currentMatrix = r.transform.localToWorldMatrix;
+                float currentTime = r.CurrentNormalizedTime(Application.isPlaying ? Time.time : (float)editorTime);
+                r.CapturePreviousMotion(currentMatrix, currentTime, r.clipIndex, Time.frameCount,
+                    out Matrix4x4 previousMatrix, out float previousTime);
+                Matrices.Add(currentMatrix); PreviousMatrices.Add(previousMatrix);
+                CpuCull.Add(r.enableCpuObjectCull); CameraCull.Add(r.enableCameraCull);
+                Times.Add(currentTime); PreviousTimes.Add(previousTime); MotionVectorFlags.Add(r.enableMotionVectors);
                 entry.context.EnableClusterColor = r.showClusterColors;
-                entry.context.Draw(Matrices, CpuCull, CameraCull, Times, r.clipIndex, r.animationEvaluation,
+                entry.context.DrawMotion(Matrices, PreviousMatrices, CpuCull, CameraCull, Times, PreviousTimes,
+                    MotionVectorFlags, r.clipIndex, r.animationEvaluation,
                     r.enableParallelBonePrefix, r.enableConeCull,
                     r.lodErrorThreshold, cullCamera, drawCamera, r.castShadows, r.receiveShadows, r.gameObject.layer);
             }

@@ -110,9 +110,12 @@ namespace ClusterMesh
         static readonly HashSet<ContextKey> UsedContexts = new HashSet<ContextKey>();
         static readonly List<ContextKey> StaleContexts = new List<ContextKey>();
         static readonly List<Matrix4x4> Matrices = new List<Matrix4x4>(ClusterMeshLimits.MaxBatchedObjects);
+        static readonly List<Matrix4x4> PreviousMatrices = new List<Matrix4x4>(ClusterMeshLimits.MaxBatchedObjects);
         static readonly List<bool> CpuCull = new List<bool>(ClusterMeshLimits.MaxBatchedObjects);
         static readonly List<bool> CameraCull = new List<bool>(ClusterMeshLimits.MaxBatchedObjects);
         static readonly List<float> Times = new List<float>(ClusterMeshLimits.MaxBatchedObjects);
+        static readonly List<float> PreviousTimes = new List<float>(ClusterMeshLimits.MaxBatchedObjects);
+        static readonly List<bool> MotionVectorFlags = new List<bool>(ClusterMeshLimits.MaxBatchedObjects);
         static readonly List<ClusterSkinnedMeshDrawContext> UrpPrepared = new List<ClusterSkinnedMeshDrawContext>();
         static int _flushedFrame = int.MinValue;
 
@@ -160,7 +163,7 @@ namespace ClusterMesh
                 return;
             _flushedFrame = Time.frameCount;
             UsedContexts.Clear();
-            ForEachRegisteredBatch((seed, batch, matrices, cpuCull, cameraCull, times, batchSlot) =>
+            ForEachRegisteredBatch((seed, batch, matrices, previousMatrices, cpuCull, cameraCull, times, previousTimes, motionVectorFlags, batchSlot) =>
             {
                 var contextKey = new ContextKey(batch, batchSlot);
                 UsedContexts.Add(contextKey);
@@ -175,7 +178,8 @@ namespace ClusterMesh
                 if (context == null)
                     return;
                 context.EnableClusterColor = batch.showClusterColors;
-                context.Draw(matrices, cpuCull, cameraCull, times, batch.clipIndex, batch.animationEvaluation,
+                context.DrawMotion(matrices, previousMatrices, cpuCull, cameraCull, times, previousTimes,
+                    motionVectorFlags, batch.clipIndex, batch.animationEvaluation,
                     batch.enableParallelBonePrefix, batch.enableConeCull, batch.lodErrorThreshold,
                     batch.camera, batch.camera,
                     batch.castShadows, batch.receiveShadows, batch.layer);
@@ -189,7 +193,7 @@ namespace ClusterMesh
             if (!ClusterMeshUrpBridge.ShouldSubmitUrp(camera))
                 return;
 
-            ForEachRegisteredBatch((seed, batch, matrices, cpuCull, cameraCull, times, batchSlot) =>
+            ForEachRegisteredBatch((seed, batch, matrices, previousMatrices, cpuCull, cameraCull, times, previousTimes, motionVectorFlags, batchSlot) =>
             {
                 if (batch.camera != camera)
                     return;
@@ -197,7 +201,8 @@ namespace ClusterMesh
                 if (context == null)
                     return;
                 context.EnableClusterColor = batch.showClusterColors;
-                if (context.PrepareUrp(matrices, cpuCull, cameraCull, times, batch.clipIndex, batch.animationEvaluation,
+                if (context.PrepareUrpMotion(matrices, previousMatrices, cpuCull, cameraCull, times, previousTimes,
+                    motionVectorFlags, batch.clipIndex, batch.animationEvaluation,
                     batch.enableParallelBonePrefix, batch.enableConeCull, batch.lodErrorThreshold,
                     camera, batch.castShadows, batch.receiveShadows, batch.layer))
                     UrpPrepared.Add(context);
@@ -228,6 +233,31 @@ namespace ClusterMesh
                 UrpPrepared[i].SubmitUrpGBuffer(cmd);
         }
 
+        public static void SubmitUrpMotionVectors(Camera camera, CommandBuffer cmd)
+        {
+            if (cmd == null || !ClusterMeshUrpBridge.ShouldSubmitUrp(camera))
+                return;
+            for (int i = 0; i < UrpPrepared.Count; i++)
+                UrpPrepared[i].SubmitUrpMotionVectors(cmd);
+        }
+
+        public static bool HasMotionVectors(Camera camera)
+        {
+            if (camera == null)
+                return false;
+            for (int i = 0; i < Renderers.Count; i++)
+            {
+                ClusterSkinnedMeshRenderer renderer = Renderers[i];
+                Camera resolved = renderer != null
+                    ? (renderer.targetCamera != null ? renderer.targetCamera : Camera.main)
+                    : null;
+                if (renderer != null && renderer.isActiveAndEnabled &&
+                    renderer.enableMotionVectors && resolved == camera)
+                    return true;
+            }
+            return false;
+        }
+
         public static void ResetForTests()
         {
             Renderers.Clear();
@@ -254,9 +284,12 @@ namespace ClusterMesh
             ClusterSkinnedMeshRenderer seed,
             BatchKey batch,
             List<Matrix4x4> matrices,
+            List<Matrix4x4> previousMatrices,
             List<bool> cpuCull,
             List<bool> cameraCull,
             List<float> times,
+            List<float> previousTimes,
+            List<bool> motionVectorFlags,
             int batchSlot);
 
         static void ForEachRegisteredBatch(BatchCallback callback)
@@ -280,9 +313,12 @@ namespace ClusterMesh
                 while (true)
                 {
                     Matrices.Clear();
+                    PreviousMatrices.Clear();
                     CpuCull.Clear();
                     CameraCull.Clear();
                     Times.Clear();
+                    PreviousTimes.Clear();
+                    MotionVectorFlags.Clear();
                     for (int j = i; j < Renderers.Count && Matrices.Count < ClusterMeshLimits.MaxBatchedObjects; j++)
                     {
                         ClusterSkinnedMeshRenderer candidate = Renderers[j];
@@ -294,7 +330,8 @@ namespace ClusterMesh
                     }
                     if (Matrices.Count == 0)
                         break;
-                    callback(seed, batch, Matrices, CpuCull, CameraCull, Times, batchSlot++);
+                    callback(seed, batch, Matrices, PreviousMatrices, CpuCull, CameraCull,
+                        Times, PreviousTimes, MotionVectorFlags, batchSlot++);
                 }
             }
         }
@@ -314,10 +351,17 @@ namespace ClusterMesh
 
         static void Add(ClusterSkinnedMeshRenderer renderer, float clock)
         {
-            Matrices.Add(renderer.transform.localToWorldMatrix);
+            Matrix4x4 currentMatrix = renderer.transform.localToWorldMatrix;
+            float currentTime = renderer.CurrentNormalizedTime(clock);
+            renderer.CapturePreviousMotion(currentMatrix, currentTime, renderer.clipIndex, Time.frameCount,
+                out Matrix4x4 previousMatrix, out float previousTime);
+            Matrices.Add(currentMatrix);
+            PreviousMatrices.Add(previousMatrix);
             CpuCull.Add(renderer.enableCpuObjectCull);
             CameraCull.Add(renderer.enableCameraCull);
-            Times.Add(renderer.CurrentNormalizedTime(clock));
+            Times.Add(currentTime);
+            PreviousTimes.Add(previousTime);
+            MotionVectorFlags.Add(renderer.enableMotionVectors);
         }
 
         static ClusterSkinnedMeshDrawContext GetOrCreate(ContextKey key)

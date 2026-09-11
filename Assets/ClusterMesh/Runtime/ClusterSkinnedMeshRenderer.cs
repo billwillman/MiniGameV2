@@ -15,6 +15,8 @@ namespace ClusterMesh
         public bool enableCameraCull = true;
         [Tooltip("Only used when the baked animation cone for this cluster is conservative.")]
         public bool enableConeCull = true;
+        [Tooltip("Write transform and baked skeletal deformation into URP's Motion Vector texture. Disabled by default to avoid previous-pose evaluation and draw-pass cost.")]
+        public bool enableMotionVectors;
         public bool enableCpuObjectCull = true;
         [Tooltip("Replace lighting with a solid color per cluster.")]
         public bool showClusterColors;
@@ -36,6 +38,62 @@ namespace ClusterMesh
         public bool playInEditMode = true;
 
         bool _registered;
+        bool _hasMotionHistory;
+        int _motionHistoryFrame = int.MinValue;
+        int _motionHistoryClip = -1;
+        Matrix4x4 _lastMotionMatrix;
+        Matrix4x4 _previousMotionMatrix;
+        float _lastMotionTime;
+        float _previousMotionTime;
+
+        public void CapturePreviousMotion(
+            Matrix4x4 currentMatrix,
+            float currentTime,
+            int currentClip,
+            int frame,
+            out Matrix4x4 previousMatrix,
+            out float previousTime)
+        {
+            if (!enableMotionVectors)
+            {
+                ResetMotionHistory();
+                previousMatrix = currentMatrix;
+                previousTime = currentTime;
+                return;
+            }
+
+            if (!_hasMotionHistory || currentClip != _motionHistoryClip || frame < _motionHistoryFrame)
+            {
+                _hasMotionHistory = true;
+                _motionHistoryFrame = frame;
+                _motionHistoryClip = currentClip;
+                _lastMotionMatrix = currentMatrix;
+                _previousMotionMatrix = currentMatrix;
+                _lastMotionTime = currentTime;
+                _previousMotionTime = currentTime;
+            }
+            else
+            {
+                if (frame != _motionHistoryFrame)
+                {
+                    _previousMotionMatrix = _lastMotionMatrix;
+                    _previousMotionTime = _lastMotionTime;
+                    _motionHistoryFrame = frame;
+                }
+                _lastMotionMatrix = currentMatrix;
+                _lastMotionTime = currentTime;
+            }
+
+            previousMatrix = _previousMotionMatrix;
+            previousTime = _previousMotionTime;
+        }
+
+        public void ResetMotionHistory()
+        {
+            _hasMotionHistory = false;
+            _motionHistoryFrame = int.MinValue;
+            _motionHistoryClip = -1;
+        }
 
         public void EnsureInitialized()
         {
@@ -65,12 +123,14 @@ namespace ClusterMesh
         {
             ClusterSkinnedMeshSceneBatcher.Unregister(this);
             _registered = false;
+            ResetMotionHistory();
         }
 
         void OnValidate()
         {
             ClusterSkinnedMeshSceneBatcher.Unregister(this);
             _registered = false;
+            ResetMotionHistory();
             if (isActiveAndEnabled)
                 EnsureInitialized();
         }

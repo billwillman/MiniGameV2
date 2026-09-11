@@ -8,6 +8,9 @@
 #if defined(CLUSTERMESH_GBUFFER_PASS)
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/UnityGBuffer.hlsl"
 #endif
+#if defined(CLUSTERMESH_MOTION_VECTOR_PASS)
+#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/MotionVectorsCommon.hlsl"
+#endif
 #include "ClusterMeshBuffers.hlsl"
 
 CBUFFER_START(UnityPerMaterial)
@@ -17,6 +20,7 @@ CBUFFER_END
 TEXTURE2D(_BaseMap); SAMPLER(sampler_BaseMap);
 TEXTURE2D(_BumpMap); SAMPLER(sampler_BumpMap);
 Texture2D<float4> _SkinPaletteTex;
+Texture2D<float4> _SkinPreviousPaletteTex;
 Texture2D<float4> _SkinAnimationTex;
 int _SkinPaletteWidth;
 int _UseGpuAnimationTexture;
@@ -35,9 +39,12 @@ StructuredBuffer<ClusterPackedSkinWeight> _SkinWeights;
 StructuredBuffer<uint> _SkinWeights8;
 StructuredBuffer<uint> _VisibleClusterIds;
 StructuredBuffer<float> _ObjectAnimationTimes;
+StructuredBuffer<float> _PreviousObjectAnimationTimes;
 CBUFFER_START(ClusterSkinnedBatch)
 float4x4 _ObjectLocalToWorld[256];
+float4x4 _ObjectPreviousLocalToWorld[256];
 float4x4 _ObjectWorldToLocal[256];
+float _ObjectMotionVectorEnabled[256];
 CBUFFER_END
 float _EnableClusterColor;
 
@@ -122,10 +129,10 @@ void FetchBaseVertex(uint vertexID, uint instanceID, out float3 p, out float3 n,
     t = float4(normalize(float3(txy.x,txy.y,tz)-n*dot(n,float3(txy.x,txy.y,tz))), nztw.y);
     uv = UnpackHalf2(v.uv);
 }
-float4 CompactPaletteRow(uint objectIndex, uint bone, uint row)
+float4 CompactPaletteRowAtTime(uint bone, uint row, float normalizedTime)
 {
     uint lastFrame = (uint)max(_SkinAnimationFrameCount - 1, 0);
-    float frame = saturate(_ObjectAnimationTimes[objectIndex]) * lastFrame;
+    float frame = saturate(normalizedTime) * lastFrame;
     uint frame0 = min((uint)floor(frame), lastFrame);
     uint frame1 = min(frame0 + 1u, lastFrame);
     float blend = frac(frame);
@@ -146,33 +153,58 @@ float4 CompactPaletteRow(uint objectIndex, uint bone, uint row)
         result = float4(r[1][0], r[1][1], r[1][2], ts.y);
     return result;
 }
+
+float4 GpuPaletteRowAtTime(uint bone, uint row, float normalizedTime)
+{
+    if (_GpuPalettePixelsPerBone == 2)
+        return CompactPaletteRowAtTime(bone, row, normalizedTime);
+
+    uint x = bone * 3u + row;
+    uint lastFrame = (uint)max(_SkinAnimationFrameCount - 1, 0);
+    float frame = saturate(normalizedTime) * lastFrame;
+    uint frame0 = min((uint)floor(frame), lastFrame);
+    uint frame1 = min(frame0 + 1u, lastFrame);
+    return lerp(
+        _SkinAnimationTex.Load(int3(x, frame0, 0)),
+        _SkinAnimationTex.Load(int3(x, frame1, 0)),
+        frac(frame));
+}
+
 float4 PaletteRow(uint objectIndex, uint bone, uint row)
 {
-    float4 result = float4(0.0, 0.0, 0.0, 0.0);
-    if (_UseGpuAnimationTexture != 0 && _GpuPalettePixelsPerBone == 2)
+    if (_UseGpuAnimationTexture != 0)
+        return GpuPaletteRowAtTime(bone, row, _ObjectAnimationTimes[objectIndex]);
+    return _SkinPaletteTex.Load(int3(bone * 3u + row, objectIndex, 0));
+}
+
+float4 PreviousPaletteRow(uint objectIndex, uint bone, uint row)
+{
+    if (_UseGpuAnimationTexture != 0)
+        return GpuPaletteRowAtTime(bone, row, _PreviousObjectAnimationTimes[objectIndex]);
+    return _SkinPreviousPaletteTex.Load(int3(bone * 3u + row, objectIndex, 0));
+}
+
+void FetchSkinInfluences(uint index, out uint4 bones, out float4 weights)
+{
+    if (_SkinWeightPacked8 != 0)
     {
-        result = CompactPaletteRow(objectIndex, bone, row);
+        uint baseIndex = index * 2u;
+        uint bi = _SkinWeights8[baseIndex];
+        uint bw = _SkinWeights8[baseIndex + 1u];
+        bones = uint4(bi & 255u, (bi >> 8) & 255u, (bi >> 16) & 255u, bi >> 24);
+        weights = float4(bw & 255u, (bw >> 8) & 255u, (bw >> 16) & 255u, bw >> 24) / 255.0;
     }
     else
     {
-        uint x = bone * 3u + row;
-        if (_UseGpuAnimationTexture != 0)
-        {
-            uint lastFrame = (uint)max(_SkinAnimationFrameCount - 1, 0);
-            float frame = saturate(_ObjectAnimationTimes[objectIndex]) * lastFrame;
-            uint frame0 = min((uint)floor(frame), lastFrame);
-            uint frame1 = min(frame0 + 1u, lastFrame);
-            result = lerp(
-                _SkinAnimationTex.Load(int3(x, frame0, 0)),
-                _SkinAnimationTex.Load(int3(x, frame1, 0)),
-                frac(frame));
-        }
-        else
-        {
-            result = _SkinPaletteTex.Load(int3(x, objectIndex, 0));
-        }
+        ClusterPackedSkinWeight skinWeight = _SkinWeights[index];
+        bones = uint4(
+            skinWeight.boneIndices01 & 0xffffu, skinWeight.boneIndices01 >> 16,
+            skinWeight.boneIndices23 & 0xffffu, skinWeight.boneIndices23 >> 16);
+        weights = float4(
+            skinWeight.boneWeights01 & 0xffffu, skinWeight.boneWeights01 >> 16,
+            skinWeight.boneWeights23 & 0xffffu, skinWeight.boneWeights23 >> 16) / 65535.0;
     }
-    return result;
+    weights /= max(dot(weights, 1), 1e-6);
 }
 float3 TransformPalettePoint(uint objectIndex, uint bone, float3 p)
 {
@@ -182,28 +214,29 @@ float3 TransformPaletteVector(uint objectIndex, uint bone, float3 p)
 {
     float4 v=float4(p,0); return float3(dot(PaletteRow(objectIndex,bone,0),v),dot(PaletteRow(objectIndex,bone,1),v),dot(PaletteRow(objectIndex,bone,2),v));
 }
+float3 TransformPreviousPalettePoint(uint objectIndex, uint bone, float3 p)
+{
+    float4 v=float4(p,1); return float3(dot(PreviousPaletteRow(objectIndex,bone,0),v),dot(PreviousPaletteRow(objectIndex,bone,1),v),dot(PreviousPaletteRow(objectIndex,bone,2),v));
+}
 void SkinVertex(uint objectIndex, uint index, inout float3 p, inout float3 n, inout float4 t)
 {
     uint4 bones;
     float4 weights;
-    if (_SkinWeightPacked8 != 0)
-    {
-        uint base = index * 2u;
-        uint bi = _SkinWeights8[base];
-        uint bw = _SkinWeights8[base + 1u];
-        bones = uint4(bi & 255u, (bi >> 8) & 255u, (bi >> 16) & 255u, bi >> 24);
-        weights = float4(bw & 255u, (bw >> 8) & 255u, (bw >> 16) & 255u, bw >> 24) / 255.0;
-    }
-    else
-    {
-        ClusterPackedSkinWeight w = _SkinWeights[index];
-        bones=uint4(w.boneIndices01 & 0xffffu,w.boneIndices01>>16,w.boneIndices23 & 0xffffu,w.boneIndices23>>16);
-        weights=float4(w.boneWeights01 & 0xffffu,w.boneWeights01>>16,w.boneWeights23 & 0xffffu,w.boneWeights23>>16)/65535.0;
-    }
-    float sum=max(dot(weights,1),1e-6); weights/=sum;
+    FetchSkinInfluences(index, bones, weights);
     float3 sp=0,sn=0,st=0;
     [unroll] for(uint i=0;i<4;i++) { sp+=TransformPalettePoint(objectIndex,bones[i],p)*weights[i]; sn+=TransformPaletteVector(objectIndex,bones[i],n)*weights[i]; st+=TransformPaletteVector(objectIndex,bones[i],t.xyz)*weights[i]; }
     p=sp; n=normalize(sn); t.xyz=normalize(st-n*dot(n,st));
+}
+
+float3 SkinPreviousPosition(uint objectIndex, uint index, float3 positionOS)
+{
+    uint4 bones;
+    float4 weights;
+    FetchSkinInfluences(index, bones, weights);
+    float3 result = 0;
+    [unroll] for (uint i = 0; i < 4; i++)
+        result += TransformPreviousPalettePoint(objectIndex, bones[i], positionOS) * weights[i];
+    return result;
 }
 Varyings ClusterSkinnedVert(Attributes input)
 {
@@ -266,4 +299,53 @@ Varyings ClusterSkinnedDepthVert(Attributes input)
     Varyings o=(Varyings)0; o.positionCS=TransformObjectToHClip(p); o.uv=TRANSFORM_TEX(uv,_BaseMap); return o;
 }
 half4 ClusterSkinnedShadowFrag(Varyings i):SV_Target { half a=SAMPLE_TEXTURE2D(_BaseMap,sampler_BaseMap,i.uv).a*_BaseColor.a; clip(a-_Cutoff); return 0; }
+
+#if defined(CLUSTERMESH_MOTION_VECTOR_PASS)
+struct ClusterSkinnedMotionVaryings
+{
+    float4 positionCS : SV_POSITION;
+    float4 positionCSNoJitter : TEXCOORD0;
+    float4 previousPositionCSNoJitter : TEXCOORD1;
+    float2 uv : TEXCOORD2;
+    nointerpolation float motionEnabled : TEXCOORD3;
+};
+
+ClusterSkinnedMotionVaryings ClusterSkinnedMotionVert(Attributes input)
+{
+    uint objectIndex = _VisibleClusterIds[input.instanceID] >> 16;
+    uint vertexIndex;
+    float3 restPosition, normalOS;
+    float4 tangentOS;
+    float2 uv;
+    FetchBaseVertex(input.vertexID, input.instanceID, restPosition, normalOS, tangentOS, uv, vertexIndex);
+
+    float3 currentPosition = restPosition;
+    SkinVertex(objectIndex, vertexIndex, currentPosition, normalOS, tangentOS);
+    float3 previousPosition = SkinPreviousPosition(objectIndex, vertexIndex, restPosition);
+    float4 currentWS = mul(_ObjectLocalToWorld[objectIndex], float4(currentPosition, 1.0));
+    float4 previousWS = mul(_ObjectPreviousLocalToWorld[objectIndex], float4(previousPosition, 1.0));
+
+    ClusterSkinnedMotionVaryings output;
+    output.positionCS = mul(UNITY_MATRIX_VP, currentWS);
+#if defined(UNITY_REVERSED_Z)
+    output.positionCS.z -= unity_MotionVectorsParams.z * output.positionCS.w;
+#else
+    output.positionCS.z += unity_MotionVectorsParams.z * output.positionCS.w;
+#endif
+    output.positionCSNoJitter = mul(_NonJitteredViewProjMatrix, currentWS);
+    output.previousPositionCSNoJitter = mul(_PrevViewProjMatrix, previousWS);
+    output.uv = TRANSFORM_TEX(uv, _BaseMap);
+    output.motionEnabled = _ObjectMotionVectorEnabled[objectIndex];
+    return output;
+}
+
+half4 ClusterSkinnedMotionFrag(ClusterSkinnedMotionVaryings input) : SV_Target
+{
+    clip(input.motionEnabled - 0.5);
+    half alpha = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, input.uv).a * _BaseColor.a;
+    clip(alpha - _Cutoff);
+    return half4(CalcNdcMotionVectorFromCsPositions(
+        input.positionCSNoJitter, input.previousPositionCSNoJitter), 0, 0);
+}
+#endif
 #endif

@@ -16,6 +16,8 @@ namespace ClusterMesh
         [Tooltip("Cull clusters outside the target camera frustum.")]
         public bool enableCameraCull = true;
         public bool enableConeCull = true;
+        [Tooltip("Write this object's transform motion into URP's Motion Vector texture. Disabled by default to avoid history and draw-pass cost.")]
+        public bool enableMotionVectors;
         [Tooltip("CPU object cull before dispatch. Off = this object is always submitted.")]
         public bool enableCpuObjectCull = true;
         [Tooltip("Replace lighting with a solid color per cluster.")]
@@ -27,6 +29,42 @@ namespace ClusterMesh
         public bool showLodLevels;
 
         bool _registered;
+        bool _hasMotionHistory;
+        int _motionHistoryFrame = int.MinValue;
+        Matrix4x4 _lastMotionMatrix;
+        Matrix4x4 _previousMotionMatrix;
+
+        public Matrix4x4 CapturePreviousMotionMatrix(Matrix4x4 current, int frame)
+        {
+            if (!enableMotionVectors)
+            {
+                ResetMotionHistory();
+                return current;
+            }
+
+            if (!_hasMotionHistory || frame < _motionHistoryFrame)
+            {
+                _hasMotionHistory = true;
+                _motionHistoryFrame = frame;
+                _lastMotionMatrix = current;
+                _previousMotionMatrix = current;
+                return current;
+            }
+
+            if (frame != _motionHistoryFrame)
+            {
+                _previousMotionMatrix = _lastMotionMatrix;
+                _motionHistoryFrame = frame;
+            }
+            _lastMotionMatrix = current;
+            return _previousMotionMatrix;
+        }
+
+        public void ResetMotionHistory()
+        {
+            _hasMotionHistory = false;
+            _motionHistoryFrame = int.MinValue;
+        }
 
         public void EnsureInitialized()
         {
@@ -48,12 +86,14 @@ namespace ClusterMesh
         {
             ClusterMeshSceneBatcher.Unregister(this);
             _registered = false;
+            ResetMotionHistory();
         }
 
         void OnValidate()
         {
             ClusterMeshSceneBatcher.Unregister(this);
             _registered = false;
+            ResetMotionHistory();
             if (isActiveAndEnabled)
                 EnsureInitialized();
         }

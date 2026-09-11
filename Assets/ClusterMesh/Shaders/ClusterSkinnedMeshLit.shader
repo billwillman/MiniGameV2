@@ -65,6 +65,18 @@ Shader "ClusterMesh/SkinnedLit"
             #define CLUSTERMESH_GBUFFER_PASS 1
             #include "ClusterSkinnedMeshLit.hlsl"
             ENDHLSL }
+        Pass { Name "MotionVectors" Tags { "LightMode"="MotionVectors" }
+            ZWrite On ZTest LEqual ColorMask RG
+            HLSLPROGRAM
+            #pragma editor_sync_compilation
+            #pragma target 4.5
+            #pragma vertex ClusterSkinnedMotionVert
+            #pragma fragment ClusterSkinnedMotionFrag
+            #pragma multi_compile_instancing
+            #pragma instancing_options procedural:ClusterSkinnedSetup
+            #define CLUSTERMESH_MOTION_VECTOR_PASS 1
+            #include "ClusterSkinnedMeshLit.hlsl"
+            ENDHLSL }
     }
     FallBack Off
 }

@@ -18,10 +18,22 @@ namespace ClusterMesh
             .GetProperty("renderingModeActual", BindingFlags.Instance | BindingFlags.NonPublic);
         static readonly FieldInfo DeferredLightsField = typeof(UniversalRenderer)
             .GetField("m_DeferredLights", BindingFlags.Instance | BindingFlags.NonPublic);
+        static readonly PropertyInfo DeferredLightsProperty = typeof(UniversalRenderer)
+            .GetProperty("deferredLights", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+        static readonly FieldInfo MotionVectorColorField = typeof(UniversalRenderer)
+            .GetField("m_MotionVectorColor", BindingFlags.Instance | BindingFlags.NonPublic);
+        static readonly FieldInfo MotionVectorDepthField = typeof(UniversalRenderer)
+            .GetField("m_MotionVectorDepth", BindingFlags.Instance | BindingFlags.NonPublic);
         static System.Type _deferredLightsType;
         static PropertyInfo _gbufferAttachmentsProperty;
+        static FieldInfo _gbufferAttachmentsField;
         static PropertyInfo _depthAttachmentProperty;
+        static PropertyInfo _depthAttachmentHandleProperty;
+        static FieldInfo _depthAttachmentField;
         static PropertyInfo _gbufferFormatsProperty;
+        static FieldInfo _gbufferFormatsField;
+
+        public static string LastDeferredBindingError { get; private set; }
 
         public static ScriptableRendererData RendererDataOverrideForTests;
 
@@ -58,19 +70,67 @@ namespace ClusterMesh
             colors = null;
             depth = null;
             formats = null;
-            if (!IsDeferred(renderer) || DeferredLightsField == null)
+            if (!IsDeferred(renderer) || (DeferredLightsField == null && DeferredLightsProperty == null))
+                return FailDeferredBinding("active renderer is not URP Deferred/Deferred+, or DeferredLights is unavailable");
+            try
+            {
+                object deferredLights = DeferredLightsProperty != null
+                    ? DeferredLightsProperty.GetValue(renderer)
+                    : DeferredLightsField.GetValue(renderer);
+                if (deferredLights == null)
+                    return FailDeferredBinding("URP DeferredLights has not been initialized");
+                CacheDeferredProperties(deferredLights.GetType());
+                colors = ReadMember<RTHandle[]>(
+                    deferredLights, _gbufferAttachmentsProperty, _gbufferAttachmentsField);
+                depth = ReadMember<RTHandle>(
+                    deferredLights, _depthAttachmentProperty, _depthAttachmentField);
+                if (depth == null && _depthAttachmentHandleProperty != null)
+                    depth = _depthAttachmentHandleProperty.GetValue(deferredLights) as RTHandle;
+                formats = ReadMember<GraphicsFormat[]>(
+                    deferredLights, _gbufferFormatsProperty, _gbufferFormatsField);
+
+                if (colors == null || colors.Length < 4)
+                    return FailDeferredBinding("URP returned fewer than the four required GBuffer MRT attachments");
+                if (depth == null)
+                    return FailDeferredBinding("URP returned no GBuffer depth attachment");
+                if (formats == null || formats.Length != colors.Length)
+                    return FailDeferredBinding("URP GBuffer format count does not match the MRT attachment count");
+                if (colors.Length > SystemInfo.supportedRenderTargetCount)
+                    return FailDeferredBinding("GBuffer MRT count exceeds this device's supported render-target count");
+                for (int i = 0; i < colors.Length; i++)
+                {
+                    if (colors[i] == null)
+                        return FailDeferredBinding("URP GBuffer MRT attachment " + i + " is null");
+                    // URP index 3 is the lighting/camera-color attachment and
+                    // intentionally reports None because its format is inherited.
+                    if (formats[i] == GraphicsFormat.None && i != 3)
+                        return FailDeferredBinding("URP GBuffer MRT format " + i + " is invalid");
+                }
+
+                LastDeferredBindingError = null;
+                return true;
+            }
+            catch (System.Exception exception)
+            {
+                return FailDeferredBinding("reflection failed: " + exception.GetType().Name);
+            }
+        }
+
+        public static bool TryGetMotionVectorTargets(
+            ScriptableRenderer renderer,
+            out RTHandle color,
+            out RTHandle depth)
+        {
+            color = null;
+            depth = null;
+            if (!(renderer is UniversalRenderer) ||
+                MotionVectorColorField == null || MotionVectorDepthField == null)
                 return false;
             try
             {
-                object deferredLights = DeferredLightsField.GetValue(renderer);
-                if (deferredLights == null)
-                    return false;
-                CacheDeferredProperties(deferredLights.GetType());
-                colors = _gbufferAttachmentsProperty?.GetValue(deferredLights) as RTHandle[];
-                depth = _depthAttachmentProperty?.GetValue(deferredLights) as RTHandle;
-                formats = _gbufferFormatsProperty?.GetValue(deferredLights) as GraphicsFormat[];
-                return colors != null && colors.Length > 0 && depth != null &&
-                       formats != null && formats.Length == colors.Length;
+                color = MotionVectorColorField.GetValue(renderer) as RTHandle;
+                depth = MotionVectorDepthField.GetValue(renderer) as RTHandle;
+                return color != null && depth != null;
             }
             catch
             {
@@ -84,9 +144,48 @@ namespace ClusterMesh
                 return;
             const BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
             _deferredLightsType = type;
-            _gbufferAttachmentsProperty = type.GetProperty("GbufferAttachments", flags);
-            _depthAttachmentProperty = type.GetProperty("DepthAttachment", flags);
-            _gbufferFormatsProperty = type.GetProperty("GbufferFormats", flags);
+            _gbufferAttachmentsProperty = FindProperty(type, flags, "GbufferAttachments", "GBufferAttachments");
+            _gbufferAttachmentsField = FindField(type, flags, "m_GbufferAttachments", "m_GBufferAttachments");
+            _depthAttachmentProperty = FindProperty(type, flags, "DepthAttachment");
+            _depthAttachmentHandleProperty = FindProperty(type, flags, "DepthAttachmentHandle");
+            _depthAttachmentField = FindField(type, flags, "m_DepthAttachment", "m_DepthAttachmentHandle");
+            _gbufferFormatsProperty = FindProperty(type, flags, "GbufferFormats", "GBufferFormats");
+            _gbufferFormatsField = FindField(type, flags, "m_GbufferFormats", "m_GBufferFormats");
+        }
+
+        static PropertyInfo FindProperty(System.Type type, BindingFlags flags, params string[] names)
+        {
+            for (int i = 0; i < names.Length; i++)
+            {
+                PropertyInfo property = type.GetProperty(names[i], flags);
+                if (property != null)
+                    return property;
+            }
+            return null;
+        }
+
+        static FieldInfo FindField(System.Type type, BindingFlags flags, params string[] names)
+        {
+            for (int i = 0; i < names.Length; i++)
+            {
+                FieldInfo field = type.GetField(names[i], flags);
+                if (field != null)
+                    return field;
+            }
+            return null;
+        }
+
+        static T ReadMember<T>(object instance, PropertyInfo property, FieldInfo field) where T : class
+        {
+            if (property != null)
+                return property.GetValue(instance) as T;
+            return field != null ? field.GetValue(instance) as T : null;
+        }
+
+        static bool FailDeferredBinding(string reason)
+        {
+            LastDeferredBindingError = reason;
+            return false;
         }
 
         public static bool HasActiveFeature(ScriptableRendererData data)

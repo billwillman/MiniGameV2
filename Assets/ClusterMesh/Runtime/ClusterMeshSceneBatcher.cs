@@ -27,6 +27,8 @@ namespace ClusterMesh
         static readonly List<ClusterMeshRenderer> Renderers = new List<ClusterMeshRenderer>();
         static readonly Dictionary<ClusterMeshAsset, ClusterMeshDrawContext> Contexts = new Dictionary<ClusterMeshAsset, ClusterMeshDrawContext>();
         static readonly List<Matrix4x4> Matrices = new List<Matrix4x4>(64);
+        static readonly List<Matrix4x4> PreviousMatrices = new List<Matrix4x4>(64);
+        static readonly List<bool> MotionVectorFlags = new List<bool>(64);
         static readonly List<bool> CpuCullFlags = new List<bool>(64);
         static readonly List<bool> CameraCullFlags = new List<bool>(64);
         static readonly HashSet<int> Seen = new HashSet<int>();
@@ -38,6 +40,8 @@ namespace ClusterMesh
             ClusterMeshRenderer seed,
             Camera camera,
             List<Matrix4x4> matrices,
+            List<Matrix4x4> previousMatrices,
+            List<bool> motionVectorFlags,
             List<bool> cpuCullFlags,
             List<bool> cameraCullFlags,
             bool clusterColors,
@@ -94,7 +98,7 @@ namespace ClusterMesh
                 return;
             _flushedFrame = Time.frameCount;
 
-            ForEachRegisteredBatch((seed, camera, matrices, cpuCullFlags, cameraCullFlags, clusterColors, lodT, batchCast) =>
+            ForEachRegisteredBatch((seed, camera, matrices, previousMatrices, motionVectorFlags, cpuCullFlags, cameraCullFlags, clusterColors, lodT, batchCast) =>
             {
                 if (ClusterMeshUrpBridge.ShouldSkipLegacyFlush(camera))
                     return;
@@ -104,7 +108,8 @@ namespace ClusterMesh
                 ctx.EnableConeCull = seed.enableConeCull;
                 ctx.EnableClusterColor = clusterColors;
                 ctx.LodErrorThreshold = lodT;
-                ctx.Draw(matrices, cpuCullFlags, cameraCullFlags, camera, batchCast, seed.receiveShadows);
+                ctx.DrawMotion(matrices, previousMatrices, motionVectorFlags,
+                    cpuCullFlags, cameraCullFlags, camera, batchCast, seed.receiveShadows);
             });
         }
 
@@ -114,7 +119,7 @@ namespace ClusterMesh
             if (!ClusterMeshUrpBridge.ShouldSubmitUrp(camera))
                 return;
 
-            ForEachRegisteredBatch((seed, resolved, matrices, cpuCullFlags, cameraCullFlags, clusterColors, lodT, batchCast) =>
+            ForEachRegisteredBatch((seed, resolved, matrices, previousMatrices, motionVectorFlags, cpuCullFlags, cameraCullFlags, clusterColors, lodT, batchCast) =>
             {
                 if (resolved != camera)
                     return;
@@ -124,7 +129,8 @@ namespace ClusterMesh
                 ctx.EnableConeCull = seed.enableConeCull;
                 ctx.EnableClusterColor = clusterColors;
                 ctx.LodErrorThreshold = lodT;
-                if (ctx.PrepareUrp(matrices, cpuCullFlags, cameraCullFlags, camera, batchCast, seed.receiveShadows))
+                if (ctx.PrepareUrpMotion(matrices, previousMatrices, motionVectorFlags,
+                        cpuCullFlags, cameraCullFlags, camera, batchCast, seed.receiveShadows))
                     UrpPrepared.Add(ctx);
             });
         }
@@ -151,6 +157,28 @@ namespace ClusterMesh
                 return;
             for (int i = 0; i < UrpPrepared.Count; i++)
                 UrpPrepared[i].SubmitUrpGBuffer(cmd);
+        }
+
+        public static void SubmitUrpMotionVectors(Camera camera, CommandBuffer cmd)
+        {
+            if (cmd == null || !ClusterMeshUrpBridge.ShouldSubmitUrp(camera))
+                return;
+            for (int i = 0; i < UrpPrepared.Count; i++)
+                UrpPrepared[i].SubmitUrpMotionVectors(cmd);
+        }
+
+        public static bool HasMotionVectors(Camera camera)
+        {
+            if (camera == null)
+                return false;
+            for (int i = 0; i < Renderers.Count; i++)
+            {
+                ClusterMeshRenderer renderer = Renderers[i];
+                if (renderer != null && renderer.isActiveAndEnabled &&
+                    renderer.enableMotionVectors && ResolveCamera(renderer) == camera)
+                    return true;
+            }
+            return false;
         }
 
         public static int CountDrawCalls(int objectCount, int materialCount)
@@ -258,9 +286,14 @@ namespace ClusterMesh
                     continue;
 
                 Matrices.Clear();
+                PreviousMatrices.Clear();
+                MotionVectorFlags.Clear();
                 CpuCullFlags.Clear();
                 CameraCullFlags.Clear();
-                Matrices.Add(seed.transform.localToWorldMatrix);
+                Matrix4x4 seedMatrix = seed.transform.localToWorldMatrix;
+                Matrices.Add(seedMatrix);
+                PreviousMatrices.Add(seed.CapturePreviousMotionMatrix(seedMatrix, Time.frameCount));
+                MotionVectorFlags.Add(seed.enableMotionVectors);
                 CpuCullFlags.Add(seed.enableCpuObjectCull);
                 CameraCullFlags.Add(seed.enableCameraCull);
                 bool clusterColors = seed.showClusterColors;
@@ -272,7 +305,10 @@ namespace ClusterMesh
                     if (other == null || other.asset != seed.asset || ResolveCamera(other) != camera)
                         continue;
                     Seen.Add(j);
-                    Matrices.Add(other.transform.localToWorldMatrix);
+                    Matrix4x4 otherMatrix = other.transform.localToWorldMatrix;
+                    Matrices.Add(otherMatrix);
+                    PreviousMatrices.Add(other.CapturePreviousMotionMatrix(otherMatrix, Time.frameCount));
+                    MotionVectorFlags.Add(other.enableMotionVectors);
                     CpuCullFlags.Add(other.enableCpuObjectCull);
                     CameraCullFlags.Add(other.enableCameraCull);
                     clusterColors |= other.showClusterColors;
@@ -280,7 +316,8 @@ namespace ClusterMesh
                     batchCast |= other.castShadows;
                 }
 
-                callback(seed, camera, Matrices, CpuCullFlags, CameraCullFlags, clusterColors, lodT, batchCast);
+                callback(seed, camera, Matrices, PreviousMatrices, MotionVectorFlags,
+                    CpuCullFlags, CameraCullFlags, clusterColors, lodT, batchCast);
             }
         }
 

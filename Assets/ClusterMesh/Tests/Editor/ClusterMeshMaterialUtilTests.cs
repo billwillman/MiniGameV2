@@ -42,7 +42,7 @@ namespace ClusterMesh.Tests
         }
 
         [Test]
-        public void CanSubmitShaderPass_InternalLoading_RejectsDepthAndGBuffer()
+        public void CanSubmitShaderPass_InternalLoading_RejectsDepthGBufferAndMotionVectors()
         {
             Shader shader = Shader.Find("Hidden/Internal-Loading");
             Assert.That(shader, Is.Not.Null);
@@ -52,11 +52,12 @@ namespace ClusterMesh.Tests
             Assert.That(ClusterMeshMaterialUtil.CanSubmitShaderPass(material, -1), Is.False);
             Assert.That(ClusterMeshMaterialUtil.CanSubmitShaderPass(material, 2), Is.False);
             Assert.That(ClusterMeshMaterialUtil.CanSubmitShaderPass(material, 3), Is.False);
+            Assert.That(ClusterMeshMaterialUtil.CanSubmitShaderPass(material, 4), Is.False);
             Object.DestroyImmediate(material);
         }
 
         [Test]
-        public void CanSubmitShaderPass_ClusterMeshLit_AllowsForwardDepthAndGBuffer()
+        public void CanSubmitShaderPass_ClusterMeshLit_AllowsForwardDepthGBufferAndMotionVectors()
         {
             Shader shader = Shader.Find("ClusterMesh/Lit");
             Assert.That(shader, Is.Not.Null);
@@ -64,6 +65,7 @@ namespace ClusterMesh.Tests
             Assert.That(ClusterMeshMaterialUtil.CanSubmitShaderPass(material, 0), Is.True);
             Assert.That(ClusterMeshMaterialUtil.CanSubmitShaderPass(material, 2), Is.True);
             Assert.That(ClusterMeshMaterialUtil.CanSubmitShaderPass(material, 3), Is.True);
+            Assert.That(ClusterMeshMaterialUtil.CanSubmitShaderPass(material, 4), Is.True);
             Object.DestroyImmediate(material);
         }
 

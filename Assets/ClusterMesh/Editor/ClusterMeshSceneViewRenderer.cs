@@ -102,6 +102,8 @@ namespace ClusterMesh
         static readonly HashSet<int> SeenRenderers = new HashSet<int>();
         static readonly List<BatchKey> StaleContexts = new List<BatchKey>();
         static readonly List<Matrix4x4> Matrices = new List<Matrix4x4>(64);
+        static readonly List<Matrix4x4> PreviousMatrices = new List<Matrix4x4>(64);
+        static readonly List<bool> MotionVectorFlags = new List<bool>(64);
         static readonly List<bool> CpuCullFlags = new List<bool>(64);
         static readonly List<bool> CameraCullFlags = new List<bool>(64);
 
@@ -160,6 +162,8 @@ namespace ClusterMesh
             StaleContexts.Clear();
             SeenRenderers.Clear();
             Matrices.Clear();
+            PreviousMatrices.Clear();
+            MotionVectorFlags.Clear();
             CpuCullFlags.Clear();
             CameraCullFlags.Clear();
             Renderers.Clear();
@@ -177,6 +181,8 @@ namespace ClusterMesh
 
                 SeenRenderers.Add(seed.GetInstanceID());
                 Matrices.Clear();
+                PreviousMatrices.Clear();
+                MotionVectorFlags.Clear();
                 CpuCullFlags.Clear();
                 CameraCullFlags.Clear();
                 AddRenderer(seed);
@@ -205,8 +211,9 @@ namespace ClusterMesh
                 // Runtime/Game rendering keeps using the configured LOD threshold.
                 context.LodErrorThreshold = 0f;
                 context.EditorDrawLayer = key.layer;
-                context.DrawEditorPreview(
-                    Matrices, CpuCullFlags, CameraCullFlags, key.cullingCamera, key.drawCamera,
+                context.DrawEditorPreviewMotion(
+                    Matrices, PreviousMatrices, MotionVectorFlags,
+                    CpuCullFlags, CameraCullFlags, key.cullingCamera, key.drawCamera,
                     key.castShadows, key.receiveShadows);
             }
         }
@@ -255,7 +262,10 @@ namespace ClusterMesh
 
         static void AddRenderer(ClusterMeshRenderer renderer)
         {
-            Matrices.Add(renderer.transform.localToWorldMatrix);
+            Matrix4x4 current = renderer.transform.localToWorldMatrix;
+            Matrices.Add(current);
+            PreviousMatrices.Add(renderer.CapturePreviousMotionMatrix(current, Time.frameCount));
+            MotionVectorFlags.Add(renderer.enableMotionVectors);
             CpuCullFlags.Add(renderer.enableCpuObjectCull);
             CameraCullFlags.Add(renderer.enableCameraCull);
         }

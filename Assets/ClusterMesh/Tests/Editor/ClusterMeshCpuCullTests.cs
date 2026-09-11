@@ -25,6 +25,41 @@ namespace ClusterMesh.Tests
         }
 
         [Test]
+        public void MotionVectors_DefaultOff_AndStaticHistoryAdvancesOncePerFrame()
+        {
+            var go = new GameObject("CMMotionHistory");
+            var renderer = go.AddComponent<ClusterMeshRenderer>();
+            Assert.That(renderer.enableMotionVectors, Is.False);
+            renderer.enableMotionVectors = true;
+            Matrix4x4 a = Matrix4x4.identity;
+            Matrix4x4 b = Matrix4x4.Translate(Vector3.right);
+            Matrix4x4 c = Matrix4x4.Translate(Vector3.up);
+            Assert.That(renderer.CapturePreviousMotionMatrix(a, 10), Is.EqualTo(a));
+            Assert.That(renderer.CapturePreviousMotionMatrix(b, 11), Is.EqualTo(a));
+            Assert.That(renderer.CapturePreviousMotionMatrix(c, 11), Is.EqualTo(a));
+            Assert.That(renderer.CapturePreviousMotionMatrix(c, 12), Is.EqualTo(c));
+            Object.DestroyImmediate(go);
+        }
+
+        [Test]
+        public void SkinnedMotionVectors_DefaultOff_AndHistoryTracksPoseTime()
+        {
+            var go = new GameObject("CMSkinnedMotionHistory");
+            var renderer = go.AddComponent<ClusterSkinnedMeshRenderer>();
+            Assert.That(renderer.enableMotionVectors, Is.False);
+            renderer.enableMotionVectors = true;
+            renderer.CapturePreviousMotion(Matrix4x4.identity, 0.1f, 0, 20,
+                out Matrix4x4 firstMatrix, out float firstTime);
+            renderer.CapturePreviousMotion(Matrix4x4.Translate(Vector3.right), 0.2f, 0, 21,
+                out Matrix4x4 previousMatrix, out float previousTime);
+            Assert.That(firstMatrix, Is.EqualTo(Matrix4x4.identity));
+            Assert.That(firstTime, Is.EqualTo(0.1f));
+            Assert.That(previousMatrix, Is.EqualTo(Matrix4x4.identity));
+            Assert.That(previousTime, Is.EqualTo(0.1f));
+            Object.DestroyImmediate(go);
+        }
+
+        [Test]
         public void CountIndirectDraws_SplitsWhenRequested()
         {
             Assert.That(ClusterMeshSceneBatcher.CountDrawCalls(10, 1), Is.EqualTo(1));

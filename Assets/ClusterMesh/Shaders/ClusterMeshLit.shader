@@ -93,6 +93,25 @@ Shader "ClusterMesh/Lit"
             #include "ClusterMeshLit.hlsl"
             ENDHLSL
         }
+
+        Pass
+        {
+            Name "MotionVectors"
+            Tags { "LightMode"="MotionVectors" }
+            ZWrite On
+            ZTest LEqual
+            ColorMask RG
+            HLSLPROGRAM
+            #pragma editor_sync_compilation
+            #pragma target 4.5
+            #pragma vertex ClusterMeshMotionVert
+            #pragma fragment ClusterMeshMotionFrag
+            #pragma multi_compile_instancing
+            #pragma instancing_options procedural:ClusterMeshSetup
+            #define CLUSTERMESH_MOTION_VECTOR_PASS 1
+            #include "ClusterMeshLit.hlsl"
+            ENDHLSL
+        }
     }
     FallBack Off
 }

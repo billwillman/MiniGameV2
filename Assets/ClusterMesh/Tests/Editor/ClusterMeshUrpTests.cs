@@ -78,10 +78,12 @@ namespace ClusterMesh.Tests
             Assert.That(staticMaterial.FindPass("ShadowCaster"), Is.EqualTo(1));
             Assert.That(staticMaterial.FindPass("DepthOnly"), Is.EqualTo(2));
             Assert.That(staticMaterial.FindPass("GBuffer"), Is.EqualTo(3));
+            Assert.That(staticMaterial.FindPass("MotionVectors"), Is.EqualTo(4));
             Assert.That(skinnedMaterial.FindPass("ForwardLit"), Is.EqualTo(0));
             Assert.That(skinnedMaterial.FindPass("ShadowCaster"), Is.EqualTo(1));
             Assert.That(skinnedMaterial.FindPass("DepthOnly"), Is.EqualTo(2));
             Assert.That(skinnedMaterial.FindPass("GBuffer"), Is.EqualTo(3));
+            Assert.That(skinnedMaterial.FindPass("MotionVectors"), Is.EqualTo(4));
             Assert.That(
                 System.IO.File.ReadAllText("Assets/ClusterMesh/Shaders/ClusterMeshLit.hlsl"),
                 Does.Contain("#pragma editor_sync_compilation"));
