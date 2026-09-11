@@ -15,6 +15,7 @@ namespace ClusterMesh.Tests
         {
             ClusterMeshUrpBridge.RendererDataOverrideForTests = null;
             ClusterMeshSceneBatcher.ResetForTests();
+            ClusterSkinnedMeshSceneBatcher.ResetForTests();
             for (int i = 0; i < _trash.Count; i++)
             {
                 if (_trash[i] != null)
@@ -55,14 +56,27 @@ namespace ClusterMesh.Tests
         }
 
         [Test]
-        public void EditorGameCamera_KeepsLegacyFlushWithActiveFeature()
+        public void EditorGameCamera_WithActiveFeature_UsesUrp()
         {
             var data = Track(ScriptableObject.CreateInstance<UniversalRendererData>());
             ClusterMeshUrpFeatureMenu.EnableOn(data);
             ClusterMeshUrpBridge.RendererDataOverrideForTests = data;
             var go = Track(new GameObject("CMUrpCam")).AddComponent<Camera>();
-            Assert.That(ClusterMeshUrpBridge.ShouldSkipLegacyFlush(go), Is.False);
+            go.cameraType = CameraType.Game;
+            Assert.That(ClusterMeshUrpBridge.ShouldSubmitUrp(go), Is.True);
+            Assert.That(ClusterMeshUrpBridge.ShouldSkipLegacyFlush(go), Is.True);
+        }
+
+        [Test]
+        public void EditorGameCamera_WithoutFeature_KeepsLegacyFlush()
+        {
+            var data = Track(ScriptableObject.CreateInstance<UniversalRendererData>());
+            ClusterMeshUrpBridge.RendererDataOverrideForTests = data;
+            var go = Track(new GameObject("CMUrpLegacyCam")).AddComponent<Camera>();
+            go.cameraType = CameraType.Game;
+            Assert.That(ClusterMeshUrpBridge.HasActiveFeature(data), Is.False);
             Assert.That(ClusterMeshUrpBridge.ShouldSubmitUrp(go), Is.False);
+            Assert.That(ClusterMeshUrpBridge.ShouldSkipLegacyFlush(go), Is.False);
         }
 
         [Test]
@@ -97,8 +111,9 @@ namespace ClusterMesh.Tests
             ClusterMeshUrpFeatureMenu.EnableOn(data);
             ClusterMeshUrpBridge.RendererDataOverrideForTests = data;
             var cam = Track(new GameObject("CMUrpFlushCam")).AddComponent<Camera>();
+            cam.cameraType = CameraType.Game;
             Assert.That(ClusterMeshUrpBridge.HasActiveFeature(data), Is.True);
-            Assert.That(ClusterMeshUrpBridge.ShouldSubmitUrp(cam), Is.False);
+            Assert.That(ClusterMeshUrpBridge.ShouldSubmitUrp(cam), Is.True);
             var mesh = ClusterMeshTestMeshes.Triangle();
             _trash.Add(mesh);
             var bake = ClusterMeshBaker.Bake(mesh, new Material[1], new ClusterMeshBakeSettings { buildLodHierarchy = false });

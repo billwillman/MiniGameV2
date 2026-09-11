@@ -27,9 +27,14 @@ namespace ClusterMesh
         public override void OnPreviewGUI(Rect r, GUIStyle background)
         {
             var asset = (ClusterMeshAsset)target;
+            if (_context != null && !_context.CanDraw)
+            {
+                _context.Dispose();
+                _context = null;
+            }
             if (_context == null)
                 _context = ClusterMeshViewerWindow.CreatePreviewContext(asset);
-            if (_context == null || !_context.IsReady)
+            if (_context == null || !_context.CanDraw)
             {
                 EditorGUI.LabelField(r, _context != null ? _context.Error : "Preview unavailable");
                 return;
@@ -62,6 +67,7 @@ namespace ClusterMesh
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Clusters", asset.clusters != null ? asset.clusters.Length.ToString() : "0");
             EditorGUILayout.LabelField("Vertices", asset.vertexCount.ToString());
+            EditorGUILayout.LabelField("Vertex Stride", asset.ResolvedVertexStride + " bytes");
             EditorGUILayout.LabelField("Indices", asset.indexCount.ToString());
             EditorGUILayout.Space();
             if (GUILayout.Button("加入场景"))

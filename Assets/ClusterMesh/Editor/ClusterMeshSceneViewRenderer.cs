@@ -195,7 +195,7 @@ namespace ClusterMesh
 
                 UsedContexts.Add(key);
                 ClusterMeshDrawContext context = GetOrCreateContext(key);
-                if (context == null || !context.IsReady)
+                if (context == null || !context.CanDraw)
                     continue;
 
                 context.EnableConeCull = key.enableConeCull;
@@ -263,7 +263,12 @@ namespace ClusterMesh
         static ClusterMeshDrawContext GetOrCreateContext(BatchKey key)
         {
             if (Contexts.TryGetValue(key, out ClusterMeshDrawContext context))
-                return context;
+            {
+                if (context != null && context.CanDraw)
+                    return context;
+                context?.Dispose();
+                Contexts.Remove(key);
+            }
 
             context = new ClusterMeshDrawContext(key.asset, key.cullShader, key.litShader);
             Contexts.Add(key, context);

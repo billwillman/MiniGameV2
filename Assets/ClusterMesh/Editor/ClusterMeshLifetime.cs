@@ -112,7 +112,9 @@ namespace ClusterMesh
                 case PlayModeStateChange.ExitingEditMode:
                     SyncEditModeTick(true);
                     ClusterMeshSceneBatcher.DisposeCachedContexts();
+                    ClusterMeshSceneViewRenderer.DisposeCachedContexts();
                     ClusterSkinnedMeshSceneBatcher.DisposeCachedContexts();
+                    ClusterSkinnedMeshSceneViewRenderer.DisposeCachedContexts();
                     break;
                 case PlayModeStateChange.EnteredPlayMode:
                     SyncEditModeTick(true);

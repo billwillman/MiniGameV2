@@ -45,6 +45,18 @@ namespace ClusterMesh
 
     [Serializable]
     [StructLayout(LayoutKind.Sequential)]
+    public struct ClusterPackedVertexTight
+    {
+        public float px;
+        public float py;
+        public float pz;
+        public uint nrmOct;
+        public uint tanOctTanW;
+        public uint uv;
+    }
+
+    [Serializable]
+    [StructLayout(LayoutKind.Sequential)]
     public struct ClusterGroup
     {
         public int clusterStart;
@@ -62,6 +74,7 @@ namespace ClusterMesh
         public int maxTrianglesPerCluster = ClusterMeshLimits.MaxTrianglesPerCluster;
         public bool buildLodHierarchy = true;
         public bool useQemSimplify = true;
+        public bool packTightRestVertices;
     }
 
     public sealed class ClusterMeshBakeResult

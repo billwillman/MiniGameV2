@@ -20,6 +20,8 @@ namespace ClusterMesh
         string _error;
         string _info;
         Vector2 _scroll;
+        ClusterSkinnedCompressionAdviceSet _compressionAdvice;
+        int _compressionAdviceHash = int.MinValue;
 
         public static bool ShowsQemToggle(bool buildLodHierarchy)
         {
@@ -79,9 +81,15 @@ namespace ClusterMesh
             settings.useQemSimplify = true;
             bakeOptions = bakeOptions ?? new ClusterSkinnedMeshBakeOptions();
             ClusterSkinnedMeshBakeResult result = ClusterSkinnedMeshBaker.Bake(renderer, clips, settings, bakeOptions);
-            geometry.CopyFrom(result.geometry, renderer.sharedMesh, settings);
+            geometry.CopyFrom(result.geometry, renderer.sharedMesh, settings, bakeOptions.packTightRestVertices);
             asset.geometry = geometry;
-            asset.packedSkinWeights = ClusterSkinnedMeshBaker.PackSkinWeights(result.skinWeights);
+            bool packWeights8 = bakeOptions.packSkinWeights8 &&
+                ClusterSkinnedMeshBaker.CanPackSkinWeights8(result.skinWeights);
+            asset.packedSkinWeights = ClusterSkinnedMeshBaker.PackSkinWeights(
+                result.skinWeights,
+                packWeights8
+                    ? ClusterSkinnedMeshAsset.PackedSkinWeightStride8
+                    : ClusterSkinnedMeshAsset.PackedSkinWeightStride);
             asset.skinBoneCount = result.bindPoses != null ? result.bindPoses.Length : 0;
             asset.bindPoses = bakeOptions.IncludesCpu ? result.bindPoses : Array.Empty<Matrix4x4>();
             asset.boneParentIndices = bakeOptions.IncludesCpu
@@ -94,7 +102,16 @@ namespace ClusterMesh
             asset.cpuCurveSegments = result.cpuCurveSegments;
             asset.boneEvaluationOrder = bakeOptions.IncludesCpu
                 ? result.boneEvaluationOrder : Array.Empty<int>();
-            asset.cullFrames = result.cullFrames;
+            if (bakeOptions.compressCullFrames)
+            {
+                asset.cullFrames = Array.Empty<ClusterSkinnedCullFrame>();
+                asset.packedCullFrames = ClusterSkinnedMeshBaker.PackCullFrames(result.cullFrames);
+            }
+            else
+            {
+                asset.cullFrames = result.cullFrames;
+                asset.packedCullFrames = null;
+            }
             asset.animationDataMode = bakeOptions.animationDataMode;
             asset.retainedAnimationCurves = bakeOptions.IncludesCpu && bakeOptions.retainAnimationCurves;
             asset.bakedGpuFramesPerSecond = bakeOptions.IncludesGpu
@@ -103,6 +120,12 @@ namespace ClusterMesh
             asset.bakedCpuCurveTolerance = bakeOptions.IncludesCpu
                 ? Mathf.Clamp(bakeOptions.cpuCurveTolerance, 0.000001f, 0.01f)
                 : 0f;
+            asset.skinWeightStride = packWeights8
+                ? ClusterSkinnedMeshAsset.PackedSkinWeightStride8
+                : ClusterSkinnedMeshAsset.PackedSkinWeightStride;
+            asset.gpuCompactPalette = bakeOptions.IncludesGpu && bakeOptions.gpuCompactPalette;
+            asset.cullFramesCompressed = bakeOptions.compressCullFrames;
+            asset.tightRestVertices = bakeOptions.packTightRestVertices;
             asset.skinningVersion = ClusterSkinnedMeshAsset.CurrentSkinningVersion;
             asset.animationSamplingVersion = ClusterSkinnedMeshAsset.CurrentAnimationSamplingVersion;
             asset.gpuAnimationVersion = bakeOptions.IncludesGpu
@@ -200,6 +223,8 @@ namespace ClusterMesh
 
             if (_bakeSkinnedAnimation)
                 DrawSkinnedOptimizationGroup();
+            else
+                DrawStaticOptimizationGroup();
 
             EditorGUILayout.Space();
             if (GUILayout.Button("Bake", GUILayout.Height(28)))
@@ -423,6 +448,38 @@ namespace ClusterMesh
             Selection.activeObject = asset;
         }
 
+        void DrawStaticOptimizationGroup()
+        {
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("高级压缩（默认关闭）", EditorStyles.boldLabel);
+            EditorGUILayout.HelpBox(
+                "建议来自当前拖入的 Mesh / MeshFilter，只做参考，不会自动勾选。静态没有逐帧 Cull 表，不能压 Cull。",
+                MessageType.None);
+            _settings.packTightRestVertices = EditorGUILayout.Toggle(
+                new GUIContent(
+                    "紧凑 Rest 顶点",
+                    "默认关闭。顶点从 32 字节改为 24 字节（位置仍 float，法线/切线改 oct）。旧资产保持 32 字节，不必重烤。"),
+                _settings.packTightRestVertices);
+            DrawCompressionAdvice(ClusterSkinnedCompressionAdvisor.AdviseTightRestVertices(ResolveStaticAdviceMesh()));
+            EditorGUILayout.HelpBox(
+                _settings.packTightRestVertices
+                    ? "已开启：静态网格 GPU 更瘦。法线/切线是 oct 量化，法线贴图可能略有误差。\n优点：顶点显存约少 25%。缺点：改顶点格式，shader 走紧凑分支。"
+                    : "默认关闭：顶点仍是 32 字节，和现有 ClusterMeshAsset 一致。",
+                MessageType.None);
+        }
+
+        Mesh ResolveStaticAdviceMesh()
+        {
+            if (_sourceObject != null)
+            {
+                var filter = _sourceObject.GetComponent<MeshFilter>();
+                if (filter != null && filter.sharedMesh != null)
+                    return filter.sharedMesh;
+            }
+
+            return _mesh;
+        }
+
         void DrawSkinnedOptimizationGroup()
         {
             if (_skinnedBakeOptions == null)
@@ -459,15 +516,32 @@ namespace ClusterMesh
                     break;
             }
 
+            RefreshCompressionAdvice();
+            EditorGUILayout.HelpBox(
+                "下面的建议来自当前拖入的 SkinnedMeshRenderer / AnimationClip，只做参考，不会自动勾选。默认仍全部关闭。",
+                MessageType.None);
+
             if (_skinnedBakeOptions.IncludesGpu)
             {
                 EditorGUILayout.Space();
                 EditorGUILayout.LabelField("GPU 优化", EditorStyles.boldLabel);
+                _skinnedBakeOptions.gpuCompactPalette = EditorGUILayout.Toggle(
+                    new GUIContent(
+                        "紧凑 GPU Palette",
+                        "默认关闭。每骨从 3 像素 3×4 矩阵改为 2 像素（四元数 + 位移/均匀缩放）。"),
+                    _skinnedBakeOptions.gpuCompactPalette);
+                DrawCompressionAdvice(_compressionAdvice.gpuCompactPalette);
+                EditorGUILayout.HelpBox(
+                    _skinnedBakeOptions.gpuCompactPalette
+                        ? "已开启：图集约小三分之一。非均匀缩放会被平均成均匀缩放，骨骼拉伸可能歪。CPU palette 仍是 3×4，只影响 GPU Atlas。\n优点：显存/包体更小。缺点：有缩放的绑定姿势误差更大，需重烤。"
+                        : "默认关闭：保持每骨 3×RGBAHalf 矩阵，和现有资产一致。",
+                    MessageType.None);
                 _skinnedBakeOptions.gpuFramesPerSecond = EditorGUILayout.Slider(
                     new GUIContent(
                         "VTF Bake FPS",
                         "GPU Palette Atlas 每秒保存的采样帧数。降低可近似线性减小纹理高度和资产大小；代价是快速动作的插值误差和抖动更明显。建议 PC 30，移动端可从 15 开始验证。"),
                     _skinnedBakeOptions.gpuFramesPerSecond, 1f, 60f);
+                DrawCompressionAdvice(_compressionAdvice.gpuFramesPerSecond);
                 EditorGUILayout.HelpBox(
                     "较低 FPS：纹理更小、显存和带宽更低，但快速动画精度下降。较高 FPS：动画更接近源 Clip，但纹理、包体和显存占用增加。",
                     MessageType.None);
@@ -498,7 +572,90 @@ namespace ClusterMesh
                 _skinnedBakeOptions.retainAnimationCurves = false;
             }
 
+            if (!_skinnedBakeOptions.IncludesGpu)
+                _skinnedBakeOptions.gpuCompactPalette = false;
+
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("高级压缩（默认关闭）", EditorStyles.boldLabel);
+            _skinnedBakeOptions.packSkinWeights8 = EditorGUILayout.Toggle(
+                new GUIContent(
+                    "权重 8 字节",
+                    "默认关闭。把每顶点蒙皮权重从 16 字节压到 8 字节（8 位骨索引 + 8 位权重）。骨索引大于 255 时自动回退 16 字节，不会烘焙失败。"),
+                _skinnedBakeOptions.packSkinWeights8);
+            DrawCompressionAdvice(_compressionAdvice.packSkinWeights8);
+            EditorGUILayout.HelpBox(
+                _skinnedBakeOptions.packSkinWeights8
+                    ? "已开启：权重显存减半。精度从 16 位降到 8 位，多骨骼混合可能略糊。超过 255 的骨索引会自动回退，不改坏烘焙。\n优点：顶点带宽小。缺点：骨索引 >255 的角色会回退 16 字节。"
+                    : "默认关闭：保持 16 字节权重，和现有资产、shader 路径一致。",
+                MessageType.None);
+
+            _skinnedBakeOptions.compressCullFrames = EditorGUILayout.Toggle(
+                new GUIContent(
+                    "压缩 Cull 表",
+                    "默认关闭。动画包围盒从每秒 4 段改为 2 段，并在磁盘上 Deflate。GPU 仍是 64 字节结构，锥剔除还在。"),
+                _skinnedBakeOptions.compressCullFrames);
+            DrawCompressionAdvice(_compressionAdvice.compressCullFrames);
+            EditorGUILayout.HelpBox(
+                _skinnedBakeOptions.compressCullFrames
+                    ? "已开启：cull 段数减半，磁盘更小。盒会粗一点，可能少剔、多画。\n优点：长 clip × 多 cluster 时体积明显下降。缺点：剔得更松，极端姿态包围盒偏大。"
+                    : "默认关闭：每秒 4 段、资产里存未压缩数组，和现有资产一致。",
+                MessageType.None);
+
+            _skinnedBakeOptions.packTightRestVertices = EditorGUILayout.Toggle(
+                new GUIContent(
+                    "紧凑 Rest 顶点",
+                    "默认关闭。只改这份蒙皮 geometry：顶点从 32 字节改为 24 字节（位置仍 float，法线/切线改 oct）。静态 Baker 有独立开关。"),
+                _skinnedBakeOptions.packTightRestVertices);
+            DrawCompressionAdvice(_compressionAdvice.packTightRestVertices);
+            EditorGUILayout.HelpBox(
+                _skinnedBakeOptions.packTightRestVertices
+                    ? "已开启：蒙皮 rest 网格 GPU 更瘦。法线/切线是 oct 量化，法线贴图可能略有误差。\n优点：顶点显存约少 25%。缺点：改顶点格式，shader 走紧凑分支。"
+                    : "默认关闭：rest 顶点仍是 32 字节。",
+                MessageType.None);
+
             EditorGUILayout.EndVertical();
+        }
+
+        void RefreshCompressionAdvice()
+        {
+            int hash = CompressionAdviceHash();
+            if (hash == _compressionAdviceHash)
+                return;
+            _compressionAdviceHash = hash;
+            _compressionAdvice = ClusterSkinnedCompressionAdvisor.Analyze(
+                _skinnedRenderer, _animationClips, _settings);
+        }
+
+        int CompressionAdviceHash()
+        {
+            unchecked
+            {
+                int hash = _skinnedRenderer != null ? _skinnedRenderer.GetInstanceID() : 0;
+                Mesh mesh = _skinnedRenderer != null ? _skinnedRenderer.sharedMesh : null;
+                hash = hash * 31 + (mesh != null ? mesh.GetInstanceID() : 0);
+                hash = hash * 31 + _settings.maxVerticesPerCluster;
+                hash = hash * 31 + _settings.maxTrianglesPerCluster;
+                hash = hash * 31 + (_settings.buildLodHierarchy ? 1 : 0);
+                if (_animationClips == null)
+                    return hash;
+                hash = hash * 31 + _animationClips.Count;
+                for (int i = 0; i < _animationClips.Count; i++)
+                    hash = hash * 31 + (_animationClips[i] != null ? _animationClips[i].GetInstanceID() : 0);
+                return hash;
+            }
+        }
+
+        static void DrawCompressionAdvice(ClusterCompressionAdvice advice)
+        {
+            Color old = GUI.color;
+            if (advice.kind == ClusterCompressionAdviceKind.Recommend)
+                GUI.color = new Color(0.45f, 0.85f, 0.5f, 1f);
+            else if (advice.kind == ClusterCompressionAdviceKind.NotRecommend)
+                GUI.color = new Color(0.85f, 0.7f, 0.35f, 1f);
+            else
+                GUI.color = new Color(0.7f, 0.7f, 0.7f, 1f);
+            EditorGUILayout.LabelField(ClusterSkinnedCompressionAdvisor.Label(advice), EditorStyles.miniLabel);
+            GUI.color = old;
         }
 
         string ResolveOutputFolder()

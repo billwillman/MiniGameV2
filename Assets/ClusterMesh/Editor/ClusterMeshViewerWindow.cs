@@ -70,6 +70,8 @@ namespace ClusterMesh
                 return;
             }
 
+            if (_context != null && _context.IsReady && !_context.CanDraw)
+                RebuildContext();
             if (_context != null && !_context.IsReady)
             {
                 EditorGUILayout.HelpBox(_context.Error, MessageType.Error);
@@ -126,7 +128,7 @@ namespace ClusterMesh
 
         void DrawPreview(Rect rect)
         {
-            if (_context == null || !_context.IsReady || rect.width < 8f || rect.height < 8f)
+            if (_context == null || !_context.CanDraw || rect.width < 8f || rect.height < 8f)
                 return;
 
             HandleOrbit(rect);

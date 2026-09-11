@@ -20,8 +20,10 @@ namespace ClusterMesh
         static readonly int OwningGroupsId = Shader.PropertyToID("_OwningGroups");
         static readonly int GroupCountId = Shader.PropertyToID("_GroupCount");
         static readonly int VerticesId = Shader.PropertyToID("_Vertices");
+        static readonly int VerticesTightId = Shader.PropertyToID("_VerticesTight");
         static readonly int IndicesId = Shader.PropertyToID("_Indices");
         static readonly int SkinWeightsId = Shader.PropertyToID("_SkinWeights");
+        static readonly int SkinWeights8Id = Shader.PropertyToID("_SkinWeights8");
         static readonly int VisibleId = Shader.PropertyToID("_VisibleClusterIds");
         static readonly int CullFramesId = Shader.PropertyToID("_CullFrames");
         static readonly int ObjectSegmentsId = Shader.PropertyToID("_ObjectCullSegments");
@@ -45,6 +47,9 @@ namespace ClusterMesh
         static readonly int PaletteWidthId = Shader.PropertyToID("_SkinPaletteWidth");
         static readonly int UseGpuAnimationTextureId = Shader.PropertyToID("_UseGpuAnimationTexture");
         static readonly int SkinAnimationFrameCountId = Shader.PropertyToID("_SkinAnimationFrameCount");
+        static readonly int SkinWeightPacked8Id = Shader.PropertyToID("_SkinWeightPacked8");
+        static readonly int RestVertexTightId = Shader.PropertyToID("_RestVertexTight");
+        static readonly int GpuPalettePixelsPerBoneId = Shader.PropertyToID("_GpuPalettePixelsPerBone");
         static readonly int ObjectAnimationTimesId = Shader.PropertyToID("_ObjectAnimationTimes");
 
         readonly ClusterSkinnedMeshAsset _asset;
@@ -55,8 +60,10 @@ namespace ClusterMesh
         readonly GraphicsBuffer _groups;
         readonly GraphicsBuffer _owningGroups;
         readonly GraphicsBuffer _vertices;
+        readonly GraphicsBuffer _verticesTight;
         readonly GraphicsBuffer _indices;
         readonly GraphicsBuffer _weights;
+        readonly GraphicsBuffer _weights8;
         readonly GraphicsBuffer _cullFrames;
         readonly GraphicsBuffer _segments;
         readonly GraphicsBuffer _cameraCull;
@@ -80,6 +87,9 @@ namespace ClusterMesh
         readonly Bounds _localAnimationBounds;
         readonly int _boneCount;
         readonly int _paletteWidth;
+        readonly int _gpuPalettePixelsPerBone;
+        readonly bool _skinWeightPacked8;
+        readonly bool _restVertexTight;
         NativeArray<ClusterSkinnedCurveHeader> _burstCurveHeaders;
         NativeArray<ClusterSkinnedCurveSegment> _burstCurveSegments;
         NativeArray<int> _burstParents;
@@ -93,7 +103,17 @@ namespace ClusterMesh
         NativeArray<int> _burstAncestorsB;
         int _burstMaxBoneDepth;
         bool _hasBurstCpuData;
+        bool _prepared;
+        bool _preparedCast;
+        bool _preparedReceive;
+        bool _preparedUseGpuAnimationTexture;
+        int _preparedDrawLayer;
+        Bounds _preparedBounds;
+        Texture2D _preparedGpuAnimationTexture;
         bool _disposed;
+
+        const int ForwardShaderPass = 0;
+        const int DepthShaderPass = 2;
 
         public bool IsReady { get; private set; }
         public string Error { get; private set; }
@@ -115,24 +135,57 @@ namespace ClusterMesh
         {
             _asset = asset;
             _cullShader = cullShader;
+            _gpuPalettePixelsPerBone = 3;
+            _skinWeightPacked8 = false;
+            _restVertexTight = false;
             if (asset == null || asset.geometry == null || asset.geometry.clusters == null || asset.geometry.clusters.Length == 0)
             { Error = "ClusterSkinnedMesh asset is missing geometry."; return; }
             if (asset.skinBoneCount <= 0)
             { Error = "ClusterSkinnedMesh asset has no baked bone count."; return; }
-            if (asset.clips == null || asset.clips.Length == 0 || asset.cullFrames == null)
-            { Error = "ClusterSkinnedMesh asset has no baked clip bounds."; return; }
-            if (!ClusterMeshGeometry.TryReadGpuGeometry(asset.geometry, out ClusterPackedVertex[] verts, out uint[] indices, out string error))
+            string cullError = null;
+            if (asset.clips == null || asset.clips.Length == 0 ||
+                !asset.TryGetCullFrames(out ClusterSkinnedCullFrame[] cullFrames, out cullError))
+            { Error = cullError ?? "ClusterSkinnedMesh asset has no baked clip bounds."; return; }
+            if (!TryValidateCullFrameLayout(asset, cullFrames, out cullError))
+            { Error = cullError; return; }
+            bool tightRest = asset.geometry.ResolvedVertexStride == ClusterMeshLimits.TightVertexStride;
+            ClusterPackedVertex[] verts = Array.Empty<ClusterPackedVertex>();
+            ClusterPackedVertexTight[] tightVerts = Array.Empty<ClusterPackedVertexTight>();
+            uint[] indices;
+            if (tightRest)
+            {
+                if (!ClusterMeshGeometry.TryReadTightVertices(asset.geometry, out tightVerts, out string tightError))
+                { Error = tightError; return; }
+                if (!ClusterMeshGeometry.TryReadPackedIndices(asset.geometry, out indices, out string indexError))
+                { Error = indexError; return; }
+            }
+            else if (!ClusterMeshGeometry.TryReadGpuGeometry(asset.geometry, out verts, out indices, out string error))
             { Error = error; return; }
-            if (!asset.TryReadSkinWeights(out ClusterPackedSkinWeight[] skinWeights, out string skinError))
+
+            ClusterPackedSkinWeight[] skinWeights = Array.Empty<ClusterPackedSkinWeight>();
+            ClusterPackedSkinWeight8[] skinWeights8 = Array.Empty<ClusterPackedSkinWeight8>();
+            bool packed8 = asset.ResolvedSkinWeightStride == ClusterSkinnedMeshAsset.PackedSkinWeightStride8;
+            if (packed8)
+            {
+                if (!asset.TryReadSkinWeights8(out skinWeights8, out string skinError8))
+                { Error = skinError8; return; }
+            }
+            else if (!asset.TryReadSkinWeights(out skinWeights, out string skinError))
             { Error = skinError; return; }
             if (cullShader == null || litShader == null)
             { Error = "ClusterSkinnedMesh cull/lit shader is missing."; return; }
-            if (!SystemInfo.supportsComputeShaders)
-            { Error = "ClusterSkinnedMesh requires compute shaders and vertex texture fetch."; return; }
+            string unsupported = ClusterMeshCapability.GetUnsupportedReason();
+            if (unsupported != null)
+            { Error = unsupported; return; }
+            if (!cullShader.HasKernel("CullSkinnedClusters"))
+            { Error = "ClusterSkinnedMesh cull kernel is missing."; return; }
 
             _boneCount = asset.skinBoneCount;
             _paletteWidth = _boneCount * 3;
-            if (_paletteWidth > SystemInfo.maxTextureSize)
+            _gpuPalettePixelsPerBone = asset.GpuPalettePixelsPerBone;
+            _skinWeightPacked8 = packed8;
+            _restVertexTight = tightRest;
+            if (asset.AllowsCpuAnimation && _paletteWidth > SystemInfo.maxTextureSize)
             { Error = "ClusterSkinnedMesh has too many bones for the palette texture."; return; }
             _kernel = cullShader.FindKernel("CullSkinnedClusters");
             _template = ClusterMeshTemplate.Create();
@@ -144,14 +197,45 @@ namespace ClusterMesh
             int[] owning = ClusterMeshLod.BuildOwningGroupIndices(asset.geometry.clusters.Length, asset.geometry.groups);
             _owningGroups = new GraphicsBuffer(GraphicsBuffer.Target.Structured, Mathf.Max(1, owning.Length), 4);
             _owningGroups.SetData(owning.Length > 0 ? owning : new[] { ClusterMeshLod.NoParent });
-            _vertices = new GraphicsBuffer(GraphicsBuffer.Target.Structured, Mathf.Max(1, verts.Length), ClusterMeshLimits.ClusterVertexStride);
-            _vertices.SetData(verts);
+            int vertexCount = tightRest ? tightVerts.Length : verts.Length;
+            if (tightRest)
+            {
+                _vertices = new GraphicsBuffer(GraphicsBuffer.Target.Structured, 1, ClusterMeshLimits.ClusterVertexStride);
+                _vertices.SetData(new ClusterPackedVertex[1]);
+                _verticesTight = new GraphicsBuffer(GraphicsBuffer.Target.Structured, Mathf.Max(1, tightVerts.Length), ClusterMeshLimits.TightVertexStride);
+                _verticesTight.SetData(tightVerts);
+            }
+            else
+            {
+                _vertices = new GraphicsBuffer(GraphicsBuffer.Target.Structured, Mathf.Max(1, verts.Length), ClusterMeshLimits.ClusterVertexStride);
+                _vertices.SetData(verts);
+                _verticesTight = new GraphicsBuffer(GraphicsBuffer.Target.Structured, 1, ClusterMeshLimits.TightVertexStride);
+                _verticesTight.SetData(new ClusterPackedVertexTight[1]);
+            }
             _indices = new GraphicsBuffer(GraphicsBuffer.Target.Structured, Mathf.Max(1, indices.Length), 4);
             _indices.SetData(indices);
-            _weights = new GraphicsBuffer(GraphicsBuffer.Target.Structured, Mathf.Max(1, verts.Length), 16);
-            _weights.SetData(skinWeights);
-            _cullFrames = new GraphicsBuffer(GraphicsBuffer.Target.Structured, Mathf.Max(1, asset.cullFrames.Length), 64);
-            _cullFrames.SetData(asset.cullFrames);
+            if (packed8)
+            {
+                _weights = new GraphicsBuffer(GraphicsBuffer.Target.Structured, 1, ClusterSkinnedMeshAsset.PackedSkinWeightStride);
+                _weights.SetData(new ClusterPackedSkinWeight[1]);
+                var weightUints = new uint[Mathf.Max(2, skinWeights8.Length * 2)];
+                for (int i = 0; i < skinWeights8.Length; i++)
+                {
+                    weightUints[i * 2] = skinWeights8[i].boneIndices;
+                    weightUints[i * 2 + 1] = skinWeights8[i].boneWeights;
+                }
+                _weights8 = new GraphicsBuffer(GraphicsBuffer.Target.Structured, weightUints.Length, 4);
+                _weights8.SetData(weightUints);
+            }
+            else
+            {
+                _weights = new GraphicsBuffer(GraphicsBuffer.Target.Structured, Mathf.Max(1, vertexCount), ClusterSkinnedMeshAsset.PackedSkinWeightStride);
+                _weights.SetData(skinWeights);
+                _weights8 = new GraphicsBuffer(GraphicsBuffer.Target.Structured, 2, 4);
+                _weights8.SetData(new uint[2]);
+            }
+            _cullFrames = new GraphicsBuffer(GraphicsBuffer.Target.Structured, Mathf.Max(1, cullFrames.Length), 64);
+            _cullFrames.SetData(cullFrames);
             _segments = new GraphicsBuffer(GraphicsBuffer.Target.Structured, ClusterMeshLimits.MaxBatchedObjects, 4);
             _cameraCull = new GraphicsBuffer(GraphicsBuffer.Target.Structured, ClusterMeshLimits.MaxBatchedObjects, 4);
             _animationTimes = new GraphicsBuffer(GraphicsBuffer.Target.Structured, ClusterMeshLimits.MaxBatchedObjects, 4);
@@ -193,9 +277,49 @@ namespace ClusterMesh
             Camera cullingCamera, Camera drawCamera,
             bool castShadows, bool receiveShadows, int drawLayer)
         {
-            if (!CanDraw || matrices == null || cullingCamera == null || drawCamera == null) return;
+            if (drawCamera == null)
+                return;
+            if (!TryPrepare(matrices, cpuCull, cameraCull, times, clipIndex, animationEvaluation,
+                    enableParallelBonePrefix, enableConeCull, lodErrorThreshold,
+                    cullingCamera, castShadows, receiveShadows, drawLayer))
+                return;
+            SubmitLegacy(drawCamera);
+        }
+
+        public bool PrepareUrp(IList<Matrix4x4> matrices, IList<bool> cpuCull, IList<bool> cameraCull, IList<float> times,
+            int clipIndex, ClusterSkinnedAnimationEvaluation animationEvaluation,
+            bool enableParallelBonePrefix, bool enableConeCull, float lodErrorThreshold,
+            Camera camera, bool castShadows, bool receiveShadows, int drawLayer)
+        {
+            if (!TryPrepare(matrices, cpuCull, cameraCull, times, clipIndex, animationEvaluation,
+                    enableParallelBonePrefix, enableConeCull, lodErrorThreshold,
+                    camera, castShadows, receiveShadows, drawLayer))
+                return false;
+            SubmitUrpShadows(camera);
+            return true;
+        }
+
+        public void SubmitUrpDepth(CommandBuffer cmd)
+        {
+            SubmitUrpCmd(cmd, DepthShaderPass);
+        }
+
+        public void SubmitUrpColor(CommandBuffer cmd)
+        {
+            SubmitUrpCmd(cmd, ForwardShaderPass);
+        }
+
+        bool TryPrepare(IList<Matrix4x4> matrices, IList<bool> cpuCull, IList<bool> cameraCull, IList<float> times,
+            int clipIndex, ClusterSkinnedAnimationEvaluation animationEvaluation,
+            bool enableParallelBonePrefix, bool enableConeCull, float lodErrorThreshold,
+            Camera cullingCamera, bool castShadows, bool receiveShadows, int drawLayer)
+        {
+            _prepared = false;
+            if (!CanDraw || matrices == null || cullingCamera == null)
+                return false;
             int sourceCount = Mathf.Min(ClusterMeshLimits.MaxBatchedObjects, matrices.Count);
-            if (sourceCount <= 0) return;
+            if (sourceCount <= 0)
+                return false;
             int clip = Mathf.Clamp(clipIndex, 0, _asset.clips.Length - 1);
             ClusterSkinnedClip clipData = _asset.clips[clip];
             Texture2D availableGpuTexture = _asset.HasGpuPalette(clip) &&
@@ -209,14 +333,14 @@ namespace ClusterMesh
             if (_asset.animationDataMode == ClusterSkinnedAnimationDataMode.GpuOnly)
             {
                 if (availableGpuTexture == null)
-                    return;
+                    return false;
                 useGpuAnimationTexture = true;
                 useBurstCpu = false;
             }
             else if (_asset.animationDataMode == ClusterSkinnedAnimationDataMode.CpuOnly)
             {
                 if (!cpuAvailable)
-                    return;
+                    return false;
                 useGpuAnimationTexture = false;
                 useBurstCpu = true;
             }
@@ -228,7 +352,7 @@ namespace ClusterMesh
                 else if (!requestGpu && availableGpuTexture != null)
                     useGpuAnimationTexture = true;
                 else
-                    return;
+                    return false;
             }
             Texture2D gpuAnimationTexture = useGpuAnimationTexture ? availableGpuTexture : null;
             bool useParallelPrefix = useBurstCpu && enableParallelBonePrefix;
@@ -255,7 +379,8 @@ namespace ClusterMesh
                     Mathf.FloorToInt(_animationTimeData[count] * segmentCount), 0, segmentCount - 1);
                 count++;
             }
-            if (count <= 0) return;
+            if (count <= 0)
+                return false;
             if (useBurstCpu)
             {
                 if (useParallelPrefix)
@@ -283,9 +408,11 @@ namespace ClusterMesh
                 _paletteTexture.Apply(false, false);
             }
             _animationTimes.SetData(_animationTimeData, 0, 0, count);
-            _segments.SetData(_segmentData, 0, 0, count); _cameraCull.SetData(_cameraCullData, 0, 0, count);
+            _segments.SetData(_segmentData, 0, 0, count);
+            _cameraCull.SetData(_cameraCullData, 0, 0, count);
             Bounds worldBounds = ClusterMeshFrustum.TransformLocalBounds(_localAnimationBounds, _l2w[0]);
-            for (int i = 1; i < count; i++) worldBounds.Encapsulate(ClusterMeshFrustum.TransformLocalBounds(_localAnimationBounds, _l2w[i]));
+            for (int i = 1; i < count; i++)
+                worldBounds.Encapsulate(ClusterMeshFrustum.TransformLocalBounds(_localAnimationBounds, _l2w[i]));
             int groups = Mathf.Max(1, Mathf.CeilToInt(count * _asset.geometry.clusters.Length / 64f));
             for (int material = 0; material < _materials.Length; material++)
             {
@@ -298,21 +425,22 @@ namespace ClusterMesh
                 _cullShader.SetBuffer(_kernel, ObjectSegmentsId, _segments);
                 _cullShader.SetBuffer(_kernel, ObjectCameraCullId, _cameraCull);
                 _cullShader.SetBuffer(_kernel, VisibleId, _visible[material]);
-                _cullShader.SetInt(ObjectCountId, count); _cullShader.SetInt(ClusterCountId, _asset.geometry.clusters.Length);
+                _cullShader.SetInt(ObjectCountId, count);
+                _cullShader.SetInt(ClusterCountId, _asset.geometry.clusters.Length);
                 _cullShader.SetInt(GroupCountId, _asset.geometry.groups != null ? _asset.geometry.groups.Length : 0);
-                _cullShader.SetInt(MaterialIndexId, material); _cullShader.SetInt(CullFrameOffsetId, clipData.cullFrameOffset);
+                _cullShader.SetInt(MaterialIndexId, material);
+                _cullShader.SetInt(CullFrameOffsetId, clipData.cullFrameOffset);
                 _cullShader.SetInt(EnableConeCullId, enableConeCull ? 1 : 0);
                 _cullShader.SetInt(HierarchyVersionId, _asset.geometry.hierarchyVersion);
                 _cullShader.SetInt(LodPerspectiveId, cullingCamera.orthographic ? 0 : 1);
                 _cullShader.SetFloat(LodErrorThresholdId, Mathf.Max(0f, lodErrorThreshold));
                 _cullShader.SetFloat(LodProjectionScaleId, ClusterMeshLod.ProjectionScale(cullingCamera));
-                _cullShader.SetVectorArray(PlanesId, _planes); _cullShader.SetVector(WorldCameraPosId, cullingCamera.transform.position);
+                _cullShader.SetVectorArray(PlanesId, _planes);
+                _cullShader.SetVector(WorldCameraPosId, cullingCamera.transform.position);
                 _cullShader.SetMatrixArray(ObjectLocalToWorldId, _l2w);
                 _cullShader.Dispatch(_kernel, groups, 1, 1);
-                _args[material].SetData(_argsSeed); GraphicsBuffer.CopyCount(_visible[material], _args[material], 4);
-                Bind(_materials[material], _visible[material], gpuAnimationTexture, useGpuAnimationTexture);
-                Graphics.DrawMeshInstancedIndirect(_template, 0, _materials[material], worldBounds, _args[material], 0, null,
-                    ShadowCastingMode.Off, receiveShadows, drawLayer, drawCamera);
+                _args[material].SetData(_argsSeed);
+                GraphicsBuffer.CopyCount(_visible[material], _args[material], 4);
                 if (castShadows)
                 {
                     _shadowVisible[material].SetCounterValue(0);
@@ -323,10 +451,57 @@ namespace ClusterMesh
                     _cullShader.Dispatch(_kernel, groups, 1, 1);
                     _shadowArgs[material].SetData(_argsSeed);
                     GraphicsBuffer.CopyCount(_shadowVisible[material], _shadowArgs[material], 4);
-                    Bind(_shadowMaterials[material], _shadowVisible[material], gpuAnimationTexture, useGpuAnimationTexture);
-                    Graphics.DrawMeshInstancedIndirect(_template, 0, _shadowMaterials[material], worldBounds,
-                        _shadowArgs[material], 0, null, ShadowCastingMode.ShadowsOnly, false, drawLayer, drawCamera);
                 }
+            }
+
+            _preparedCast = castShadows;
+            _preparedReceive = receiveShadows;
+            _preparedDrawLayer = drawLayer;
+            _preparedBounds = worldBounds;
+            _preparedGpuAnimationTexture = gpuAnimationTexture;
+            _preparedUseGpuAnimationTexture = useGpuAnimationTexture;
+            _prepared = true;
+            return true;
+        }
+
+        void SubmitLegacy(Camera drawCamera)
+        {
+            if (!_prepared || drawCamera == null)
+                return;
+            for (int material = 0; material < _materials.Length; material++)
+            {
+                Bind(_materials[material], _visible[material], _preparedGpuAnimationTexture, _preparedUseGpuAnimationTexture);
+                Graphics.DrawMeshInstancedIndirect(_template, 0, _materials[material], _preparedBounds, _args[material], 0, null,
+                    ShadowCastingMode.Off, _preparedReceive, _preparedDrawLayer, drawCamera);
+                if (_preparedCast)
+                {
+                    Bind(_shadowMaterials[material], _shadowVisible[material], _preparedGpuAnimationTexture, _preparedUseGpuAnimationTexture);
+                    Graphics.DrawMeshInstancedIndirect(_template, 0, _shadowMaterials[material], _preparedBounds,
+                        _shadowArgs[material], 0, null, ShadowCastingMode.ShadowsOnly, false, _preparedDrawLayer, drawCamera);
+                }
+            }
+        }
+
+        void SubmitUrpShadows(Camera camera)
+        {
+            if (!_prepared || !_preparedCast || camera == null)
+                return;
+            for (int material = 0; material < _materials.Length; material++)
+            {
+                Bind(_shadowMaterials[material], _shadowVisible[material], _preparedGpuAnimationTexture, _preparedUseGpuAnimationTexture);
+                Graphics.DrawMeshInstancedIndirect(_template, 0, _shadowMaterials[material], _preparedBounds,
+                    _shadowArgs[material], 0, null, ShadowCastingMode.ShadowsOnly, false, _preparedDrawLayer, camera);
+            }
+        }
+
+        void SubmitUrpCmd(CommandBuffer cmd, int shaderPass)
+        {
+            if (!_prepared || cmd == null)
+                return;
+            for (int material = 0; material < _materials.Length; material++)
+            {
+                Bind(_materials[material], _visible[material], _preparedGpuAnimationTexture, _preparedUseGpuAnimationTexture);
+                cmd.DrawMeshInstancedIndirect(_template, 0, _materials[material], shaderPass, _args[material]);
             }
         }
 
@@ -469,14 +644,18 @@ namespace ClusterMesh
         {
             if (m == null || visible == null)
                 return;
-            m.SetBuffer(ClustersId, _clusters); m.SetBuffer(VerticesId, _vertices); m.SetBuffer(IndicesId, _indices);
-            m.SetBuffer(SkinWeightsId, _weights); m.SetBuffer(VisibleId, visible);
+            m.SetBuffer(ClustersId, _clusters); m.SetBuffer(VerticesId, _vertices); m.SetBuffer(VerticesTightId, _verticesTight);
+            m.SetBuffer(IndicesId, _indices);
+            m.SetBuffer(SkinWeightsId, _weights); m.SetBuffer(SkinWeights8Id, _weights8); m.SetBuffer(VisibleId, visible);
             m.SetBuffer(ObjectAnimationTimesId, _animationTimes);
             m.SetMatrixArray(ObjectLocalToWorldId, _l2w); m.SetMatrixArray(ObjectWorldToLocalId, _w2l);
             m.SetTexture(SkinPaletteTexId, _paletteTexture); m.SetInt(PaletteWidthId, _paletteWidth);
             m.SetTexture(SkinAnimationTexId, gpuAnimationTexture != null ? gpuAnimationTexture : _paletteTexture);
             m.SetInt(UseGpuAnimationTextureId, useGpuAnimationTexture ? 1 : 0);
             m.SetInt(SkinAnimationFrameCountId, gpuAnimationTexture != null ? gpuAnimationTexture.height : 1);
+            m.SetInt(SkinWeightPacked8Id, _skinWeightPacked8 ? 1 : 0);
+            m.SetInt(RestVertexTightId, _restVertexTight ? 1 : 0);
+            m.SetInt(GpuPalettePixelsPerBoneId, _gpuPalettePixelsPerBone);
             m.SetFloat(EnableClusterColorId, EnableClusterColor ? 1f : 0f);
         }
 
@@ -494,17 +673,49 @@ namespace ClusterMesh
 
         static Bounds BuildAnimationBounds(ClusterSkinnedMeshAsset a)
         {
-            if (a.cullFrames == null || a.cullFrames.Length == 0) return ClusterMeshFrustum.AssetLocalBounds(a.geometry);
-            Bounds b = new Bounds(a.cullFrames[0].aabbCenter, a.cullFrames[0].aabbExtents * 2f);
-            for (int i = 1; i < a.cullFrames.Length; i++) b.Encapsulate(new Bounds(a.cullFrames[i].aabbCenter, a.cullFrames[i].aabbExtents * 2f));
+            if (!a.TryGetCullFrames(out ClusterSkinnedCullFrame[] frames, out _) || frames == null || frames.Length == 0)
+                return ClusterMeshFrustum.AssetLocalBounds(a.geometry);
+            Bounds b = new Bounds(frames[0].aabbCenter, frames[0].aabbExtents * 2f);
+            for (int i = 1; i < frames.Length; i++) b.Encapsulate(new Bounds(frames[i].aabbCenter, frames[i].aabbExtents * 2f));
             return b;
+        }
+
+        static bool TryValidateCullFrameLayout(ClusterSkinnedMeshAsset asset,
+            ClusterSkinnedCullFrame[] frames, out string error)
+        {
+            error = null;
+            int clusterCount = asset != null && asset.geometry != null && asset.geometry.clusters != null
+                ? asset.geometry.clusters.Length : 0;
+            if (clusterCount <= 0 || frames == null || frames.Length == 0)
+            {
+                error = "ClusterSkinnedMesh asset has no baked clip bounds.";
+                return false;
+            }
+
+            for (int i = 0; i < asset.clips.Length; i++)
+            {
+                ClusterSkinnedClip clip = asset.clips[i];
+                if (clip == null || clip.segmentCount <= 0 || clip.cullFrameOffset < 0)
+                {
+                    error = "ClusterSkinnedMesh clip " + i + " has invalid cull frame metadata.";
+                    return false;
+                }
+
+                long requiredEnd = (long)clip.cullFrameOffset + (long)clip.segmentCount * clusterCount;
+                if (requiredEnd > frames.LongLength)
+                {
+                    error = "ClusterSkinnedMesh clip " + i + " cull frames are incomplete.";
+                    return false;
+                }
+            }
+            return true;
         }
         void CopyPlane(int i, Plane p) => _planes[i] = new Vector4(p.normal.x, p.normal.y, p.normal.z, p.distance);
         public void Dispose()
         {
             if (_disposed) return; _disposed = true; IsReady = false;
-            _clusters?.Dispose(); _groups?.Dispose(); _owningGroups?.Dispose(); _vertices?.Dispose(); _indices?.Dispose();
-            _weights?.Dispose(); _cullFrames?.Dispose(); _segments?.Dispose(); _cameraCull?.Dispose();
+            _clusters?.Dispose(); _groups?.Dispose(); _owningGroups?.Dispose(); _vertices?.Dispose(); _verticesTight?.Dispose(); _indices?.Dispose();
+            _weights?.Dispose(); _weights8?.Dispose(); _cullFrames?.Dispose(); _segments?.Dispose(); _cameraCull?.Dispose();
             _animationTimes?.Dispose();
             if (_burstCurveHeaders.IsCreated) _burstCurveHeaders.Dispose();
             if (_burstCurveSegments.IsCreated) _burstCurveSegments.Dispose();

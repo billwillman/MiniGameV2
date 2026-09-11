@@ -242,6 +242,10 @@ namespace ClusterMesh.Tests
                 Assert.That(bakeOptions.animationDataMode,
                     Is.EqualTo(ClusterSkinnedAnimationDataMode.GpuOnly));
                 Assert.That(bakeOptions.retainAnimationCurves, Is.False);
+                Assert.That(bakeOptions.packSkinWeights8, Is.False);
+                Assert.That(bakeOptions.gpuCompactPalette, Is.False);
+                Assert.That(bakeOptions.compressCullFrames, Is.False);
+                Assert.That(bakeOptions.packTightRestVertices, Is.False);
 
                 asset.bindPoses = new[] { Matrix4x4.identity };
                 asset.skinBoneCount = 1;

@@ -49,6 +49,10 @@ namespace ClusterMesh
                 EditorGUILayout.LabelField("VTF Bake FPS", asset.bakedGpuFramesPerSecond.ToString("0.##"));
             if (asset.AllowsCpuAnimation)
                 EditorGUILayout.LabelField("CPU Curve Tolerance", asset.bakedCpuCurveTolerance.ToString("0.######"));
+            EditorGUILayout.LabelField("Skin Weight Stride", asset.ResolvedSkinWeightStride + " bytes");
+            EditorGUILayout.LabelField("GPU Palette Pixels / Bone", asset.GpuPalettePixelsPerBone.ToString());
+            EditorGUILayout.LabelField("Cull Frames", asset.cullFramesCompressed ? "Deflate + 2 segments/s" : "Uncompressed");
+            EditorGUILayout.LabelField("Rest Vertices", asset.tightRestVertices ? "24-byte tight" : "32-byte");
             DrawPalettePreview(asset);
             EditorGUILayout.Space();
             if (GUILayout.Button("加入场景"))
@@ -77,13 +81,10 @@ namespace ClusterMesh
             _previewClip = EditorGUILayout.Popup("Animation Clip", Mathf.Clamp(_previewClip, 0, clips.Length - 1), labels);
             _previewTime = EditorGUILayout.Slider("Normalized Time", _previewTime, 0f, 1f);
 
-            int width = boneCount * 3;
-            if (width > SystemInfo.maxTextureSize)
-            {
-                EditorGUILayout.HelpBox("骨骼 Palette 宽度超过当前设备的最大纹理尺寸，无法创建 VTF 预览。", MessageType.Error);
-                return;
-            }
-            EditorGUILayout.LabelField("Runtime Layout", width + " × instance count · RGBAFloat · Point");
+            int gpuWidth = boneCount * asset.GpuPalettePixelsPerBone;
+            int cpuWidth = boneCount * 3;
+            if (asset.AllowsGpuAnimation)
+                EditorGUILayout.LabelField("GPU Runtime Layout", gpuWidth + " × frame count · RGBAHalf · Point");
 
             if (asset.HasGpuPalette(_previewClip))
             {
@@ -108,7 +109,13 @@ namespace ClusterMesh
                 return;
             }
 
-            EnsurePalettePreview(asset, boneCount, width);
+            if (cpuWidth > SystemInfo.maxTextureSize)
+            {
+                EditorGUILayout.HelpBox("CPU 骨骼 Palette 宽度超过当前设备的最大纹理尺寸，无法创建 VTF 预览。", MessageType.Error);
+                return;
+            }
+            EditorGUILayout.LabelField("CPU Runtime Layout", cpuWidth + " × instance count · RGBAFloat · Point");
+            EnsurePalettePreview(asset, boneCount, cpuWidth);
             if (_palettePreview == null)
                 return;
             Rect previewRect = GUILayoutUtility.GetRect(64f, 72f, GUILayout.ExpandWidth(true));

@@ -26,9 +26,11 @@ float3 _LightPosition;
 
 StructuredBuffer<ClusterHeader> _Clusters;
 StructuredBuffer<ClusterVertex> _Vertices;
+StructuredBuffer<ClusterVertexTight> _VerticesTight;
 StructuredBuffer<uint> _Indices;
 StructuredBuffer<uint> _VisibleClusterIds;
 float _EnableClusterColor;
+int _RestVertexTight;
 
 CBUFFER_START(ClusterMeshBatch)
     float4x4 _ObjectLocalToWorld[256];
@@ -113,7 +115,11 @@ void FetchClusterVertex(uint vertexID, uint instanceID, out float3 positionOS, o
     uint localIndex = ((h.indexOffset + vertexID) & 1u) == 0u
         ? (raw & 0xffffu)
         : (raw >> 16);
-    ClusterMeshUnpackVertex(_Vertices[h.vertexOffset + localIndex], positionOS, normalOS, tangentOS, uv);
+    uint vertexIndex = h.vertexOffset + localIndex;
+    if (_RestVertexTight != 0)
+        ClusterMeshUnpackVertexTight(_VerticesTight[vertexIndex], positionOS, normalOS, tangentOS, uv);
+    else
+        ClusterMeshUnpackVertex(_Vertices[vertexIndex], positionOS, normalOS, tangentOS, uv);
 }
 
 Varyings ClusterMeshVert(Attributes input)

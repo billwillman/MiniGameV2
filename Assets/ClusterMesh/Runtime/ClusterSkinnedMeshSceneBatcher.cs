@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace ClusterMesh
 {
@@ -112,8 +113,11 @@ namespace ClusterMesh
         static readonly List<bool> CpuCull = new List<bool>(ClusterMeshLimits.MaxBatchedObjects);
         static readonly List<bool> CameraCull = new List<bool>(ClusterMeshLimits.MaxBatchedObjects);
         static readonly List<float> Times = new List<float>(ClusterMeshLimits.MaxBatchedObjects);
+        static readonly List<ClusterSkinnedMeshDrawContext> UrpPrepared = new List<ClusterSkinnedMeshDrawContext>();
         static int _flushedFrame = int.MinValue;
 
+        public static int LegacyFlushBatchCountForTests { get; private set; }
+        public static int UrpPreparedCountForTests => UrpPrepared.Count;
         public static int CachedContextCount => Contexts.Count;
         public static int RegisteredCount
         {
@@ -155,12 +159,107 @@ namespace ClusterMesh
             if (_flushedFrame == Time.frameCount)
                 return;
             _flushedFrame = Time.frameCount;
+            UsedContexts.Clear();
+            ForEachRegisteredBatch((seed, batch, matrices, cpuCull, cameraCull, times, batchSlot) =>
+            {
+                var contextKey = new ContextKey(batch, batchSlot);
+                UsedContexts.Add(contextKey);
+                if (ClusterMeshUrpBridge.ShouldSkipLegacyFlush(batch.camera))
+                {
+                    GetOrCreate(contextKey);
+                    return;
+                }
+
+                LegacyFlushBatchCountForTests++;
+                ClusterSkinnedMeshDrawContext context = GetOrCreate(contextKey);
+                if (context == null)
+                    return;
+                context.EnableClusterColor = batch.showClusterColors;
+                context.Draw(matrices, cpuCull, cameraCull, times, batch.clipIndex, batch.animationEvaluation,
+                    batch.enableParallelBonePrefix, batch.enableConeCull, batch.lodErrorThreshold,
+                    batch.camera, batch.camera,
+                    batch.castShadows, batch.receiveShadows, batch.layer);
+            });
+            DisposeUnusedContexts();
+        }
+
+        public static void PrepareAndSubmitUrpShadows(Camera camera)
+        {
+            UrpPrepared.Clear();
+            if (!ClusterMeshUrpBridge.ShouldSubmitUrp(camera))
+                return;
+
+            ForEachRegisteredBatch((seed, batch, matrices, cpuCull, cameraCull, times, batchSlot) =>
+            {
+                if (batch.camera != camera)
+                    return;
+                ClusterSkinnedMeshDrawContext context = GetOrCreate(new ContextKey(batch, batchSlot));
+                if (context == null)
+                    return;
+                context.EnableClusterColor = batch.showClusterColors;
+                if (context.PrepareUrp(matrices, cpuCull, cameraCull, times, batch.clipIndex, batch.animationEvaluation,
+                    batch.enableParallelBonePrefix, batch.enableConeCull, batch.lodErrorThreshold,
+                    camera, batch.castShadows, batch.receiveShadows, batch.layer))
+                    UrpPrepared.Add(context);
+            });
+        }
+
+        public static void SubmitUrpDepth(Camera camera, CommandBuffer cmd)
+        {
+            if (cmd == null || !ClusterMeshUrpBridge.ShouldSubmitUrp(camera))
+                return;
+            for (int i = 0; i < UrpPrepared.Count; i++)
+                UrpPrepared[i].SubmitUrpDepth(cmd);
+        }
+
+        public static void SubmitUrpColor(Camera camera, CommandBuffer cmd)
+        {
+            if (cmd == null || !ClusterMeshUrpBridge.ShouldSubmitUrp(camera))
+                return;
+            for (int i = 0; i < UrpPrepared.Count; i++)
+                UrpPrepared[i].SubmitUrpColor(cmd);
+        }
+
+        public static void ResetForTests()
+        {
+            Renderers.Clear();
+            UrpPrepared.Clear();
+            LegacyFlushBatchCountForTests = 0;
+            DisposeCachedContexts();
+        }
+
+        public static void CollectRegisteredForEditor(List<ClusterSkinnedMeshRenderer> output)
+        {
+            output.Clear();
+            for (int i = 0; i < Renderers.Count; i++)
+                if (Renderers[i] != null && Renderers[i].isActiveAndEnabled)
+                    output.Add(Renderers[i]);
+        }
+
+        public static ClusterSkinnedMeshDrawContext CreatePreviewContext(ClusterSkinnedMeshRenderer renderer)
+        {
+            return renderer == null ? null :
+                new ClusterSkinnedMeshDrawContext(renderer.asset, renderer.cullShader, renderer.litShader);
+        }
+
+        delegate void BatchCallback(
+            ClusterSkinnedMeshRenderer seed,
+            BatchKey batch,
+            List<Matrix4x4> matrices,
+            List<bool> cpuCull,
+            List<bool> cameraCull,
+            List<float> times,
+            int batchSlot);
+
+        static void ForEachRegisteredBatch(BatchCallback callback)
+        {
             for (int i = Renderers.Count - 1; i >= 0; i--)
+            {
                 if (Renderers[i] == null)
                     Renderers.RemoveAt(i);
+            }
 
             SeenRendererIds.Clear();
-            UsedContexts.Clear();
             float clock = Application.isPlaying ? Time.time : Time.realtimeSinceStartup;
             for (int i = 0; i < Renderers.Count; i++)
             {
@@ -187,34 +286,9 @@ namespace ClusterMesh
                     }
                     if (Matrices.Count == 0)
                         break;
-
-                    var contextKey = new ContextKey(batch, batchSlot++);
-                    UsedContexts.Add(contextKey);
-                    ClusterSkinnedMeshDrawContext context = GetOrCreate(contextKey);
-                    if (context == null)
-                        continue;
-                    context.EnableClusterColor = batch.showClusterColors;
-                    context.Draw(Matrices, CpuCull, CameraCull, Times, batch.clipIndex, batch.animationEvaluation,
-                        batch.enableParallelBonePrefix, batch.enableConeCull, batch.lodErrorThreshold,
-                        batch.camera, batch.camera,
-                        batch.castShadows, batch.receiveShadows, batch.layer);
+                    callback(seed, batch, Matrices, CpuCull, CameraCull, Times, batchSlot++);
                 }
             }
-            DisposeUnusedContexts();
-        }
-
-        public static void CollectRegisteredForEditor(List<ClusterSkinnedMeshRenderer> output)
-        {
-            output.Clear();
-            for (int i = 0; i < Renderers.Count; i++)
-                if (Renderers[i] != null && Renderers[i].isActiveAndEnabled)
-                    output.Add(Renderers[i]);
-        }
-
-        public static ClusterSkinnedMeshDrawContext CreatePreviewContext(ClusterSkinnedMeshRenderer renderer)
-        {
-            return renderer == null ? null :
-                new ClusterSkinnedMeshDrawContext(renderer.asset, renderer.cullShader, renderer.litShader);
         }
 
         static bool TryGetBatchKey(ClusterSkinnedMeshRenderer renderer, out BatchKey key)
@@ -280,6 +354,7 @@ namespace ClusterMesh
 
         public static void DisposeCachedContexts()
         {
+            UrpPrepared.Clear();
             foreach (KeyValuePair<ContextKey, ClusterSkinnedMeshDrawContext> pair in Contexts)
                 pair.Value?.Dispose();
             Contexts.Clear();

@@ -92,6 +92,65 @@ namespace ClusterMesh.Tests
         }
 
         [Test]
+        public void Constructor_TightRest_ReadyIffCapabilityAllows()
+        {
+            var mesh = ClusterMeshTestMeshes.Triangle();
+            var settings = new ClusterMeshBakeSettings { packTightRestVertices = true };
+            var bake = ClusterMeshBaker.Bake(mesh, new Material[1], settings);
+            var asset = ScriptableObject.CreateInstance<ClusterMeshAsset>();
+            asset.CopyFrom(bake, mesh, settings);
+
+            var cull = AssetDatabase.LoadAssetAtPath<ComputeShader>("Assets/ClusterMesh/Shaders/ClusterMeshCull.compute");
+            var lit = Shader.Find("ClusterMesh/Lit");
+            using (var ctx = new ClusterMeshDrawContext(asset, cull, lit))
+            {
+                Assert.That(asset.ResolvedVertexStride, Is.EqualTo(ClusterMeshLimits.TightVertexStride));
+                Assert.That(ctx.IsReady, Is.EqualTo(ClusterMeshCapability.IsSupported()));
+                if (!ctx.IsReady)
+                    Assert.That(ctx.Error, Is.Not.Null);
+            }
+
+            Object.DestroyImmediate(asset);
+            Object.DestroyImmediate(mesh);
+        }
+
+        [Test]
+        public void Draw_AfterRuntimeMaterialsDestroyed_DoesNotThrow()
+        {
+            var mesh = ClusterMeshTestMeshes.Triangle();
+            var bake = ClusterMeshBaker.Bake(mesh, new Material[1], new ClusterMeshBakeSettings { buildLodHierarchy = false });
+            var asset = ScriptableObject.CreateInstance<ClusterMeshAsset>();
+            asset.CopyFrom(bake, mesh, new ClusterMeshBakeSettings { buildLodHierarchy = false });
+            var cull = AssetDatabase.LoadAssetAtPath<ComputeShader>("Assets/ClusterMesh/Shaders/ClusterMeshCull.compute");
+            var lit = Shader.Find("ClusterMesh/Lit");
+            var camGo = new GameObject("CMDestroyedMatCam");
+            var cam = camGo.AddComponent<Camera>();
+            using (var ctx = new ClusterMeshDrawContext(asset, cull, lit))
+            {
+                if (!ctx.IsReady)
+                {
+                    Object.DestroyImmediate(camGo);
+                    Object.DestroyImmediate(asset);
+                    Object.DestroyImmediate(mesh);
+                    Assert.Ignore(ctx.Error);
+                    return;
+                }
+
+                var flags = System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance;
+                var color = (Material[])typeof(ClusterMeshDrawContext).GetField("_materials", flags).GetValue(ctx);
+                Object.DestroyImmediate(color[0]);
+                Assert.That(ctx.CanDraw, Is.False);
+                Assert.DoesNotThrow(() => ctx.Draw(Matrix4x4.identity, cam));
+                Assert.DoesNotThrow(() => ctx.DrawEditorPreview(
+                    new[] { Matrix4x4.identity }, new[] { true }, new[] { true }, cam, cam, true, true));
+            }
+
+            Object.DestroyImmediate(camGo);
+            Object.DestroyImmediate(asset);
+            Object.DestroyImmediate(mesh);
+        }
+
+        [Test]
         public void Dispose_Twice_DoesNotThrow()
         {
             var cull = AssetDatabase.LoadAssetAtPath<ComputeShader>("Assets/ClusterMesh/Shaders/ClusterMeshCull.compute");
