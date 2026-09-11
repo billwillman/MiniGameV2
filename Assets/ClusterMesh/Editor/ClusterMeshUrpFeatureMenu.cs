@@ -157,10 +157,10 @@ namespace ClusterMesh
         static List<UniversalRenderPipelineAsset> CollectProjectUrpAssets()
         {
             var result = new List<UniversalRenderPipelineAsset>();
+            AddUnique(result, UniversalRenderPipeline.asset);
             AddUnique(result, GraphicsSettings.renderPipelineAsset as UniversalRenderPipelineAsset);
             for (int i = 0; i < QualitySettings.names.Length; i++)
                 AddUnique(result, QualitySettings.GetRenderPipelineAssetAt(i) as UniversalRenderPipelineAsset);
-            AddUnique(result, UniversalRenderPipeline.asset);
             return result;
         }
 
@@ -173,6 +173,10 @@ namespace ClusterMesh
         static UniversalRenderPipelineAsset CreateUrpDeferredAssets()
         {
             EnsureAssetFolder(SettingsFolder);
+            UniversalRenderPipelineAsset existing =
+                AssetDatabase.LoadAssetAtPath<UniversalRenderPipelineAsset>(PipelineAssetPath);
+            if (existing != null)
+                return existing;
             string rendererPath = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(RendererAssetPath) == null
                 ? RendererAssetPath
                 : AssetDatabase.GenerateUniqueAssetPath(RendererAssetPath);
@@ -219,6 +223,12 @@ namespace ClusterMesh
 
             int universalDefault = -1;
             int configured = 0;
+            int currentDefault = defaultIndex.intValue;
+            if (currentDefault >= 0 && currentDefault < list.arraySize &&
+                list.GetArrayElementAtIndex(currentDefault).objectReferenceValue is UniversalRendererData)
+            {
+                universalDefault = currentDefault;
+            }
             for (int i = 0; i < list.arraySize; i++)
             {
                 var data = list.GetArrayElementAtIndex(i).objectReferenceValue as UniversalRendererData;
