@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 using UnityEngine.TestTools;
 
@@ -57,6 +58,50 @@ namespace ClusterMesh.Tests
             ClusterMeshUrpFeatureMenu.ConfigureDeferredOn(data);
             Assert.That(data.renderingMode, Is.EqualTo(RenderingMode.Deferred));
             Assert.That(ClusterMeshUrpBridge.HasActiveFeature(data), Is.True);
+        }
+
+        [Test]
+        public void ConfigureForwardOn_SwitchesFromDeferredAndKeepsFeature()
+        {
+            var data = Track(ScriptableObject.CreateInstance<UniversalRendererData>());
+            ClusterMeshUrpFeatureMenu.ConfigureDeferredOn(data);
+            ClusterMeshUrpFeatureMenu.ConfigureForwardOn(data);
+            Assert.That(data.renderingMode, Is.EqualTo(RenderingMode.Forward));
+            Assert.That(ClusterMeshUrpBridge.HasActiveFeature(data), Is.True);
+        }
+
+        [Test]
+        public void AreCompatibleDeferredTargets_MismatchedSizes_IsFalse()
+        {
+            RTHandle color = AllocHandle(987, 354, false);
+            RTHandle depth = AllocHandle(1288, 478, true);
+            try
+            {
+                Assert.That(ClusterMeshUrpBridge.AreCompatibleDeferredTargets(null, depth), Is.False);
+                Assert.That(ClusterMeshUrpBridge.AreCompatibleDeferredTargets(new[] { color }, null), Is.False);
+                Assert.That(ClusterMeshUrpBridge.AreCompatibleDeferredTargets(new[] { color }, depth), Is.False);
+            }
+            finally
+            {
+                ReleaseHandle(color);
+                ReleaseHandle(depth);
+            }
+        }
+
+        [Test]
+        public void AreCompatibleDeferredTargets_MatchingSizes_IsTrue()
+        {
+            RTHandle color = AllocHandle(64, 32, false);
+            RTHandle depth = AllocHandle(64, 32, true);
+            try
+            {
+                Assert.That(ClusterMeshUrpBridge.AreCompatibleDeferredTargets(new[] { color }, depth), Is.True);
+            }
+            finally
+            {
+                ReleaseHandle(color);
+                ReleaseHandle(depth);
+            }
         }
 
         [Test]

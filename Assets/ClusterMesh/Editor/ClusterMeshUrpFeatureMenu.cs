@@ -38,6 +38,36 @@ namespace ClusterMesh
                       " 延迟渲染仅支持 URP Deferred/Deferred+，不支持 Built-in/HDRP 延迟。");
         }
 
+        [MenuItem("Tools/ClusterMesh/Setup URP Forward (One Click)", priority = 1)]
+        public static void SetupUrpForward()
+        {
+            List<UniversalRenderPipelineAsset> assets = CollectProjectUrpAssets();
+            if (assets.Count == 0)
+            {
+                Debug.LogError("ClusterMesh: 当前没有 URP Asset，无法切回 Forward。请先指定管线资产或使用 Setup URP Deferred。");
+                return;
+            }
+
+            UniversalRenderPipelineAsset primary = assets[0];
+            int configuredRenderers = 0;
+            for (int i = 0; i < assets.Count; i++)
+                configuredRenderers += ConfigurePipeline(assets[i], RenderingMode.Forward);
+
+            GraphicsSettings.renderPipelineAsset = primary;
+            AssignAllQualityLevelsToUrp(primary);
+            EditorUtility.SetDirty(primary);
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+            Selection.activeObject = primary;
+            Debug.Log($"ClusterMesh: URP Forward 一键配置完成。管线资产 {assets.Count} 个，Universal Renderer {configuredRenderers} 个，ClusterMesh URP Feature 保持启用。");
+        }
+
+        [MenuItem("Tools/ClusterMesh/Setup URP Forward (One Click)", true)]
+        public static bool SetupUrpForwardValidate()
+        {
+            return CollectProjectUrpAssets().Count > 0;
+        }
+
         [MenuItem("Tools/ClusterMesh/Enable URP Feature")]
         public static void Enable()
         {
@@ -119,6 +149,15 @@ namespace ClusterMesh
             if (data == null)
                 return;
             data.renderingMode = RenderingMode.Deferred;
+            EnableOn(data);
+            EditorUtility.SetDirty(data);
+        }
+
+        public static void ConfigureForwardOn(UniversalRendererData data)
+        {
+            if (data == null)
+                return;
+            data.renderingMode = RenderingMode.Forward;
             EnableOn(data);
             EditorUtility.SetDirty(data);
         }
@@ -211,7 +250,7 @@ namespace ClusterMesh
             return fallback;
         }
 
-        static int ConfigurePipeline(UniversalRenderPipelineAsset pipeline)
+        static int ConfigurePipeline(UniversalRenderPipelineAsset pipeline, RenderingMode mode = RenderingMode.Deferred)
         {
             if (pipeline == null)
                 return 0;
@@ -236,11 +275,14 @@ namespace ClusterMesh
                     continue;
                 if (universalDefault < 0)
                     universalDefault = i;
-                ConfigureDeferredOn(data);
+                if (mode == RenderingMode.Deferred)
+                    ConfigureDeferredOn(data);
+                else
+                    ConfigureForwardOn(data);
                 configured++;
             }
 
-            if (universalDefault < 0)
+            if (universalDefault < 0 && mode == RenderingMode.Deferred)
             {
                 string pipelinePath = AssetDatabase.GetAssetPath(pipeline);
                 string directory = string.IsNullOrEmpty(pipelinePath)
@@ -258,7 +300,8 @@ namespace ClusterMesh
                 configured++;
             }
 
-            defaultIndex.intValue = universalDefault;
+            if (universalDefault >= 0)
+                defaultIndex.intValue = universalDefault;
             serialized.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(pipeline);
             return configured;
