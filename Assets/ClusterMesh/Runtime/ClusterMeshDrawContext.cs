@@ -90,6 +90,17 @@ namespace ClusterMesh
         }
 
         public bool IsReady { get; private set; }
+        public bool CanDraw
+        {
+            get
+            {
+                if (!IsReady || _disposed)
+                    return false;
+                if (_template == null)
+                    return false;
+                return MaterialsAlive(_materials) && MaterialsAlive(_shadowMaterials);
+            }
+        }
         public string Error { get; }
         public int IsolateIndex { get; set; } = -1;
         public bool EnableConeCull { get; set; } = true;
@@ -296,7 +307,7 @@ namespace ClusterMesh
             bool castShadows,
             bool receiveShadows)
         {
-            if (drawCamera == null)
+            if (drawCamera == null || !CanDraw)
                 return;
             if (!PrepareChunks(localToWorld, enableCpuObjectCull, enableCameraCull, count, cullingCamera, castShadows, receiveShadows))
                 return;
@@ -358,7 +369,7 @@ namespace ClusterMesh
         {
             ReleaseExtras();
             _urpChunks.Clear();
-            if (!IsReady || camera == null || count <= 0)
+            if (!CanDraw || camera == null || count <= 0)
                 return false;
 
             ClusterMeshFrustum.WorldPlanes(camera, _planes);
@@ -506,6 +517,8 @@ namespace ClusterMesh
 
         void SubmitLegacy(UrpChunk chunk, Camera camera)
         {
+            if (!CanDraw)
+                return;
             RestoreChunk(chunk);
             for (int materialIndex = 0; materialIndex < _materials.Length; materialIndex++)
             {
@@ -534,7 +547,7 @@ namespace ClusterMesh
 
         void SubmitUrpShadows(UrpChunk chunk, Camera camera)
         {
-            if (!_preparedCast)
+            if (!CanDraw || !_preparedCast)
                 return;
             RestoreChunk(chunk);
             for (int materialIndex = 0; materialIndex < _materials.Length; materialIndex++)
@@ -551,6 +564,8 @@ namespace ClusterMesh
 
         void SubmitCmd(UrpChunk chunk, CommandBuffer cmd, int shaderPass)
         {
+            if (!CanDraw)
+                return;
             RestoreChunk(chunk);
             for (int materialIndex = 0; materialIndex < _materials.Length; materialIndex++)
             {
@@ -606,6 +621,8 @@ namespace ClusterMesh
 
         void BindDrawMaterial(Material mat, GraphicsBuffer visible)
         {
+            if (mat == null)
+                return;
             mat.SetBuffer(ClustersId, _clusterBuffer);
             mat.SetBuffer(VerticesId, _vertexBuffer);
             mat.SetBuffer(VerticesTightId, _vertexTightBuffer);
@@ -615,6 +632,19 @@ namespace ClusterMesh
             mat.SetMatrixArray(ObjectLocalToWorldId, _l2w);
             mat.SetMatrixArray(ObjectWorldToLocalId, _w2l);
             mat.SetFloat(EnableClusterColorId, EnableClusterColor ? 1f : 0f);
+        }
+
+        static bool MaterialsAlive(Material[] materials)
+        {
+            if (materials == null || materials.Length == 0)
+                return false;
+            for (int i = 0; i < materials.Length; i++)
+            {
+                if (materials[i] == null)
+                    return false;
+            }
+
+            return true;
         }
 
         static void CopyPlanes(Plane[] src, Vector4[] dest)

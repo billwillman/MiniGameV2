@@ -27,9 +27,14 @@ namespace ClusterMesh
         public override void OnPreviewGUI(Rect r, GUIStyle background)
         {
             var asset = (ClusterMeshAsset)target;
+            if (_context != null && !_context.CanDraw)
+            {
+                _context.Dispose();
+                _context = null;
+            }
             if (_context == null)
                 _context = ClusterMeshViewerWindow.CreatePreviewContext(asset);
-            if (_context == null || !_context.IsReady)
+            if (_context == null || !_context.CanDraw)
             {
                 EditorGUI.LabelField(r, _context != null ? _context.Error : "Preview unavailable");
                 return;

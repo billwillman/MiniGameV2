@@ -30,5 +30,14 @@ namespace ClusterMesh.Tests
             Assert.That(runtime.enableInstancing, Is.True);
             Object.DestroyImmediate(runtime);
         }
+
+        [Test]
+        public void CreateRuntimeMaterial_MarksHideAndDontSave()
+        {
+            var shader = Shader.Find("Unlit/Color");
+            var runtime = ClusterMeshMaterialUtil.CreateRuntimeMaterial(null, shader);
+            Assert.That(runtime.hideFlags, Is.EqualTo(HideFlags.HideAndDontSave));
+            Object.DestroyImmediate(runtime);
+        }
     }
 }

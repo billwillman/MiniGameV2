@@ -99,7 +99,7 @@ namespace ClusterMesh
                 if (ClusterMeshUrpBridge.ShouldSkipLegacyFlush(camera))
                     return;
                 ClusterMeshDrawContext ctx = GetOrCreate(seed);
-                if (ctx == null || !ctx.IsReady)
+                if (ctx == null || !ctx.CanDraw)
                     return;
                 ctx.EnableConeCull = seed.enableConeCull;
                 ctx.EnableClusterColor = clusterColors;
@@ -119,7 +119,7 @@ namespace ClusterMesh
                 if (resolved != camera)
                     return;
                 ClusterMeshDrawContext ctx = GetOrCreate(seed);
-                if (ctx == null || !ctx.IsReady)
+                if (ctx == null || !ctx.CanDraw)
                     return;
                 ctx.EnableConeCull = seed.enableConeCull;
                 ctx.EnableClusterColor = clusterColors;
@@ -285,7 +285,12 @@ namespace ClusterMesh
         {
             ClusterMeshAsset asset = seed.asset;
             if (Contexts.TryGetValue(asset, out ClusterMeshDrawContext existing))
-                return existing;
+            {
+                if (existing != null && existing.CanDraw)
+                    return existing;
+                existing?.Dispose();
+                Contexts.Remove(asset);
+            }
 
             var ctx = new ClusterMeshDrawContext(asset, seed.cullShader, seed.litShader);
             if (!ctx.IsReady)

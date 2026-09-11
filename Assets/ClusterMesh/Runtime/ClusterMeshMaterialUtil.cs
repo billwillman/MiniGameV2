@@ -9,7 +9,11 @@ namespace ClusterMesh
             if (lit == null)
                 throw new System.InvalidOperationException("ClusterMesh Lit shader is missing.");
 
-            var material = new Material(lit) { name = source != null ? source.name + " (ClusterMesh)" : "ClusterMeshLit" };
+            var material = new Material(lit)
+            {
+                name = source != null ? source.name + " (ClusterMesh)" : "ClusterMeshLit",
+                hideFlags = HideFlags.HideAndDontSave
+            };
             material.enableInstancing = true;
             if (source == null)
                 return material;
