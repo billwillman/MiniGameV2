@@ -244,6 +244,16 @@ namespace ClusterMesh
             return ShouldSubmitUrp(camera);
         }
 
+        // ShadowsOnly must be queued before URP Cull. AddRenderPasses runs after
+        // Cull, which is why Game View lost shadows while Scene View (BeginCameraRendering) kept them.
+        public static void SubmitUrpShadowsBeforeCull(Camera camera)
+        {
+            if (!ShouldSubmitUrp(camera))
+                return;
+            ClusterMeshSceneBatcher.PrepareAndSubmitUrpShadows(camera);
+            ClusterSkinnedMeshSceneBatcher.PrepareAndSubmitUrpShadows(camera);
+        }
+
         public static bool ShouldSubmitUrp(Camera camera)
         {
             // Game cameras (Play, Edit Mode Game View, and Player) use the Feature

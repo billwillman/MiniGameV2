@@ -50,6 +50,20 @@ namespace ClusterMesh.Tests
         }
 
         [Test]
+        public void SubmitUrpShadowsBeforeCull_SameGameCameraTwice_SubmitsOnce()
+        {
+            var data = Track(ScriptableObject.CreateInstance<UniversalRendererData>());
+            ClusterMeshUrpFeatureMenu.EnableOn(data);
+            ClusterMeshUrpBridge.RendererDataOverrideForTests = data;
+            ClusterSkinnedMeshRenderer renderer = CreateRegisteredRenderer();
+            ClusterMeshUrpBridge.SubmitUrpShadowsBeforeCull(renderer.targetCamera);
+            int first = ClusterSkinnedMeshSceneBatcher.UrpShadowSubmitCountForTests;
+            Assert.That(first, Is.EqualTo(1));
+            ClusterMeshUrpBridge.SubmitUrpShadowsBeforeCull(renderer.targetCamera);
+            Assert.That(ClusterSkinnedMeshSceneBatcher.UrpShadowSubmitCountForTests, Is.EqualTo(1));
+        }
+
+        [Test]
         public void PrepareAndSubmitUrpShadows_WithoutFeature_DoesNotPrepare()
         {
             var data = Track(ScriptableObject.CreateInstance<UniversalRendererData>());

@@ -54,7 +54,8 @@ MonoBehaviour:
   m_RendererFeatures:
   - {fileID: -1878332245247344467}
   - {fileID: 406871501764670633}
-  m_RendererFeatureMap: adc0de57c6d2eee5
+  - {fileID: 5829173640182947101}
+  m_RendererFeatureMap: adc0de57c6d2eee5a9b4e9a3797fa5051ddd2c9d8a62e550
   m_UseNativeRenderPass: 0
   postProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}
   xrSystemData: {fileID: 11400000, guid: 60e1133243b97e347b653163a8c01b64, type: 2}
@@ -110,3 +111,23 @@ MonoBehaviour:
   m_Name: ClusterMesh URP
   m_EditorClassIdentifier: 
   m_Active: 1
+--- !u!114 &5829173640182947101
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 88bd13fabf96a4cc1aaf221e40805c5c, type: 3}
+  m_Name: RadiantRenderFeature
+  m_EditorClassIdentifier: 
+  m_Active: 1
+  renderingPath: 1
+  ignorePostProcessingOption: 1
+  ignoreOverlayCameras: 1
+  camerasLayerMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  useRenderingLayers: 0

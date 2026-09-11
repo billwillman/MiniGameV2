@@ -201,6 +201,36 @@ namespace ClusterMesh.Tests
         }
 
         [Test]
+        public void PrepareAndSubmitUrpShadows_SameGameCameraTwice_SubmitsOnce()
+        {
+            var data = Track(ScriptableObject.CreateInstance<UniversalRendererData>());
+            ClusterMeshUrpFeatureMenu.EnableOn(data);
+            ClusterMeshUrpBridge.RendererDataOverrideForTests = data;
+            var cam = Track(new GameObject("CMUrpShadowOnceCam")).AddComponent<Camera>();
+            cam.cameraType = CameraType.Game;
+            var mesh = ClusterMeshTestMeshes.Triangle();
+            _trash.Add(mesh);
+            var bake = ClusterMeshBaker.Bake(mesh, new Material[1], new ClusterMeshBakeSettings { buildLodHierarchy = false });
+            var asset = Track(ScriptableObject.CreateInstance<ClusterMeshAsset>());
+            asset.CopyFrom(bake, mesh, new ClusterMeshBakeSettings { buildLodHierarchy = false });
+            var host = Track(new GameObject("CMUrpShadowOnceHost"));
+            var renderer = host.AddComponent<ClusterMeshRenderer>();
+            renderer.asset = asset;
+            renderer.targetCamera = cam;
+            renderer.cullShader = AssetDatabaseCull();
+            string reason = ClusterMeshCapability.GetUnsupportedReason();
+            if (reason != null)
+                LogAssert.Expect(LogType.Error, "ClusterMesh: " + reason);
+            ClusterMeshSceneBatcher.Register(renderer);
+
+            ClusterMeshUrpBridge.SubmitUrpShadowsBeforeCull(cam);
+            int first = ClusterMeshSceneBatcher.UrpShadowSubmitCountForTests;
+            Assert.That(first, Is.EqualTo(1));
+            ClusterMeshUrpBridge.SubmitUrpShadowsBeforeCull(cam);
+            Assert.That(ClusterMeshSceneBatcher.UrpShadowSubmitCountForTests, Is.EqualTo(1));
+        }
+
+        [Test]
         public void EditorLegacyFallback_WithActiveFeature_DoesNotThrow()
         {
             var data = Track(ScriptableObject.CreateInstance<UniversalRendererData>());

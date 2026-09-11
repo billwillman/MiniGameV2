@@ -13,6 +13,8 @@ namespace ClusterMesh
 
         public override void Create()
         {
+            RenderPipelineManager.beginCameraRendering -= OnBeginCameraRendering;
+            RenderPipelineManager.beginCameraRendering += OnBeginCameraRendering;
             _depthPass = new ClusterMeshUrpPass(RenderPassEvent.BeforeRenderingPrePasses, ClusterMeshUrpPhase.Depth);
             _colorPass = new ClusterMeshUrpPass(RenderPassEvent.BeforeRenderingOpaques, ClusterMeshUrpPhase.Color);
             _gbufferPass = new ClusterMeshUrpPass(
@@ -23,14 +25,29 @@ namespace ClusterMesh
                 ClusterMeshUrpPhase.Motion);
         }
 
+        protected override void Dispose(bool disposing)
+        {
+            RenderPipelineManager.beginCameraRendering -= OnBeginCameraRendering;
+            base.Dispose(disposing);
+        }
+
+        static void OnBeginCameraRendering(ScriptableRenderContext context, Camera camera)
+        {
+            ClusterMeshUrpBridge.SubmitUrpShadowsBeforeCull(camera);
+        }
+
+        public override void OnCameraPreCull(ScriptableRenderer renderer, in CameraData cameraData)
+        {
+            ClusterMeshUrpBridge.SubmitUrpShadowsBeforeCull(cameraData.camera);
+        }
+
         public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)
         {
             Camera camera = renderingData.cameraData.camera;
             if (!ClusterMeshUrpBridge.ShouldSubmitUrp(camera))
                 return;
 
-            ClusterMeshSceneBatcher.PrepareAndSubmitUrpShadows(camera);
-            ClusterSkinnedMeshSceneBatcher.PrepareAndSubmitUrpShadows(camera);
+            ClusterMeshUrpBridge.SubmitUrpShadowsBeforeCull(camera);
             renderer.EnqueuePass(_depthPass);
             if (ClusterMeshUrpBridge.IsDeferred(renderer))
             {

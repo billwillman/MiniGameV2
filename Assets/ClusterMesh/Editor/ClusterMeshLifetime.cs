@@ -94,6 +94,7 @@ namespace ClusterMesh
 
             ClusterMeshSceneViewRenderer.DrawSceneCamera(camera);
             ClusterSkinnedMeshSceneViewRenderer.DrawSceneCamera(camera);
+            ClusterMeshUrpBridge.SubmitUrpShadowsBeforeCull(camera);
         }
 
         static void OnBuiltInCameraPreCull(Camera camera)

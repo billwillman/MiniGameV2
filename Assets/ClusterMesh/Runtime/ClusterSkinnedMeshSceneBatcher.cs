@@ -118,9 +118,12 @@ namespace ClusterMesh
         static readonly List<bool> MotionVectorFlags = new List<bool>(ClusterMeshLimits.MaxBatchedObjects);
         static readonly List<ClusterSkinnedMeshDrawContext> UrpPrepared = new List<ClusterSkinnedMeshDrawContext>();
         static int _flushedFrame = int.MinValue;
+        static int _urpPreparedFrame = int.MinValue;
+        static int _urpPreparedCameraId;
 
         public static int LegacyFlushBatchCountForTests { get; private set; }
         public static int UrpPreparedCountForTests => UrpPrepared.Count;
+        public static int UrpShadowSubmitCountForTests { get; private set; }
         public static int CachedContextCount => Contexts.Count;
         public static int RegisteredCount
         {
@@ -189,9 +192,16 @@ namespace ClusterMesh
 
         public static void PrepareAndSubmitUrpShadows(Camera camera)
         {
-            UrpPrepared.Clear();
             if (!ClusterMeshUrpBridge.ShouldSubmitUrp(camera))
                 return;
+            int cameraId = camera.GetInstanceID();
+            if (_urpPreparedFrame == Time.frameCount && _urpPreparedCameraId == cameraId)
+                return;
+
+            UrpPrepared.Clear();
+            _urpPreparedFrame = Time.frameCount;
+            _urpPreparedCameraId = cameraId;
+            UrpShadowSubmitCountForTests++;
 
             ForEachRegisteredBatch((seed, batch, matrices, previousMatrices, cpuCull, cameraCull, times, previousTimes, motionVectorFlags, batchSlot) =>
             {
@@ -263,6 +273,9 @@ namespace ClusterMesh
             Renderers.Clear();
             UrpPrepared.Clear();
             LegacyFlushBatchCountForTests = 0;
+            UrpShadowSubmitCountForTests = 0;
+            _urpPreparedFrame = int.MinValue;
+            _urpPreparedCameraId = 0;
             DisposeCachedContexts();
         }
 
