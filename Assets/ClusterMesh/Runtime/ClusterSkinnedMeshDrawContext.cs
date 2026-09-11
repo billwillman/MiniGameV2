@@ -140,12 +140,14 @@ namespace ClusterMesh
             _restVertexTight = false;
             if (asset == null || asset.geometry == null || asset.geometry.clusters == null || asset.geometry.clusters.Length == 0)
             { Error = "ClusterSkinnedMesh asset is missing geometry."; return; }
-            if (asset.bindPoses == null || asset.bindPoses.Length == 0)
-            { Error = "ClusterSkinnedMesh asset has no bind poses."; return; }
+            if (asset.skinBoneCount <= 0)
+            { Error = "ClusterSkinnedMesh asset has no baked bone count."; return; }
             string cullError = null;
             if (asset.clips == null || asset.clips.Length == 0 ||
                 !asset.TryGetCullFrames(out ClusterSkinnedCullFrame[] cullFrames, out cullError))
             { Error = cullError ?? "ClusterSkinnedMesh asset has no baked clip bounds."; return; }
+            if (!TryValidateCullFrameLayout(asset, cullFrames, out cullError))
+            { Error = cullError; return; }
             bool tightRest = asset.geometry.ResolvedVertexStride == ClusterMeshLimits.TightVertexStride;
             ClusterPackedVertex[] verts = Array.Empty<ClusterPackedVertex>();
             ClusterPackedVertexTight[] tightVerts = Array.Empty<ClusterPackedVertexTight>();
@@ -178,12 +180,12 @@ namespace ClusterMesh
             if (!cullShader.HasKernel("CullSkinnedClusters"))
             { Error = "ClusterSkinnedMesh cull kernel is missing."; return; }
 
-            _boneCount = asset.bindPoses.Length;
+            _boneCount = asset.skinBoneCount;
             _paletteWidth = _boneCount * 3;
             _gpuPalettePixelsPerBone = asset.GpuPalettePixelsPerBone;
             _skinWeightPacked8 = packed8;
             _restVertexTight = tightRest;
-            if (_paletteWidth > SystemInfo.maxTextureSize)
+            if (asset.AllowsCpuAnimation && _paletteWidth > SystemInfo.maxTextureSize)
             { Error = "ClusterSkinnedMesh has too many bones for the palette texture."; return; }
             _kernel = cullShader.FindKernel("CullSkinnedClusters");
             _template = ClusterMeshTemplate.Create();
@@ -676,6 +678,37 @@ namespace ClusterMesh
             Bounds b = new Bounds(frames[0].aabbCenter, frames[0].aabbExtents * 2f);
             for (int i = 1; i < frames.Length; i++) b.Encapsulate(new Bounds(frames[i].aabbCenter, frames[i].aabbExtents * 2f));
             return b;
+        }
+
+        static bool TryValidateCullFrameLayout(ClusterSkinnedMeshAsset asset,
+            ClusterSkinnedCullFrame[] frames, out string error)
+        {
+            error = null;
+            int clusterCount = asset != null && asset.geometry != null && asset.geometry.clusters != null
+                ? asset.geometry.clusters.Length : 0;
+            if (clusterCount <= 0 || frames == null || frames.Length == 0)
+            {
+                error = "ClusterSkinnedMesh asset has no baked clip bounds.";
+                return false;
+            }
+
+            for (int i = 0; i < asset.clips.Length; i++)
+            {
+                ClusterSkinnedClip clip = asset.clips[i];
+                if (clip == null || clip.segmentCount <= 0 || clip.cullFrameOffset < 0)
+                {
+                    error = "ClusterSkinnedMesh clip " + i + " has invalid cull frame metadata.";
+                    return false;
+                }
+
+                long requiredEnd = (long)clip.cullFrameOffset + (long)clip.segmentCount * clusterCount;
+                if (requiredEnd > frames.LongLength)
+                {
+                    error = "ClusterSkinnedMesh clip " + i + " cull frames are incomplete.";
+                    return false;
+                }
+            }
+            return true;
         }
         void CopyPlane(int i, Plane p) => _planes[i] = new Vector4(p.normal.x, p.normal.y, p.normal.z, p.distance);
         public void Dispose()

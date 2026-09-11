@@ -91,9 +91,16 @@ float3x3 QuatToMat(float4 q)
 }
 void FetchBaseVertex(uint vertexID, uint instanceID, out float3 p, out float3 n, out float4 t, out float2 uv, out uint vertexIndex)
 {
+    // Tuanjie/DXC does not always propagate definite assignment through an
+    // out-parameter helper. Seed every output before the tight-vertex branch.
+    p = float3(0.0, 0.0, 0.0);
+    n = float3(0.0, 1.0, 0.0);
+    t = float4(1.0, 0.0, 0.0, 1.0);
+    uv = float2(0.0, 0.0);
+    vertexIndex = 0u;
     uint cluster = _VisibleClusterIds[instanceID] & 0xffffu;
     ClusterHeader h = _Clusters[cluster];
-    if (vertexID >= h.triangleCount * 3) { p=0; n=float3(0,1,0); t=float4(1,0,0,1); uv=0; vertexIndex=0; return; }
+    if (vertexID >= h.triangleCount * 3u) return;
     uint raw = _Indices[(h.indexOffset + vertexID) >> 1];
     uint local = ((h.indexOffset + vertexID) & 1u) == 0 ? raw & 0xffffu : raw >> 16;
     vertexIndex = h.vertexOffset + local;
@@ -127,27 +134,40 @@ float4 CompactPaletteRow(uint objectIndex, uint bone, uint row)
         _SkinAnimationTex.Load(int3(xq + 1u, frame1, 0)),
         blend);
     float3x3 r = QuatToMat(q) * ts.w;
-    if (row == 0u) return float4(r[0][0], r[0][1], r[0][2], ts.x);
-    if (row == 1u) return float4(r[1][0], r[1][1], r[1][2], ts.y);
-    return float4(r[2][0], r[2][1], r[2][2], ts.z);
+    float4 result = float4(r[2][0], r[2][1], r[2][2], ts.z);
+    if (row == 0u)
+        result = float4(r[0][0], r[0][1], r[0][2], ts.x);
+    else if (row == 1u)
+        result = float4(r[1][0], r[1][1], r[1][2], ts.y);
+    return result;
 }
 float4 PaletteRow(uint objectIndex, uint bone, uint row)
 {
+    float4 result = float4(0.0, 0.0, 0.0, 0.0);
     if (_UseGpuAnimationTexture != 0 && _GpuPalettePixelsPerBone == 2)
-        return CompactPaletteRow(objectIndex, bone, row);
-    uint x = bone * 3u + row;
-    if (_UseGpuAnimationTexture != 0)
     {
-        uint lastFrame = (uint)max(_SkinAnimationFrameCount - 1, 0);
-        float frame = saturate(_ObjectAnimationTimes[objectIndex]) * lastFrame;
-        uint frame0 = min((uint)floor(frame), lastFrame);
-        uint frame1 = min(frame0 + 1u, lastFrame);
-        return lerp(
-            _SkinAnimationTex.Load(int3(x, frame0, 0)),
-            _SkinAnimationTex.Load(int3(x, frame1, 0)),
-            frac(frame));
+        result = CompactPaletteRow(objectIndex, bone, row);
     }
-    return _SkinPaletteTex.Load(int3(x, objectIndex, 0));
+    else
+    {
+        uint x = bone * 3u + row;
+        if (_UseGpuAnimationTexture != 0)
+        {
+            uint lastFrame = (uint)max(_SkinAnimationFrameCount - 1, 0);
+            float frame = saturate(_ObjectAnimationTimes[objectIndex]) * lastFrame;
+            uint frame0 = min((uint)floor(frame), lastFrame);
+            uint frame1 = min(frame0 + 1u, lastFrame);
+            result = lerp(
+                _SkinAnimationTex.Load(int3(x, frame0, 0)),
+                _SkinAnimationTex.Load(int3(x, frame1, 0)),
+                frac(frame));
+        }
+        else
+        {
+            result = _SkinPaletteTex.Load(int3(x, objectIndex, 0));
+        }
+    }
+    return result;
 }
 float3 TransformPalettePoint(uint objectIndex, uint bone, float3 p)
 {

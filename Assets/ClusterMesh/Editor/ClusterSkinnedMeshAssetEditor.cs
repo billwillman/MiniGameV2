@@ -39,7 +39,7 @@ namespace ClusterMesh
             EditorGUILayout.LabelField("Clusters", geometry != null && geometry.clusters != null
                 ? geometry.clusters.Length.ToString() : "0");
             EditorGUILayout.LabelField("Vertices", geometry != null ? geometry.vertexCount.ToString() : "0");
-            EditorGUILayout.LabelField("Bones", asset.bindPoses != null ? asset.bindPoses.Length.ToString() : "0");
+            EditorGUILayout.LabelField("Bones", asset.skinBoneCount.ToString());
             EditorGUILayout.LabelField("Clips", asset.clips != null ? asset.clips.Length.ToString() : "0");
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Animation Data", EditorStyles.boldLabel);
@@ -63,7 +63,7 @@ namespace ClusterMesh
         {
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Animation Data Preview", EditorStyles.boldLabel);
-            int boneCount = asset.bindPoses != null ? asset.bindPoses.Length : 0;
+            int boneCount = asset.skinBoneCount;
             ClusterSkinnedClip[] clips = asset.clips;
             if (boneCount <= 0 || clips == null || clips.Length == 0)
             {
@@ -81,13 +81,10 @@ namespace ClusterMesh
             _previewClip = EditorGUILayout.Popup("Animation Clip", Mathf.Clamp(_previewClip, 0, clips.Length - 1), labels);
             _previewTime = EditorGUILayout.Slider("Normalized Time", _previewTime, 0f, 1f);
 
-            int width = boneCount * 3;
-            if (width > SystemInfo.maxTextureSize)
-            {
-                EditorGUILayout.HelpBox("骨骼 Palette 宽度超过当前设备的最大纹理尺寸，无法创建 VTF 预览。", MessageType.Error);
-                return;
-            }
-            EditorGUILayout.LabelField("Runtime Layout", width + " × instance count · RGBAFloat · Point");
+            int gpuWidth = boneCount * asset.GpuPalettePixelsPerBone;
+            int cpuWidth = boneCount * 3;
+            if (asset.AllowsGpuAnimation)
+                EditorGUILayout.LabelField("GPU Runtime Layout", gpuWidth + " × frame count · RGBAHalf · Point");
 
             if (asset.HasGpuPalette(_previewClip))
             {
@@ -112,7 +109,13 @@ namespace ClusterMesh
                 return;
             }
 
-            EnsurePalettePreview(asset, boneCount, width);
+            if (cpuWidth > SystemInfo.maxTextureSize)
+            {
+                EditorGUILayout.HelpBox("CPU 骨骼 Palette 宽度超过当前设备的最大纹理尺寸，无法创建 VTF 预览。", MessageType.Error);
+                return;
+            }
+            EditorGUILayout.LabelField("CPU Runtime Layout", cpuWidth + " × instance count · RGBAFloat · Point");
+            EnsurePalettePreview(asset, boneCount, cpuWidth);
             if (_palettePreview == null)
                 return;
             Rect previewRect = GUILayoutUtility.GetRect(64f, 72f, GUILayout.ExpandWidth(true));

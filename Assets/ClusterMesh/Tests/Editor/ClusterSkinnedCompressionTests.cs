@@ -152,7 +152,8 @@ namespace ClusterMesh.Tests
             var texture = new Texture2D(2, 2, TextureFormat.RGBAHalf, false, true);
             try
             {
-                asset.bindPoses = new[] { Matrix4x4.identity };
+                asset.skinBoneCount = 1;
+                asset.bindPoses = System.Array.Empty<Matrix4x4>();
                 asset.clips = new[] { new ClusterSkinnedClip() };
                 asset.gpuPaletteTextures = new[] { texture };
                 asset.gpuAnimationVersion = ClusterSkinnedMeshAsset.CurrentGpuAnimationVersion;
@@ -167,6 +168,22 @@ namespace ClusterMesh.Tests
             finally
             {
                 Object.DestroyImmediate(texture);
+                Object.DestroyImmediate(asset);
+            }
+        }
+
+        [Test]
+        public void TryGetCullFrames_EmptyArray_IsRejected()
+        {
+            var asset = ScriptableObject.CreateInstance<ClusterSkinnedMeshAsset>();
+            try
+            {
+                asset.cullFrames = System.Array.Empty<ClusterSkinnedCullFrame>();
+                Assert.That(asset.TryGetCullFrames(out _, out string error), Is.False);
+                Assert.That(error, Does.Contain("no baked clip bounds"));
+            }
+            finally
+            {
                 Object.DestroyImmediate(asset);
             }
         }

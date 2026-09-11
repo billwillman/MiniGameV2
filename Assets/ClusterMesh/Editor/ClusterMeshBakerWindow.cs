@@ -90,14 +90,18 @@ namespace ClusterMesh
                 packWeights8
                     ? ClusterSkinnedMeshAsset.PackedSkinWeightStride8
                     : ClusterSkinnedMeshAsset.PackedSkinWeightStride);
-            asset.bindPoses = result.bindPoses;
-            asset.bonePaths = result.bonePaths;
-            asset.boneParentIndices = result.boneParentIndices;
+            asset.skinBoneCount = result.bindPoses != null ? result.bindPoses.Length : 0;
+            asset.bindPoses = bakeOptions.IncludesCpu ? result.bindPoses : Array.Empty<Matrix4x4>();
+            asset.boneParentIndices = bakeOptions.IncludesCpu
+                ? result.boneParentIndices : Array.Empty<int>();
+            asset.bonePaths = bakeOptions.IncludesCpu && bakeOptions.retainAnimationCurves
+                ? result.bonePaths : Array.Empty<string>();
             asset.clips = result.clips;
             asset.gpuPaletteTextures = result.gpuPaletteTextures;
             asset.cpuCurveHeaders = result.cpuCurveHeaders;
             asset.cpuCurveSegments = result.cpuCurveSegments;
-            asset.boneEvaluationOrder = result.boneEvaluationOrder;
+            asset.boneEvaluationOrder = bakeOptions.IncludesCpu
+                ? result.boneEvaluationOrder : Array.Empty<int>();
             if (bakeOptions.compressCullFrames)
             {
                 asset.cullFrames = Array.Empty<ClusterSkinnedCullFrame>();
