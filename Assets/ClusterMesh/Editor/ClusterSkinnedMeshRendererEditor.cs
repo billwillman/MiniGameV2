@@ -14,6 +14,7 @@ namespace ClusterMesh
             var renderer = (ClusterSkinnedMeshRenderer)target;
             serializedObject.Update();
             SerializedProperty evaluation = serializedObject.FindProperty("animationEvaluation");
+            SerializedProperty parallelPrefix = serializedObject.FindProperty("enableParallelBonePrefix");
             SerializedProperty prop = serializedObject.GetIterator();
             bool enterChildren = true;
             while (prop.NextVisible(enterChildren))
@@ -26,43 +27,45 @@ namespace ClusterMesh
                     continue;
                 }
 
+                if (prop.propertyPath == "animationEvaluation" ||
+                    prop.propertyPath == "enableParallelBonePrefix")
+                    continue;
                 if (prop.propertyPath == "lodErrorThreshold")
                     DrawLodErrorThreshold(prop);
                 else if (prop.propertyPath == "clipIndex")
                     DrawClipIndex(prop, renderer.asset);
-                else if (prop.propertyPath == "enableParallelBonePrefix")
-                {
-                    if ((ClusterSkinnedAnimationEvaluation)evaluation.enumValueIndex ==
-                        ClusterSkinnedAnimationEvaluation.CpuCurves)
-                    {
-                        EditorGUILayout.PropertyField(prop, new GUIContent(
-                            "前缀并行开启",
-                            "仅 CPU Curves 生效。先并行求每根骨头的局部 pose，再用前缀积算骨骼层级。骨架很深或 CPU 实例很少时才可能更快；普通人模请保持关闭，额外 Job 和缓冲往往更贵。"));
-                        EditorGUILayout.HelpBox(
-                            "前缀并行把「局部曲线」和「层级乘」拆开：骨头之间先并行算局部变换，再按骨骼树做前缀积。默认关闭。人模骨骼不深时，多出来的 Job 通常比按父子顺序串行更慢。",
-                            MessageType.Info);
-                    }
-                }
                 else
                     EditorGUILayout.PropertyField(prop, true);
             }
 
+            DrawAnimationGroup(renderer, evaluation, parallelPrefix);
+
             serializedObject.ApplyModifiedProperties();
-            if (renderer.animationEvaluation == ClusterSkinnedAnimationEvaluation.GpuTexture &&
-                renderer.asset != null && renderer.asset.clips != null && renderer.asset.clips.Length > 0 &&
-                !renderer.asset.HasGpuPalette(Mathf.Clamp(renderer.clipIndex, 0, renderer.asset.clips.Length - 1)))
+            renderer.ConstrainAnimationEvaluation();
+            if (renderer.asset != null && renderer.asset.clips != null && renderer.asset.clips.Length > 0)
             {
-                EditorGUILayout.HelpBox(
-                    "当前资产没有可用的 GPU Palette Atlas，将自动回退 CPU Curves。重新 Baker 后可启用真正的 GPU Texture 动画。",
-                    MessageType.Warning);
-            }
-            if (renderer.animationEvaluation == ClusterSkinnedAnimationEvaluation.CpuCurves &&
-                renderer.asset != null && renderer.asset.clips != null && renderer.asset.clips.Length > 0 &&
-                !renderer.asset.HasCpuBurstCurves(Mathf.Clamp(renderer.clipIndex, 0, renderer.asset.clips.Length - 1)))
-            {
-                EditorGUILayout.HelpBox(
-                    "当前资产没有可用的 Burst 曲线数据，将使用旧版兼容路径。重新 Baker 后，CPU Curves 会由 Job System + Burst 计算。",
-                    MessageType.Warning);
+                int clip = Mathf.Clamp(renderer.clipIndex, 0, renderer.asset.clips.Length - 1);
+                bool gpuRequested = renderer.animationEvaluation == ClusterSkinnedAnimationEvaluation.GpuTexture;
+                bool gpuReady = renderer.asset.HasGpuPalette(clip) &&
+                    SystemInfo.SupportsTextureFormat(renderer.asset.gpuPaletteTextures[clip].format);
+                bool cpuReady = renderer.asset.HasCpuBurstCurves(clip) &&
+                    SystemInfo.SupportsTextureFormat(TextureFormat.RGBAFloat);
+                if (gpuRequested && !gpuReady)
+                {
+                    EditorGUILayout.HelpBox(
+                        renderer.asset.animationDataMode == ClusterSkinnedAnimationDataMode.GpuAndCpu && cpuReady
+                            ? "当前 GPU VTF 数据或纹理格式不可用，将回退到已烘焙的 CPU Hermite 数据。"
+                            : "当前资产无法使用 GPU VTF 数据。该数据模式没有 CPU 回退，Renderer 将不会绘制；请用支持的设备运行或重新选择数据模式 Baker。",
+                        MessageType.Error);
+                }
+                else if (!gpuRequested && !cpuReady)
+                {
+                    EditorGUILayout.HelpBox(
+                        renderer.asset.animationDataMode == ClusterSkinnedAnimationDataMode.GpuAndCpu && gpuReady
+                            ? "当前 CPU Hermite 数据不可用，将回退到已烘焙的 GPU VTF 数据。"
+                            : "当前资产没有可用的 CPU Hermite 数据。该数据模式没有 GPU 回退，Renderer 将不会绘制；请重新 Baker。",
+                        MessageType.Error);
+                }
             }
             if (renderer.asset != null &&
                 renderer.asset.animationSamplingVersion != ClusterSkinnedMeshAsset.CurrentAnimationSamplingVersion)
@@ -75,6 +78,69 @@ namespace ClusterMesh
             }
             if (renderer.playAutomatically)
                 EditorGUILayout.HelpBox("自动播放开启时，Normalized Time 是播放相位偏移；需要手动定格拖动时请关闭 Play Automatically。", MessageType.Info);
+        }
+
+        static void DrawAnimationGroup(ClusterSkinnedMeshRenderer renderer, SerializedProperty evaluation,
+            SerializedProperty parallelPrefix)
+        {
+            ClusterSkinnedMeshAsset asset = renderer.asset;
+            ClusterSkinnedAnimationDataMode dataMode = asset != null
+                ? asset.animationDataMode
+                : ClusterSkinnedAnimationDataMode.GpuAndCpu;
+
+            EditorGUILayout.Space();
+            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+            EditorGUILayout.LabelField("动画运行优化", EditorStyles.boldLabel);
+            if (asset != null)
+                EditorGUILayout.LabelField("资产数据模式", dataMode.ToString());
+
+            if (dataMode == ClusterSkinnedAnimationDataMode.GpuOnly)
+            {
+                evaluation.enumValueIndex = (int)ClusterSkinnedAnimationEvaluation.GpuTexture;
+                using (new EditorGUI.DisabledScope(true))
+                    EditorGUILayout.PropertyField(evaluation, new GUIContent("Animation Evaluation"));
+                EditorGUILayout.HelpBox(
+                    "GPU Only 资产只能使用 VTF。优点是无 CPU 骨骼求值和 Palette 上传；缺点是 GPU 路径不可用时不会回退，也不会绘制。",
+                    MessageType.None);
+            }
+            else if (dataMode == ClusterSkinnedAnimationDataMode.CpuOnly)
+            {
+                evaluation.enumValueIndex = (int)ClusterSkinnedAnimationEvaluation.CpuCurves;
+                using (new EditorGUI.DisabledScope(true))
+                    EditorGUILayout.PropertyField(evaluation, new GUIContent("Animation Evaluation"));
+            }
+            else
+            {
+                EditorGUILayout.PropertyField(evaluation, new GUIContent(
+                    "Animation Evaluation",
+                    "GPU + CPU 资产可选择首选路径；只有这种模式会在首选路径不可用时回退另一套数据。"));
+                EditorGUILayout.HelpBox(
+                    "GPU + CPU 同时包含两套数据：可运行时切换并允许回退，但资产体积和加载内存更大。",
+                    MessageType.None);
+            }
+
+            bool includesCpu = dataMode != ClusterSkinnedAnimationDataMode.GpuOnly;
+            if (includesCpu)
+            {
+                EditorGUILayout.Space();
+                EditorGUILayout.LabelField("CPU 优化", EditorStyles.boldLabel);
+                EditorGUILayout.PropertyField(parallelPrefix, new GUIContent(
+                    "前缀并行开启",
+                    "仅 CPU Curves 实际生效。并行计算局部 Pose，再用树前缀积计算骨骼层级。深骨架或大批量实例可能受益；普通浅层人模会增加 Job 调度和临时缓冲成本。"));
+                EditorGUILayout.HelpBox(
+                    "优点：深骨架、大批量 CPU 动画时可提高并行度。缺点：增加 Job 次数和缓冲；普通人模可能更慢。默认关闭。",
+                    MessageType.None);
+            }
+
+            if (dataMode != ClusterSkinnedAnimationDataMode.CpuOnly)
+            {
+                EditorGUILayout.Space();
+                EditorGUILayout.LabelField("GPU 优化", EditorStyles.boldLabel);
+                EditorGUILayout.HelpBox(
+                    "VTF Bake FPS 与纹理大小在 Baker 的“蒙皮动画优化”组设置。较低采样率节省包体、显存和带宽，较高采样率减少快速动画的插值误差。",
+                    MessageType.None);
+            }
+            EditorGUILayout.EndVertical();
         }
 
         static void DrawClipIndex(SerializedProperty prop, ClusterSkinnedMeshAsset asset)

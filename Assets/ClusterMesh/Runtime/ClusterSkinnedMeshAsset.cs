@@ -9,7 +9,7 @@ namespace ClusterMesh
     public sealed class ClusterSkinnedMeshAsset : ScriptableObject
     {
         public const int CurrentSkinningVersion = 1;
-        public const int CurrentAnimationSamplingVersion = 1;
+        public const int CurrentAnimationSamplingVersion = 2;
         public const int CurrentGpuAnimationVersion = 1;
         public const int CurrentCpuBurstAnimationVersion = 1;
         public const int PackedSkinWeightStride = 16;
@@ -26,15 +26,37 @@ namespace ClusterMesh
         public ClusterSkinnedCurveSegment[] cpuCurveSegments;
         public int[] boneEvaluationOrder;
         public ClusterSkinnedCullFrame[] cullFrames;
+        [HideInInspector]
+        public ClusterSkinnedAnimationDataMode animationDataMode = ClusterSkinnedAnimationDataMode.GpuOnly;
+        [HideInInspector]
+        public bool retainedAnimationCurves;
+        [HideInInspector]
+        public float bakedGpuFramesPerSecond;
+        [HideInInspector]
+        public float bakedCpuCurveTolerance;
         public int skinningVersion;
         public int animationSamplingVersion;
         public int gpuAnimationVersion;
         public int cpuBurstAnimationVersion;
         public int skinVertexCount;
 
+        public bool AllowsGpuAnimation =>
+            animationDataMode != ClusterSkinnedAnimationDataMode.CpuOnly;
+
+        public bool AllowsCpuAnimation =>
+            animationDataMode != ClusterSkinnedAnimationDataMode.GpuOnly;
+
+        public bool HasManagedCurves(int clipIndex)
+        {
+            if (clips == null || bindPoses == null || clipIndex < 0 || clipIndex >= clips.Length)
+                return false;
+            ClusterSkinnedClip clip = clips[clipIndex];
+            return clip != null && clip.boneCurves != null && clip.boneCurves.Length == bindPoses.Length;
+        }
+
         public bool HasGpuPalette(int clipIndex)
         {
-            if (gpuAnimationVersion != CurrentGpuAnimationVersion || clips == null ||
+            if (!AllowsGpuAnimation || gpuAnimationVersion != CurrentGpuAnimationVersion || clips == null ||
                 gpuPaletteTextures == null || clipIndex < 0 || clipIndex >= clips.Length ||
                 clipIndex >= gpuPaletteTextures.Length || bindPoses == null)
                 return false;
@@ -44,7 +66,7 @@ namespace ClusterMesh
 
         public bool HasCpuBurstCurves(int clipIndex)
         {
-            if (cpuBurstAnimationVersion != CurrentCpuBurstAnimationVersion || clips == null ||
+            if (!AllowsCpuAnimation || cpuBurstAnimationVersion != CurrentCpuBurstAnimationVersion || clips == null ||
                 bindPoses == null || boneParentIndices == null || boneEvaluationOrder == null ||
                 cpuCurveHeaders == null || cpuCurveSegments == null || clipIndex < 0 ||
                 clipIndex >= clips.Length || bindPoses.Length == 0 ||

@@ -42,7 +42,7 @@ namespace ClusterMesh
         {
             if (clip == null)
                 throw new InvalidOperationException("Skinned ClusterMesh baker requires an AnimationClip.");
-            return Bake(renderer, new[] { clip }, settings);
+            return Bake(renderer, new[] { clip }, settings, new ClusterSkinnedMeshBakeOptions());
         }
 
         public static ClusterSkinnedMeshBakeResult Bake(
@@ -50,11 +50,21 @@ namespace ClusterMesh
             AnimationClip[] animationClips,
             ClusterMeshBakeSettings settings)
         {
+            return Bake(renderer, animationClips, settings, new ClusterSkinnedMeshBakeOptions());
+        }
+
+        public static ClusterSkinnedMeshBakeResult Bake(
+            SkinnedMeshRenderer renderer,
+            AnimationClip[] animationClips,
+            ClusterMeshBakeSettings settings,
+            ClusterSkinnedMeshBakeOptions bakeOptions)
+        {
             if (renderer == null || renderer.sharedMesh == null)
                 throw new InvalidOperationException("Skinned ClusterMesh baker requires a SkinnedMeshRenderer with a shared Mesh.");
             if (animationClips == null || animationClips.Length == 0)
                 throw new InvalidOperationException("Skinned ClusterMesh baker requires at least one AnimationClip.");
             settings = settings ?? new ClusterMeshBakeSettings();
+            bakeOptions = bakeOptions ?? new ClusterSkinnedMeshBakeOptions();
             if (settings.maxVerticesPerCluster < 3 || settings.maxTrianglesPerCluster < 1)
                 throw new InvalidOperationException("ClusterMesh baker budgets must allow at least one triangle.");
 
@@ -72,7 +82,10 @@ namespace ClusterMesh
             {
                 if (animationClips[i] == null)
                     throw new InvalidOperationException("AnimationClip list contains a missing clip.");
-                sampledClips[i] = SampleClip(renderer, animationClips[i], bones, parentIndices, bindPoses);
+                sampledClips[i] = SampleClip(renderer, animationClips[i], bones, parentIndices, bindPoses,
+                    Mathf.Clamp(bakeOptions.cpuCurveTolerance, 0.000001f, 0.01f),
+                    bakeOptions.IncludesGpu ? Mathf.Clamp(bakeOptions.gpuFramesPerSecond, 1f, 60f) : 0f,
+                    bakeOptions.IncludesCpu);
             }
 
             ClusterSkinWeight[] sourceSkin = ReadSourceWeights(mesh, bones.Length);
@@ -82,19 +95,33 @@ namespace ClusterMesh
 
             var allCullFrames = new List<ClusterSkinnedCullFrame>();
             var clips = new ClusterSkinnedClip[sampledClips.Length];
-            var gpuPaletteTextures = new Texture2D[sampledClips.Length];
+            var gpuPaletteTextures = bakeOptions.IncludesGpu
+                ? new Texture2D[sampledClips.Length]
+                : Array.Empty<Texture2D>();
             var cpuCurveHeaders = new List<ClusterSkinnedCurveHeader>();
             var cpuCurveSegments = new List<ClusterSkinnedCurveSegment>();
-            int[] boneEvaluationOrder = BuildBoneEvaluationOrder(parentIndices);
+            int[] boneEvaluationOrder = bakeOptions.IncludesCpu
+                ? BuildBoneEvaluationOrder(parentIndices)
+                : Array.Empty<int>();
             for (int i = 0; i < sampledClips.Length; i++)
             {
                 SampledClip sampled = sampledClips[i];
                 sampled.clip.cullFrameOffset = allCullFrames.Count;
-                sampled.clip.cpuCurveHeaderOffset = cpuCurveHeaders.Count;
-                BuildCpuBurstCurves(sampled.clip, cpuCurveHeaders, cpuCurveSegments);
+                sampled.clip.cpuCurveHeaderOffset = -1;
+                if (bakeOptions.IncludesCpu)
+                {
+                    sampled.clip.cpuCurveHeaderOffset = cpuCurveHeaders.Count;
+                    BuildCpuBurstCurves(sampled.clip, cpuCurveHeaders, cpuCurveSegments);
+                }
                 BuildCullFrames(geometry, outputSkin, sampled, allCullFrames);
                 clips[i] = sampled.clip;
-                gpuPaletteTextures[i] = BuildGpuPaletteTexture(sampled, bindPoses, parentIndices, i);
+                if (bakeOptions.IncludesGpu)
+                {
+                    gpuPaletteTextures[i] = BuildGpuPaletteTexture(sampled, bindPoses.Length, i,
+                        Mathf.Clamp(bakeOptions.gpuFramesPerSecond, 1f, 60f));
+                }
+                if (!bakeOptions.IncludesCpu || !bakeOptions.retainAnimationCurves)
+                    sampled.clip.boneCurves = null;
             }
 
             return new ClusterSkinnedMeshBakeResult
@@ -205,44 +232,33 @@ namespace ClusterMesh
             });
         }
 
-        static Texture2D BuildGpuPaletteTexture(SampledClip sampled, Matrix4x4[] bindPoses,
-            int[] parentIndices, int clipIndex)
+        static Texture2D BuildGpuPaletteTexture(SampledClip sampled, int boneCount,
+            int clipIndex, float framesPerSecond)
         {
-            int boneCount = bindPoses.Length;
             int width = boneCount * 3;
-            int frameCount = sampled.times.Length;
+            int frameCount = Mathf.Max(2,
+                Mathf.CeilToInt(Mathf.Max(0f, sampled.clip.duration) * framesPerSecond) + 1);
             if (width > SystemInfo.maxTextureSize || frameCount > SystemInfo.maxTextureSize)
                 throw new InvalidOperationException(
                     "Animation clip '" + sampled.clip.name + "' exceeds the GPU palette texture size limit.");
 
-            var temporaryAsset = ScriptableObject.CreateInstance<ClusterSkinnedMeshAsset>();
-            temporaryAsset.bindPoses = bindPoses;
-            temporaryAsset.boneParentIndices = parentIndices;
-            temporaryAsset.clips = new[] { sampled.clip };
-            var palette = new Matrix4x4[boneCount];
             var pixels = new Color[width * frameCount];
-            try
+            for (int frame = 0; frame < frameCount; frame++)
             {
-                for (int frame = 0; frame < frameCount; frame++)
+                float sampleTime = frameCount > 1
+                    ? sampled.clip.duration * frame / (frameCount - 1f)
+                    : 0f;
+                FindSampleFrames(sampled.times, sampleTime, out int frameA, out int frameB, out float blend);
+                int row = frame * width;
+                for (int bone = 0; bone < boneCount; bone++)
                 {
-                    if (!ClusterSkinnedAnimation.EvaluatePaletteAtTime(
-                            temporaryAsset, 0, sampled.times[frame], palette))
-                        throw new InvalidOperationException(
-                            "Could not build GPU palette texture for clip '" + sampled.clip.name + "'.");
-                    int row = frame * width;
-                    for (int bone = 0; bone < boneCount; bone++)
-                    {
-                        Matrix4x4 matrix = palette[bone];
-                        int pixel = row + bone * 3;
-                        pixels[pixel] = new Color(matrix.m00, matrix.m01, matrix.m02, matrix.m03);
-                        pixels[pixel + 1] = new Color(matrix.m10, matrix.m11, matrix.m12, matrix.m13);
-                        pixels[pixel + 2] = new Color(matrix.m20, matrix.m21, matrix.m22, matrix.m23);
-                    }
+                    Matrix4x4 matrix = LerpMatrix(
+                        sampled.palettes[frameA][bone], sampled.palettes[frameB][bone], blend);
+                    int pixel = row + bone * 3;
+                    pixels[pixel] = new Color(matrix.m00, matrix.m01, matrix.m02, matrix.m03);
+                    pixels[pixel + 1] = new Color(matrix.m10, matrix.m11, matrix.m12, matrix.m13);
+                    pixels[pixel + 2] = new Color(matrix.m20, matrix.m21, matrix.m22, matrix.m23);
                 }
-            }
-            finally
-            {
-                UnityEngine.Object.DestroyImmediate(temporaryAsset);
             }
 
             var texture = new Texture2D(width, frameCount, TextureFormat.RGBAHalf, false, true)
@@ -254,6 +270,32 @@ namespace ClusterMesh
             texture.SetPixels(pixels);
             texture.Apply(false, true);
             return texture;
+        }
+
+        static void FindSampleFrames(float[] times, float time, out int frameA, out int frameB, out float blend)
+        {
+            int low = 0;
+            int high = Mathf.Max(0, times.Length - 1);
+            while (low + 1 < high)
+            {
+                int middle = (low + high) >> 1;
+                if (times[middle] <= time)
+                    low = middle;
+                else
+                    high = middle;
+            }
+            frameA = low;
+            frameB = Mathf.Min(frameA + 1, times.Length - 1);
+            float duration = times[frameB] - times[frameA];
+            blend = duration > 1e-8f ? Mathf.Clamp01((time - times[frameA]) / duration) : 0f;
+        }
+
+        static Matrix4x4 LerpMatrix(Matrix4x4 a, Matrix4x4 b, float t)
+        {
+            Matrix4x4 result = default;
+            for (int i = 0; i < 16; i++)
+                result[i] = Mathf.LerpUnclamped(a[i], b[i], t);
+            return result;
         }
 
         public static byte[] PackSkinWeights(ClusterSkinWeight[] weights)
@@ -723,7 +765,8 @@ namespace ClusterMesh
         }
 
         static SampledClip SampleClip(SkinnedMeshRenderer sourceRenderer, AnimationClip sourceClip, Transform[] sourceBones,
-            int[] parentIndices, Matrix4x4[] bindPoses)
+            int[] parentIndices, Matrix4x4[] bindPoses, float curveTolerance, float minimumSampleRate,
+            bool buildCpuCurves)
         {
             GameObject sourceRoot = sourceRenderer.transform.root.gameObject;
             GameObject clone = UnityEngine.Object.Instantiate(sourceRoot);
@@ -782,19 +825,23 @@ namespace ClusterMesh
                     graph.Play();
                 }
 
-                float frameRate = Mathf.Clamp(sourceClip.frameRate > 0f ? sourceClip.frameRate : 30f, 1f, 60f);
+                float sourceFrameRate = sourceClip.frameRate > 0f ? sourceClip.frameRate : 30f;
+                float frameRate = Mathf.Clamp(Mathf.Max(sourceFrameRate, minimumSampleRate), 1f, 60f);
                 float duration = Mathf.Max(0f, sourceClip.length);
                 int frameCount = Mathf.Max(2, Mathf.CeilToInt(duration * frameRate) + 1);
                 var times = new float[frameCount];
                 var palettes = new Matrix4x4[frameCount][];
-                var positions = new Vector3[sourceBones.Length][];
-                var rotations = new Quaternion[sourceBones.Length][];
-                var scales = new Vector3[sourceBones.Length][];
-                for (int b = 0; b < sourceBones.Length; b++)
+                var positions = buildCpuCurves ? new Vector3[sourceBones.Length][] : null;
+                var rotations = buildCpuCurves ? new Quaternion[sourceBones.Length][] : null;
+                var scales = buildCpuCurves ? new Vector3[sourceBones.Length][] : null;
+                if (buildCpuCurves)
                 {
-                    positions[b] = new Vector3[frameCount];
-                    rotations[b] = new Quaternion[frameCount];
-                    scales[b] = new Vector3[frameCount];
+                    for (int b = 0; b < sourceBones.Length; b++)
+                    {
+                        positions[b] = new Vector3[frameCount];
+                        rotations[b] = new Quaternion[frameCount];
+                        scales[b] = new Vector3[frameCount];
+                    }
                 }
                 try
                 {
@@ -814,15 +861,18 @@ namespace ClusterMesh
                         palettes[frame] = new Matrix4x4[sourceBones.Length];
                         for (int bone = 0; bone < sourceBones.Length; bone++)
                         {
-                            Transform parent = parentIndices[bone] >= 0 ? bones[parentIndices[bone]] : null;
-                            Matrix4x4 local = parent != null
-                                ? parent.worldToLocalMatrix * bones[bone].localToWorldMatrix
-                                : renderer.transform.worldToLocalMatrix * bones[bone].localToWorldMatrix;
-                            Decompose(local, out positions[bone][frame], out rotations[bone][frame], out scales[bone][frame]);
-                            if (frame > 0 && Quaternion.Dot(rotations[bone][frame - 1], rotations[bone][frame]) < 0f)
+                            if (buildCpuCurves)
                             {
-                                Quaternion q = rotations[bone][frame];
-                                rotations[bone][frame] = new Quaternion(-q.x, -q.y, -q.z, -q.w);
+                                Transform parent = parentIndices[bone] >= 0 ? bones[parentIndices[bone]] : null;
+                                Matrix4x4 local = parent != null
+                                    ? parent.worldToLocalMatrix * bones[bone].localToWorldMatrix
+                                    : renderer.transform.worldToLocalMatrix * bones[bone].localToWorldMatrix;
+                                Decompose(local, out positions[bone][frame], out rotations[bone][frame], out scales[bone][frame]);
+                                if (frame > 0 && Quaternion.Dot(rotations[bone][frame - 1], rotations[bone][frame]) < 0f)
+                                {
+                                    Quaternion q = rotations[bone][frame];
+                                    rotations[bone][frame] = new Quaternion(-q.x, -q.y, -q.z, -q.w);
+                                }
                             }
                             palettes[frame][bone] = renderer.transform.worldToLocalMatrix * bones[bone].localToWorldMatrix * bindPoses[bone];
                         }
@@ -841,9 +891,14 @@ namespace ClusterMesh
                             ? "Check that the Humanoid Animator Avatar matches the selected SkinnedMeshRenderer."
                             : "Check that the Generic/Legacy clip binding root matches the selected SkinnedMeshRenderer hierarchy."));
                 }
-                var curves = new ClusterSkinnedBoneCurves[sourceBones.Length];
-                for (int bone = 0; bone < sourceBones.Length; bone++)
-                    curves[bone] = FitBoneCurves(times, positions[bone], rotations[bone], scales[bone]);
+                ClusterSkinnedBoneCurves[] curves = null;
+                if (buildCpuCurves)
+                {
+                    curves = new ClusterSkinnedBoneCurves[sourceBones.Length];
+                    for (int bone = 0; bone < sourceBones.Length; bone++)
+                        curves[bone] = FitBoneCurves(
+                            times, positions[bone], rotations[bone], scales[bone], curveTolerance);
+                }
                 int segmentCount = Mathf.Max(1, Mathf.CeilToInt(Mathf.Max(duration, 1f / frameRate) * 4f));
                 return new SampledClip
                 {
@@ -951,20 +1006,21 @@ namespace ClusterMesh
             }
         }
 
-        static ClusterSkinnedBoneCurves FitBoneCurves(float[] times, Vector3[] positions, Quaternion[] rotations, Vector3[] scales)
+        static ClusterSkinnedBoneCurves FitBoneCurves(float[] times, Vector3[] positions, Quaternion[] rotations,
+            Vector3[] scales, float tolerance)
         {
             return new ClusterSkinnedBoneCurves
             {
-                positionX = FitCurve(times, i => positions[i].x, 1e-4f),
-                positionY = FitCurve(times, i => positions[i].y, 1e-4f),
-                positionZ = FitCurve(times, i => positions[i].z, 1e-4f),
-                rotationX = FitCurve(times, i => rotations[i].x, 1e-4f),
-                rotationY = FitCurve(times, i => rotations[i].y, 1e-4f),
-                rotationZ = FitCurve(times, i => rotations[i].z, 1e-4f),
-                rotationW = FitCurve(times, i => rotations[i].w, 1e-4f),
-                scaleX = FitCurve(times, i => scales[i].x, 1e-4f),
-                scaleY = FitCurve(times, i => scales[i].y, 1e-4f),
-                scaleZ = FitCurve(times, i => scales[i].z, 1e-4f)
+                positionX = FitCurve(times, i => positions[i].x, tolerance),
+                positionY = FitCurve(times, i => positions[i].y, tolerance),
+                positionZ = FitCurve(times, i => positions[i].z, tolerance),
+                rotationX = FitCurve(times, i => rotations[i].x, tolerance),
+                rotationY = FitCurve(times, i => rotations[i].y, tolerance),
+                rotationZ = FitCurve(times, i => rotations[i].z, tolerance),
+                rotationW = FitCurve(times, i => rotations[i].w, tolerance),
+                scaleX = FitCurve(times, i => scales[i].x, tolerance),
+                scaleY = FitCurve(times, i => scales[i].y, tolerance),
+                scaleZ = FitCurve(times, i => scales[i].z, tolerance)
             };
         }
 

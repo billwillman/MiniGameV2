@@ -16,6 +16,7 @@ namespace ClusterMesh
         DefaultAsset _outputFolder;
         string _assetName = "ClusterMeshAsset";
         ClusterMeshBakeSettings _settings = new ClusterMeshBakeSettings();
+        [SerializeField] ClusterSkinnedMeshBakeOptions _skinnedBakeOptions = new ClusterSkinnedMeshBakeOptions();
         string _error;
         string _info;
         Vector2 _scroll;
@@ -61,11 +62,23 @@ namespace ClusterMesh
             AnimationClip[] clips,
             ClusterMeshBakeSettings settings)
         {
+            WriteSkinnedAsset(asset, geometry, renderer, clips, settings, new ClusterSkinnedMeshBakeOptions());
+        }
+
+        public static void WriteSkinnedAsset(
+            ClusterSkinnedMeshAsset asset,
+            ClusterMeshAsset geometry,
+            SkinnedMeshRenderer renderer,
+            AnimationClip[] clips,
+            ClusterMeshBakeSettings settings,
+            ClusterSkinnedMeshBakeOptions bakeOptions)
+        {
             if (asset == null || geometry == null)
                 throw new InvalidOperationException("Skinned ClusterMesh output assets are missing.");
             settings = settings ?? new ClusterMeshBakeSettings();
             settings.useQemSimplify = true;
-            ClusterSkinnedMeshBakeResult result = ClusterSkinnedMeshBaker.Bake(renderer, clips, settings);
+            bakeOptions = bakeOptions ?? new ClusterSkinnedMeshBakeOptions();
+            ClusterSkinnedMeshBakeResult result = ClusterSkinnedMeshBaker.Bake(renderer, clips, settings, bakeOptions);
             geometry.CopyFrom(result.geometry, renderer.sharedMesh, settings);
             asset.geometry = geometry;
             asset.packedSkinWeights = ClusterSkinnedMeshBaker.PackSkinWeights(result.skinWeights);
@@ -78,10 +91,20 @@ namespace ClusterMesh
             asset.cpuCurveSegments = result.cpuCurveSegments;
             asset.boneEvaluationOrder = result.boneEvaluationOrder;
             asset.cullFrames = result.cullFrames;
+            asset.animationDataMode = bakeOptions.animationDataMode;
+            asset.retainedAnimationCurves = bakeOptions.IncludesCpu && bakeOptions.retainAnimationCurves;
+            asset.bakedGpuFramesPerSecond = bakeOptions.IncludesGpu
+                ? Mathf.Clamp(bakeOptions.gpuFramesPerSecond, 1f, 60f)
+                : 0f;
+            asset.bakedCpuCurveTolerance = bakeOptions.IncludesCpu
+                ? Mathf.Clamp(bakeOptions.cpuCurveTolerance, 0.000001f, 0.01f)
+                : 0f;
             asset.skinningVersion = ClusterSkinnedMeshAsset.CurrentSkinningVersion;
             asset.animationSamplingVersion = ClusterSkinnedMeshAsset.CurrentAnimationSamplingVersion;
-            asset.gpuAnimationVersion = ClusterSkinnedMeshAsset.CurrentGpuAnimationVersion;
-            asset.cpuBurstAnimationVersion = ClusterSkinnedMeshAsset.CurrentCpuBurstAnimationVersion;
+            asset.gpuAnimationVersion = bakeOptions.IncludesGpu
+                ? ClusterSkinnedMeshAsset.CurrentGpuAnimationVersion : 0;
+            asset.cpuBurstAnimationVersion = bakeOptions.IncludesCpu
+                ? ClusterSkinnedMeshAsset.CurrentCpuBurstAnimationVersion : 0;
             asset.skinVertexCount = result.skinWeights != null ? result.skinWeights.Length : 0;
         }
 
@@ -170,6 +193,9 @@ namespace ClusterMesh
                         "勾选：组内用 QEM（位置+法线+UV）折叠。不勾：最短边，和以前一样。阈值 T 仍在 Renderer 上调。"),
                     _settings.useQemSimplify);
             }
+
+            if (_bakeSkinnedAnimation)
+                DrawSkinnedOptimizationGroup();
 
             EditorGUILayout.Space();
             if (GUILayout.Button("Bake", GUILayout.Height(28)))
@@ -373,7 +399,7 @@ namespace ClusterMesh
             var asset = ScriptableObject.CreateInstance<ClusterSkinnedMeshAsset>();
             var geometry = ScriptableObject.CreateInstance<ClusterMeshAsset>();
             geometry.name = "Geometry";
-            WriteSkinnedAsset(asset, geometry, _skinnedRenderer, clips, _settings);
+            WriteSkinnedAsset(asset, geometry, _skinnedRenderer, clips, _settings, _skinnedBakeOptions);
             string path = AssetDatabase.GenerateUniqueAssetPath(folder + "/" + _assetName + ".asset");
             AssetDatabase.CreateAsset(asset, path);
             AssetDatabase.AddObjectToAsset(geometry, asset);
@@ -391,6 +417,84 @@ namespace ClusterMesh
             _info = "已写入 " + path + "，共 " + clusterCount + " 个蒙皮 cluster，" +
                 groupCount + " 个 Skinning-Aware QEM LOD 组，" + asset.clips.Length + " 个动画 Clip。";
             Selection.activeObject = asset;
+        }
+
+        void DrawSkinnedOptimizationGroup()
+        {
+            if (_skinnedBakeOptions == null)
+                _skinnedBakeOptions = new ClusterSkinnedMeshBakeOptions();
+
+            EditorGUILayout.Space();
+            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+            EditorGUILayout.LabelField("蒙皮动画优化", EditorStyles.boldLabel);
+            _skinnedBakeOptions.animationDataMode = (ClusterSkinnedAnimationDataMode)EditorGUILayout.EnumPopup(
+                new GUIContent(
+                    "动画数据模式",
+                    "决定资产中实际保存哪些动画数据。GPU Only 最小且最快；CPU Only 兼容无 VTF 的设备；GPU + CPU 允许运行时切换与回退，但资产最大。"),
+                _skinnedBakeOptions.animationDataMode);
+
+            switch (_skinnedBakeOptions.animationDataMode)
+            {
+                case ClusterSkinnedAnimationDataMode.GpuOnly:
+                    EditorGUILayout.HelpBox(
+                        "优点：只保存 VTF Palette Atlas，资产较小、运行时没有 CPU 曲线求值开销。\n" +
+                        "缺点：设备不支持该 GPU 纹理格式或 VTF 路径时无法回退 CPU，并且 Renderer 只能使用 GPU Texture。",
+                        MessageType.Info);
+                    break;
+                case ClusterSkinnedAnimationDataMode.CpuOnly:
+                    EditorGUILayout.HelpBox(
+                        "优点：不保存预烘焙 GPU Atlas，适合需要 CPU Job System + Burst 动态求值的路径。\n" +
+                        "缺点：每帧需要在 CPU 求值骨骼曲线并上传浮点 Palette，仍需 Compute Shader 与顶点纹理读取；实例多时 CPU 和上传成本更高，Renderer 只能使用 CPU Curves。",
+                        MessageType.Info);
+                    break;
+                default:
+                    EditorGUILayout.HelpBox(
+                        "优点：Renderer 可在 GPU Texture 与 CPU Curves 间切换，GPU 不可用时也能回退 CPU。\n" +
+                        "缺点：同时保存 VTF Atlas 和 CPU Hermite 曲线，资产体积最大。",
+                        MessageType.Info);
+                    break;
+            }
+
+            if (_skinnedBakeOptions.IncludesGpu)
+            {
+                EditorGUILayout.Space();
+                EditorGUILayout.LabelField("GPU 优化", EditorStyles.boldLabel);
+                _skinnedBakeOptions.gpuFramesPerSecond = EditorGUILayout.Slider(
+                    new GUIContent(
+                        "VTF Bake FPS",
+                        "GPU Palette Atlas 每秒保存的采样帧数。降低可近似线性减小纹理高度和资产大小；代价是快速动作的插值误差和抖动更明显。建议 PC 30，移动端可从 15 开始验证。"),
+                    _skinnedBakeOptions.gpuFramesPerSecond, 1f, 60f);
+                EditorGUILayout.HelpBox(
+                    "较低 FPS：纹理更小、显存和带宽更低，但快速动画精度下降。较高 FPS：动画更接近源 Clip，但纹理、包体和显存占用增加。",
+                    MessageType.None);
+            }
+
+            if (_skinnedBakeOptions.IncludesCpu)
+            {
+                EditorGUILayout.Space();
+                EditorGUILayout.LabelField("CPU 优化", EditorStyles.boldLabel);
+                _skinnedBakeOptions.cpuCurveTolerance = EditorGUILayout.Slider(
+                    new GUIContent(
+                        "Curve Fit Tolerance",
+                        "CPU Hermite 曲线拟合允许的误差。值越大保留的曲线段越少、资产和求值成本越低；值越小越接近源动画，但数据更多。"),
+                    _skinnedBakeOptions.cpuCurveTolerance, 0.000001f, 0.01f);
+                _skinnedBakeOptions.retainAnimationCurves = EditorGUILayout.Toggle(
+                    new GUIContent(
+                        "保留 AnimationCurve",
+                        "默认关闭。CPU 运行时读取的是已压缩的 Hermite 曲线段，并不需要原始 AnimationCurve。仅在需要人工检查拟合结果、调试或让外部编辑器工具读取原曲线时开启。"),
+                    _skinnedBakeOptions.retainAnimationCurves);
+                EditorGUILayout.HelpBox(
+                    _skinnedBakeOptions.retainAnimationCurves
+                        ? "已开启：资产会同时保存原始拟合 AnimationCurve 和 CPU Hermite 数据，方便检查，但属于重复数据，会明显增大多骨骼、多 Clip 资产。"
+                        : "默认关闭：只保存运行时需要的 CPU Hermite 曲线段。不会影响 CPU Job System + Burst 播放，也不会影响 SceneView 预览。",
+                    MessageType.None);
+            }
+            else
+            {
+                _skinnedBakeOptions.retainAnimationCurves = false;
+            }
+
+            EditorGUILayout.EndVertical();
         }
 
         string ResolveOutputFolder()

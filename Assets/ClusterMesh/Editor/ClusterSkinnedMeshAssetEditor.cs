@@ -41,6 +41,14 @@ namespace ClusterMesh
             EditorGUILayout.LabelField("Vertices", geometry != null ? geometry.vertexCount.ToString() : "0");
             EditorGUILayout.LabelField("Bones", asset.bindPoses != null ? asset.bindPoses.Length.ToString() : "0");
             EditorGUILayout.LabelField("Clips", asset.clips != null ? asset.clips.Length.ToString() : "0");
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Animation Data", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("Mode", asset.animationDataMode.ToString());
+            EditorGUILayout.LabelField("Retained AnimationCurve", asset.retainedAnimationCurves ? "Yes" : "No");
+            if (asset.AllowsGpuAnimation)
+                EditorGUILayout.LabelField("VTF Bake FPS", asset.bakedGpuFramesPerSecond.ToString("0.##"));
+            if (asset.AllowsCpuAnimation)
+                EditorGUILayout.LabelField("CPU Curve Tolerance", asset.bakedCpuCurveTolerance.ToString("0.######"));
             DrawPalettePreview(asset);
             EditorGUILayout.Space();
             if (GUILayout.Button("加入场景"))
@@ -50,7 +58,7 @@ namespace ClusterMesh
         void DrawPalettePreview(ClusterSkinnedMeshAsset asset)
         {
             EditorGUILayout.Space();
-            EditorGUILayout.LabelField("VTF Palette Texture", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("Animation Data Preview", EditorStyles.boldLabel);
             int boneCount = asset.bindPoses != null ? asset.bindPoses.Length : 0;
             ClusterSkinnedClip[] clips = asset.clips;
             if (boneCount <= 0 || clips == null || clips.Length == 0)
@@ -76,9 +84,6 @@ namespace ClusterMesh
                 return;
             }
             EditorGUILayout.LabelField("Runtime Layout", width + " × instance count · RGBAFloat · Point");
-            EditorGUILayout.HelpBox(
-                "横向每个骨骼占 3 个像素，分别保存 3×4 蒙皮矩阵的 Row 0/1/2。下面显示当前 Clip 与时间的一条实例纹理行；负值和大于 1 的值在预览窗口中会被颜色显示范围截断，但底层像素仍是原始 float。",
-                MessageType.None);
 
             if (asset.HasGpuPalette(_previewClip))
             {
@@ -89,9 +94,18 @@ namespace ClusterMesh
                 GUI.DrawTexture(atlasRect, atlas, ScaleMode.StretchToFill, false);
                 EditorGUILayout.ObjectField("GPU Texture Asset", atlas, typeof(Texture2D), false);
             }
-            else
+            else if (asset.AllowsGpuAnimation)
             {
-                EditorGUILayout.HelpBox("该 Clip 没有 GPU Palette Atlas；GPU 模式会自动回退 CPU。请重新 Baker。", MessageType.Warning);
+                EditorGUILayout.HelpBox("该 Clip 没有有效的 GPU Palette Atlas；请重新 Baker。", MessageType.Warning);
+            }
+
+            bool hasCpuPreview = asset.HasCpuBurstCurves(_previewClip) || asset.HasManagedCurves(_previewClip);
+            if (!hasCpuPreview)
+            {
+                EditorGUILayout.HelpBox(
+                    "GPU Only 资产不保存 CPU 曲线，避免为预览重复占用资产空间。上方 Baked GPU Atlas 就是实际运行时 VTF 纹理；当前 Pose 由 GPU 在 SceneView 中直接显示。",
+                    MessageType.None);
+                return;
             }
 
             EnsurePalettePreview(asset, boneCount, width);

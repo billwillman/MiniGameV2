@@ -181,6 +181,7 @@ namespace ClusterMesh.Tests
                     scaleZ = AnimationCurve.Constant(0f, 2f, 1f)
                 };
                 asset.bindPoses = new[] { Matrix4x4.identity };
+                asset.animationDataMode = ClusterSkinnedAnimationDataMode.CpuOnly;
                 asset.boneParentIndices = new[] { -1 };
                 asset.clips = new[]
                 {
@@ -236,6 +237,10 @@ namespace ClusterMesh.Tests
                 Assert.That(renderer.animationEvaluation,
                     Is.EqualTo(ClusterSkinnedAnimationEvaluation.GpuTexture));
                 Assert.That(renderer.enableParallelBonePrefix, Is.False);
+                var bakeOptions = new ClusterSkinnedMeshBakeOptions();
+                Assert.That(bakeOptions.animationDataMode,
+                    Is.EqualTo(ClusterSkinnedAnimationDataMode.GpuOnly));
+                Assert.That(bakeOptions.retainAnimationCurves, Is.False);
 
                 asset.bindPoses = new[] { Matrix4x4.identity };
                 asset.clips = new[] { new ClusterSkinnedClip() };
@@ -288,6 +293,7 @@ namespace ClusterMesh.Tests
             try
             {
                 asset.bindPoses = new[] { Matrix4x4.identity };
+                asset.animationDataMode = ClusterSkinnedAnimationDataMode.CpuOnly;
                 asset.boneParentIndices = new[] { -1 };
                 asset.boneEvaluationOrder = new[] { 0 };
                 asset.clips = new[] { new ClusterSkinnedClip { cpuCurveHeaderOffset = 0 } };

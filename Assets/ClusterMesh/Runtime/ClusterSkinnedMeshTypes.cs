@@ -10,6 +10,25 @@ namespace ClusterMesh
         CpuCurves = 1
     }
 
+    public enum ClusterSkinnedAnimationDataMode
+    {
+        GpuOnly = 0,
+        CpuOnly = 1,
+        GpuAndCpu = 2
+    }
+
+    [Serializable]
+    public sealed class ClusterSkinnedMeshBakeOptions
+    {
+        public ClusterSkinnedAnimationDataMode animationDataMode = ClusterSkinnedAnimationDataMode.GpuOnly;
+        public bool retainAnimationCurves;
+        [Range(1f, 60f)] public float gpuFramesPerSecond = 30f;
+        [Range(0.000001f, 0.01f)] public float cpuCurveTolerance = 0.0001f;
+
+        public bool IncludesGpu => animationDataMode != ClusterSkinnedAnimationDataMode.CpuOnly;
+        public bool IncludesCpu => animationDataMode != ClusterSkinnedAnimationDataMode.GpuOnly;
+    }
+
     [Serializable]
     public struct ClusterSkinWeight
     {
@@ -146,9 +165,8 @@ namespace ClusterMesh
                 return false;
 
             ClusterSkinnedClip clip = asset.clips[clipIndex];
-            if (clip == null || clip.boneCurves == null || clip.boneCurves.Length != boneCount)
+            if (clip == null)
                 return false;
-
             float duration = Mathf.Max(0f, clip.duration);
             return EvaluatePaletteAtTime(
                 asset, clipIndex, Mathf.Clamp01(normalizedTime) * duration, destination);
@@ -200,7 +218,10 @@ namespace ClusterMesh
                 return false;
             ClusterSkinnedClip clip = asset.clips[clipIndex];
             float duration = clip != null ? Mathf.Max(0f, clip.duration) : 0f;
-            s_EvaluationTime = duration > 0f ? Mathf.Clamp(time, 0f, duration) : 0f;
+            float clampedTime = duration > 0f ? Mathf.Clamp(time, 0f, duration) : 0f;
+            if (!asset.HasManagedCurves(clipIndex))
+                return EvaluatePackedPalette(asset, clipIndex, clampedTime, destination);
+            s_EvaluationTime = clampedTime;
             try
             {
                 return EvaluatePaletteInternal(asset, clipIndex, destination);
@@ -209,6 +230,68 @@ namespace ClusterMesh
             {
                 s_EvaluationTime = 0f;
             }
+        }
+
+        static bool EvaluatePackedPalette(ClusterSkinnedMeshAsset asset, int clipIndex, float time,
+            Matrix4x4[] destination)
+        {
+            if (!asset.HasCpuBurstCurves(clipIndex) || destination == null ||
+                destination.Length < asset.bindPoses.Length)
+                return false;
+            int boneCount = asset.bindPoses.Length;
+            ClusterSkinnedClip clip = asset.clips[clipIndex];
+            var globals = new Matrix4x4[boneCount];
+            for (int orderIndex = 0; orderIndex < boneCount; orderIndex++)
+            {
+                int bone = asset.boneEvaluationOrder[orderIndex];
+                int curve = clip.cpuCurveHeaderOffset + bone * 10;
+                Vector3 position = new Vector3(
+                    EvaluatePackedCurve(asset, curve, time),
+                    EvaluatePackedCurve(asset, curve + 1, time),
+                    EvaluatePackedCurve(asset, curve + 2, time));
+                Quaternion rotation = new Quaternion(
+                    EvaluatePackedCurve(asset, curve + 3, time),
+                    EvaluatePackedCurve(asset, curve + 4, time),
+                    EvaluatePackedCurve(asset, curve + 5, time),
+                    EvaluatePackedCurve(asset, curve + 6, time));
+                if (rotation.x * rotation.x + rotation.y * rotation.y +
+                    rotation.z * rotation.z + rotation.w * rotation.w < 1e-12f)
+                    rotation = Quaternion.identity;
+                else
+                    rotation.Normalize();
+                Vector3 scale = new Vector3(
+                    EvaluatePackedCurve(asset, curve + 7, time),
+                    EvaluatePackedCurve(asset, curve + 8, time),
+                    EvaluatePackedCurve(asset, curve + 9, time));
+                Matrix4x4 local = Matrix4x4.TRS(position, rotation, scale);
+                int parent = asset.boneParentIndices[bone];
+                globals[bone] = parent >= 0 ? globals[parent] * local : local;
+                destination[bone] = globals[bone] * asset.bindPoses[bone];
+            }
+            return true;
+        }
+
+        static float EvaluatePackedCurve(ClusterSkinnedMeshAsset asset, int headerIndex, float time)
+        {
+            ClusterSkinnedCurveHeader header = asset.cpuCurveHeaders[headerIndex];
+            int first = header.segmentOffset;
+            int count = Mathf.Max(1, header.segmentCount);
+            int low = 0;
+            int high = count - 1;
+            while (low < high)
+            {
+                int middle = (low + high + 1) >> 1;
+                if (asset.cpuCurveSegments[first + middle].startTime <= time)
+                    low = middle;
+                else
+                    high = middle - 1;
+            }
+            ClusterSkinnedCurveSegment segment = asset.cpuCurveSegments[first + low];
+            float u = segment.inverseDuration > 0f
+                ? Mathf.Clamp01((time - segment.startTime) * segment.inverseDuration)
+                : 0f;
+            Vector4 c = segment.coefficients;
+            return ((c.w * u + c.z) * u + c.y) * u + c.x;
         }
 
         static bool EvaluatePaletteInternal(ClusterSkinnedMeshAsset asset, int clipIndex, Matrix4x4[] destination)

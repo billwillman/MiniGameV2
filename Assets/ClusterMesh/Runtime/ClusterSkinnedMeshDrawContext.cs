@@ -68,8 +68,6 @@ namespace ClusterMesh
         readonly Material[] _materials;
         readonly Material[] _shadowMaterials;
         readonly Texture2D _paletteTexture;
-        readonly Color[] _palettePixels;
-        readonly Matrix4x4[] _paletteScratch;
         readonly Matrix4x4[] _l2w = new Matrix4x4[ClusterMeshLimits.MaxBatchedObjects];
         readonly Matrix4x4[] _w2l = new Matrix4x4[ClusterMeshLimits.MaxBatchedObjects];
         readonly uint[] _segmentData = new uint[ClusterMeshLimits.MaxBatchedObjects];
@@ -176,11 +174,15 @@ namespace ClusterMesh
                 _args[i].SetData(_argsSeed);
                 _shadowArgs[i].SetData(_argsSeed);
             }
-            _paletteTexture = new Texture2D(_paletteWidth, ClusterMeshLimits.MaxBatchedObjects, TextureFormat.RGBAFloat, false, true)
+            bool needsCpuPalette = asset.AllowsCpuAnimation &&
+                SystemInfo.SupportsTextureFormat(TextureFormat.RGBAFloat);
+            int cpuPaletteWidth = needsCpuPalette ? _paletteWidth : 1;
+            int cpuPaletteHeight = needsCpuPalette ? ClusterMeshLimits.MaxBatchedObjects : 1;
+            TextureFormat cpuPaletteFormat = needsCpuPalette ? TextureFormat.RGBAFloat : TextureFormat.RGBA32;
+            _paletteTexture = new Texture2D(cpuPaletteWidth, cpuPaletteHeight, cpuPaletteFormat, false, true)
             { name = "ClusterSkinnedMesh Palette", filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp, hideFlags = HideFlags.HideAndDontSave };
-            _palettePixels = new Color[_paletteWidth * ClusterMeshLimits.MaxBatchedObjects];
-            _paletteScratch = new Matrix4x4[_boneCount];
-            InitializeBurstCpuData(asset);
+            if (needsCpuPalette)
+                InitializeBurstCpuData(asset);
             _localAnimationBounds = BuildAnimationBounds(asset);
             IsReady = true;
         }
@@ -196,14 +198,39 @@ namespace ClusterMesh
             if (sourceCount <= 0) return;
             int clip = Mathf.Clamp(clipIndex, 0, _asset.clips.Length - 1);
             ClusterSkinnedClip clipData = _asset.clips[clip];
-            Texture2D gpuAnimationTexture = animationEvaluation == ClusterSkinnedAnimationEvaluation.GpuTexture &&
-                _asset.HasGpuPalette(clip) && SystemInfo.SupportsTextureFormat(TextureFormat.RGBAHalf)
+            Texture2D availableGpuTexture = _asset.HasGpuPalette(clip) &&
+                SystemInfo.SupportsTextureFormat(_asset.gpuPaletteTextures[clip].format)
                     ? _asset.gpuPaletteTextures[clip] : null;
-            bool useGpuAnimationTexture = gpuAnimationTexture != null;
-            // Burst evaluation is an explicit CPU-mode cost. GPU mode never schedules this job;
-            // an old GPU asset without an atlas keeps the legacy managed fallback until rebaked.
-            bool useBurstCpu = animationEvaluation == ClusterSkinnedAnimationEvaluation.CpuCurves &&
-                _hasBurstCpuData && _asset.HasCpuBurstCurves(clip);
+            bool cpuAvailable = _asset.HasCpuBurstCurves(clip) && _hasBurstCpuData;
+            bool requestGpu = animationEvaluation == ClusterSkinnedAnimationEvaluation.GpuTexture;
+            bool useGpuAnimationTexture = requestGpu && availableGpuTexture != null;
+            bool useBurstCpu = !requestGpu && cpuAvailable;
+
+            if (_asset.animationDataMode == ClusterSkinnedAnimationDataMode.GpuOnly)
+            {
+                if (availableGpuTexture == null)
+                    return;
+                useGpuAnimationTexture = true;
+                useBurstCpu = false;
+            }
+            else if (_asset.animationDataMode == ClusterSkinnedAnimationDataMode.CpuOnly)
+            {
+                if (!cpuAvailable)
+                    return;
+                useGpuAnimationTexture = false;
+                useBurstCpu = true;
+            }
+            else if (!useGpuAnimationTexture && !useBurstCpu)
+            {
+                // Only dual-data assets may fall back to the other baked representation.
+                if (requestGpu && cpuAvailable)
+                    useBurstCpu = true;
+                else if (!requestGpu && availableGpuTexture != null)
+                    useGpuAnimationTexture = true;
+                else
+                    return;
+            }
+            Texture2D gpuAnimationTexture = useGpuAnimationTexture ? availableGpuTexture : null;
             bool useParallelPrefix = useBurstCpu && enableParallelBonePrefix;
             ClusterMeshFrustum.WorldPlanes(cullingCamera, _planeScratch);
             for (int i = 0; i < _planeScratch.Length; i++)
@@ -226,8 +253,6 @@ namespace ClusterMesh
                 int segmentCount = Mathf.Max(1, clipData.segmentCount);
                 _segmentData[count] = (uint)Mathf.Clamp(
                     Mathf.FloorToInt(_animationTimeData[count] * segmentCount), 0, segmentCount - 1);
-                if (!useGpuAnimationTexture && !useBurstCpu)
-                    UploadPaletteRow(count, clip, t);
                 count++;
             }
             if (count <= 0) return;
@@ -255,11 +280,6 @@ namespace ClusterMesh
                     paletteJob.Schedule(count, 1).Complete();
                 }
                 _paletteTexture.SetPixelData(_burstPalettePixels, 0);
-                _paletteTexture.Apply(false, false);
-            }
-            else if (!useGpuAnimationTexture)
-            {
-                _paletteTexture.SetPixels(_palettePixels);
                 _paletteTexture.Apply(false, false);
             }
             _animationTimes.SetData(_animationTimeData, 0, 0, count);
@@ -307,21 +327,6 @@ namespace ClusterMesh
                     Graphics.DrawMeshInstancedIndirect(_template, 0, _shadowMaterials[material], worldBounds,
                         _shadowArgs[material], 0, null, ShadowCastingMode.ShadowsOnly, false, drawLayer, drawCamera);
                 }
-            }
-        }
-
-        void UploadPaletteRow(int objectIndex, int clip, float time)
-        {
-            ClusterSkinnedClip clipData = _asset.clips[clip];
-            ClusterSkinnedAnimation.EvaluatePaletteAtTime(
-                _asset, clip, Mathf.Repeat(time, 1f) * Mathf.Max(0f, clipData.duration), _paletteScratch);
-            int basePixel = objectIndex * _paletteWidth;
-            for (int bone = 0; bone < _boneCount; bone++)
-            {
-                Matrix4x4 m = _paletteScratch[bone]; int x = basePixel + bone * 3;
-                _palettePixels[x] = new Color(m.m00, m.m01, m.m02, m.m03);
-                _palettePixels[x + 1] = new Color(m.m10, m.m11, m.m12, m.m13);
-                _palettePixels[x + 2] = new Color(m.m20, m.m21, m.m22, m.m23);
             }
         }
 
