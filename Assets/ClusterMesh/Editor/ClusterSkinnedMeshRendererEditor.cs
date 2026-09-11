@@ -13,6 +13,7 @@ namespace ClusterMesh
         {
             var renderer = (ClusterSkinnedMeshRenderer)target;
             serializedObject.Update();
+            SerializedProperty evaluation = serializedObject.FindProperty("animationEvaluation");
             SerializedProperty prop = serializedObject.GetIterator();
             bool enterChildren = true;
             while (prop.NextVisible(enterChildren))
@@ -29,6 +30,12 @@ namespace ClusterMesh
                     DrawLodErrorThreshold(prop);
                 else if (prop.propertyPath == "clipIndex")
                     DrawClipIndex(prop, renderer.asset);
+                else if (prop.propertyPath == "enableParallelBonePrefix")
+                {
+                    if ((ClusterSkinnedAnimationEvaluation)evaluation.enumValueIndex ==
+                        ClusterSkinnedAnimationEvaluation.CpuCurves)
+                        EditorGUILayout.PropertyField(prop, true);
+                }
                 else
                     EditorGUILayout.PropertyField(prop, true);
             }

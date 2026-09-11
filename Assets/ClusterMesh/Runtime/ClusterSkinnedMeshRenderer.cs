@@ -26,6 +26,9 @@ namespace ClusterMesh
         public bool showLodLevels;
         [Tooltip("GPU Texture is the default and performs no per-frame CPU curve evaluation. CPU Curves keeps the compact curve path and is used as an automatic fallback for old assets or unsupported texture formats.")]
         public ClusterSkinnedAnimationEvaluation animationEvaluation = ClusterSkinnedAnimationEvaluation.GpuTexture;
+        [InspectorName("前缀并行开启")]
+        [Tooltip("CPU Curves only. Evaluates local poses per bone, then resolves the bone tree with a parallel prefix product. Best for deep skeletons or a small number of CPU-animated instances; disabled by default because extra jobs and buffers can cost more on typical rigs.")]
+        public bool enableParallelBonePrefix;
         public int clipIndex;
         [Range(0f, 1f)] public float normalizedTime;
         public float speed = 1f;

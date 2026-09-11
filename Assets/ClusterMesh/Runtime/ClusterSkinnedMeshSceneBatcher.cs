@@ -20,6 +20,7 @@ namespace ClusterMesh
             public readonly int clipIndex;
             public readonly int layer;
             public readonly ClusterSkinnedAnimationEvaluation animationEvaluation;
+            public readonly bool enableParallelBonePrefix;
             public readonly bool enableConeCull;
             public readonly bool showClusterColors;
             public readonly bool castShadows;
@@ -39,6 +40,8 @@ namespace ClusterMesh
                 clipIndex = renderer.clipIndex;
                 layer = renderer.gameObject.layer;
                 animationEvaluation = renderer.animationEvaluation;
+                enableParallelBonePrefix = renderer.animationEvaluation == ClusterSkinnedAnimationEvaluation.CpuCurves &&
+                    renderer.enableParallelBonePrefix;
                 enableConeCull = renderer.enableConeCull;
                 showClusterColors = renderer.showClusterColors;
                 castShadows = renderer.castShadows;
@@ -52,6 +55,7 @@ namespace ClusterMesh
                     cullShaderId == other.cullShaderId && litShaderId == other.litShaderId &&
                     clipIndex == other.clipIndex && layer == other.layer &&
                     animationEvaluation == other.animationEvaluation &&
+                    enableParallelBonePrefix == other.enableParallelBonePrefix &&
                     enableConeCull == other.enableConeCull &&
                     showClusterColors == other.showClusterColors &&
                     castShadows == other.castShadows && receiveShadows == other.receiveShadows &&
@@ -71,6 +75,7 @@ namespace ClusterMesh
                     hash = (hash * 397) ^ clipIndex;
                     hash = (hash * 397) ^ layer;
                     hash = (hash * 397) ^ (int)animationEvaluation;
+                    hash = (hash * 397) ^ enableParallelBonePrefix.GetHashCode();
                     hash = (hash * 397) ^ enableConeCull.GetHashCode();
                     hash = (hash * 397) ^ showClusterColors.GetHashCode();
                     hash = (hash * 397) ^ castShadows.GetHashCode();
@@ -190,7 +195,8 @@ namespace ClusterMesh
                         continue;
                     context.EnableClusterColor = batch.showClusterColors;
                     context.Draw(Matrices, CpuCull, CameraCull, Times, batch.clipIndex, batch.animationEvaluation,
-                        batch.enableConeCull, batch.lodErrorThreshold, batch.camera, batch.camera,
+                        batch.enableParallelBonePrefix, batch.enableConeCull, batch.lodErrorThreshold,
+                        batch.camera, batch.camera,
                         batch.castShadows, batch.receiveShadows, batch.layer);
                 }
             }

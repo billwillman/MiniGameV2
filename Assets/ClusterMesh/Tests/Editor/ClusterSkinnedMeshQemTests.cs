@@ -209,7 +209,7 @@ namespace ClusterMesh.Tests
                 Assert.DoesNotThrow(() => ctx.Draw(
                     new[] { Matrix4x4.identity }, null, null, new[] { 0f },
                     0, ClusterSkinnedAnimationEvaluation.GpuTexture,
-                    false, 0f, Camera.main, Camera.main, true, true, 0));
+                    false, false, 0f, Camera.main, Camera.main, true, true, 0));
             }
         }
 
@@ -235,6 +235,7 @@ namespace ClusterMesh.Tests
                 var renderer = go.AddComponent<ClusterSkinnedMeshRenderer>();
                 Assert.That(renderer.animationEvaluation,
                     Is.EqualTo(ClusterSkinnedAnimationEvaluation.GpuTexture));
+                Assert.That(renderer.enableParallelBonePrefix, Is.False);
 
                 asset.bindPoses = new[] { Matrix4x4.identity };
                 asset.clips = new[] { new ClusterSkinnedClip() };

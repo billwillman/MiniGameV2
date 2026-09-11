@@ -81,7 +81,7 @@ namespace ClusterMesh
                 Times.Add(r.CurrentNormalizedTime(Application.isPlaying ? Time.time : (float)editorTime));
                 entry.context.EnableClusterColor = r.showClusterColors;
                 entry.context.Draw(Matrices, CpuCull, CameraCull, Times, r.clipIndex, r.animationEvaluation,
-                    r.enableConeCull,
+                    r.enableParallelBonePrefix, r.enableConeCull,
                     r.lodErrorThreshold, cullCamera, drawCamera, r.castShadows, r.receiveShadows, r.gameObject.layer);
             }
         }

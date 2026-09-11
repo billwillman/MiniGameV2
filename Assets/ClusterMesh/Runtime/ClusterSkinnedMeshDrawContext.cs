@@ -90,6 +90,10 @@ namespace ClusterMesh
         NativeArray<float> _burstTimes;
         NativeArray<float4x4> _burstGlobalScratch;
         NativeArray<float4> _burstPalettePixels;
+        NativeArray<float4x4> _burstPrefixScratch;
+        NativeArray<int> _burstAncestorsA;
+        NativeArray<int> _burstAncestorsB;
+        int _burstMaxBoneDepth;
         bool _hasBurstCpuData;
         bool _disposed;
 
@@ -183,7 +187,8 @@ namespace ClusterMesh
 
         public void Draw(IList<Matrix4x4> matrices, IList<bool> cpuCull, IList<bool> cameraCull, IList<float> times,
             int clipIndex, ClusterSkinnedAnimationEvaluation animationEvaluation,
-            bool enableConeCull, float lodErrorThreshold, Camera cullingCamera, Camera drawCamera,
+            bool enableParallelBonePrefix, bool enableConeCull, float lodErrorThreshold,
+            Camera cullingCamera, Camera drawCamera,
             bool castShadows, bool receiveShadows, int drawLayer)
         {
             if (!CanDraw || matrices == null || cullingCamera == null || drawCamera == null) return;
@@ -199,6 +204,7 @@ namespace ClusterMesh
             // an old GPU asset without an atlas keeps the legacy managed fallback until rebaked.
             bool useBurstCpu = animationEvaluation == ClusterSkinnedAnimationEvaluation.CpuCurves &&
                 _hasBurstCpuData && _asset.HasCpuBurstCurves(clip);
+            bool useParallelPrefix = useBurstCpu && enableParallelBonePrefix;
             ClusterMeshFrustum.WorldPlanes(cullingCamera, _planeScratch);
             for (int i = 0; i < _planeScratch.Length; i++)
                 CopyPlane(i, _planeScratch[i]);
@@ -227,22 +233,27 @@ namespace ClusterMesh
             if (count <= 0) return;
             if (useBurstCpu)
             {
-                ClusterSkinnedPaletteJob paletteJob = new ClusterSkinnedPaletteJob
+                if (useParallelPrefix)
+                    EvaluateParallelPrefixPalette(count, clipData);
+                else
                 {
-                    headers = _burstCurveHeaders,
-                    segments = _burstCurveSegments,
-                    parents = _burstParents,
-                    evaluationOrder = _burstEvaluationOrder,
-                    bindPoses = _burstBindPoses,
-                    normalizedTimes = _burstTimes,
-                    globalScratch = _burstGlobalScratch,
-                    palettePixels = _burstPalettePixels,
-                    curveHeaderOffset = clipData.cpuCurveHeaderOffset,
-                    boneCount = _boneCount,
-                    paletteWidth = _paletteWidth,
-                    duration = clipData.duration
-                };
-                paletteJob.Schedule(count, 1).Complete();
+                    ClusterSkinnedPaletteJob paletteJob = new ClusterSkinnedPaletteJob
+                    {
+                        headers = _burstCurveHeaders,
+                        segments = _burstCurveSegments,
+                        parents = _burstParents,
+                        evaluationOrder = _burstEvaluationOrder,
+                        bindPoses = _burstBindPoses,
+                        normalizedTimes = _burstTimes,
+                        globalScratch = _burstGlobalScratch,
+                        palettePixels = _burstPalettePixels,
+                        curveHeaderOffset = clipData.cpuCurveHeaderOffset,
+                        boneCount = _boneCount,
+                        paletteWidth = _paletteWidth,
+                        duration = clipData.duration
+                    };
+                    paletteJob.Schedule(count, 1).Complete();
+                }
                 _paletteTexture.SetPixelData(_burstPalettePixels, 0);
                 _paletteTexture.Apply(false, false);
             }
@@ -331,7 +342,76 @@ namespace ClusterMesh
                 _boneCount * ClusterMeshLimits.MaxBatchedObjects, Allocator.Persistent);
             _burstPalettePixels = new NativeArray<float4>(
                 _paletteWidth * ClusterMeshLimits.MaxBatchedObjects, Allocator.Persistent);
+            var depths = new int[_boneCount];
+            for (int i = 0; i < _boneCount; i++)
+            {
+                int bone = asset.boneEvaluationOrder[i];
+                int parent = asset.boneParentIndices[bone];
+                depths[bone] = parent >= 0 ? depths[parent] + 1 : 0;
+                _burstMaxBoneDepth = Mathf.Max(_burstMaxBoneDepth, depths[bone]);
+            }
             _hasBurstCpuData = true;
+        }
+
+        void EvaluateParallelPrefixPalette(int objectCount, ClusterSkinnedClip clip)
+        {
+            EnsureParallelPrefixBuffers();
+            int itemCount = objectCount * _boneCount;
+            JobHandle dependency = new ClusterSkinnedLocalPoseJob
+            {
+                headers = _burstCurveHeaders,
+                segments = _burstCurveSegments,
+                parents = _burstParents,
+                normalizedTimes = _burstTimes,
+                matrices = _burstGlobalScratch,
+                ancestors = _burstAncestorsA,
+                curveHeaderOffset = clip.cpuCurveHeaderOffset,
+                boneCount = _boneCount,
+                duration = clip.duration
+            }.Schedule(itemCount, 32);
+
+            NativeArray<float4x4> currentMatrices = _burstGlobalScratch;
+            NativeArray<float4x4> nextMatrices = _burstPrefixScratch;
+            NativeArray<int> currentAncestors = _burstAncestorsA;
+            NativeArray<int> nextAncestors = _burstAncestorsB;
+            for (int span = 1; span <= _burstMaxBoneDepth; span <<= 1)
+            {
+                dependency = new ClusterSkinnedPrefixStepJob
+                {
+                    inputMatrices = currentMatrices,
+                    inputAncestors = currentAncestors,
+                    outputMatrices = nextMatrices,
+                    outputAncestors = nextAncestors,
+                    boneCount = _boneCount
+                }.Schedule(itemCount, 32, dependency);
+
+                NativeArray<float4x4> matrixSwap = currentMatrices;
+                currentMatrices = nextMatrices;
+                nextMatrices = matrixSwap;
+                NativeArray<int> ancestorSwap = currentAncestors;
+                currentAncestors = nextAncestors;
+                nextAncestors = ancestorSwap;
+            }
+
+            dependency = new ClusterSkinnedPaletteRowsJob
+            {
+                globalMatrices = currentMatrices,
+                bindPoses = _burstBindPoses,
+                palettePixels = _burstPalettePixels,
+                boneCount = _boneCount,
+                paletteWidth = _paletteWidth
+            }.Schedule(itemCount, 32, dependency);
+            dependency.Complete();
+        }
+
+        void EnsureParallelPrefixBuffers()
+        {
+            if (_burstPrefixScratch.IsCreated)
+                return;
+            int capacity = _boneCount * ClusterMeshLimits.MaxBatchedObjects;
+            _burstPrefixScratch = new NativeArray<float4x4>(capacity, Allocator.Persistent);
+            _burstAncestorsA = new NativeArray<int>(capacity, Allocator.Persistent);
+            _burstAncestorsB = new NativeArray<int>(capacity, Allocator.Persistent);
         }
 
         static bool ValidateBurstCpuData(ClusterSkinnedMeshAsset asset)
@@ -429,6 +509,9 @@ namespace ClusterMesh
             if (_burstTimes.IsCreated) _burstTimes.Dispose();
             if (_burstGlobalScratch.IsCreated) _burstGlobalScratch.Dispose();
             if (_burstPalettePixels.IsCreated) _burstPalettePixels.Dispose();
+            if (_burstPrefixScratch.IsCreated) _burstPrefixScratch.Dispose();
+            if (_burstAncestorsA.IsCreated) _burstAncestorsA.Dispose();
+            if (_burstAncestorsB.IsCreated) _burstAncestorsB.Dispose();
             if (_visible != null) foreach (var b in _visible) b?.Dispose();
             if (_shadowVisible != null) foreach (var b in _shadowVisible) b?.Dispose();
             if (_args != null) foreach (var b in _args) b?.Dispose();
