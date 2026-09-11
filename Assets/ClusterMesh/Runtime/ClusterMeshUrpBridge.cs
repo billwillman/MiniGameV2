@@ -116,6 +116,43 @@ namespace ClusterMesh
             }
         }
 
+        public static bool AreCompatibleDeferredTargets(RTHandle[] colors, RTHandle depth)
+        {
+            if (colors == null || colors.Length == 0 || depth == null)
+                return false;
+            if (!TryGetPixelSize(depth, out int width, out int height))
+                return false;
+            for (int i = 0; i < colors.Length; i++)
+            {
+                if (!TryGetPixelSize(colors[i], out int colorWidth, out int colorHeight))
+                    return false;
+                if (colorWidth != width || colorHeight != height)
+                    return false;
+            }
+
+            return true;
+        }
+
+        static bool TryGetPixelSize(RTHandle handle, out int width, out int height)
+        {
+            width = 0;
+            height = 0;
+            if (handle == null)
+                return false;
+            RenderTexture rt = handle.rt;
+            if (rt != null)
+            {
+                width = rt.width;
+                height = rt.height;
+                return width > 0 && height > 0;
+            }
+
+            Vector2Int scaled = handle.GetScaledSize();
+            width = scaled.x;
+            height = scaled.y;
+            return width > 0 && height > 0;
+        }
+
         public static bool TryGetMotionVectorTargets(
             ScriptableRenderer renderer,
             out RTHandle color,

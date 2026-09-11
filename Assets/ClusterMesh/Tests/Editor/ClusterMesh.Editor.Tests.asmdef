@@ -4,6 +4,7 @@
     "references": [
         "ClusterMesh.Runtime",
         "ClusterMesh.Editor",
+        "Unity.RenderPipelines.Core.Runtime",
         "Unity.RenderPipelines.Universal.Runtime"
     ],
     "includePlatforms": ["Editor"],

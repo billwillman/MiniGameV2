@@ -83,12 +83,16 @@ namespace ClusterMesh
             _motionTargetsReady = false;
         }
 
-        public override void OnCameraSetup(CommandBuffer cmd, ref RenderingData renderingData)
+        public override void Configure(CommandBuffer cmd, RenderTextureDescriptor cameraTextureDescriptor)
         {
+            // URP calls every OnCameraSetup first, then every Configure. GBufferPass
+            // reallocates _GBuffer0 in Configure. Binding here keeps color/depth sizes aligned.
             if (_phase == ClusterMeshUrpPhase.GBuffer)
             {
-                _deferredTargetsReady = ClusterMeshUrpBridge.TryGetDeferredTargets(
+                bool found = ClusterMeshUrpBridge.TryGetDeferredTargets(
                     _renderer, out RTHandle[] colors, out RTHandle depth, out _);
+                _deferredTargetsReady = found &&
+                    ClusterMeshUrpBridge.AreCompatibleDeferredTargets(colors, depth);
                 if (_deferredTargetsReady)
                 {
                     ConfigureTarget(colors, depth);
@@ -99,14 +103,17 @@ namespace ClusterMesh
                 {
                     Debug.LogError(
                         "ClusterMesh: URP Deferred GBuffer binding failed; ClusterMesh GBuffer submission was skipped. " +
-                        ClusterMeshUrpBridge.LastDeferredBindingError);
+                        (found
+                            ? "GBuffer color and depth attachments have different dimensions."
+                            : ClusterMeshUrpBridge.LastDeferredBindingError));
                     _loggedDeferredTargetFailure = true;
                 }
             }
             else if (_phase == ClusterMeshUrpPhase.Motion)
             {
                 _motionTargetsReady = ClusterMeshUrpBridge.TryGetMotionVectorTargets(
-                    _renderer, out RTHandle color, out RTHandle depth);
+                    _renderer, out RTHandle color, out RTHandle depth) &&
+                    ClusterMeshUrpBridge.AreCompatibleDeferredTargets(new[] { color }, depth);
                 if (_motionTargetsReady)
                 {
                     ConfigureTarget(color, depth);

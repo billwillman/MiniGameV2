@@ -227,6 +227,26 @@ namespace ClusterMesh.Tests
                 "Assets/ClusterMesh/Shaders/ClusterMeshCull.compute");
         }
 
+        static RTHandle AllocHandle(int width, int height, bool depth)
+        {
+            var rt = new RenderTexture(width, height, depth ? 24 : 0)
+            {
+                name = depth ? "CMTestDepth" : "CMTestColor"
+            };
+            rt.Create();
+            return RTHandles.Alloc(rt);
+        }
+
+        static void ReleaseHandle(RTHandle handle)
+        {
+            if (handle == null)
+                return;
+            RenderTexture rt = handle.rt;
+            RTHandles.Release(handle);
+            if (rt != null)
+                Object.DestroyImmediate(rt);
+        }
+
         static int FeatureCount(ScriptableRendererData data)
         {
             int n = 0;
