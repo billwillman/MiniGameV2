@@ -50,9 +50,46 @@ namespace ClusterMesh.Tests
         }
 
         [Test]
+        public void ConfigureDeferredOn_EnablesDeferredAndFeature()
+        {
+            var data = Track(ScriptableObject.CreateInstance<UniversalRendererData>());
+            data.renderingMode = RenderingMode.Forward;
+            ClusterMeshUrpFeatureMenu.ConfigureDeferredOn(data);
+            Assert.That(data.renderingMode, Is.EqualTo(RenderingMode.Deferred));
+            Assert.That(ClusterMeshUrpBridge.HasActiveFeature(data), Is.True);
+        }
+
+        [Test]
         public void ShouldSkipLegacyFlush_NullCamera_IsFalse()
         {
             Assert.That(ClusterMeshUrpBridge.ShouldSkipLegacyFlush(null), Is.False);
+        }
+
+        [Test]
+        public void UrpShaders_AppendGBufferWithoutChangingExistingPassIndices()
+        {
+            Shader staticShader = Shader.Find("ClusterMesh/Lit");
+            Shader skinnedShader = Shader.Find("ClusterMesh/SkinnedLit");
+            Assert.That(staticShader, Is.Not.Null);
+            Assert.That(skinnedShader, Is.Not.Null);
+            Material staticMaterial = Track(new Material(staticShader));
+            Material skinnedMaterial = Track(new Material(skinnedShader));
+            Assert.That(staticMaterial.FindPass("ForwardLit"), Is.EqualTo(0));
+            Assert.That(staticMaterial.FindPass("ShadowCaster"), Is.EqualTo(1));
+            Assert.That(staticMaterial.FindPass("DepthOnly"), Is.EqualTo(2));
+            Assert.That(staticMaterial.FindPass("GBuffer"), Is.EqualTo(3));
+            Assert.That(skinnedMaterial.FindPass("ForwardLit"), Is.EqualTo(0));
+            Assert.That(skinnedMaterial.FindPass("ShadowCaster"), Is.EqualTo(1));
+            Assert.That(skinnedMaterial.FindPass("DepthOnly"), Is.EqualTo(2));
+            Assert.That(skinnedMaterial.FindPass("GBuffer"), Is.EqualTo(3));
+        }
+
+        [Test]
+        public void DeferredSupport_IsExplicitlyUrpOnly()
+        {
+            StringAssert.Contains("only by URP", ClusterMeshUrpBridge.DeferredSupportDescription);
+            StringAssert.Contains("Built-in", ClusterMeshUrpBridge.DeferredSupportDescription);
+            StringAssert.Contains("HDRP", ClusterMeshUrpBridge.DeferredSupportDescription);
         }
 
         [Test]

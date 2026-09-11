@@ -3,6 +3,9 @@
 
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
+#if defined(CLUSTERMESH_GBUFFER_PASS)
+#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/UnityGBuffer.hlsl"
+#endif
 #include "ClusterMeshBuffers.hlsl"
 
 CBUFFER_START(UnityPerMaterial)
@@ -175,6 +178,42 @@ half4 ClusterMeshFrag(Varyings input) : SV_Target
     surface.alpha = albedo.a;
     return UniversalFragmentPBR(inputData, surface);
 }
+
+#if defined(CLUSTERMESH_GBUFFER_PASS)
+FragmentOutput ClusterMeshGBufferFrag(Varyings input)
+{
+    half4 albedo = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, input.uv) * _BaseColor;
+    clip(albedo.a - _Cutoff);
+    if (_EnableClusterColor > 0.5f)
+        albedo.rgb = ClusterMeshDebugRgb(input.clusterId);
+
+    float3 normalTS = UnpackNormalScale(SAMPLE_TEXTURE2D(_BumpMap, sampler_BumpMap, input.uv), _BumpScale);
+    float3 nT = normalize(input.tangentWS.xyz);
+    float3 nN = normalize(input.normalWS);
+    float3 nB = cross(nN, nT) * input.tangentWS.w;
+
+    InputData inputData = (InputData)0;
+    inputData.positionWS = input.positionWS;
+    inputData.positionCS = input.positionCS;
+    inputData.normalWS = normalize(mul(normalTS, float3x3(nT, nB, nN)));
+    inputData.viewDirectionWS = GetWorldSpaceNormalizeViewDir(input.positionWS);
+    inputData.shadowCoord = TransformWorldToShadowCoord(input.positionWS);
+    inputData.bakedGI = SampleSH(inputData.normalWS);
+    inputData.shadowMask = half4(1, 1, 1, 1);
+    inputData.normalizedScreenSpaceUV = GetNormalizedScreenSpaceUV(input.positionCS);
+
+    BRDFData brdfData;
+    InitializeBRDFData(albedo.rgb, _Metallic, half3(0, 0, 0), _Smoothness, albedo.a, brdfData);
+    Light mainLight = GetMainLight(inputData.shadowCoord, inputData.positionWS, inputData.shadowMask);
+    MixRealtimeAndBakedGI(mainLight, inputData.normalWS, inputData.bakedGI, inputData.shadowMask);
+    half3 indirect = 0;
+#if !defined(UNITY_TUANJIEGI)
+    indirect = GlobalIllumination(brdfData, inputData.bakedGI, 1, inputData.positionWS,
+        inputData.normalWS, inputData.viewDirectionWS);
+#endif
+    return BRDFDataToGbuffer(brdfData, inputData, _Smoothness, indirect, 1);
+}
+#endif
 
 Varyings ClusterMeshShadowVert(Attributes input)
 {

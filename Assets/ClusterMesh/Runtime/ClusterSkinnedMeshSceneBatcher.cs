@@ -220,6 +220,14 @@ namespace ClusterMesh
                 UrpPrepared[i].SubmitUrpColor(cmd);
         }
 
+        public static void SubmitUrpGBuffer(Camera camera, CommandBuffer cmd)
+        {
+            if (cmd == null || !ClusterMeshUrpBridge.ShouldSubmitUrp(camera))
+                return;
+            for (int i = 0; i < UrpPrepared.Count; i++)
+                UrpPrepared[i].SubmitUrpGBuffer(cmd);
+        }
+
         public static void ResetForTests()
         {
             Renderers.Clear();

@@ -77,8 +77,10 @@ namespace ClusterMesh.Tests
                 {
                     Assert.DoesNotThrow(() => ctx.SubmitUrpDepth(cmd));
                     Assert.DoesNotThrow(() => ctx.SubmitUrpColor(cmd));
+                    Assert.DoesNotThrow(() => ctx.SubmitUrpGBuffer(cmd));
                     Assert.DoesNotThrow(() => ctx.SubmitUrpDepth(null));
                     Assert.DoesNotThrow(() => ctx.SubmitUrpColor(null));
+                    Assert.DoesNotThrow(() => ctx.SubmitUrpGBuffer(null));
                 }
                 finally
                 {
@@ -106,6 +108,8 @@ namespace ClusterMesh.Tests
                 Assert.DoesNotThrow(() => ClusterSkinnedMeshSceneBatcher.SubmitUrpDepth(skinned.targetCamera, cmd));
                 Assert.DoesNotThrow(() => ClusterMeshSceneBatcher.SubmitUrpColor(skinned.targetCamera, cmd));
                 Assert.DoesNotThrow(() => ClusterSkinnedMeshSceneBatcher.SubmitUrpColor(skinned.targetCamera, cmd));
+                Assert.DoesNotThrow(() => ClusterMeshSceneBatcher.SubmitUrpGBuffer(skinned.targetCamera, cmd));
+                Assert.DoesNotThrow(() => ClusterSkinnedMeshSceneBatcher.SubmitUrpGBuffer(skinned.targetCamera, cmd));
             }
             finally
             {

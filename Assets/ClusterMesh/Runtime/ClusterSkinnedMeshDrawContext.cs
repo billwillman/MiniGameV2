@@ -114,6 +114,8 @@ namespace ClusterMesh
 
         const int ForwardShaderPass = 0;
         const int DepthShaderPass = 2;
+        const int GBufferShaderPass = 3;
+        const string ReceiveShadowsOffKeyword = "_RECEIVE_SHADOWS_OFF";
 
         public bool IsReady { get; private set; }
         public string Error { get; private set; }
@@ -307,6 +309,11 @@ namespace ClusterMesh
         public void SubmitUrpColor(CommandBuffer cmd)
         {
             SubmitUrpCmd(cmd, ForwardShaderPass);
+        }
+
+        public void SubmitUrpGBuffer(CommandBuffer cmd)
+        {
+            SubmitUrpCmd(cmd, GBufferShaderPass);
         }
 
         bool TryPrepare(IList<Matrix4x4> matrices, IList<bool> cpuCull, IList<bool> cameraCull, IList<float> times,
@@ -657,6 +664,8 @@ namespace ClusterMesh
             m.SetInt(RestVertexTightId, _restVertexTight ? 1 : 0);
             m.SetInt(GpuPalettePixelsPerBoneId, _gpuPalettePixelsPerBone);
             m.SetFloat(EnableClusterColorId, EnableClusterColor ? 1f : 0f);
+            if (_preparedReceive) m.DisableKeyword(ReceiveShadowsOffKeyword);
+            else m.EnableKeyword(ReceiveShadowsOffKeyword);
         }
 
         static bool MaterialsAlive(Material[] materials)

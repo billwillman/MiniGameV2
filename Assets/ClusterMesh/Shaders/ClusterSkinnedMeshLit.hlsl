@@ -3,6 +3,9 @@
 
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
+#if defined(CLUSTERMESH_GBUFFER_PASS)
+#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/UnityGBuffer.hlsl"
+#endif
 #include "ClusterMeshBuffers.hlsl"
 
 CBUFFER_START(UnityPerMaterial)
@@ -215,6 +218,27 @@ half4 ClusterSkinnedFrag(Varyings i):SV_Target
     InputData d=(InputData)0; d.positionWS=i.positionWS; d.normalWS=normalize(mul(nts,float3x3(t,b,n))); d.viewDirectionWS=GetWorldSpaceNormalizeViewDir(i.positionWS); d.shadowCoord=TransformWorldToShadowCoord(i.positionWS); d.bakedGI=SampleSH(d.normalWS);
     SurfaceData s=(SurfaceData)0; s.albedo=albedo.rgb;s.metallic=_Metallic;s.smoothness=_Smoothness;s.normalTS=nts;s.occlusion=1;s.alpha=albedo.a; return UniversalFragmentPBR(d,s);
 }
+#if defined(CLUSTERMESH_GBUFFER_PASS)
+FragmentOutput ClusterSkinnedGBufferFrag(Varyings i)
+{
+    half4 albedo=SAMPLE_TEXTURE2D(_BaseMap,sampler_BaseMap,i.uv)*_BaseColor; clip(albedo.a-_Cutoff);
+    if (_EnableClusterColor > 0.5f) albedo.rgb=ClusterSkinnedDebugRgb(i.clusterId);
+    float3 nts=UnpackNormalScale(SAMPLE_TEXTURE2D(_BumpMap,sampler_BumpMap,i.uv),_BumpScale);
+    float3 t=normalize(i.tangentWS.xyz),n=normalize(i.normalWS),b=cross(n,t)*i.tangentWS.w;
+    InputData d=(InputData)0; d.positionWS=i.positionWS; d.positionCS=i.positionCS;
+    d.normalWS=normalize(mul(nts,float3x3(t,b,n))); d.viewDirectionWS=GetWorldSpaceNormalizeViewDir(i.positionWS);
+    d.shadowCoord=TransformWorldToShadowCoord(i.positionWS); d.bakedGI=SampleSH(d.normalWS);
+    d.shadowMask=half4(1,1,1,1); d.normalizedScreenSpaceUV=GetNormalizedScreenSpaceUV(i.positionCS);
+    BRDFData brdf; InitializeBRDFData(albedo.rgb,_Metallic,half3(0,0,0),_Smoothness,albedo.a,brdf);
+    Light mainLight=GetMainLight(d.shadowCoord,d.positionWS,d.shadowMask);
+    MixRealtimeAndBakedGI(mainLight,d.normalWS,d.bakedGI,d.shadowMask);
+    half3 indirect=0;
+    #if !defined(UNITY_TUANJIEGI)
+    indirect=GlobalIllumination(brdf,d.bakedGI,1,d.positionWS,d.normalWS,d.viewDirectionWS);
+    #endif
+    return BRDFDataToGbuffer(brdf,d,_Smoothness,indirect,1);
+}
+#endif
 Varyings ClusterSkinnedShadowVert(Attributes input)
 {
     uint objectIndex=_VisibleClusterIds[input.instanceID]>>16, vertexIndex; float3 p,n; float4 t; float2 uv;

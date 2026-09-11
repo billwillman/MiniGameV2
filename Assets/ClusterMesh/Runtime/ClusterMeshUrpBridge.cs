@@ -1,5 +1,7 @@
 using System.Reflection;
 using UnityEngine;
+using UnityEngine.Experimental.Rendering;
+using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 
 namespace ClusterMesh
@@ -12,8 +14,76 @@ namespace ClusterMesh
             .GetField("m_RendererDataList", BindingFlags.Instance | BindingFlags.NonPublic);
         static readonly FieldInfo DefaultRendererIndexField = typeof(UniversalRenderPipelineAsset)
             .GetField("m_DefaultRendererIndex", BindingFlags.Instance | BindingFlags.NonPublic);
+        static readonly PropertyInfo RenderingModeActualProperty = typeof(UniversalRenderer)
+            .GetProperty("renderingModeActual", BindingFlags.Instance | BindingFlags.NonPublic);
+        static readonly FieldInfo DeferredLightsField = typeof(UniversalRenderer)
+            .GetField("m_DeferredLights", BindingFlags.Instance | BindingFlags.NonPublic);
+        static System.Type _deferredLightsType;
+        static PropertyInfo _gbufferAttachmentsProperty;
+        static PropertyInfo _depthAttachmentProperty;
+        static PropertyInfo _gbufferFormatsProperty;
 
         public static ScriptableRendererData RendererDataOverrideForTests;
+
+        public const string DeferredSupportDescription =
+            "ClusterMesh deferred rendering is supported only by URP Deferred/Deferred+; Built-in and HDRP deferred are not supported.";
+
+        public static bool IsDeferred(ScriptableRenderer renderer)
+        {
+            if (!(renderer is UniversalRenderer) || RenderingModeActualProperty == null)
+                return false;
+            try
+            {
+                object value = RenderingModeActualProperty.GetValue(renderer);
+                return value is RenderingMode mode &&
+                       (mode == RenderingMode.Deferred || mode == RenderingMode.DeferredPlus);
+            }
+            catch
+            {
+                // A different URP implementation must keep the established Forward path alive.
+                return false;
+            }
+        }
+
+        public static bool TryGetDeferredTargets(
+            ScriptableRenderer renderer,
+            out RTHandle[] colors,
+            out RTHandle depth,
+            out GraphicsFormat[] formats)
+        {
+            colors = null;
+            depth = null;
+            formats = null;
+            if (!IsDeferred(renderer) || DeferredLightsField == null)
+                return false;
+            try
+            {
+                object deferredLights = DeferredLightsField.GetValue(renderer);
+                if (deferredLights == null)
+                    return false;
+                CacheDeferredProperties(deferredLights.GetType());
+                colors = _gbufferAttachmentsProperty?.GetValue(deferredLights) as RTHandle[];
+                depth = _depthAttachmentProperty?.GetValue(deferredLights) as RTHandle;
+                formats = _gbufferFormatsProperty?.GetValue(deferredLights) as GraphicsFormat[];
+                return colors != null && colors.Length > 0 && depth != null &&
+                       formats != null && formats.Length == colors.Length;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        static void CacheDeferredProperties(System.Type type)
+        {
+            if (_deferredLightsType == type)
+                return;
+            const BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+            _deferredLightsType = type;
+            _gbufferAttachmentsProperty = type.GetProperty("GbufferAttachments", flags);
+            _depthAttachmentProperty = type.GetProperty("DepthAttachment", flags);
+            _gbufferFormatsProperty = type.GetProperty("GbufferFormats", flags);
+        }
 
         public static bool HasActiveFeature(ScriptableRendererData data)
         {

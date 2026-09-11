@@ -65,6 +65,30 @@ Shader "ClusterMesh/Lit"
             #include "ClusterMeshLit.hlsl"
             ENDHLSL
         }
+
+        // ClusterMesh deferred support is intentionally URP-only.
+        Pass
+        {
+            Name "GBuffer"
+            Tags { "LightMode"="UniversalGBuffer" "UniversalMaterialType"="Lit" }
+            ZWrite On
+            ZTest LEqual
+            Stencil { Ref 32 ReadMask 96 WriteMask 96 Comp Always Pass Replace }
+            HLSLPROGRAM
+            #pragma target 4.5
+            #pragma exclude_renderers gles3 glcore
+            #pragma vertex ClusterMeshVert
+            #pragma fragment ClusterMeshGBufferFrag
+            #pragma multi_compile_instancing
+            #pragma instancing_options procedural:ClusterMeshSetup
+            #pragma multi_compile _ _MAIN_LIGHT_SHADOWS _MAIN_LIGHT_SHADOWS_CASCADE _MAIN_LIGHT_SHADOWS_SCREEN
+            #pragma multi_compile_fragment _ _GBUFFER_NORMALS_OCT
+            #pragma multi_compile_fragment _ UNITY_TUANJIEGI
+            #pragma shader_feature_local _RECEIVE_SHADOWS_OFF
+            #define CLUSTERMESH_GBUFFER_PASS 1
+            #include "ClusterMeshLit.hlsl"
+            ENDHLSL
+        }
     }
     FallBack Off
 }

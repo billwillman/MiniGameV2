@@ -14,6 +14,7 @@ namespace ClusterMesh
         static readonly int VerticesId = Shader.PropertyToID("_Vertices");
         static readonly int VerticesTightId = Shader.PropertyToID("_VerticesTight");
         static readonly int RestVertexTightId = Shader.PropertyToID("_RestVertexTight");
+        const string ReceiveShadowsOffKeyword = "_RECEIVE_SHADOWS_OFF";
         static readonly int IndicesId = Shader.PropertyToID("_Indices");
         static readonly int VisibleId = Shader.PropertyToID("_VisibleClusterIds");
         static readonly int ShadowVisibleId = Shader.PropertyToID("_ShadowClusterIds");
@@ -76,6 +77,7 @@ namespace ClusterMesh
 
         const int ForwardShaderPass = 0;
         const int DepthShaderPass = 2;
+        const int GBufferShaderPass = 3;
 
         sealed class UrpChunk
         {
@@ -358,6 +360,14 @@ namespace ClusterMesh
                 SubmitCmd(_urpChunks[i], cmd, ForwardShaderPass);
         }
 
+        public void SubmitUrpGBuffer(CommandBuffer cmd)
+        {
+            if (cmd == null)
+                return;
+            for (int i = 0; i < _urpChunks.Count; i++)
+                SubmitCmd(_urpChunks[i], cmd, GBufferShaderPass);
+        }
+
         bool PrepareChunks(
             IList<Matrix4x4> localToWorld,
             IList<bool> enableCpuObjectCull,
@@ -632,6 +642,10 @@ namespace ClusterMesh
             mat.SetMatrixArray(ObjectLocalToWorldId, _l2w);
             mat.SetMatrixArray(ObjectWorldToLocalId, _w2l);
             mat.SetFloat(EnableClusterColorId, EnableClusterColor ? 1f : 0f);
+            if (_preparedReceive)
+                mat.DisableKeyword(ReceiveShadowsOffKeyword);
+            else
+                mat.EnableKeyword(ReceiveShadowsOffKeyword);
         }
 
         static bool MaterialsAlive(Material[] materials)
