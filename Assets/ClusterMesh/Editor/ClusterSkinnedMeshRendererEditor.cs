@@ -34,7 +34,14 @@ namespace ClusterMesh
                 {
                     if ((ClusterSkinnedAnimationEvaluation)evaluation.enumValueIndex ==
                         ClusterSkinnedAnimationEvaluation.CpuCurves)
-                        EditorGUILayout.PropertyField(prop, true);
+                    {
+                        EditorGUILayout.PropertyField(prop, new GUIContent(
+                            "前缀并行开启",
+                            "仅 CPU Curves 生效。先并行求每根骨头的局部 pose，再用前缀积算骨骼层级。骨架很深或 CPU 实例很少时才可能更快；普通人模请保持关闭，额外 Job 和缓冲往往更贵。"));
+                        EditorGUILayout.HelpBox(
+                            "前缀并行把「局部曲线」和「层级乘」拆开：骨头之间先并行算局部变换，再按骨骼树做前缀积。默认关闭。人模骨骼不深时，多出来的 Job 通常比按父子顺序串行更慢。",
+                            MessageType.Info);
+                    }
                 }
                 else
                     EditorGUILayout.PropertyField(prop, true);

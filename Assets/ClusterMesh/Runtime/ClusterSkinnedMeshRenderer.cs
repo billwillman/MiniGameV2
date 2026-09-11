@@ -27,7 +27,7 @@ namespace ClusterMesh
         [Tooltip("GPU Texture is the default and performs no per-frame CPU curve evaluation. CPU Curves keeps the compact curve path and is used as an automatic fallback for old assets or unsupported texture formats.")]
         public ClusterSkinnedAnimationEvaluation animationEvaluation = ClusterSkinnedAnimationEvaluation.GpuTexture;
         [InspectorName("前缀并行开启")]
-        [Tooltip("CPU Curves only. Evaluates local poses per bone, then resolves the bone tree with a parallel prefix product. Best for deep skeletons or a small number of CPU-animated instances; disabled by default because extra jobs and buffers can cost more on typical rigs.")]
+        [Tooltip("仅 CPU Curves 生效。先并行求每根骨头的局部 pose，再用前缀积算骨骼层级。骨架很深或 CPU 实例很少时才可能更快；普通人模请保持关闭，额外 Job 和缓冲往往更贵。")]
         public bool enableParallelBonePrefix;
         public int clipIndex;
         [Range(0f, 1f)] public float normalizedTime;
