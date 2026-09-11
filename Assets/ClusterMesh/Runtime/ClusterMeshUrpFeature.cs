@@ -88,10 +88,10 @@ namespace ClusterMesh
             if (_phase == ClusterMeshUrpPhase.GBuffer)
             {
                 _deferredTargetsReady = ClusterMeshUrpBridge.TryGetDeferredTargets(
-                    _renderer, out RTHandle[] colors, out RTHandle depth, out UnityEngine.Experimental.Rendering.GraphicsFormat[] formats);
+                    _renderer, out RTHandle[] colors, out RTHandle depth, out _);
                 if (_deferredTargetsReady)
                 {
-                    ConfigureTarget(colors, depth, formats);
+                    ConfigureTarget(colors, depth);
                     ConfigureClear(ClearFlag.None, Color.black);
                     _loggedDeferredTargetFailure = false;
                 }
