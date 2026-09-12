@@ -215,19 +215,27 @@ namespace ClusterMesh.Tests
             Assert.That(
                 ClusterMeshUrpBridge.MotionVectorSlotDescription(
                     ClusterMeshMotionVectorSlot.AfterSkyboxPlus1),
-                Does.Contain("官方物体 MV 同级，早于 Radiant + 2"));
+                Does.Contain("官方物体 MV 同级，早于 Radiant + 2")
+                    .And.Contain("Radiant GI 的 Temporal 和 URP TAA"));
+            Assert.That(
+                ClusterMeshUrpBridge.MotionVectorSlotLabel(
+                    ClusterMeshMotionVectorSlot.AfterSkyboxPlus1),
+                Does.Contain("推荐"));
             Assert.That(
                 ClusterMeshUrpBridge.MotionVectorSlotDescription(
                     ClusterMeshMotionVectorSlot.AfterOpaques),
-                Does.Contain("比天空盒和官方物体 MV 更早"));
+                Does.Contain("比天空盒和官方物体 MV 更早")
+                    .And.Contain("不推荐日常"));
             Assert.That(
                 ClusterMeshUrpBridge.MotionVectorSlotDescription(
                     ClusterMeshMotionVectorSlot.AfterSkybox),
-                Does.Contain("早于 Radiant + 2"));
+                Does.Contain("早于 Radiant + 2")
+                    .And.Contain("通常仍有效"));
             Assert.That(
                 ClusterMeshUrpBridge.MotionVectorSlotDescription(
                     ClusterMeshMotionVectorSlot.BeforePostProcessingMinus1),
-                Does.Contain("晚于 Radiant + 2"));
+                Does.Contain("晚于 Radiant + 2")
+                    .And.Contain("选这项无效"));
             var defaultSettings = Track(ScriptableObject.CreateInstance<ClusterMeshSettings>());
             Assert.That(
                 defaultSettings.MotionVectorSlot,

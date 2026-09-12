@@ -8,7 +8,7 @@ namespace ClusterMesh
 {
     public enum ClusterMeshMotionVectorSlot
     {
-        [InspectorName("After Skybox + 1（默认，Radiant 前）")]
+        [InspectorName("After Skybox + 1（推荐：Radiant GI / TAA）")]
         AfterSkyboxPlus1 = 0,
         [InspectorName("After Opaques")]
         AfterOpaques = 1,
@@ -72,7 +72,7 @@ namespace ClusterMesh
                 case ClusterMeshMotionVectorSlot.BeforePostProcessingMinus1:
                     return "Before PostProcessing - 1（旧挂点）";
                 default:
-                    return "After Skybox + 1（默认）";
+                    return "After Skybox + 1（推荐：Radiant GI / TAA）";
             }
         }
 
@@ -81,13 +81,17 @@ namespace ClusterMesh
             switch (slot)
             {
                 case ClusterMeshMotionVectorSlot.AfterOpaques:
-                    return "AfterRenderingOpaques。比天空盒和官方物体 MV 更早写入。";
+                    return "AfterRenderingOpaques。比天空盒和官方物体 MV 更早写入。" +
+                           "排查用，不推荐日常。可能和官方物体 MV 抢同一张图；Radiant GI / TAA 一般不需要这么早。";
                 case ClusterMeshMotionVectorSlot.AfterSkybox:
-                    return "AfterRenderingSkybox。紧贴天空盒之后，仍早于 Radiant + 2。";
+                    return "AfterRenderingSkybox。紧贴天空盒之后，仍早于 Radiant + 2。" +
+                           "Radiant GI / TAA 通常仍有效，但和官方物体 MV 不同级，可能互盖。无特殊冲突时用默认 +1。";
                 case ClusterMeshMotionVectorSlot.BeforePostProcessingMinus1:
-                    return "BeforeRenderingPostProcessing - 1。旧挂点；2022.3 上晚于 Radiant + 2，Temporal 会把角色当静态世界。";
+                    return "BeforeRenderingPostProcessing - 1。旧挂点；2022.3 上晚于 Radiant + 2，Temporal 会把角色当静态世界。" +
+                           "Radiant GI / TAA 选这项无效。";
                 default:
-                    return "AfterRenderingSkybox + 1。官方物体 MV 同级，早于 Radiant + 2。";
+                    return "AfterRenderingSkybox + 1。官方物体 MV 同级，早于 Radiant + 2。" +
+                           "推荐本档：本工程 Radiant GI 的 Temporal 和 URP TAA 能采到 ClusterMesh 速度，转相机 / 走角色不把轮廓当静态世界拖边。";
             }
         }
 

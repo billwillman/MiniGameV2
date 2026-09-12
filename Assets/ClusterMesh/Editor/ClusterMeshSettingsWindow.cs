@@ -47,11 +47,15 @@ namespace ClusterMesh
 
             EditorGUILayout.HelpBox(
                 "项目级设置。管线时机对所有 ClusterMesh / Skinned ClusterMesh 生效，不要写在单个 Renderer 上。\n" +
-                "物体是否写出 Motion Vector 仍由各 Renderer 的 enableMotionVectors 决定。",
+                "物体是否写出 Motion Vector 仍由各 Renderer 的 enableMotionVectors 决定；这里只决定写入时机。\n" +
+                "本工程 Radiant GI 在 AfterRenderingSkybox + 2 读 _MotionVectorTexture，URP TAA 用同一张图。" +
+                "必须先于它写入，Temporal 才认 ClusterMesh 在动。推荐默认 After Skybox + 1。",
                 MessageType.Info);
 
             EditorGUILayout.LabelField("Motion Vector Pass", EditorStyles.boldLabel);
-            EditorGUILayout.LabelField("ClusterMesh 物体速度写入 URP Motion Vector 图的时机。", EditorStyles.miniLabel);
+            EditorGUILayout.LabelField(
+                "ClusterMesh 物体速度写入 URP Motion Vector 图的时机。勾选物体 MV 后，选对挂点 Radiant GI / TAA 才有效。",
+                EditorStyles.wordWrappedMiniLabel);
             EditorGUILayout.Space(4);
 
             DrawMotionVectorSlot(
