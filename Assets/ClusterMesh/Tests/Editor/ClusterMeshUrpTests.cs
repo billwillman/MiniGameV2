@@ -257,6 +257,9 @@ namespace ClusterMesh.Tests
             string window = System.IO.File.ReadAllText(
                 "Assets/ClusterMesh/Editor/ClusterMeshSettingsWindow.cs");
             Assert.That(window, Does.Contain("Tools/ClusterMesh/通用设置"));
+            Assert.That(window, Does.Contain("仅流式资产"));
+            Assert.That(window, Does.Contain("没勾就烤出来的资产"));
+            Assert.That(window, Does.Contain("完全无效"));
             string menu = System.IO.File.ReadAllText(
                 "Assets/ClusterMesh/Editor/ClusterMeshUrpFeatureMenu.cs");
             Assert.That(menu, Does.Contain("Tools/ClusterMesh/Setup Radiant URP 延迟渲染"));

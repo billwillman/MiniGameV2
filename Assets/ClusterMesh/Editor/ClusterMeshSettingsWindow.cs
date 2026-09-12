@@ -77,11 +77,16 @@ namespace ClusterMesh
 
         static void DrawStreamingSettings(ClusterMeshSettings settings)
         {
-            EditorGUILayout.LabelField("Page Streaming", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("Page Streaming（仅流式资产）", EditorStyles.boldLabel);
             EditorGUILayout.HelpBox(
-                "设计目的：Bake 时勾选 Page Streaming 的 Static Mesh / Skinned Mesh 会把几何页写入独立 .cmstream 文件，运行时使用异步 FileStream 按需读取。根 LOD 常驻，细节页缺失时回退到已驻留父 LOD，避免模型空洞。\n" +
-                "文件位置不绑定 StreamingAssets：ClusterMeshStreaming.RootPath / FilePathResolver 可映射到 persistentDataPath、热更目录或任意真实文件路径。\n" +
-                "未勾选 Streaming 的旧资产不会创建流式 Runtime、请求 Buffer 或页池，下列设置对非 Streaming 路径完全无效。",
+                "下列共享池、I/O 预算、预取和驻留宽限只对 Bake 时勾了「Page Streaming」的资产生效。\n" +
+                "没勾就烤出来的资产是内嵌 .asset，没有 .cmstream，不会建页池、不会异步读文件。改这些项对它们完全无效，也不会改变合批、探针、雾或 Motion Vector。\n" +
+                "要让本节生效：Tools/ClusterMesh/Baker → 存储与流式加载 → 勾选 Page Streaming → 重新 Bake。\n" +
+                "本页上半的 Motion Vector Pass 与是否流式无关，对所有 ClusterMesh 仍然有效。",
+                MessageType.Warning);
+            EditorGUILayout.HelpBox(
+                "勾选后：几何页写入独立 .cmstream，运行时异步 FileStream 按需读取。根 LOD 常驻，细节页缺失时回退到已驻留父 LOD，避免模型空洞。\n" +
+                "文件位置不绑定 StreamingAssets：ClusterMeshStreaming.RootPath / FilePathResolver 可映射到 persistentDataPath、热更目录或任意真实文件路径。",
                 MessageType.Info);
 
             EditorGUI.BeginChangeCheck();
@@ -95,7 +100,7 @@ namespace ClusterMesh
                 settings.SharedGpuPoolPageCapacity, 32, 2048);
 
             EditorGUILayout.Space(4);
-            EditorGUILayout.LabelField("I/O 与上传预算", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("I/O 与上传预算（仅流式资产）", EditorStyles.boldLabel);
             int reads = EditorGUILayout.IntSlider(
                 new GUIContent("Concurrent Reads", "所有流式资产共用的异步 FileStream 在途读取上限，防止资产数量把并发放大。"),
                 settings.MaxConcurrentPageReads, 1, 32);
@@ -113,7 +118,7 @@ namespace ClusterMesh
                 settings.MaxDecodedMegabytes, 4, 256);
 
             EditorGUILayout.Space(4);
-            EditorGUILayout.LabelField("调度与稳定性", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("调度与稳定性（仅流式资产）", EditorStyles.boldLabel);
             bool prefetch = EditorGUILayout.Toggle(
                 new GUIContent("Prefetch Next Detail", "按相机距离和 LOD 请求优先级，低优先级预取目标节点的下一层细节，降低靠近物体时的 LOD 跳变等待；代价是少量额外 I/O。"),
                 settings.EnableStreamingPrefetch);
