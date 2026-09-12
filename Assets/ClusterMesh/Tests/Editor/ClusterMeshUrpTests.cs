@@ -17,6 +17,7 @@ namespace ClusterMesh.Tests
             ClusterMeshUrpBridge.RendererDataOverrideForTests = null;
             ClusterMeshSettings.OverrideForTests = null;
             ClusterMeshSettings.ClearCacheForTests();
+            ClusterMeshUrpFeatureMenu.RadiantInstalledOverrideForTests = null;
             ClusterMeshSceneBatcher.ResetForTests();
             ClusterSkinnedMeshSceneBatcher.ResetForTests();
             for (int i = 0; i < _trash.Count; i++)
@@ -256,6 +257,50 @@ namespace ClusterMesh.Tests
             string window = System.IO.File.ReadAllText(
                 "Assets/ClusterMesh/Editor/ClusterMeshSettingsWindow.cs");
             Assert.That(window, Does.Contain("Tools/ClusterMesh/通用设置"));
+            string menu = System.IO.File.ReadAllText(
+                "Assets/ClusterMesh/Editor/ClusterMeshUrpFeatureMenu.cs");
+            Assert.That(menu, Does.Contain("Tools/ClusterMesh/Setup Radiant URP 延迟渲染"));
+            Assert.That(menu, Does.Contain("没有安装 Radiant"));
+        }
+
+        [Test]
+        public void RadiantInstalled_CanBeOverriddenForMissingPackage()
+        {
+            ClusterMeshUrpFeatureMenu.RadiantInstalledOverrideForTests = false;
+            Assert.That(ClusterMeshUrpFeatureMenu.IsRadiantInstalled(), Is.False);
+            ClusterMeshUrpFeatureMenu.RadiantInstalledOverrideForTests = true;
+            Assert.That(ClusterMeshUrpFeatureMenu.IsRadiantInstalled(), Is.True);
+        }
+
+        [Test]
+        public void EnableRadiantOn_AddsOnce_WithoutProjectRendererNames()
+        {
+            if (!ClusterMeshUrpFeatureMenu.IsRadiantInstalled())
+                Assert.Ignore("没有安装 Radiant");
+
+            var data = Track(ScriptableObject.CreateInstance<UniversalRendererData>());
+            data.name = "AnyUniversalRenderer";
+            Assert.That(ClusterMeshUrpFeatureMenu.HasRadiantFeature(data), Is.False);
+            ClusterMeshUrpFeatureMenu.EnableRadiantOn(data);
+            Assert.That(ClusterMeshUrpFeatureMenu.HasRadiantFeature(data), Is.True);
+            int count = FeatureCount(data);
+            ClusterMeshUrpFeatureMenu.EnableRadiantOn(data);
+            Assert.That(FeatureCount(data), Is.EqualTo(count));
+        }
+
+        [Test]
+        public void SetupFolders_ResolveFromClusterMeshModule_NotProjectSettings()
+        {
+            string module = ClusterMeshUrpFeatureMenu.ResolveModuleFolder();
+            string settings = ClusterMeshUrpFeatureMenu.ResolveSettingsFolder();
+            Assert.That(module, Is.Not.Null.And.EndWith("ClusterMesh"));
+            Assert.That(settings, Is.EqualTo(module + "/Settings"));
+            Assert.That(settings, Does.Not.Contain("Assets/Settings"));
+            Assert.That(settings, Does.Not.Contain("FogOfWar"));
+            string menu = System.IO.File.ReadAllText(
+                "Assets/ClusterMesh/Editor/ClusterMeshUrpFeatureMenu.cs");
+            Assert.That(menu, Does.Not.Contain("return \"Assets/ClusterMesh\""));
+            Assert.That(menu, Does.Contain("ForEachDefaultRenderer"));
         }
 
         [Test]
