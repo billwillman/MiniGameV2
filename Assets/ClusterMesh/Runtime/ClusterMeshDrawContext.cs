@@ -38,6 +38,19 @@ namespace ClusterMesh
         static readonly int ObjectCameraCullFlagsId = Shader.PropertyToID("_ObjectCameraCullFlags");
         static readonly int ObjectWorldToLocalId = Shader.PropertyToID("_ObjectWorldToLocal");
         static readonly int ObjectSHId = Shader.PropertyToID("_ObjectSH");
+        static readonly int StreamNodesId = Shader.PropertyToID("_StreamNodes");
+        static readonly int StreamAddressesId = Shader.PropertyToID("_StreamAddresses");
+        static readonly int StreamPageTableId = Shader.PropertyToID("_StreamPageTable");
+        static readonly int StreamNodeResidentId = Shader.PropertyToID("_StreamNodeResident");
+        static readonly int StreamRequestedPagesId = Shader.PropertyToID("_StreamRequestedPages");
+        static readonly int StreamSelectedNodeStampsId = Shader.PropertyToID("_StreamSelectedNodeStamps");
+        static readonly int StreamNodeCountId = Shader.PropertyToID("_StreamNodeCount");
+        static readonly int StreamRequestPriorityOffsetId = Shader.PropertyToID("_StreamRequestPriorityOffset");
+        static readonly int StreamRequestEnabledId = Shader.PropertyToID("_StreamRequestEnabled");
+        static readonly int StreamPageVertexCapacityId = Shader.PropertyToID("_StreamPageVertexCapacity");
+        static readonly int StreamPageIndexCapacityId = Shader.PropertyToID("_StreamPageIndexCapacity");
+        static readonly int ClusterStreamingEnabledId = Shader.PropertyToID("_ClusterStreamingEnabled");
+        static readonly int StreamSelectionStampId = Shader.PropertyToID("_StreamSelectionStamp");
 
         readonly ClusterMeshAsset _asset;
         readonly ComputeShader _cullShader;
@@ -52,6 +65,12 @@ namespace ClusterMesh
         readonly GraphicsBuffer _vertexBuffer;
         readonly GraphicsBuffer _vertexTightBuffer;
         readonly GraphicsBuffer _indexBuffer;
+        readonly ClusterMeshPageRuntime _streamRuntime;
+        readonly GraphicsBuffer[] _streamRequestedPages;
+        readonly GraphicsBuffer _streamSelectedNodeStamps;
+        readonly uint[] _streamRequestZeros;
+        readonly int[] _streamTraversalStack;
+        readonly bool _streaming;
         readonly bool _restVertexTight;
         readonly GraphicsBuffer[] _visibleBuffers;
         readonly GraphicsBuffer[] _shadowVisibleBuffers;
@@ -81,6 +100,12 @@ namespace ClusterMesh
         bool _preparedCast;
         bool _preparedReceive;
         bool _preparedHasMotionVectors;
+        uint _streamSelectionStamp;
+        readonly bool[] _streamReadbackPending = new bool[2];
+        int _streamActiveRequestBuffer = -1;
+        int _streamGpuReadbackFailures;
+        int _streamCpuFallbackSerial;
+        bool _streamCpuRequestFallback;
         bool _disposed;
 
         const int ForwardShaderPass = 0;
@@ -113,9 +138,14 @@ namespace ClusterMesh
                     return false;
                 if (_template == null)
                     return false;
+                if (_streaming && (_streamRuntime == null || !_streamRuntime.IsReady || _streamRuntime.Failed))
+                    return false;
                 return MaterialsAlive(_materials) && MaterialsAlive(_shadowMaterials);
             }
         }
+        public bool IsWaitingForStreaming => IsReady && !_disposed && _streaming &&
+            _streamRuntime != null && !_streamRuntime.IsDisposed &&
+            !_streamRuntime.IsReady && !_streamRuntime.Failed;
         public string Error { get; }
         public int IsolateIndex { get; set; } = -1;
         public bool EnableConeCull { get; set; } = true;
@@ -135,11 +165,26 @@ namespace ClusterMesh
                 return;
             }
 
+            _streaming = asset.UsesStreaming;
             bool tightRest = asset.ResolvedVertexStride == ClusterMeshLimits.TightVertexStride;
             ClusterPackedVertex[] packedVerts = Array.Empty<ClusterPackedVertex>();
             ClusterPackedVertexTight[] tightVerts = Array.Empty<ClusterPackedVertexTight>();
-            uint[] packedIndices;
-            if (tightRest)
+            uint[] packedIndices = Array.Empty<uint>();
+            if (_streaming)
+            {
+                _streamRuntime = ClusterMeshStreaming.Acquire(asset);
+                if (_streamRuntime == null)
+                {
+                    Error = "ClusterMesh streaming runtime could not be created.";
+                    return;
+                }
+                if (_streamRuntime.Failed)
+                {
+                    Error = _streamRuntime.Error;
+                    return;
+                }
+            }
+            else if (tightRest)
             {
                 if (!ClusterMeshGeometry.TryReadTightVertices(asset, out tightVerts, out string tightError))
                 {
@@ -172,7 +217,7 @@ namespace ClusterMesh
                 return;
             }
 
-            _cullKernel = cullShader.FindKernel("CullClusters");
+            _cullKernel = cullShader.FindKernel(_streaming ? "CullStreamedClusters" : "CullClusters");
             _template = ClusterMeshTemplate.Create();
 
             _clusterBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, asset.clusters.Length, ClusterMeshLimits.ClusterHeaderStride);
@@ -195,7 +240,30 @@ namespace ClusterMesh
                 GraphicsBuffer.Target.Structured, ClusterMeshLimits.MaxBatchedObjects, ClusterMeshLimits.ObjectSHStride);
             _localBounds = ClusterMeshFrustum.AssetLocalBounds(asset);
             _restVertexTight = tightRest;
-            if (tightRest)
+            if (_streaming)
+            {
+                int nodeCount = _streamRuntime.NodeCount;
+                int requestWordCount = _streamRuntime.RequestWordCount;
+                if (nodeCount <= 0 || requestWordCount <= 0 ||
+                    nodeCount > int.MaxValue / ClusterMeshLimits.MaxBatchedObjects)
+                {
+                    Error = "ClusterMesh streaming node count is invalid for GPU culling.";
+                    return;
+                }
+                _streamRequestZeros = new uint[requestWordCount + nodeCount];
+                _streamTraversalStack = new int[nodeCount];
+                _streamRequestedPages = new GraphicsBuffer[2];
+                for (int i = 0; i < _streamRequestedPages.Length; i++)
+                {
+                    _streamRequestedPages[i] = new GraphicsBuffer(
+                        GraphicsBuffer.Target.Structured, _streamRequestZeros.Length, 4);
+                    _streamRequestedPages[i].SetData(_streamRequestZeros);
+                }
+                _streamSelectedNodeStamps = new GraphicsBuffer(
+                    GraphicsBuffer.Target.Structured, nodeCount * ClusterMeshLimits.MaxBatchedObjects, 4);
+                _streamSelectedNodeStamps.SetData(new uint[nodeCount * ClusterMeshLimits.MaxBatchedObjects]);
+            }
+            else if (tightRest)
             {
                 _vertexBuffer = new GraphicsBuffer(
                     GraphicsBuffer.Target.Structured, 1, ClusterMeshLimits.ClusterVertexStride);
@@ -218,12 +286,15 @@ namespace ClusterMesh
                     GraphicsBuffer.Target.Structured, 1, ClusterMeshLimits.TightVertexStride);
                 _vertexTightBuffer.SetData(new ClusterPackedVertexTight[1]);
             }
-            _indexBuffer = new GraphicsBuffer(
-                GraphicsBuffer.Target.Structured,
-                Mathf.Max(1, packedIndices.Length),
-                4);
-            if (packedIndices.Length > 0)
-                _indexBuffer.SetData(packedIndices);
+            if (!_streaming)
+            {
+                _indexBuffer = new GraphicsBuffer(
+                    GraphicsBuffer.Target.Structured,
+                    Mathf.Max(1, packedIndices.Length),
+                    4);
+                if (packedIndices.Length > 0)
+                    _indexBuffer.SetData(packedIndices);
+            }
 
             int materialCount = Mathf.Max(1, asset.materials != null ? asset.materials.Length : 1);
             int visibleCapacity = Mathf.Max(1, asset.clusters.Length) * ClusterMeshLimits.MaxBatchedObjects;
@@ -497,6 +568,29 @@ namespace ClusterMesh
             _urpChunks.Clear();
             if (!CanDraw || camera == null || count <= 0)
                 return false;
+            // A streamed asset becomes drawable only after the always-resident
+            // root pages are in the asset's physical pool. This is a normal
+            // loading state, not a context creation error.
+            if (_streaming && (_streamRuntime == null || !_streamRuntime.IsReady))
+                return false;
+            _streamActiveRequestBuffer = -1;
+            _streamCpuFallbackSerial++;
+            bool retryGpuRequests = _streamGpuReadbackFailures >= 3 &&
+                _streamCpuFallbackSerial % 60 == 0;
+            bool useCpuOnlyRequests = !SystemInfo.supportsAsyncGPUReadback ||
+                (_streamGpuReadbackFailures >= 3 && !retryGpuRequests);
+            _streamCpuRequestFallback = _streaming && useCpuOnlyRequests &&
+                (_streamCpuFallbackSerial & 3) == 0;
+            if (_streaming && !useCpuOnlyRequests)
+            {
+                for (int i = 0; i < _streamReadbackPending.Length; i++)
+                {
+                    if (_streamReadbackPending[i]) continue;
+                    _streamActiveRequestBuffer = i;
+                    _streamRequestedPages[i].SetData(_streamRequestZeros);
+                    break;
+                }
+            }
 
             ClusterMeshFrustum.WorldPlanes(camera, _planes);
             CopyPlanes(_planes, _planeVectors);
@@ -618,6 +712,8 @@ namespace ClusterMesh
 
                 _urpChunks.Add(stored);
             }
+            if (_streaming && _urpChunks.Count > 0 && _streamActiveRequestBuffer >= 0)
+                RequestStreamNodesFromGpu();
 
             return _urpChunks.Count > 0;
         }
@@ -629,7 +725,8 @@ namespace ClusterMesh
             GraphicsBuffer[] visibleBuffers,
             GraphicsBuffer[] shadowVisibleBuffers)
         {
-            int groups = Mathf.CeilToInt((n * _asset.clusters.Length) / 64f);
+            int workItems = _streaming ? n * _streamRuntime.NodeCount : n * _asset.clusters.Length;
+            int groups = Mathf.CeilToInt(workItems / 64f);
             _cullShader.SetBuffer(_cullKernel, ClustersId, _clusterBuffer);
             _cullShader.SetBuffer(_cullKernel, GroupsId, _groupBuffer);
             _cullShader.SetBuffer(_cullKernel, OwningGroupsId, _owningGroupBuffer);
@@ -650,6 +747,24 @@ namespace ClusterMesh
             _cullShader.SetVector(WorldCameraPosId, camera.transform.position);
             _cullShader.SetMatrixArray(ObjectLocalToWorldId, _l2w);
 
+            if (_streaming)
+            {
+                _cullShader.SetBuffer(_cullKernel, StreamNodesId, _streamRuntime.Nodes);
+                _cullShader.SetBuffer(_cullKernel, StreamAddressesId, _streamRuntime.Addresses);
+                _cullShader.SetBuffer(_cullKernel, StreamPageTableId, _streamRuntime.PageTable);
+                _cullShader.SetBuffer(_cullKernel, StreamNodeResidentId, _streamRuntime.NodeResident);
+                GraphicsBuffer requestBuffer = _streamRequestedPages[
+                    _streamActiveRequestBuffer >= 0 ? _streamActiveRequestBuffer : 0];
+                _cullShader.SetBuffer(_cullKernel, StreamRequestedPagesId, requestBuffer);
+                _cullShader.SetBuffer(_cullKernel, StreamSelectedNodeStampsId, _streamSelectedNodeStamps);
+                _cullShader.SetInt(StreamNodeCountId, _streamRuntime.NodeCount);
+                _cullShader.SetInt(StreamRequestPriorityOffsetId, _streamRuntime.RequestWordCount);
+                _cullShader.SetInt(StreamRequestEnabledId, 0);
+                _cullShader.SetInt(StreamPageVertexCapacityId, _streamRuntime.Descriptor.vertexPageCapacity);
+                _cullShader.SetInt(StreamPageIndexCapacityId, _streamRuntime.Descriptor.indexPageCapacity);
+                _cullShader.SetInt(ClusterStreamingEnabledId, 1);
+            }
+
             for (int materialIndex = 0; materialIndex < _materials.Length; materialIndex++)
             {
                 GraphicsBuffer visible = visibleBuffers[materialIndex];
@@ -659,10 +774,143 @@ namespace ClusterMesh
                 _cullShader.SetBuffer(_cullKernel, VisibleId, visible);
                 _cullShader.SetBuffer(_cullKernel, ShadowVisibleId, shadowVisible);
                 _cullShader.SetInt(MaterialIndexId, materialIndex);
+                if (_streaming)
+                    _cullShader.SetInt(StreamRequestEnabledId,
+                        _streamActiveRequestBuffer >= 0 && materialIndex == 0 ? 1 : 0);
+                SetNextStreamSelectionStamp();
                 _cullShader.Dispatch(_cullKernel, Mathf.Max(1, groups), 1, 1);
+            }
+
+            if (_streaming && _streamCpuRequestFallback)
+                RequestStreamNodesFromCpu(n, camera);
+        }
+
+        void SetNextStreamSelectionStamp()
+        {
+            if (!_streaming)
+                return;
+            if (++_streamSelectionStamp == 0)
+            {
+                _streamSelectionStamp = 1;
+                _streamSelectedNodeStamps.SetData(
+                    new uint[_streamRuntime.NodeCount * ClusterMeshLimits.MaxBatchedObjects]);
+            }
+            _cullShader.SetInt(StreamSelectionStampId, unchecked((int)_streamSelectionStamp));
+        }
+
+        void RequestStreamNodesFromGpu()
+        {
+            int bufferIndex = _streamActiveRequestBuffer;
+            if (bufferIndex < 0 || _streamReadbackPending[bufferIndex])
+                return;
+            try
+            {
+                _streamReadbackPending[bufferIndex] = true;
+                _streamActiveRequestBuffer = -1;
+                AsyncGPUReadback.Request(_streamRequestedPages[bufferIndex], request =>
+                {
+                    _streamReadbackPending[bufferIndex] = false;
+                    if (_disposed)
+                    {
+                        _streamRequestedPages[bufferIndex]?.Dispose();
+                        return;
+                    }
+                    if (_streamRuntime == null)
+                        return;
+                    if (request.hasError)
+                    {
+                        _streamGpuReadbackFailures++;
+                        return;
+                    }
+                    _streamGpuReadbackFailures = 0;
+                    var requested = request.GetData<uint>();
+                    int words = Mathf.Min(requested.Length, _streamRuntime.RequestWordCount);
+                    for (int wordIndex = 0; wordIndex < words; wordIndex++)
+                    {
+                        uint bits = requested[wordIndex];
+                        if (bits == 0)
+                            continue;
+                        int baseNode = wordIndex << 5;
+                        for (int bit = 0; bit < 32; bit++)
+                        {
+                            int nodeIndex = baseNode + bit;
+                            if (nodeIndex >= _streamRuntime.NodeCount)
+                                break;
+                            if ((bits & (1u << bit)) != 0)
+                            {
+                                int priorityIndex = _streamRuntime.RequestWordCount + nodeIndex;
+                                uint priority = priorityIndex < requested.Length ? requested[priorityIndex] : 0u;
+                                _streamRuntime.RequestNode(nodeIndex, priority);
+                            }
+                        }
+                    }
+                });
+            }
+            catch (Exception)
+            {
+                _streamReadbackPending[bufferIndex] = false;
+                _streamGpuReadbackFailures++;
             }
         }
 
+        void RequestStreamNodesFromCpu(int objectCount, Camera camera)
+        {
+            if (_streamRuntime == null || _streamRuntime.Descriptor == null)
+                return;
+            ClusterMeshStreamNode[] nodes = _streamRuntime.Descriptor.nodes;
+            int[] roots = _streamRuntime.RootNodes;
+            for (int objectIndex = 0; objectIndex < objectCount; objectIndex++)
+            {
+                Matrix4x4 objectToWorld = _l2w[objectIndex];
+                int count = roots.Length;
+                Array.Copy(roots, 0, _streamTraversalStack, 0, count);
+                while (count > 0)
+                {
+                    int nodeIndex = _streamTraversalStack[--count];
+                    ClusterMeshStreamNode node = nodes[nodeIndex];
+                    int[] children = _streamRuntime.GetNodeChildren(nodeIndex);
+                    bool desired = LodErrorThreshold <= 0f
+                        ? node.lodLevel == 0
+                        : CpuStreamProjectedError(node, objectToWorld, camera) < LodErrorThreshold;
+                    if (desired || children.Length == 0)
+                    {
+                        _streamRuntime.RequestNode(nodeIndex);
+                        TouchResidentFallback(nodeIndex);
+                        continue;
+                    }
+                    for (int child = 0; child < children.Length; child++)
+                        _streamTraversalStack[count++] = children[child];
+                }
+            }
+        }
+
+        void TouchResidentFallback(int nodeIndex)
+        {
+            ClusterMeshStreamNode[] nodes = _streamRuntime.Descriptor.nodes;
+            int remaining = nodes.Length;
+            int current = nodeIndex;
+            while (current >= 0 && current < nodes.Length && remaining-- > 0)
+            {
+                if (_streamRuntime.IsNodeResident(current))
+                {
+                    _streamRuntime.MarkNodeUsed(current);
+                    return;
+                }
+                current = nodes[current].parentNodeIndex;
+            }
+        }
+
+        static float CpuStreamProjectedError(ClusterMeshStreamNode node, Matrix4x4 objectToWorld, Camera camera)
+        {
+            Vector3 x = objectToWorld.MultiplyVector(Vector3.right);
+            Vector3 y = objectToWorld.MultiplyVector(Vector3.up);
+            Vector3 z = objectToWorld.MultiplyVector(Vector3.forward);
+            float scale = Mathf.Max(1e-6f, Mathf.Max(x.magnitude, Mathf.Max(y.magnitude, z.magnitude)));
+            float error = node.lodError * scale * ClusterMeshLod.ProjectionScale(camera);
+            if (!camera.orthographic)
+                error /= Mathf.Max((camera.transform.position - objectToWorld.MultiplyPoint3x4(node.aabbCenter)).magnitude, 1e-4f);
+            return error;
+        }
         void SubmitLegacy(UrpChunk chunk, Camera camera)
         {
             if (!CanDraw)
@@ -781,10 +1029,25 @@ namespace ClusterMesh
             if (mat == null)
                 return;
             mat.SetBuffer(ClustersId, _clusterBuffer);
-            mat.SetBuffer(VerticesId, _vertexBuffer);
-            mat.SetBuffer(VerticesTightId, _vertexTightBuffer);
+            if (_streaming)
+            {
+                mat.SetBuffer(VerticesId, _streamRuntime.Vertices);
+                mat.SetBuffer(VerticesTightId, _streamRuntime.VerticesTight);
+                mat.SetBuffer(IndicesId, _streamRuntime.Indices);
+                mat.SetBuffer(StreamAddressesId, _streamRuntime.Addresses);
+                mat.SetBuffer(StreamPageTableId, _streamRuntime.PageTable);
+                mat.SetInt(StreamPageVertexCapacityId, _streamRuntime.Descriptor.vertexPageCapacity);
+                mat.SetInt(StreamPageIndexCapacityId, _streamRuntime.Descriptor.indexPageCapacity);
+                mat.SetInt(ClusterStreamingEnabledId, 1);
+            }
+            else
+            {
+                mat.SetBuffer(VerticesId, _vertexBuffer);
+                mat.SetBuffer(VerticesTightId, _vertexTightBuffer);
+                mat.SetBuffer(IndicesId, _indexBuffer);
+                mat.SetInt(ClusterStreamingEnabledId, 0);
+            }
             mat.SetInt(RestVertexTightId, _restVertexTight ? 1 : 0);
-            mat.SetBuffer(IndicesId, _indexBuffer);
             mat.SetBuffer(VisibleId, visible);
             mat.SetMatrixArray(ObjectLocalToWorldId, _l2w);
             mat.SetMatrixArray(ObjectWorldToLocalId, _w2l);
@@ -841,6 +1104,12 @@ namespace ClusterMesh
             _vertexBuffer?.Dispose();
             _vertexTightBuffer?.Dispose();
             _indexBuffer?.Dispose();
+            if (_streamRequestedPages != null)
+                for (int i = 0; i < _streamRequestedPages.Length; i++)
+                    if (!_streamReadbackPending[i]) _streamRequestedPages[i]?.Dispose();
+            _streamSelectedNodeStamps?.Dispose();
+            if (_streamRuntime != null)
+                ClusterMeshStreaming.Release(_streamRuntime);
             if (_visibleBuffers != null)
             {
                 for (int i = 0; i < _visibleBuffers.Length; i++)

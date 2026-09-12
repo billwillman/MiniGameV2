@@ -165,6 +165,7 @@ namespace ClusterMesh
 
         public static void Flush()
         {
+            ClusterMeshStreaming.UpdateFromRenderLoop();
             if (_flushedFrame == Time.frameCount)
                 return;
             _flushedFrame = Time.frameCount;
@@ -196,6 +197,7 @@ namespace ClusterMesh
 
         public static void PrepareAndSubmitUrpShadows(Camera camera)
         {
+            ClusterMeshStreaming.UpdateFromRenderLoop();
             if (!ClusterMeshUrpBridge.ShouldSubmitUrp(camera))
                 return;
             int cameraId = camera.GetInstanceID();
@@ -396,7 +398,7 @@ namespace ClusterMesh
         {
             if (Contexts.TryGetValue(key, out ClusterSkinnedMeshDrawContext context))
             {
-                if (context != null && context.CanDraw)
+                if (context != null && (context.CanDraw || context.IsWaitingForStreaming))
                     return context;
                 context?.Dispose();
                 Contexts.Remove(key);

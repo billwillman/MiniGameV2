@@ -41,6 +41,11 @@ StructuredBuffer<uint> _VisibleClusterIds;
 StructuredBuffer<ClusterMeshObjectSH> _ObjectSH;
 StructuredBuffer<float> _ObjectAnimationTimes;
 StructuredBuffer<float> _PreviousObjectAnimationTimes;
+StructuredBuffer<ClusterStreamAddress> _StreamAddresses;
+StructuredBuffer<ClusterMeshStreamPageTableEntry> _StreamPageTable;
+int _StreamPageVertexCapacity;
+int _StreamPageIndexCapacity;
+int _ClusterStreamingEnabled;
 CBUFFER_START(ClusterSkinnedBatch)
 float4x4 _ObjectLocalToWorld[256];
 float4x4 _ObjectPreviousLocalToWorld[256];
@@ -128,15 +133,33 @@ void FetchBaseVertex(uint vertexID, uint instanceID, out float3 p, out float3 n,
     uint cluster = _VisibleClusterIds[instanceID] & 0xffffu;
     ClusterHeader h = _Clusters[cluster];
     if (vertexID >= h.triangleCount * 3u) return;
-    uint raw = _Indices[(h.indexOffset + vertexID) >> 1];
-    uint local = ((h.indexOffset + vertexID) & 1u) == 0 ? raw & 0xffffu : raw >> 16;
-    vertexIndex = h.vertexOffset + local;
+    uint vertexBufferIndex;
+    if (_ClusterStreamingEnabled != 0)
+    {
+        ClusterStreamAddress address = _StreamAddresses[cluster];
+        ClusterMeshStreamPageTableEntry page = _StreamPageTable[address.pageId];
+        if ((page.flags & 1u) == 0u) return;
+        uint streamIndex = address.indexOffset + vertexID;
+        uint raw = _Indices[page.indexBase + (streamIndex >> 1)];
+        uint local = (streamIndex & 1u) == 0 ? raw & 0xffffu : raw >> 16;
+        vertexBufferIndex = page.vertexBase + address.vertexOffset + local;
+        // _SkinWeights lives in the physical streamed weight range. This is
+        // deliberately separate from vertexBase when the page is compacted.
+        vertexIndex = page.weightBase + address.vertexOffset + local;
+    }
+    else
+    {
+        uint raw = _Indices[(h.indexOffset + vertexID) >> 1];
+        uint local = ((h.indexOffset + vertexID) & 1u) == 0 ? raw & 0xffffu : raw >> 16;
+        vertexBufferIndex = h.vertexOffset + local;
+        vertexIndex = vertexBufferIndex;
+    }
     if (_RestVertexTight != 0)
     {
-        ClusterMeshUnpackVertexTight(_VerticesTight[vertexIndex], p, n, t, uv);
+        ClusterMeshUnpackVertexTight(_VerticesTight[vertexBufferIndex], p, n, t, uv);
         return;
     }
-    ClusterVertex v = _Vertices[vertexIndex];
+    ClusterVertex v = _Vertices[vertexBufferIndex];
     p = v.position.xyz;
     float2 nxy = UnpackHalf2(v.nrmXY), nztw = UnpackHalf2(v.nrmZ_tanW), txy = UnpackHalf2(v.tanXY);
     n = normalize(float3(nxy.x,nxy.y,nztw.x));

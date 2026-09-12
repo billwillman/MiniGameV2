@@ -57,6 +57,9 @@ namespace ClusterMesh
 
         static void OnEditorUpdate()
         {
+            // One shared pump for every static/skinned renderer. Individual
+            // components never subscribe to EditorApplication.update.
+            ClusterMeshStreaming.Update();
             if (EditModeTickActive)
                 OnEditModeUpdate();
             if (SceneViewTickActive)
@@ -116,6 +119,7 @@ namespace ClusterMesh
                     ClusterMeshSceneViewRenderer.DisposeCachedContexts();
                     ClusterSkinnedMeshSceneBatcher.DisposeCachedContexts();
                     ClusterSkinnedMeshSceneViewRenderer.DisposeCachedContexts();
+                    ClusterMeshStreaming.DisposeAll();
                     break;
                 case PlayModeStateChange.EnteredPlayMode:
                     SyncEditModeTick(true);
@@ -126,6 +130,7 @@ namespace ClusterMesh
                     ClusterMeshSceneViewRenderer.DisposeCachedContexts();
                     ClusterSkinnedMeshSceneBatcher.DisposeCachedContexts();
                     ClusterSkinnedMeshSceneViewRenderer.DisposeCachedContexts();
+                    ClusterMeshStreaming.DisposeAll();
                     break;
                 case PlayModeStateChange.EnteredEditMode:
                     SyncSceneViewTick(true);
@@ -142,6 +147,7 @@ namespace ClusterMesh
             ClusterMeshSceneViewRenderer.DisposeCachedContexts();
             ClusterSkinnedMeshSceneBatcher.DisposeCachedContexts();
             ClusterSkinnedMeshSceneViewRenderer.DisposeCachedContexts();
+            ClusterMeshStreaming.DisposeAll();
         }
 
         static void OnQuitting()
@@ -152,6 +158,7 @@ namespace ClusterMesh
             ClusterMeshSceneViewRenderer.DisposeCachedContexts();
             ClusterSkinnedMeshSceneBatcher.DisposeCachedContexts();
             ClusterSkinnedMeshSceneViewRenderer.DisposeCachedContexts();
+            ClusterMeshStreaming.DisposeAll();
         }
     }
 }

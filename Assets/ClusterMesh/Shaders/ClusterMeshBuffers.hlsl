@@ -104,6 +104,41 @@ struct ClusterGroup
     float4 aabbExtents;
 };
 
+// 64 bytes. Keep this layout in sync with the streaming node GraphicsBuffer.
+// The explicit scalar fields before the two float4s avoid platform-dependent
+// float3 alignment in StructuredBuffers.
+struct ClusterStreamNode
+{
+    int clusterStart;
+    int clusterCount;
+    int parentNodeIndex;
+    int materialIndex;
+    float lodError;
+    int lodLevel;
+    uint flags;
+    uint padding;
+    float4 aabbCenter;
+    float4 aabbExtents;
+};
+
+struct ClusterStreamAddress
+{
+    uint pageId;
+    uint vertexOffset;
+    uint indexOffset;
+    uint reserved;
+};
+
+// 16 bytes. A logical stream page maps to independently packed physical
+// vertex, packed-index and skin-weight ranges.
+struct ClusterMeshStreamPageTableEntry
+{
+    uint vertexBase;
+    uint indexBase;
+    uint weightBase;
+    uint flags;
+};
+
 struct ClusterMeshObjectSH
 {
     float4 shAr;

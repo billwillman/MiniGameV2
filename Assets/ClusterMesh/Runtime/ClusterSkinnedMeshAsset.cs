@@ -51,6 +51,8 @@ namespace ClusterMesh
         public int cpuBurstAnimationVersion;
         public int skinVertexCount;
 
+        public bool UsesStreaming => geometry != null && geometry.UsesStreaming;
+
         public bool AllowsGpuAnimation =>
             animationDataMode != ClusterSkinnedAnimationDataMode.CpuOnly;
 

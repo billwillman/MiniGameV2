@@ -87,6 +87,11 @@ namespace ClusterMesh
         public bool buildLodHierarchy = true;
         public bool useQemSimplify = true;
         public bool packTightRestVertices;
+        [Tooltip("Write geometry into a page-streamed sidecar file. Disabled keeps the legacy embedded asset format unchanged.")]
+        public bool enableStreaming;
+        [Range(8, 512)]
+        [Tooltip("Maximum physical GPU page slots per streamed asset. Root LOD pages are always resident and may raise this minimum.")]
+        public int streamingPagePoolCapacity = 64;
     }
 
     public sealed class ClusterMeshBakeResult

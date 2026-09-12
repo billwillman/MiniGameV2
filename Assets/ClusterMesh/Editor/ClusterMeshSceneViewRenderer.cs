@@ -215,10 +215,9 @@ namespace ClusterMesh
 
                 context.EnableConeCull = key.enableConeCull;
                 context.EnableClusterColor = key.showClusterColors;
-                // Scene view is a culling preview: keep leaf clusters so the compute
-                // shader applies cone culling whenever the renderer switch is enabled.
-                // Runtime/Game rendering keeps using the configured LOD threshold.
-                context.LodErrorThreshold = 0f;
+                // SceneView previews the same configured LOD policy as GameView;
+                // only the chosen target camera supplies frustum/cone culling.
+                context.LodErrorThreshold = key.lodErrorThreshold;
                 context.EditorDrawLayer = key.layer;
                 context.DrawEditorPreviewMotion(
                     Matrices, PreviousMatrices, MotionVectorFlags,
@@ -287,7 +286,7 @@ namespace ClusterMesh
         {
             if (Contexts.TryGetValue(key, out ClusterMeshDrawContext context))
             {
-                if (context != null && context.CanDraw)
+                if (context != null && (context.CanDraw || context.IsWaitingForStreaming))
                     return context;
                 context?.Dispose();
                 Contexts.Remove(key);

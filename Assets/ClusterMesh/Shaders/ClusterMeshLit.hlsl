@@ -40,6 +40,11 @@ StructuredBuffer<uint> _VisibleClusterIds;
 StructuredBuffer<ClusterMeshObjectSH> _ObjectSH;
 float _EnableClusterColor;
 int _RestVertexTight;
+StructuredBuffer<ClusterStreamAddress> _StreamAddresses;
+StructuredBuffer<ClusterMeshStreamPageTableEntry> _StreamPageTable;
+int _StreamPageVertexCapacity;
+int _StreamPageIndexCapacity;
+int _ClusterStreamingEnabled;
 
 CBUFFER_START(ClusterMeshBatch)
     float4x4 _ObjectLocalToWorld[256];
@@ -137,11 +142,38 @@ void FetchClusterVertex(uint vertexID, uint instanceID, out float3 positionOS, o
         return;
     }
 
-    uint raw = _Indices[(h.indexOffset + vertexID) >> 1];
-    uint localIndex = ((h.indexOffset + vertexID) & 1u) == 0u
+    uint vertexBase = h.vertexOffset;
+    uint indexOffset = h.indexOffset;
+    if (_ClusterStreamingEnabled != 0)
+    {
+        ClusterStreamAddress address = _StreamAddresses[clusterId];
+        ClusterMeshStreamPageTableEntry page = _StreamPageTable[address.pageId];
+        if ((page.flags & 1u) == 0u)
+        {
+            positionOS = 0;
+            normalOS = float3(0, 1, 0);
+            tangentOS = float4(1, 0, 0, 1);
+            uv = 0;
+            return;
+        }
+        vertexBase = page.vertexBase + address.vertexOffset;
+        indexOffset = address.indexOffset;
+        uint streamIndex = indexOffset + vertexID;
+        uint raw = _Indices[page.indexBase + (streamIndex >> 1)];
+        uint localIndex = (streamIndex & 1u) == 0u ? (raw & 0xffffu) : (raw >> 16);
+        uint vertexIndex = vertexBase + localIndex;
+        if (_RestVertexTight != 0)
+            ClusterMeshUnpackVertexTight(_VerticesTight[vertexIndex], positionOS, normalOS, tangentOS, uv);
+        else
+            ClusterMeshUnpackVertex(_Vertices[vertexIndex], positionOS, normalOS, tangentOS, uv);
+        return;
+    }
+
+    uint raw = _Indices[(indexOffset + vertexID) >> 1];
+    uint localIndex = ((indexOffset + vertexID) & 1u) == 0u
         ? (raw & 0xffffu)
         : (raw >> 16);
-    uint vertexIndex = h.vertexOffset + localIndex;
+    uint vertexIndex = vertexBase + localIndex;
     if (_RestVertexTight != 0)
         ClusterMeshUnpackVertexTight(_VerticesTight[vertexIndex], positionOS, normalOS, tangentOS, uv);
     else

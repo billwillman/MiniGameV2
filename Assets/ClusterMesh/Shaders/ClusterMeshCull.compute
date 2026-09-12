@@ -1,4 +1,5 @@
 #pragma kernel CullClusters
+#pragma kernel CullStreamedClusters
 
 #include "ClusterMeshBuffers.hlsl"
 
@@ -25,6 +26,22 @@ float3 _WorldCameraPos;
 float4x4 _ObjectLocalToWorld[256];
 StructuredBuffer<uint> _ObjectCameraCullFlags;
 
+
+// Streaming-only data. CullClusters deliberately does not reference these so
+// the legacy static-buffer kernel remains unchanged.
+StructuredBuffer<ClusterStreamNode> _StreamNodes;
+StructuredBuffer<ClusterStreamAddress> _StreamAddresses;
+StructuredBuffer<ClusterMeshStreamPageTableEntry> _StreamPageTable;
+StructuredBuffer<uint> _StreamNodeResident;
+RWStructuredBuffer<uint> _StreamRequestedPages;
+RWStructuredBuffer<uint> _StreamSelectedNodeStamps;
+int _StreamNodeCount;
+int _StreamRequestPriorityOffset;
+int _StreamRequestEnabled;
+int _StreamPageVertexCapacity;
+int _StreamPageIndexCapacity;
+int _ClusterStreamingEnabled;
+uint _StreamSelectionStamp;
 void TransformAabb(ClusterHeader h, float4x4 m, out float3 worldCenter, out float3 worldExtents)
 {
     float3 c = h.aabbCenter.xyz;
@@ -193,4 +210,159 @@ void CullClusters(uint3 id : SV_DispatchThreadID)
     }
     if (inShadow)
         _ShadowClusterIds.Append(packed);
+}
+
+void TransformStreamAabb(ClusterStreamNode node, float4x4 m, out float3 worldCenter, out float3 worldExtents)
+{
+    worldCenter = mul(m, float4(node.aabbCenter.xyz, 1.0f)).xyz;
+    float3 e = node.aabbExtents.xyz;
+    float3 x = mul((float3x3)m, float3(e.x, 0, 0));
+    float3 y = mul((float3x3)m, float3(0, e.y, 0));
+    float3 z = mul((float3x3)m, float3(0, 0, e.z));
+    worldExtents = abs(x) + abs(y) + abs(z);
+}
+
+// This is the group-style branch of TestLod expressed over stream nodes. A
+// node is selected at the point where it is sufficiently coarse but its parent
+// is not, so exactly one desired node is chosen per hierarchy branch.
+bool IsDesiredStreamNode(uint nodeIndex, float4x4 objectToWorld)
+{
+    ClusterStreamNode node = _StreamNodes[nodeIndex];
+    if (_LodErrorThreshold <= 0.0f)
+        return node.lodLevel == 0;
+
+    float3 center, extents;
+    TransformStreamAabb(node, objectToWorld, center, extents);
+    if (LodProjected(node.lodError, center, objectToWorld) >= _LodErrorThreshold)
+        return false;
+    if (node.parentNodeIndex < 0 || node.parentNodeIndex >= _StreamNodeCount)
+        return true;
+
+    ClusterStreamNode parent = _StreamNodes[node.parentNodeIndex];
+    float3 parentCenter, parentExtents;
+    TransformStreamAabb(parent, objectToWorld, parentCenter, parentExtents);
+    return LodProjected(parent.lodError, parentCenter, objectToWorld) >= _LodErrorThreshold;
+}
+
+bool FindResidentStreamNode(uint requestedNode, out uint selectedNode)
+{
+    int current = (int)requestedNode;
+    int remaining = _StreamNodeCount;
+    [loop]
+    while (current >= 0 && current < _StreamNodeCount && remaining-- > 0)
+    {
+        if ((_StreamNodeResident[current] & 1u) != 0u)
+        {
+            selectedNode = (uint)current;
+            return true;
+        }
+        current = _StreamNodes[current].parentNodeIndex;
+    }
+    selectedNode = 0;
+    return false;
+}
+
+bool TrySelectStreamNode(uint objectIndex, uint nodeIndex)
+{
+    uint stampIndex = objectIndex * (uint)_StreamNodeCount + nodeIndex;
+    uint previous;
+    InterlockedExchange(_StreamSelectedNodeStamps[stampIndex], _StreamSelectionStamp, previous);
+    return previous != _StreamSelectionStamp;
+}
+
+void AppendStreamNodeClusters(uint objectIndex, uint nodeIndex)
+{
+    ClusterStreamNode node = _StreamNodes[nodeIndex];
+    uint start = (uint)max(node.clusterStart, 0);
+    uint count = (uint)max(node.clusterCount, 0);
+    uint end = min(start + count, _ClusterCount);
+    float4x4 objectToWorld = _ObjectLocalToWorld[objectIndex];
+
+    [loop]
+    for (uint clusterIndex = start; clusterIndex < end; clusterIndex++)
+    {
+        ClusterHeader h = _Clusters[clusterIndex];
+        if (h.materialIndex != _MaterialIndex)
+            continue;
+        if (_IsolateIndex >= 0 && (int)clusterIndex != _IsolateIndex)
+            continue;
+
+        float3 worldCenter, worldExtents;
+        TransformAabb(h, objectToWorld, worldCenter, worldExtents);
+        bool inCamera = _ObjectCameraCullFlags[objectIndex] == 0u || TestAabb(worldCenter, worldExtents, false);
+        bool inShadow = _EnableShadowList != 0 && TestAabb(worldCenter, worldExtents, true);
+        if (!inCamera && !inShadow)
+            continue;
+
+        int owningGroup = -1;
+        if (_HierarchyVersion >= 2 && _LodErrorThreshold > 0.0f)
+            owningGroup = ReadOwningGroup(clusterIndex);
+        uint packed = (objectIndex << 16) | clusterIndex;
+        if (inCamera)
+        {
+            bool useCone = _EnableConeCull != 0;
+            if (useCone && _HierarchyVersion >= 2 && _LodErrorThreshold > 0.0f && owningGroup >= 0)
+                useCone = false;
+            if (!useCone || TestCone(h, objectToWorld, worldExtents))
+                _VisibleClusterIds.Append(packed);
+        }
+        if (inShadow)
+            _ShadowClusterIds.Append(packed);
+    }
+}
+
+[numthreads(64, 1, 1)]
+void CullStreamedClusters(uint3 id : SV_DispatchThreadID)
+{
+    if (_ClusterStreamingEnabled == 0 || _StreamNodeCount <= 0)
+        return;
+
+    uint total = _ObjectCount * (uint)_StreamNodeCount;
+    uint i = id.x;
+    if (i >= total)
+        return;
+
+    uint objectIndex = i / (uint)_StreamNodeCount;
+    uint desiredNode = i % (uint)_StreamNodeCount;
+    float3 requestCenter, requestExtents;
+    TransformStreamAabb(_StreamNodes[desiredNode], _ObjectLocalToWorld[objectIndex], requestCenter, requestExtents);
+    bool requestInCamera = _ObjectCameraCullFlags[objectIndex] == 0u ||
+        TestAabb(requestCenter, requestExtents, false);
+    bool requestInShadow = _EnableShadowList != 0 && TestAabb(requestCenter, requestExtents, true);
+    if (!requestInCamera && !requestInShadow)
+        return;
+    if (!IsDesiredStreamNode(desiredNode, _ObjectLocalToWorld[objectIndex]))
+        return;
+
+    // This is also the residency-use signal. RequestNode refreshes the LRU age
+    // when the page is already present and schedules I/O when it is not.
+    if (_StreamRequestEnabled != 0)
+    {
+        uint ignored;
+        uint requestWord = desiredNode >> 5;
+        uint requestMask = 1u << (desiredNode & 31u);
+        InterlockedOr(_StreamRequestedPages[requestWord], requestMask, ignored);
+        float3 worldCenter = mul(_ObjectLocalToWorld[objectIndex], float4(_StreamNodes[desiredNode].aabbCenter.xyz, 1.0)).xyz;
+        float distanceToCamera = length(worldCenter - _WorldCameraPos);
+        uint priority = asuint(1.0 / max(1e-4, distanceToCamera));
+        InterlockedMax(_StreamRequestedPages[_StreamRequestPriorityOffset + desiredNode], priority, ignored);
+    }
+
+    uint selectedNode = desiredNode;
+    if ((_StreamNodeResident[desiredNode] & 1u) == 0u)
+    {
+        if (!FindResidentStreamNode(desiredNode, selectedNode))
+            return;
+        if (selectedNode != desiredNode && _StreamRequestEnabled != 0)
+        {
+            uint fallbackIgnored;
+            InterlockedOr(
+                _StreamRequestedPages[selectedNode >> 5],
+                1u << (selectedNode & 31u),
+                fallbackIgnored);
+        }
+    }
+    if (!TrySelectStreamNode(objectIndex, selectedNode))
+        return;
+    AppendStreamNodeClusters(objectIndex, selectedNode);
 }

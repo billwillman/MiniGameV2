@@ -1,4 +1,5 @@
 #pragma kernel CullSkinnedClusters
+#pragma kernel CullStreamedSkinnedClusters
 
 #include "ClusterMeshBuffers.hlsl"
 
@@ -26,6 +27,22 @@ float4 _Planes[6];
 float3 _WorldCameraPos;
 float4x4 _ObjectLocalToWorld[256];
 
+
+// Streaming-only data. CullSkinnedClusters intentionally retains its existing
+// static cluster traversal and does not consume these bindings.
+StructuredBuffer<ClusterStreamNode> _StreamNodes;
+StructuredBuffer<ClusterStreamAddress> _StreamAddresses;
+StructuredBuffer<ClusterMeshStreamPageTableEntry> _StreamPageTable;
+StructuredBuffer<uint> _StreamNodeResident;
+RWStructuredBuffer<uint> _StreamRequestedPages;
+RWStructuredBuffer<uint> _StreamSelectedNodeStamps;
+int _StreamNodeCount;
+int _StreamRequestPriorityOffset;
+int _StreamRequestEnabled;
+int _StreamPageVertexCapacity;
+int _StreamPageIndexCapacity;
+int _ClusterStreamingEnabled;
+uint _StreamSelectionStamp;
 void TransformAabb(ClusterSkinnedCullFrame f, float4x4 m, out float3 c, out float3 e)
 {
     c = mul(m, float4(f.aabbCenter.xyz, 1)).xyz;
@@ -116,4 +133,107 @@ void CullSkinnedClusters(uint3 id : SV_DispatchThreadID)
     if (_ObjectCameraCullFlags[objectIndex] != 0 && !TestAabb(center, extents)) return;
     if (_EnableConeCull != 0 && !TestCone(f, _ObjectLocalToWorld[objectIndex], extents)) return;
     _VisibleClusterIds.Append((objectIndex << 16) | clusterIndex);
+}
+
+void TransformStreamAabb(ClusterStreamNode node, float4x4 m, out float3 c, out float3 e)
+{
+    c = mul(m, float4(node.aabbCenter.xyz, 1)).xyz;
+    float3 x = mul((float3x3)m, float3(node.aabbExtents.x, 0, 0));
+    float3 y = mul((float3x3)m, float3(0, node.aabbExtents.y, 0));
+    float3 z = mul((float3x3)m, float3(0, 0, node.aabbExtents.z));
+    e = abs(x) + abs(y) + abs(z);
+}
+bool IsDesiredStreamNode(uint nodeIndex, float4x4 objectToWorld)
+{
+    ClusterStreamNode node = _StreamNodes[nodeIndex];
+    if (_LodErrorThreshold <= 0) return node.lodLevel == 0;
+    float3 center, extents;
+    TransformStreamAabb(node, objectToWorld, center, extents);
+    if (ProjectedError(node.lodError, center, objectToWorld) >= _LodErrorThreshold) return false;
+    if (node.parentNodeIndex < 0 || node.parentNodeIndex >= _StreamNodeCount) return true;
+    ClusterStreamNode parent = _StreamNodes[node.parentNodeIndex];
+    float3 parentCenter, parentExtents;
+    TransformStreamAabb(parent, objectToWorld, parentCenter, parentExtents);
+    return ProjectedError(parent.lodError, parentCenter, objectToWorld) >= _LodErrorThreshold;
+}
+bool FindResidentStreamNode(uint requestedNode, out uint selectedNode)
+{
+    int current = (int)requestedNode;
+    int remaining = _StreamNodeCount;
+    [loop] while (current >= 0 && current < _StreamNodeCount && remaining-- > 0)
+    {
+        if ((_StreamNodeResident[current] & 1u) != 0u) { selectedNode = (uint)current; return true; }
+        current = _StreamNodes[current].parentNodeIndex;
+    }
+    selectedNode = 0;
+    return false;
+}
+bool TrySelectStreamNode(uint objectIndex, uint nodeIndex)
+{
+    uint previous;
+    InterlockedExchange(_StreamSelectedNodeStamps[objectIndex * (uint)_StreamNodeCount + nodeIndex], _StreamSelectionStamp, previous);
+    return previous != _StreamSelectionStamp;
+}
+void AppendStreamNodeClusters(uint objectIndex, uint nodeIndex)
+{
+    ClusterStreamNode node = _StreamNodes[nodeIndex];
+    uint start = (uint)max(node.clusterStart, 0);
+    uint end = min(start + (uint)max(node.clusterCount, 0), _ClusterCount);
+    uint segment = _ObjectCullSegments[objectIndex];
+    float4x4 objectToWorld = _ObjectLocalToWorld[objectIndex];
+    [loop] for (uint clusterIndex = start; clusterIndex < end; clusterIndex++)
+    {
+        ClusterHeader h = _Clusters[clusterIndex];
+        if (h.materialIndex != _MaterialIndex) continue;
+        // Keep the exact current-clip frame used by CullSkinnedClusters; only
+        // node selection/stream fallback is new to this kernel.
+        ClusterSkinnedCullFrame f = _CullFrames[_CullFrameOffset + segment * _ClusterCount + clusterIndex];
+        float3 center, extents;
+        TransformAabb(f, objectToWorld, center, extents);
+        if (_ObjectCameraCullFlags[objectIndex] != 0 && !TestAabb(center, extents)) continue;
+        if (_EnableConeCull != 0 && !TestCone(f, objectToWorld, extents)) continue;
+        _VisibleClusterIds.Append((objectIndex << 16) | clusterIndex);
+    }
+}
+
+[numthreads(64, 1, 1)]
+void CullStreamedSkinnedClusters(uint3 id : SV_DispatchThreadID)
+{
+    if (_ClusterStreamingEnabled == 0 || _StreamNodeCount <= 0) return;
+    uint total = _ObjectCount * (uint)_StreamNodeCount;
+    uint i = id.x;
+    if (i >= total) return;
+    uint objectIndex = i / (uint)_StreamNodeCount;
+    uint desiredNode = i % (uint)_StreamNodeCount;
+    if (!IsDesiredStreamNode(desiredNode, _ObjectLocalToWorld[objectIndex])) return;
+
+    // Feed both missing-page requests and resident-page LRU touches through the
+    // same compact readback bitset.
+    if (_StreamRequestEnabled != 0)
+    {
+        uint ignored;
+        uint requestWord = desiredNode >> 5;
+        uint requestMask = 1u << (desiredNode & 31u);
+        InterlockedOr(_StreamRequestedPages[requestWord], requestMask, ignored);
+        float3 worldCenter = mul(_ObjectLocalToWorld[objectIndex], float4(_StreamNodes[desiredNode].aabbCenter.xyz, 1.0)).xyz;
+        float distanceToCamera = length(worldCenter - _WorldCameraPos);
+        uint priority = asuint(1.0 / max(1e-4, distanceToCamera));
+        InterlockedMax(_StreamRequestedPages[_StreamRequestPriorityOffset + desiredNode], priority, ignored);
+    }
+
+    uint selectedNode = desiredNode;
+    if ((_StreamNodeResident[desiredNode] & 1u) == 0u)
+    {
+        if (!FindResidentStreamNode(desiredNode, selectedNode)) return;
+        if (selectedNode != desiredNode && _StreamRequestEnabled != 0)
+        {
+            uint fallbackIgnored;
+            InterlockedOr(
+                _StreamRequestedPages[selectedNode >> 5],
+                1u << (selectedNode & 31u),
+                fallbackIgnored);
+        }
+    }
+    if (!TrySelectStreamNode(objectIndex, selectedNode)) return;
+    AppendStreamNodeClusters(objectIndex, selectedNode);
 }

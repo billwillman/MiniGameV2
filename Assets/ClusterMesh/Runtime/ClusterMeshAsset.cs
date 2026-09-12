@@ -19,6 +19,10 @@ namespace ClusterMesh
         public int indexCount;
         public byte[] packedVertices;
         public byte[] packedIndices;
+        [Tooltip("Null for legacy embedded assets. Present only when page streaming was enabled during Bake.")]
+        public ClusterMeshStreamDescriptor streamDescriptor;
+
+        public bool UsesStreaming => streamDescriptor != null && streamDescriptor.IsValid;
 
         public int ResolvedVertexStride =>
             vertexStride > 0 ? vertexStride : ClusterMeshLimits.ClusterVertexStride;
@@ -31,6 +35,11 @@ namespace ClusterMesh
         public void CopyFrom(
             ClusterMeshBakeResult result, Mesh source, ClusterMeshBakeSettings settings, bool tightRestVertices)
         {
+            // A normal bake always produces the legacy embedded representation first.
+            // The streaming baker installs a fresh descriptor only after its sidecar
+            // has been written successfully, so an old descriptor must never survive
+            // a re-bake.
+            streamDescriptor = null;
             sourceMesh = source;
             materials = result.materials;
             maxVerticesPerCluster = settings.maxVerticesPerCluster;
@@ -56,6 +65,7 @@ namespace ClusterMesh
             indexCount = other.indexCount;
             packedVertices = other.packedVertices;
             packedIndices = other.packedIndices;
+            streamDescriptor = other.streamDescriptor;
         }
     }
 }

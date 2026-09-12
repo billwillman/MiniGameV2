@@ -221,6 +221,32 @@ namespace ClusterMesh
                     _settings.useQemSimplify);
             }
 
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("存储与流式加载", EditorStyles.boldLabel);
+            _settings.enableStreaming = EditorGUILayout.Toggle(
+                new GUIContent(
+                    "Page Streaming",
+                    "默认关闭。开启后生成独立 .cmstream 文件，根 LOD 常驻，细节 Cluster Page 通过异步 FileStream 按需进入有限 GPU Pool。关闭时完全保持旧 .asset 内嵌格式。"),
+                _settings.enableStreaming);
+            if (_settings.enableStreaming)
+            {
+                _settings.buildLodHierarchy = true;
+                _settings.streamingPagePoolCapacity = EditorGUILayout.IntSlider(
+                    new GUIContent(
+                        "GPU Page Pool",
+                        "每份流式资产最多使用的物理页槽数。根页永不驱逐；数值越大越不易抖动，但显存占用越高。"),
+                    Mathf.Clamp(_settings.streamingPagePoolCapacity, 8, 512), 8, 512);
+                EditorGUILayout.HelpBox(
+                    "流式资产会在 .asset 旁生成版本化 .cmstream。运行时只保存逻辑文件名，由 ClusterMeshStreaming.RootPath / FilePathResolver 映射到 persistentDataPath、热更目录或其他真实文件路径；读取只使用异步 FileStream。Page 缺失时回退到最近已驻留父 LOD，不应出现空洞。",
+                    MessageType.Info);
+            }
+            else
+            {
+                EditorGUILayout.HelpBox(
+                    "关闭：继续使用原有内嵌格式，不生成外部文件，也不进入 Page Streaming 代码路径。",
+                    MessageType.None);
+            }
+
             if (_bakeSkinnedAnimation)
                 DrawSkinnedOptimizationGroup();
             else
@@ -403,6 +429,8 @@ namespace ClusterMesh
                 WriteAsset(asset, mesh, materials, _settings);
                 string path = AssetDatabase.GenerateUniqueAssetPath(folder + "/" + _assetName + ".asset");
                 AssetDatabase.CreateAsset(asset, path);
+                if (_settings.enableStreaming)
+                    ClusterMeshStreamBaker.FinalizeStatic(asset, path, _settings);
                 AssetDatabase.SaveAssets();
                 int groupCount = asset.groups != null ? asset.groups.Length : 0;
                 _info = "已写入 " + path + "，共 " + asset.clusters.Length + " 个 cluster" +
@@ -432,6 +460,8 @@ namespace ClusterMesh
             string path = AssetDatabase.GenerateUniqueAssetPath(folder + "/" + _assetName + ".asset");
             AssetDatabase.CreateAsset(asset, path);
             AssetDatabase.AddObjectToAsset(geometry, asset);
+            if (_settings.enableStreaming)
+                ClusterMeshStreamBaker.FinalizeSkinned(asset, path, _settings);
             if (asset.gpuPaletteTextures != null)
             {
                 for (int i = 0; i < asset.gpuPaletteTextures.Length; i++)
