@@ -10,6 +10,7 @@ namespace ClusterMesh
         public const int ClusterGroupStride = 48;
         public const int ClusterVertexStride = 32;
         public const int TightVertexStride = 24;
+        public const int ObjectSHStride = 112;
         public const int GeometryVersion = 1;
 
         public static uint PackVisibleId(int objectIndex, int clusterIndex)

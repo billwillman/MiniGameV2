@@ -37,6 +37,7 @@ namespace ClusterMesh
         static readonly int ObjectMotionVectorEnabledId = Shader.PropertyToID("_ObjectMotionVectorEnabled");
         static readonly int ObjectCameraCullFlagsId = Shader.PropertyToID("_ObjectCameraCullFlags");
         static readonly int ObjectWorldToLocalId = Shader.PropertyToID("_ObjectWorldToLocal");
+        static readonly int ObjectSHId = Shader.PropertyToID("_ObjectSH");
 
         readonly ClusterMeshAsset _asset;
         readonly ComputeShader _cullShader;
@@ -46,6 +47,7 @@ namespace ClusterMesh
         readonly GraphicsBuffer _groupBuffer;
         readonly GraphicsBuffer _owningGroupBuffer;
         readonly GraphicsBuffer _objectCameraCullFlagsBuffer;
+        readonly GraphicsBuffer _objectSHBuffer;
         readonly Bounds _localBounds;
         readonly GraphicsBuffer _vertexBuffer;
         readonly GraphicsBuffer _vertexTightBuffer;
@@ -70,6 +72,7 @@ namespace ClusterMesh
         readonly Matrix4x4[] _w2l = new Matrix4x4[ClusterMeshLimits.MaxBatchedObjects];
         readonly float[] _motionVectorEnabled = new float[ClusterMeshLimits.MaxBatchedObjects];
         readonly uint[] _objectCameraCullFlags = new uint[ClusterMeshLimits.MaxBatchedObjects];
+        readonly ClusterMeshObjectSH[] _objectSH = new ClusterMeshObjectSH[ClusterMeshLimits.MaxBatchedObjects];
         readonly List<UrpChunk> _urpChunks = new List<UrpChunk>();
         readonly List<GraphicsBuffer> _extraArgs = new List<GraphicsBuffer>();
         readonly List<GraphicsBuffer> _extraVisible = new List<GraphicsBuffer>();
@@ -94,6 +97,7 @@ namespace ClusterMesh
             public Matrix4x4[] previousL2w;
             public Matrix4x4[] w2l;
             public float[] motionVectorEnabled;
+            public ClusterMeshObjectSH[] objectSH;
             public GraphicsBuffer[] colorArgs;
             public GraphicsBuffer[] shadowArgs;
             public GraphicsBuffer[] visible;
@@ -187,6 +191,8 @@ namespace ClusterMesh
                 _owningGroupBuffer.SetData(new[] { ClusterMeshLod.NoParent });
             _objectCameraCullFlagsBuffer = new GraphicsBuffer(
                 GraphicsBuffer.Target.Structured, ClusterMeshLimits.MaxBatchedObjects, 4);
+            _objectSHBuffer = new GraphicsBuffer(
+                GraphicsBuffer.Target.Structured, ClusterMeshLimits.MaxBatchedObjects, ClusterMeshLimits.ObjectSHStride);
             _localBounds = ClusterMeshFrustum.AssetLocalBounds(asset);
             _restVertexTight = tightRest;
             if (tightRest)
@@ -515,6 +521,8 @@ namespace ClusterMesh
                     _preparedHasMotionVectors |= _motionVectorEnabled[n] > 0.5f;
                     chunkHasMotionVectors |= _motionVectorEnabled[n] > 0.5f;
                     _objectCameraCullFlags[n] = cameraCull ? 1u : 0u;
+                    ClusterMeshLightProbes.Pack(
+                        ClusterMeshLightProbes.Evaluate(l2w.GetColumn(3)), out _objectSH[n]);
                     if (!hasBounds)
                     {
                         worldBounds = b;
@@ -537,6 +545,7 @@ namespace ClusterMesh
                     previousL2w = chunkHasMotionVectors ? new Matrix4x4[n] : null,
                     w2l = new Matrix4x4[n],
                     motionVectorEnabled = chunkHasMotionVectors ? new float[n] : null,
+                    objectSH = new ClusterMeshObjectSH[n],
                     colorArgs = new GraphicsBuffer[_materials.Length],
                     shadowArgs = new GraphicsBuffer[_materials.Length],
                     visible = new GraphicsBuffer[_materials.Length],
@@ -544,6 +553,7 @@ namespace ClusterMesh
                 };
                 Array.Copy(_l2w, stored.l2w, n);
                 Array.Copy(_w2l, stored.w2l, n);
+                Array.Copy(_objectSH, stored.objectSH, n);
                 if (chunkHasMotionVectors)
                 {
                     Array.Copy(_previousL2w, stored.previousL2w, n);
@@ -701,6 +711,8 @@ namespace ClusterMesh
         {
             Array.Copy(chunk.l2w, _l2w, chunk.n);
             Array.Copy(chunk.w2l, _w2l, chunk.n);
+            Array.Copy(chunk.objectSH, _objectSH, chunk.n);
+            _objectSHBuffer.SetData(_objectSH, 0, 0, chunk.n);
             if (chunk.hasMotionVectors)
             {
                 Array.Copy(chunk.previousL2w, _previousL2w, chunk.n);
@@ -748,6 +760,7 @@ namespace ClusterMesh
             mat.SetBuffer(VisibleId, visible);
             mat.SetMatrixArray(ObjectLocalToWorldId, _l2w);
             mat.SetMatrixArray(ObjectWorldToLocalId, _w2l);
+            mat.SetBuffer(ObjectSHId, _objectSHBuffer);
             if (bindMotion)
             {
                 mat.SetMatrixArray(ObjectPreviousLocalToWorldId, _previousL2w);
@@ -796,6 +809,7 @@ namespace ClusterMesh
             _groupBuffer?.Dispose();
             _owningGroupBuffer?.Dispose();
             _objectCameraCullFlagsBuffer?.Dispose();
+            _objectSHBuffer?.Dispose();
             _vertexBuffer?.Dispose();
             _vertexTightBuffer?.Dispose();
             _indexBuffer?.Dispose();

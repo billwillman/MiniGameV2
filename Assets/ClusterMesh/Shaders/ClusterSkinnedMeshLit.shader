@@ -23,6 +23,7 @@ Shader "ClusterMesh/SkinnedLit"
             #pragma instancing_options procedural:ClusterSkinnedSetup
             #pragma multi_compile _ _MAIN_LIGHT_SHADOWS _MAIN_LIGHT_SHADOWS_CASCADE
             #pragma multi_compile _ _ADDITIONAL_LIGHTS
+            #pragma multi_compile_fog
             #include "ClusterSkinnedMeshLit.hlsl"
             ENDHLSL }
         Pass { Name "ShadowCaster" Tags { "LightMode"="ShadowCaster" } ZWrite On ColorMask 0

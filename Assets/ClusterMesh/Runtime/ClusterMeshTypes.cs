@@ -67,6 +67,18 @@ namespace ClusterMesh
         public Vector4 aabbExtents;
     }
 
+    [StructLayout(LayoutKind.Sequential)]
+    public struct ClusterMeshObjectSH
+    {
+        public Vector4 shAr;
+        public Vector4 shAg;
+        public Vector4 shAb;
+        public Vector4 shBr;
+        public Vector4 shBg;
+        public Vector4 shBb;
+        public Vector4 shC;
+    }
+
     [Serializable]
     public sealed class ClusterMeshBakeSettings
     {

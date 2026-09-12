@@ -104,4 +104,15 @@ struct ClusterGroup
     float4 aabbExtents;
 };
 
+struct ClusterMeshObjectSH
+{
+    float4 shAr;
+    float4 shAg;
+    float4 shAb;
+    float4 shBr;
+    float4 shBg;
+    float4 shBb;
+    float4 shC;
+};
+
 #endif

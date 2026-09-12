@@ -24,7 +24,7 @@ Branch: `feat/clustermesh-lod`
 
 ## A. 卫生 / 验证
 
-多数不用新 spec。有数再开 B。
+规格：`2026-09-12-clustermesh-shipping-profiler-design.md`（无功能代码，量完填第 5 节再勾）。有数再开 B。
 
 - [ ] **出包 Profiler**：第 3 项画像（同资产 ~200、镜内 ~20）Dispatch / 主画实例是否按留下的降，不是按注册总数。Demo 10 个全在画面里应几乎持平。
 - [ ] **GC Alloc**：对着 `ClusterMeshDrawContext.Draw` 看。预期扎在 `SetMatrixArray` / `SetVectorArray`，C# 热路径稳态接近 0。
@@ -106,16 +106,12 @@ Profiler 打到对应热点再讨论 + spec。不要为「感觉该上」开工�
 
 ### URP 照明 / Pass 对齐 P3（R1 明确没做）
 
-- [ ] **探针 / SH / 雾 / lightmap / DepthNormals**  
-  R1 只换提交时机，Lit 仍不像旁边 MeshRenderer。规格 Non-goals 写成 P3：这是 **shader 对齐**，不是再挂一个 Feature。  
-  玩家会看见：室内偏黑或不受 Light Probe、没有雾、不吃 lightmap、SSAO/法线相关 Pass 缺这块几何。  
-  开工前：单独讨论拆哪些（探针 vs 雾 vs DepthNormals 不要绑死同一期）并落盘 spec。不写 spec 不动 `ClusterMeshLit.hlsl`。  
-  不要和 R2、时域滞回、Hi-Z 混一期。
+- [x] **探针 / SH / 雾**（lightmap / DepthNormals 仍停放）  
+  规格：`2026-09-12-clustermesh-lighting-p3-probes-fog-design.md`。每物体 Light Probe SH + Forward 雾。  
+  代码已落。`ClusterMesh.Editor.Tests` 因编辑器占用未跑。不要和 R2、时域滞回、Hi-Z、lightmap、DepthNormals 混一期。
 
-- [ ] **MotionVectors（TAA / TSR）**  
-  R1 把深度推进 Prepass，减轻「深度图没有 ClusterMesh」；**没有** Velocity / MotionVectors Pass。相机或物体动、换 LOD 时 TAA 仍会鬼影。  
-  与时域 LOD 滞回正交：滞回少换层，MotionVectors 让已画的几何被 TAA 认出来。  
-  开工前：新 spec（哪一个 URP event、是否只要相机运动）。不写 spec 不加 Pass。
+- [x] **MotionVectors 时机**  
+  规格：`2026-09-12-clustermesh-motion-vectors-timing-design.md`。`MotionVectorPassEvent = AfterRenderingSkybox + 1`。默认开关仍关。测试未跑。
 
 - [ ] **叠相机 / 非 Default Renderer 挂 Feature**  
   T1 锁定：菜单只动当前 URP Asset 的 Default Renderer，禁止扫全工程（避免误改 2D / Overlay / FogOfWar 那套）。  

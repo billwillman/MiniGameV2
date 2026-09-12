@@ -38,6 +38,7 @@ StructuredBuffer<uint> _Indices;
 StructuredBuffer<ClusterPackedSkinWeight> _SkinWeights;
 StructuredBuffer<uint> _SkinWeights8;
 StructuredBuffer<uint> _VisibleClusterIds;
+StructuredBuffer<ClusterMeshObjectSH> _ObjectSH;
 StructuredBuffer<float> _ObjectAnimationTimes;
 StructuredBuffer<float> _PreviousObjectAnimationTimes;
 CBUFFER_START(ClusterSkinnedBatch)
@@ -49,7 +50,21 @@ CBUFFER_END
 float _EnableClusterColor;
 
 struct Attributes { uint vertexID : SV_VertexID; uint instanceID : SV_InstanceID; };
-struct Varyings { float4 positionCS : SV_POSITION; float3 positionWS : TEXCOORD0; float3 normalWS : TEXCOORD1; float4 tangentWS : TEXCOORD2; float2 uv : TEXCOORD3; nointerpolation uint clusterId : TEXCOORD4; };
+struct Varyings { float4 positionCS : SV_POSITION; float3 positionWS : TEXCOORD0; float3 normalWS : TEXCOORD1; float4 tangentWS : TEXCOORD2; float2 uv : TEXCOORD3; nointerpolation uint clusterId : TEXCOORD4; nointerpolation uint objectIndex : TEXCOORD5; };
+
+half3 ClusterSkinnedSampleObjectSH(uint objectIndex, float3 normalWS)
+{
+    ClusterMeshObjectSH sh = _ObjectSH[objectIndex];
+    float4 coeffs[7];
+    coeffs[0] = sh.shAr;
+    coeffs[1] = sh.shAg;
+    coeffs[2] = sh.shAb;
+    coeffs[3] = sh.shBr;
+    coeffs[4] = sh.shBg;
+    coeffs[5] = sh.shBb;
+    coeffs[6] = sh.shC;
+    return max(half3(0, 0, 0), SampleSH9(coeffs, normalWS));
+}
 
 float3 ClusterSkinnedHsvToRgb(float h, float s, float v)
 {
@@ -243,14 +258,14 @@ Varyings ClusterSkinnedVert(Attributes input)
     uint objectIndex=_VisibleClusterIds[input.instanceID]>>16, vertexIndex; float3 p,n; float4 t; float2 uv;
     ApplyClusterSkinnedInstance(input.instanceID); FetchBaseVertex(input.vertexID,input.instanceID,p,n,t,uv,vertexIndex); SkinVertex(objectIndex,vertexIndex,p,n,t);
     VertexPositionInputs pos=GetVertexPositionInputs(p); VertexNormalInputs normal=GetVertexNormalInputs(n,t);
-    Varyings o; o.positionCS=pos.positionCS; o.positionWS=pos.positionWS; o.normalWS=normal.normalWS; o.tangentWS=float4(normal.tangentWS,t.w); o.uv=TRANSFORM_TEX(uv,_BaseMap); o.clusterId=_VisibleClusterIds[input.instanceID]&0xffffu; return o;
+    Varyings o; o.positionCS=pos.positionCS; o.positionWS=pos.positionWS; o.normalWS=normal.normalWS; o.tangentWS=float4(normal.tangentWS,t.w); o.uv=TRANSFORM_TEX(uv,_BaseMap); o.clusterId=_VisibleClusterIds[input.instanceID]&0xffffu; o.objectIndex=objectIndex; return o;
 }
 half4 ClusterSkinnedFrag(Varyings i):SV_Target
 {
     half4 albedo=SAMPLE_TEXTURE2D(_BaseMap,sampler_BaseMap,i.uv)*_BaseColor; clip(albedo.a-_Cutoff);
     if (_EnableClusterColor > 0.5f) return half4(ClusterSkinnedDebugRgb(i.clusterId), albedo.a);
     float3 nts=UnpackNormalScale(SAMPLE_TEXTURE2D(_BumpMap,sampler_BumpMap,i.uv),_BumpScale); float3 t=normalize(i.tangentWS.xyz),n=normalize(i.normalWS),b=cross(n,t)*i.tangentWS.w;
-    InputData d=(InputData)0; d.positionWS=i.positionWS; d.normalWS=normalize(mul(nts,float3x3(t,b,n))); d.viewDirectionWS=GetWorldSpaceNormalizeViewDir(i.positionWS); d.shadowCoord=TransformWorldToShadowCoord(i.positionWS); d.bakedGI=SampleSH(d.normalWS);
+    InputData d=(InputData)0; d.positionWS=i.positionWS; d.normalWS=normalize(mul(nts,float3x3(t,b,n))); d.viewDirectionWS=GetWorldSpaceNormalizeViewDir(i.positionWS); d.shadowCoord=TransformWorldToShadowCoord(i.positionWS); d.fogCoord=ComputeFogFactor(i.positionCS.z); d.bakedGI=ClusterSkinnedSampleObjectSH(i.objectIndex,d.normalWS);
     SurfaceData s=(SurfaceData)0; s.albedo=albedo.rgb;s.metallic=_Metallic;s.smoothness=_Smoothness;s.normalTS=nts;s.occlusion=1;s.alpha=albedo.a; return UniversalFragmentPBR(d,s);
 }
 #if defined(CLUSTERMESH_GBUFFER_PASS)
@@ -262,7 +277,7 @@ FragmentOutput ClusterSkinnedGBufferFrag(Varyings i)
     float3 t=normalize(i.tangentWS.xyz),n=normalize(i.normalWS),b=cross(n,t)*i.tangentWS.w;
     InputData d=(InputData)0; d.positionWS=i.positionWS; d.positionCS=i.positionCS;
     d.normalWS=normalize(mul(nts,float3x3(t,b,n))); d.viewDirectionWS=GetWorldSpaceNormalizeViewDir(i.positionWS);
-    d.shadowCoord=TransformWorldToShadowCoord(i.positionWS); d.bakedGI=SampleSH(d.normalWS);
+    d.shadowCoord=TransformWorldToShadowCoord(i.positionWS); d.bakedGI=ClusterSkinnedSampleObjectSH(i.objectIndex,d.normalWS);
     d.shadowMask=half4(1,1,1,1); d.normalizedScreenSpaceUV=GetNormalizedScreenSpaceUV(i.positionCS);
     BRDFData brdf; InitializeBRDFData(albedo.rgb,_Metallic,half3(0,0,0),_Smoothness,albedo.a,brdf);
     Light mainLight=GetMainLight(d.shadowCoord,d.positionWS,d.shadowMask);

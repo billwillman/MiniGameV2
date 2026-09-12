@@ -44,6 +44,7 @@ namespace ClusterMesh
         static readonly int ObjectPreviousLocalToWorldId = Shader.PropertyToID("_ObjectPreviousLocalToWorld");
         static readonly int ObjectMotionVectorEnabledId = Shader.PropertyToID("_ObjectMotionVectorEnabled");
         static readonly int ObjectWorldToLocalId = Shader.PropertyToID("_ObjectWorldToLocal");
+        static readonly int ObjectSHId = Shader.PropertyToID("_ObjectSH");
         static readonly int SkinPaletteTexId = Shader.PropertyToID("_SkinPaletteTex");
         static readonly int SkinPreviousPaletteTexId = Shader.PropertyToID("_SkinPreviousPaletteTex");
         static readonly int SkinAnimationTexId = Shader.PropertyToID("_SkinAnimationTex");
@@ -72,6 +73,7 @@ namespace ClusterMesh
         readonly GraphicsBuffer _segments;
         readonly GraphicsBuffer _cameraCull;
         readonly GraphicsBuffer _animationTimes;
+        readonly GraphicsBuffer _objectSHBuffer;
         GraphicsBuffer _previousAnimationTimes;
         readonly GraphicsBuffer[] _visible;
         readonly GraphicsBuffer[] _shadowVisible;
@@ -90,6 +92,7 @@ namespace ClusterMesh
         readonly float[] _animationTimeData = new float[ClusterMeshLimits.MaxBatchedObjects];
         readonly float[] _previousAnimationTimeData = new float[ClusterMeshLimits.MaxBatchedObjects];
         readonly float[] _motionVectorEnabled = new float[ClusterMeshLimits.MaxBatchedObjects];
+        readonly ClusterMeshObjectSH[] _objectSH = new ClusterMeshObjectSH[ClusterMeshLimits.MaxBatchedObjects];
         readonly Vector4[] _planes = new Vector4[6];
         readonly Plane[] _planeScratch = new Plane[6];
         readonly uint[] _argsSeed = new uint[5];
@@ -252,6 +255,8 @@ namespace ClusterMesh
             _segments = new GraphicsBuffer(GraphicsBuffer.Target.Structured, ClusterMeshLimits.MaxBatchedObjects, 4);
             _cameraCull = new GraphicsBuffer(GraphicsBuffer.Target.Structured, ClusterMeshLimits.MaxBatchedObjects, 4);
             _animationTimes = new GraphicsBuffer(GraphicsBuffer.Target.Structured, ClusterMeshLimits.MaxBatchedObjects, 4);
+            _objectSHBuffer = new GraphicsBuffer(
+                GraphicsBuffer.Target.Structured, ClusterMeshLimits.MaxBatchedObjects, ClusterMeshLimits.ObjectSHStride);
 
             int materialCount = Mathf.Max(1, asset.geometry.materials != null ? asset.geometry.materials.Length : 1);
             int capacity = Mathf.Max(1, asset.geometry.clusters.Length * ClusterMeshLimits.MaxBatchedObjects);
@@ -473,6 +478,8 @@ namespace ClusterMesh
                     enableMotionVectors[i];
                 _motionVectorEnabled[count] = motionEnabled ? 1f : 0f;
                 hasMotionVectors |= motionEnabled;
+                ClusterMeshLightProbes.Pack(
+                    ClusterMeshLightProbes.Evaluate(m.GetColumn(3)), out _objectSH[count]);
                 if (useBurstCpu)
                     _burstTimes[count] = _animationTimeData[count];
                 int segmentCount = Mathf.Max(1, clipData.segmentCount);
@@ -494,6 +501,7 @@ namespace ClusterMesh
                 }
             }
             _animationTimes.SetData(_animationTimeData, 0, 0, count);
+            _objectSHBuffer.SetData(_objectSH, 0, 0, count);
             if (hasMotionVectors)
             {
                 EnsureMotionResources(false);
@@ -800,6 +808,7 @@ namespace ClusterMesh
             m.SetBuffer(ObjectAnimationTimesId, _animationTimes);
             m.SetMatrixArray(ObjectLocalToWorldId, _l2w);
             m.SetMatrixArray(ObjectWorldToLocalId, _w2l);
+            m.SetBuffer(ObjectSHId, _objectSHBuffer);
             m.SetTexture(SkinPaletteTexId, _paletteTexture); m.SetInt(PaletteWidthId, _paletteWidth);
             if (bindMotion)
             {
@@ -878,6 +887,7 @@ namespace ClusterMesh
             _clusters?.Dispose(); _groups?.Dispose(); _owningGroups?.Dispose(); _vertices?.Dispose(); _verticesTight?.Dispose(); _indices?.Dispose();
             _weights?.Dispose(); _weights8?.Dispose(); _cullFrames?.Dispose(); _segments?.Dispose(); _cameraCull?.Dispose();
             _animationTimes?.Dispose();
+            _objectSHBuffer?.Dispose();
             _previousAnimationTimes?.Dispose();
             if (_burstCurveHeaders.IsCreated) _burstCurveHeaders.Dispose();
             if (_burstCurveSegments.IsCreated) _burstCurveSegments.Dispose();

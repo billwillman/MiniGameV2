@@ -6,6 +6,18 @@ using UnityEngine.Rendering.Universal;
 
 namespace ClusterMesh
 {
+    public enum ClusterMeshMotionVectorSlot
+    {
+        [InspectorName("After Skybox + 1（默认，Radiant 前）")]
+        AfterSkyboxPlus1 = 0,
+        [InspectorName("After Opaques")]
+        AfterOpaques = 1,
+        [InspectorName("After Skybox")]
+        AfterSkybox = 2,
+        [InspectorName("Before PostProcessing - 1（旧挂点）")]
+        BeforePostProcessingMinus1 = 3
+    }
+
     public static class ClusterMeshUrpBridge
     {
         static readonly FieldInfo RendererIndexField = typeof(UniversalAdditionalCameraData)
@@ -39,6 +51,60 @@ namespace ClusterMesh
 
         public const string DeferredSupportDescription =
             "ClusterMesh deferred rendering is supported only by URP Deferred; Built-in and HDRP deferred are not supported.";
+
+        public static readonly RenderPassEvent MotionVectorPassEvent =
+            (RenderPassEvent)((int)RenderPassEvent.AfterRenderingSkybox + 1);
+
+        public static ClusterMeshMotionVectorSlot CurrentMotionVectorSlot =>
+            ClusterMeshSettings.CurrentMotionVectorSlot;
+
+        public static RenderPassEvent CurrentMotionVectorPassEvent =>
+            ResolveMotionVectorPassEvent(CurrentMotionVectorSlot);
+
+        public static string MotionVectorSlotLabel(ClusterMeshMotionVectorSlot slot)
+        {
+            switch (slot)
+            {
+                case ClusterMeshMotionVectorSlot.AfterOpaques:
+                    return "After Opaques";
+                case ClusterMeshMotionVectorSlot.AfterSkybox:
+                    return "After Skybox";
+                case ClusterMeshMotionVectorSlot.BeforePostProcessingMinus1:
+                    return "Before PostProcessing - 1（旧挂点）";
+                default:
+                    return "After Skybox + 1（默认）";
+            }
+        }
+
+        public static string MotionVectorSlotDescription(ClusterMeshMotionVectorSlot slot)
+        {
+            switch (slot)
+            {
+                case ClusterMeshMotionVectorSlot.AfterOpaques:
+                    return "AfterRenderingOpaques。比天空盒和官方物体 MV 更早写入。";
+                case ClusterMeshMotionVectorSlot.AfterSkybox:
+                    return "AfterRenderingSkybox。紧贴天空盒之后，仍早于 Radiant + 2。";
+                case ClusterMeshMotionVectorSlot.BeforePostProcessingMinus1:
+                    return "BeforeRenderingPostProcessing - 1。旧挂点；2022.3 上晚于 Radiant + 2，Temporal 会把角色当静态世界。";
+                default:
+                    return "AfterRenderingSkybox + 1。官方物体 MV 同级，早于 Radiant + 2。";
+            }
+        }
+
+        public static RenderPassEvent ResolveMotionVectorPassEvent(ClusterMeshMotionVectorSlot slot)
+        {
+            switch (slot)
+            {
+                case ClusterMeshMotionVectorSlot.AfterOpaques:
+                    return RenderPassEvent.AfterRenderingOpaques;
+                case ClusterMeshMotionVectorSlot.AfterSkybox:
+                    return RenderPassEvent.AfterRenderingSkybox;
+                case ClusterMeshMotionVectorSlot.BeforePostProcessingMinus1:
+                    return (RenderPassEvent)((int)RenderPassEvent.BeforeRenderingPostProcessing - 1);
+                default:
+                    return MotionVectorPassEvent;
+            }
+        }
 
         public static bool IsDeferred(ScriptableRenderer renderer)
         {

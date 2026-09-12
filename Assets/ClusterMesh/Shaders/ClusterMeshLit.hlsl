@@ -37,6 +37,7 @@ StructuredBuffer<ClusterVertex> _Vertices;
 StructuredBuffer<ClusterVertexTight> _VerticesTight;
 StructuredBuffer<uint> _Indices;
 StructuredBuffer<uint> _VisibleClusterIds;
+StructuredBuffer<ClusterMeshObjectSH> _ObjectSH;
 float _EnableClusterColor;
 int _RestVertexTight;
 
@@ -76,6 +77,7 @@ struct Varyings
     float4 tangentWS : TEXCOORD2;
     float2 uv : TEXCOORD3;
     nointerpolation uint clusterId : TEXCOORD4;
+    nointerpolation uint objectIndex : TEXCOORD5;
 };
 
 float3 ClusterMeshHsvToRgb(float h, float s, float v)
@@ -105,6 +107,20 @@ float3 ClusterMeshDebugRgb(uint clusterId)
 {
     float hue = frac((clusterId + 1.0f) * 0.6180339887f);
     return ClusterMeshHsvToRgb(hue, 0.72f, 0.95f);
+}
+
+half3 ClusterMeshSampleObjectSH(uint objectIndex, float3 normalWS)
+{
+    ClusterMeshObjectSH sh = _ObjectSH[objectIndex];
+    float4 coeffs[7];
+    coeffs[0] = sh.shAr;
+    coeffs[1] = sh.shAg;
+    coeffs[2] = sh.shAb;
+    coeffs[3] = sh.shBr;
+    coeffs[4] = sh.shBg;
+    coeffs[5] = sh.shBb;
+    coeffs[6] = sh.shC;
+    return max(half3(0, 0, 0), SampleSH9(coeffs, normalWS));
 }
 
 void FetchClusterVertex(uint vertexID, uint instanceID, out float3 positionOS, out float3 normalOS, out float4 tangentOS, out float2 uv, out uint clusterId)
@@ -152,6 +168,7 @@ Varyings ClusterMeshVert(Attributes input)
     o.tangentWS = float4(nrm.tangentWS, tangentOS.w);
     o.uv = TRANSFORM_TEX(uv, _BaseMap);
     o.clusterId = clusterId;
+    o.objectIndex = _VisibleClusterIds[input.instanceID] >> 16;
     return o;
 }
 
@@ -173,8 +190,8 @@ half4 ClusterMeshFrag(Varyings input) : SV_Target
     inputData.normalWS = normalWS;
     inputData.viewDirectionWS = GetWorldSpaceNormalizeViewDir(input.positionWS);
     inputData.shadowCoord = TransformWorldToShadowCoord(input.positionWS);
-    inputData.fogCoord = 0;
-    inputData.bakedGI = SampleSH(normalWS);
+    inputData.fogCoord = ComputeFogFactor(input.positionCS.z);
+    inputData.bakedGI = ClusterMeshSampleObjectSH(input.objectIndex, normalWS);
 
     SurfaceData surface = (SurfaceData)0;
     surface.albedo = albedo.rgb;
@@ -205,7 +222,7 @@ FragmentOutput ClusterMeshGBufferFrag(Varyings input)
     inputData.normalWS = normalize(mul(normalTS, float3x3(nT, nB, nN)));
     inputData.viewDirectionWS = GetWorldSpaceNormalizeViewDir(input.positionWS);
     inputData.shadowCoord = TransformWorldToShadowCoord(input.positionWS);
-    inputData.bakedGI = SampleSH(inputData.normalWS);
+    inputData.bakedGI = ClusterMeshSampleObjectSH(input.objectIndex, inputData.normalWS);
     inputData.shadowMask = half4(1, 1, 1, 1);
     inputData.normalizedScreenSpaceUV = GetNormalizedScreenSpaceUV(input.positionCS);
 
@@ -252,6 +269,7 @@ Varyings ClusterMeshShadowVert(Attributes input)
     o.tangentWS = 0;
     o.uv = uv;
     o.clusterId = clusterId;
+    o.objectIndex = _VisibleClusterIds[input.instanceID] >> 16;
     return o;
 }
 

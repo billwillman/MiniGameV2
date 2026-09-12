@@ -343,8 +343,11 @@ namespace ClusterMesh
         public override void OnInspectorGUI()
         {
             EditorGUILayout.HelpBox(
-                "延迟渲染支持范围：仅 URP Deferred / Deferred+。不支持 Built-in、HDRP 或其他渲染管线的延迟路径。URP Forward 路径保持兼容。",
+                "延迟渲染支持范围：仅 URP Deferred / Deferred+。不支持 Built-in、HDRP 或其他渲染管线的延迟路径。URP Forward 路径保持兼容。\n\n" +
+                "Motion Vector Pass 等管线时机在 Tools/ClusterMesh/通用设置，不在单个 Renderer 上。",
                 MessageType.Info);
+            if (GUILayout.Button("打开通用设置"))
+                ClusterMeshSettingsWindow.Open();
         }
     }
 }

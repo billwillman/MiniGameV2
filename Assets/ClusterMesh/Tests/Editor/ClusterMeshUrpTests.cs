@@ -15,6 +15,8 @@ namespace ClusterMesh.Tests
         public void TearDown()
         {
             ClusterMeshUrpBridge.RendererDataOverrideForTests = null;
+            ClusterMeshSettings.OverrideForTests = null;
+            ClusterMeshSettings.ClearCacheForTests();
             ClusterMeshSceneBatcher.ResetForTests();
             ClusterSkinnedMeshSceneBatcher.ResetForTests();
             for (int i = 0; i < _trash.Count; i++)
@@ -183,6 +185,69 @@ namespace ClusterMesh.Tests
             Assert.That(
                 System.IO.File.ReadAllText("Assets/ClusterMesh/Runtime/ClusterMeshUrpFeature.cs"),
                 Does.Not.Contain("renderer.EnqueuePass(_depthPass)"));
+        }
+
+        [Test]
+        public void MotionVectorPassEvent_IsAfterSkyboxBeforeRadiant()
+        {
+            Assert.That(
+                ClusterMeshUrpBridge.MotionVectorPassEvent,
+                Is.EqualTo((RenderPassEvent)((int)RenderPassEvent.AfterRenderingSkybox + 1)));
+            Assert.That(
+                ClusterMeshUrpBridge.ResolveMotionVectorPassEvent(default),
+                Is.EqualTo(ClusterMeshUrpBridge.MotionVectorPassEvent));
+            Assert.That(
+                ClusterMeshUrpBridge.ResolveMotionVectorPassEvent(
+                    ClusterMeshMotionVectorSlot.AfterSkyboxPlus1),
+                Is.EqualTo(ClusterMeshUrpBridge.MotionVectorPassEvent));
+            Assert.That(
+                ClusterMeshUrpBridge.ResolveMotionVectorPassEvent(
+                    ClusterMeshMotionVectorSlot.AfterOpaques),
+                Is.EqualTo(RenderPassEvent.AfterRenderingOpaques));
+            Assert.That(
+                ClusterMeshUrpBridge.ResolveMotionVectorPassEvent(
+                    ClusterMeshMotionVectorSlot.AfterSkybox),
+                Is.EqualTo(RenderPassEvent.AfterRenderingSkybox));
+            Assert.That(
+                ClusterMeshUrpBridge.ResolveMotionVectorPassEvent(
+                    ClusterMeshMotionVectorSlot.BeforePostProcessingMinus1),
+                Is.EqualTo((RenderPassEvent)((int)RenderPassEvent.BeforeRenderingPostProcessing - 1)));
+            Assert.That(
+                ClusterMeshUrpBridge.MotionVectorSlotDescription(
+                    ClusterMeshMotionVectorSlot.AfterSkyboxPlus1),
+                Does.Contain("官方物体 MV 同级，早于 Radiant + 2"));
+            Assert.That(
+                ClusterMeshUrpBridge.MotionVectorSlotDescription(
+                    ClusterMeshMotionVectorSlot.AfterOpaques),
+                Does.Contain("比天空盒和官方物体 MV 更早"));
+            Assert.That(
+                ClusterMeshUrpBridge.MotionVectorSlotDescription(
+                    ClusterMeshMotionVectorSlot.AfterSkybox),
+                Does.Contain("早于 Radiant + 2"));
+            Assert.That(
+                ClusterMeshUrpBridge.MotionVectorSlotDescription(
+                    ClusterMeshMotionVectorSlot.BeforePostProcessingMinus1),
+                Does.Contain("晚于 Radiant + 2"));
+            var defaultSettings = Track(ScriptableObject.CreateInstance<ClusterMeshSettings>());
+            Assert.That(
+                defaultSettings.MotionVectorSlot,
+                Is.EqualTo(ClusterMeshMotionVectorSlot.AfterSkyboxPlus1));
+            var overrideSettings = Track(ScriptableObject.CreateInstance<ClusterMeshSettings>());
+            overrideSettings.MotionVectorSlot = ClusterMeshMotionVectorSlot.AfterOpaques;
+            ClusterMeshSettings.OverrideForTests = overrideSettings;
+            Assert.That(
+                ClusterMeshSettings.CurrentMotionVectorSlot,
+                Is.EqualTo(ClusterMeshMotionVectorSlot.AfterOpaques));
+            Assert.That(
+                ClusterMeshUrpBridge.CurrentMotionVectorPassEvent,
+                Is.EqualTo(RenderPassEvent.AfterRenderingOpaques));
+            string feature = System.IO.File.ReadAllText(
+                "Assets/ClusterMesh/Runtime/ClusterMeshUrpFeature.cs");
+            Assert.That(feature, Does.Contain("CurrentMotionVectorPassEvent"));
+            Assert.That(feature, Does.Not.Contain("motionVectorSlot"));
+            string window = System.IO.File.ReadAllText(
+                "Assets/ClusterMesh/Editor/ClusterMeshSettingsWindow.cs");
+            Assert.That(window, Does.Contain("Tools/ClusterMesh/通用设置"));
         }
 
         [Test]

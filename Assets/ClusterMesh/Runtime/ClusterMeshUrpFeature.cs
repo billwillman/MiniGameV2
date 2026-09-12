@@ -21,7 +21,7 @@ namespace ClusterMesh
                 (RenderPassEvent)((int)RenderPassEvent.BeforeRenderingGbuffer + 1),
                 ClusterMeshUrpPhase.GBuffer);
             _motionPass = new ClusterMeshUrpPass(
-                (RenderPassEvent)((int)RenderPassEvent.BeforeRenderingPostProcessing - 1),
+                ClusterMeshUrpBridge.CurrentMotionVectorPassEvent,
                 ClusterMeshUrpPhase.Motion);
         }
 
@@ -65,6 +65,7 @@ namespace ClusterMesh
             if (ClusterMeshSceneBatcher.HasMotionVectors(camera) ||
                 ClusterSkinnedMeshSceneBatcher.HasMotionVectors(camera))
             {
+                _motionPass.renderPassEvent = ClusterMeshUrpBridge.CurrentMotionVectorPassEvent;
                 _motionPass.Setup(renderer);
                 renderer.EnqueuePass(_motionPass);
             }
