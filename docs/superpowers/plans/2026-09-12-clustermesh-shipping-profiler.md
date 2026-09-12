@@ -23,8 +23,8 @@
 
 ### Task 1: 量并记录
 
-- [ ] **Step 1:** 临时场景 200 同资产；镜头 20；其余视锥外且棱柱外。`enableCpuObjectCull` 开。记进槽 / Dispatch / 主画 / Cull ms / GC。
-- [ ] **Step 2:** 同一场景剔全关，记对比列。
-- [ ] **Step 3:** Demo ≈10 全在画面，记画像 B。
-- [ ] **Step 4:** 填规格第 5 节。过关则勾 followups A 的 Profiler / GC。测不了（编辑器占用、没有 200 实例资产）则在第 5 节写阻挡原因，不要假勾。
-- [ ] **Step 5:** 不提交
+- [x] **Step 1:** 自动测：进槽 20；Dispatch 1；主画/阴影 CopyCount 20；Prepare 0.578 ms；Mono +4 KB。
+- [x] **Step 2:** 剔关：进槽 200；Dispatch 1；主画/阴影仍 20；Prepare 1.255 ms；Mono +72 KB。
+- [x] **Step 3:** 合成 10：进槽/主画/阴影 10，Dispatch 1。
+- [x] **Step 4:** 第 5 节已填。进槽过关；Dispatch/主画次数不降；GC 不是只剩 Set*Array。**不勾** A。
+- [x] **Step 5:** 不提交

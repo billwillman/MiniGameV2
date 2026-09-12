@@ -48,18 +48,30 @@ P3 的 `GetInterpolatedProbe` 每槽一次是预期 CPU 成本，不算本项失
 
 ## 5. 记录（量完再填）
 
-机器 / 日期：未量。2026-09-12 本机会话：Tuanjie 已打开 `D:/MiniGameV2`，batchmode 被拒；未建 200 实例临时场景（规格禁止改玩法场景）。关编辑器后按第 2 节再填。
+机器 / 日期：BESTZENG-PC1，AMD Ryzen 7 5800X，2026-09-12。
 
-| 项 | 画像 A（200 / 剔开） | 画像 A（200 / 剔关） | 画像 B（Demo≈10） |
+方法：未改玩法场景。`ClusterMeshShippingProfilerTests` 自动建临时 Camera + Sun（光朝 −Z）+ 朝向镜头的同资产三角。batchmode **不要** `-nographics`。进槽读 `KeepObject` / `PrepareUrp` chunk.n；Dispatch 读非空 chunk 数；主画 / 阴影读 Indirect args `CopyCount`（`GetData` args[1]）；GC 用第二次 Prepare 后 `Profiler.GetMonoUsedSizeLong`（`ProfilerRecorder("GC.Alloc")` 在 batchmode EditMode 恒为 0，作废）。不是 Play Mode 转相机 3 秒，followups A **不勾**。
+
+| 项 | 画像 A（200 / 剔开） | 画像 A（200 / 剔关） | 画像 B（合成 10，全在锥内） |
 | --- | --- | --- | --- |
-| 进槽物体 | 未量 | 未量 | 未量 |
-| Dispatch 次数 | 未量 | 未量 | 未量 |
-| 主画实例（估） | 未量 | 未量 | 未量 |
-| Cull ms | 未量 | 未量 | 未量 |
-| GC Alloc B/帧 | 未量 | 未量 | 未量 |
-| 分配栈顶 | 未量 | 未量 | 未量 |
+| 进槽物体 | **20** | **200** | **10** |
+| Dispatch 次数 | **1** | **1**（200&lt;256） | **1** |
+| kernel groups（clusters=1） | 1 | 4 | 1 |
+| 主画实例（CopyCount） | **20** | **20** | **10** |
+| 阴影实例（CopyCount） | **20** | **20** | **10** |
+| PrepareUrp ms | 0.578 | 1.255 | 0.267 |
+| GC Alloc（Recorder） | 0（采样无效） | 0（采样无效） | 0（采样无效） |
+| GC（Mono 增量） | +4096 B | +73728 B | +4096 B |
+| 分配栈顶 | `PrepareChunks` 每帧 `new` 矩阵 / SH；`SetMatrixArray`；P3 `GetInterpolatedProbe` | 同左，n=200 | 同左，n=10 |
 
 过关签名：进槽与 Dispatch 在「剔开」下列显低于「剔关」；画像 B 不恶化；GC 结论写清是否只剩 Set*Array。
+
+本次结论：
+
+- **进槽过关**：20 ≪ 200；画像 B 10 未恶化。
+- **Dispatch 次数不过关**：都是 1。差在 kernel groups（1 vs 4）和 Prepare 时间（0.58 vs 1.26 ms）。
+- **主画 / 阴影次数不降**：GPU 视锥 + 棱柱已经把身后 180 去掉，CopyCount 剔开关都是 20 / 20。CPU 剔省的是进核物体数，不是主画实例。
+- **GC 不是「只剩 Set*Array」**：Mono 增量随 n 变（4 KB / 72 KB / 4 KB）。Recorder 在 batchmode 读不到，不能当 Play Mode 每帧 Alloc。
 
 ## 6. 文件
 
