@@ -30,6 +30,17 @@ namespace ClusterMesh.Tests
         }
 
         [Test]
+        public void CenteredIn_PlacesWindowInHostCenter()
+        {
+            var host = new Rect(100f, 40f, 1920f, 1080f);
+            Rect placed = ClusterMeshStartupSplashWindow.CenteredIn(host, 536f, 572f);
+            Assert.That(placed.x, Is.EqualTo(100f + (1920f - 536f) * 0.5f).Within(0.01f));
+            Assert.That(placed.y, Is.EqualTo(40f + (1080f - 572f) * 0.5f).Within(0.01f));
+            Assert.That(placed.width, Is.EqualTo(536f));
+            Assert.That(placed.height, Is.EqualTo(572f));
+        }
+
+        [Test]
         public void ShouldShowOnLaunch_FalseAfterShownThisSession()
         {
             bool previous = SessionState.GetBool(ClusterMeshStartupSplashWindow.SessionShownKey, false);

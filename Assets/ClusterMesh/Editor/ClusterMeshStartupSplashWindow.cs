@@ -48,8 +48,36 @@ namespace ClusterMesh
             float height = ImageSize + Pad * 2 + ButtonRow;
             window.minSize = window.maxSize = new Vector2(width, height);
             window.ShowUtility();
+            CenterOnEditor(window, width, height);
+            EditorApplication.delayCall += () =>
+            {
+                if (window != null)
+                    CenterOnEditor(window, width, height);
+            };
             window.Focus();
             window.LoadPromo();
+        }
+
+        static void CenterOnEditor(EditorWindow window, float width, float height)
+        {
+            window.position = CenteredIn(HostWindowRect(), width, height);
+        }
+
+        public static Rect CenteredIn(Rect host, float width, float height)
+        {
+            return new Rect(
+                host.x + Mathf.Max(0f, (host.width - width) * 0.5f),
+                host.y + Mathf.Max(0f, (host.height - height) * 0.5f),
+                width,
+                height);
+        }
+
+        static Rect HostWindowRect()
+        {
+            Rect host = EditorGUIUtility.GetMainWindowPosition();
+            if (host.width >= 1f && host.height >= 1f)
+                return host;
+            return new Rect(0f, 0f, Screen.currentResolution.width, Screen.currentResolution.height);
         }
 
         void OnEnable()
