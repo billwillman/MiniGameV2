@@ -103,6 +103,217 @@ namespace ClusterMesh
         public uint flags;
     }
 
+    internal struct ClusterMeshSharedPoolKey : IEquatable<ClusterMeshSharedPoolKey>
+    {
+        public int vertexStride;
+        public int weightStride;
+        public int vertexPageCapacity;
+        public int indexPageCapacity;
+
+        public bool Equals(ClusterMeshSharedPoolKey other) =>
+            vertexStride == other.vertexStride && weightStride == other.weightStride &&
+            vertexPageCapacity == other.vertexPageCapacity &&
+            indexPageCapacity == other.indexPageCapacity;
+        public override bool Equals(object obj) => obj is ClusterMeshSharedPoolKey other && Equals(other);
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int hash = vertexStride;
+                hash = hash * 397 ^ weightStride;
+                hash = hash * 397 ^ vertexPageCapacity;
+                return hash * 397 ^ indexPageCapacity;
+            }
+        }
+    }
+
+    internal sealed class ClusterMeshSharedGpuPool : IDisposable
+    {
+        sealed class Reservation
+        {
+            public int rootPages;
+            public int detailHeadroom;
+        }
+
+        sealed class Slot
+        {
+            public ClusterMeshPageRuntime owner;
+            public int pageId = -1;
+            public bool pinned;
+            public int lastUsed;
+        }
+
+        readonly Slot[] _slots;
+        readonly Dictionary<ClusterMeshPageRuntime, Reservation> _reservations =
+            new Dictionary<ClusterMeshPageRuntime, Reservation>();
+        ClusterMeshPageRuntime _admittedOwner;
+        int _admittedNode = -1;
+
+        public ClusterMeshSharedPoolKey Key { get; }
+        public int Capacity => _slots.Length;
+        public int ReferenceCount => _reservations.Count;
+        public int ReservedRootPages { get; private set; }
+        public int ReservedDetailHeadroom { get; private set; }
+        public GraphicsBuffer Vertices { get; }
+        public GraphicsBuffer VerticesTight { get; }
+        public GraphicsBuffer Indices { get; }
+        public GraphicsBuffer Weights { get; }
+        public GraphicsBuffer Weights8 { get; }
+
+        public ClusterMeshSharedGpuPool(ClusterMeshSharedPoolKey key, int capacity)
+        {
+            Key = key;
+            _slots = new Slot[capacity];
+            for (int i = 0; i < capacity; i++) _slots[i] = new Slot();
+            try
+            {
+                int vertexCapacity = CheckedCapacity(capacity, key.vertexPageCapacity);
+                int indexCapacity = CheckedCapacity(capacity, key.indexPageCapacity);
+                bool tight = key.vertexStride == ClusterMeshLimits.TightVertexStride;
+                Vertices = new GraphicsBuffer(GraphicsBuffer.Target.Structured,
+                    tight ? 1 : vertexCapacity, ClusterMeshLimits.ClusterVertexStride);
+                VerticesTight = new GraphicsBuffer(GraphicsBuffer.Target.Structured,
+                    tight ? vertexCapacity : 1, ClusterMeshLimits.TightVertexStride);
+                Indices = new GraphicsBuffer(GraphicsBuffer.Target.Structured, indexCapacity, 4);
+                bool weights4 = key.weightStride == ClusterSkinnedMeshAsset.PackedSkinWeightStride;
+                bool weights8 = key.weightStride == ClusterSkinnedMeshAsset.PackedSkinWeightStride8;
+                Weights = new GraphicsBuffer(GraphicsBuffer.Target.Structured,
+                    weights4 ? vertexCapacity : 1, ClusterSkinnedMeshAsset.PackedSkinWeightStride);
+                Weights8 = new GraphicsBuffer(GraphicsBuffer.Target.Structured,
+                    weights8 ? CheckedCapacity(vertexCapacity, 2) : 2, 4);
+            }
+            catch
+            {
+                Dispose();
+                throw;
+            }
+        }
+
+        public bool CanReserve(int rootPages, int detailHeadroom)
+        {
+            int roots = ReservedRootPages + rootPages;
+            int detail = Mathf.Max(ReservedDetailHeadroom, detailHeadroom);
+            return roots <= Capacity - detail;
+        }
+
+        public void Acquire(ClusterMeshPageRuntime owner, int rootPages, int detailHeadroom)
+        {
+            if (owner == null || _reservations.ContainsKey(owner))
+                throw new InvalidOperationException("ClusterMesh shared GPU pool owner is invalid or already acquired.");
+            _reservations.Add(owner, new Reservation
+            {
+                rootPages = rootPages,
+                detailHeadroom = detailHeadroom
+            });
+            ReservedRootPages += rootPages;
+            ReservedDetailHeadroom = Mathf.Max(ReservedDetailHeadroom, detailHeadroom);
+        }
+
+        public bool TryAllocate(ClusterMeshPageRuntime owner, int pageId, int nodeIndex,
+            bool pinned, int tick, out int slotIndex)
+        {
+            slotIndex = -1;
+            if (!pinned)
+            {
+                if (_admittedOwner == null)
+                {
+                    _admittedOwner = owner;
+                    _admittedNode = nodeIndex;
+                }
+                else if (!ReferenceEquals(_admittedOwner, owner) || _admittedNode != nodeIndex)
+                    return false;
+            }
+
+            for (int i = 0; i < _slots.Length; i++)
+                if (_slots[i].owner == null) { slotIndex = i; break; }
+            if (slotIndex < 0)
+            {
+                int oldest = int.MaxValue;
+                for (int i = 0; i < _slots.Length; i++)
+                {
+                    Slot slot = _slots[i];
+                    if (slot.pinned || slot.lastUsed >= oldest ||
+                        tick - slot.lastUsed < ClusterMeshStreaming.ResidentGraceUpdates ||
+                        !slot.owner.CanEvictSharedPage(slot.pageId))
+                        continue;
+                    oldest = slot.lastUsed;
+                    slotIndex = i;
+                }
+            }
+            if (slotIndex < 0)
+                return false;
+
+            Slot selected = _slots[slotIndex];
+            if (selected.owner != null)
+                selected.owner.OnSharedPageEvicted(selected.pageId);
+            selected.owner = owner;
+            selected.pageId = pageId;
+            selected.pinned = pinned;
+            selected.lastUsed = tick;
+            return true;
+        }
+
+        public void CompleteNodeAdmission(ClusterMeshPageRuntime owner, int nodeIndex)
+        {
+            if (!ReferenceEquals(_admittedOwner, owner) || _admittedNode != nodeIndex) return;
+            _admittedOwner = null;
+            _admittedNode = -1;
+        }
+
+        public void CancelAllocation(ClusterMeshPageRuntime owner, int pageId)
+        {
+            for (int i = 0; i < _slots.Length; i++)
+            {
+                Slot slot = _slots[i];
+                if (!ReferenceEquals(slot.owner, owner) || slot.pageId != pageId) continue;
+                slot.owner = null; slot.pageId = -1; slot.pinned = false; slot.lastUsed = 0;
+                break;
+            }
+        }
+
+        public void Touch(int slotIndex, int tick)
+        {
+            if (slotIndex >= 0 && slotIndex < _slots.Length)
+                _slots[slotIndex].lastUsed = tick;
+        }
+
+        public void Release(ClusterMeshPageRuntime owner)
+        {
+            for (int i = 0; i < _slots.Length; i++)
+            {
+                Slot slot = _slots[i];
+                if (!ReferenceEquals(slot.owner, owner)) continue;
+                slot.owner = null; slot.pageId = -1; slot.pinned = false; slot.lastUsed = 0;
+            }
+            if (ReferenceEquals(_admittedOwner, owner))
+            {
+                _admittedOwner = null;
+                _admittedNode = -1;
+            }
+            if (_reservations.TryGetValue(owner, out Reservation reservation))
+            {
+                _reservations.Remove(owner);
+                ReservedRootPages = Mathf.Max(0, ReservedRootPages - reservation.rootPages);
+                ReservedDetailHeadroom = 0;
+                foreach (Reservation remaining in _reservations.Values)
+                    ReservedDetailHeadroom = Mathf.Max(
+                        ReservedDetailHeadroom, remaining.detailHeadroom);
+            }
+        }
+
+        static int CheckedCapacity(int a, int b)
+        {
+            try { return Mathf.Max(1, checked(a * b)); }
+            catch (OverflowException) { throw new InvalidOperationException("ClusterMesh shared GPU pool is too large."); }
+        }
+
+        public void Dispose()
+        {
+            Vertices?.Dispose(); VerticesTight?.Dispose(); Indices?.Dispose();
+            Weights?.Dispose(); Weights8?.Dispose();
+        }
+    }
+
     public sealed class ClusterMeshPageRuntime : IDisposable
     {
         const int FileHeaderBytes = 16;
@@ -140,6 +351,8 @@ namespace ClusterMesh
         readonly int[] _rootNodes;
         readonly int[] _pageSlots;
         readonly Slot[] _slots;
+        readonly ClusterMeshSharedGpuPool _sharedPool;
+        readonly int _rootPageCount;
         readonly ClusterPackedVertex[] _vertexStaging;
         readonly ClusterPackedVertexTight[] _tightVertexStaging;
         readonly uint[] _indexStaging;
@@ -161,6 +374,7 @@ namespace ClusterMesh
         int _loadingNode = -1;
         bool _metadataReady;
         bool _disposed;
+        bool _sharedPoolReleased;
 
         public ClusterMeshAsset Geometry => _geometry;
         public ClusterMeshStreamDescriptor Descriptor => _descriptor;
@@ -169,6 +383,7 @@ namespace ClusterMesh
         public string Error { get; private set; }
         public bool MetadataReady => _metadataReady;
         public bool IsDisposed => _disposed;
+        public bool UsesGlobalSharedGpuPool => _sharedPool != null;
         public int NodeCount => _descriptor != null && _descriptor.nodes != null ? _descriptor.nodes.Length : 0;
         public int PageCount => _descriptor != null && _descriptor.pages != null ? _descriptor.pages.Length : 0;
         // GPU requests are per logical LOD node. A node can span several fixed
@@ -215,8 +430,27 @@ namespace ClusterMesh
             _nodeResident = new uint[descriptor.nodes.Length];
             _pageSlots = new int[descriptor.pages.Length];
             for (int i = 0; i < _pageSlots.Length; i++) _pageSlots[i] = -1;
-            _slots = new Slot[descriptor.poolPageCapacity];
-            for (int i = 0; i < _slots.Length; i++) _slots[i] = new Slot();
+            _rootPageCount = CountRootPages();
+            ClusterMeshSharedGpuPool sharedPool = null;
+            if (ClusterMeshStreaming.UseGlobalSharedGpuPool)
+            {
+                try
+                {
+                    sharedPool = ClusterMeshStreaming.AcquireSharedPool(
+                        this, geometry.ResolvedVertexStride, descriptor, _rootPageCount,
+                        CountMaxDetailNodePages());
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogWarning("ClusterMesh shared GPU pool fallback: " + ex.Message);
+                }
+            }
+            _sharedPool = sharedPool;
+            if (_sharedPool == null)
+            {
+                _slots = new Slot[descriptor.poolPageCapacity];
+                for (int i = 0; i < _slots.Length; i++) _slots[i] = new Slot();
+            }
             bool tight = geometry.ResolvedVertexStride == ClusterMeshLimits.TightVertexStride;
             _vertexStaging = tight ? null : new ClusterPackedVertex[descriptor.vertexPageCapacity];
             _tightVertexStaging = tight ? new ClusterPackedVertexTight[descriptor.vertexPageCapacity] : null;
@@ -293,7 +527,11 @@ namespace ClusterMesh
             {
                 int slot = _pageSlots[pages[i]];
                 if (slot >= 0)
-                    _slots[slot].lastUsed = _tick;
+                {
+                    if (_sharedPool != null)
+                        _sharedPool.Touch(slot, ClusterMeshStreaming.UpdateSerial);
+                    else _slots[slot].lastUsed = _tick;
+                }
             }
         }
 
@@ -423,6 +661,7 @@ namespace ClusterMesh
                 }
                 catch (Exception ex)
                 {
+                    _sharedPool?.CancelAllocation(this, id);
                     payload.Dispose();
                     _completed.Remove(id);
                     Fail("Unable to upload ClusterMesh stream page " + id + ": " + ex.Message);
@@ -438,22 +677,31 @@ namespace ClusterMesh
 
         bool UploadPage(int pageId, Payload payload, ref bool nodesChanged)
         {
-            int slot = FindSlot();
-            if (slot < 0)
-                return false;
-            if (_slots[slot].pageId >= 0)
+            ClusterMeshStreamPage page = _descriptor.pages[pageId];
+            int slot;
+            if (_sharedPool != null)
             {
-                int old = _slots[slot].pageId;
-                int oldNode = _descriptor.pages[old].nodeIndex;
-                _pageSlots[old] = -1;
-                _pageTable[old] = default;
-                RecomputeNodeResident(oldNode);
-                PageTable.SetData(_pageTable, old, old, 1);
-                NodeResident.SetData(_nodeResident, oldNode, oldNode, 1);
-                nodesChanged = true;
+                if (!_sharedPool.TryAllocate(this, pageId, page.nodeIndex,
+                    IsRootPage(pageId), ClusterMeshStreaming.UpdateSerial, out slot))
+                    return false;
+            }
+            else
+            {
+                slot = FindSlot();
+                if (slot < 0) return false;
+                if (_slots[slot].pageId >= 0)
+                {
+                    int old = _slots[slot].pageId;
+                    int oldNode = _descriptor.pages[old].nodeIndex;
+                    _pageSlots[old] = -1;
+                    _pageTable[old] = default;
+                    RecomputeNodeResident(oldNode);
+                    PageTable.SetData(_pageTable, old, old, 1);
+                    NodeResident.SetData(_nodeResident, oldNode, oldNode, 1);
+                    nodesChanged = true;
+                }
             }
 
-            ClusterMeshStreamPage page = _descriptor.pages[pageId];
             if (!IsRootPage(pageId) && _loadingNode < 0)
                 _loadingNode = page.nodeIndex;
             int vertexBase = slot * _descriptor.vertexPageCapacity;
@@ -492,9 +740,12 @@ namespace ClusterMesh
                 }
             }
 
-            _slots[slot].pageId = pageId;
-            _slots[slot].pinned = IsRootPage(pageId);
-            _slots[slot].lastUsed = _tick;
+            if (_sharedPool == null)
+            {
+                _slots[slot].pageId = pageId;
+                _slots[slot].pinned = IsRootPage(pageId);
+                _slots[slot].lastUsed = _tick;
+            }
             _pageSlots[pageId] = slot;
             _pageTable[pageId] = new ClusterMeshStreamPageTableEntry
             {
@@ -507,7 +758,10 @@ namespace ClusterMesh
             PageTable.SetData(_pageTable, pageId, pageId, 1);
             NodeResident.SetData(_nodeResident, page.nodeIndex, page.nodeIndex, 1);
             if (_loadingNode == page.nodeIndex && IsNodeResident(page.nodeIndex))
+            {
                 _loadingNode = -1;
+                _sharedPool?.CompleteNodeAdmission(this, page.nodeIndex);
+            }
             nodesChanged = true;
             return true;
         }
@@ -529,6 +783,23 @@ namespace ClusterMesh
                 result = i;
             }
             return result;
+        }
+
+        internal bool CanEvictSharedPage(int pageId)
+        {
+            return !_disposed && !Failed && pageId >= 0 && pageId < PageCount &&
+                _descriptor.pages[pageId].nodeIndex != _loadingNode;
+        }
+
+        internal void OnSharedPageEvicted(int pageId)
+        {
+            if (_disposed || Failed || pageId < 0 || pageId >= PageCount) return;
+            int node = _descriptor.pages[pageId].nodeIndex;
+            _pageSlots[pageId] = -1;
+            _pageTable[pageId] = default;
+            RecomputeNodeResident(node);
+            if (PageTable != null) PageTable.SetData(_pageTable, pageId, pageId, 1);
+            if (NodeResident != null) NodeResident.SetData(_nodeResident, node, node, 1);
         }
 
         void RecomputeNodeResident(int node)
@@ -594,6 +865,28 @@ namespace ClusterMesh
             return p.root || _descriptor.nodes[p.nodeIndex].parentNodeIndex < 0;
         }
 
+        int CountRootPages()
+        {
+            int count = 0;
+            for (int i = 0; i < PageCount; i++) if (IsRootPage(i)) count++;
+            return count;
+        }
+
+        int CountMaxDetailNodePages()
+        {
+            var counts = new int[NodeCount];
+            for (int page = 0; page < PageCount; page++)
+            {
+                int node = _descriptor.pages[page].nodeIndex;
+                if (_descriptor.nodes[node].parentNodeIndex >= 0)
+                    counts[node]++;
+            }
+            int maximum = 0;
+            for (int node = 0; node < counts.Length; node++)
+                maximum = Mathf.Max(maximum, counts[node]);
+            return maximum;
+        }
+
         void RequestRoots()
         {
             int roots = 0;
@@ -605,7 +898,7 @@ namespace ClusterMesh
             }
             if (roots == 0)
                 Fail("ClusterMesh streaming descriptor has no root pages.");
-            else if (roots > _slots.Length)
+            else if (roots > (_sharedPool != null ? _sharedPool.Capacity : _slots.Length))
                 Fail("ClusterMesh streaming root pages exceed the fixed page pool.");
         }
 
@@ -619,20 +912,31 @@ namespace ClusterMesh
 
         void CreateGpuBuffers()
         {
-            int vertices = Capacity(_descriptor.poolPageCapacity, _descriptor.vertexPageCapacity);
-            int indices = Capacity(_descriptor.poolPageCapacity, _descriptor.indexPageCapacity);
-            bool tight = _geometry.ResolvedVertexStride == ClusterMeshLimits.TightVertexStride;
-            Vertices = new GraphicsBuffer(GraphicsBuffer.Target.Structured,
-                tight ? 1 : vertices, ClusterMeshLimits.ClusterVertexStride);
-            VerticesTight = new GraphicsBuffer(GraphicsBuffer.Target.Structured,
-                tight ? vertices : 1, ClusterMeshLimits.TightVertexStride);
-            Indices = new GraphicsBuffer(GraphicsBuffer.Target.Structured, indices, 4);
-            bool weights4 = _descriptor.weightStride == ClusterSkinnedMeshAsset.PackedSkinWeightStride;
-            bool weights8 = _descriptor.weightStride == ClusterSkinnedMeshAsset.PackedSkinWeightStride8;
-            Weights = new GraphicsBuffer(GraphicsBuffer.Target.Structured,
-                weights4 ? vertices : 1, ClusterSkinnedMeshAsset.PackedSkinWeightStride);
-            Weights8 = new GraphicsBuffer(GraphicsBuffer.Target.Structured,
-                weights8 ? Capacity(vertices, 2) : 2, 4);
+            if (_sharedPool != null)
+            {
+                Vertices = _sharedPool.Vertices;
+                VerticesTight = _sharedPool.VerticesTight;
+                Indices = _sharedPool.Indices;
+                Weights = _sharedPool.Weights;
+                Weights8 = _sharedPool.Weights8;
+            }
+            else
+            {
+                int vertices = Capacity(_descriptor.poolPageCapacity, _descriptor.vertexPageCapacity);
+                int indices = Capacity(_descriptor.poolPageCapacity, _descriptor.indexPageCapacity);
+                bool tight = _geometry.ResolvedVertexStride == ClusterMeshLimits.TightVertexStride;
+                Vertices = new GraphicsBuffer(GraphicsBuffer.Target.Structured,
+                    tight ? 1 : vertices, ClusterMeshLimits.ClusterVertexStride);
+                VerticesTight = new GraphicsBuffer(GraphicsBuffer.Target.Structured,
+                    tight ? vertices : 1, ClusterMeshLimits.TightVertexStride);
+                Indices = new GraphicsBuffer(GraphicsBuffer.Target.Structured, indices, 4);
+                bool weights4 = _descriptor.weightStride == ClusterSkinnedMeshAsset.PackedSkinWeightStride;
+                bool weights8 = _descriptor.weightStride == ClusterSkinnedMeshAsset.PackedSkinWeightStride8;
+                Weights = new GraphicsBuffer(GraphicsBuffer.Target.Structured,
+                    weights4 ? vertices : 1, ClusterSkinnedMeshAsset.PackedSkinWeightStride);
+                Weights8 = new GraphicsBuffer(GraphicsBuffer.Target.Structured,
+                    weights8 ? Capacity(vertices, 2) : 2, 4);
+            }
             Addresses = new GraphicsBuffer(GraphicsBuffer.Target.Structured, Mathf.Max(1, _descriptor.addresses.Length), 16);
             PageTable = new GraphicsBuffer(GraphicsBuffer.Target.Structured, Mathf.Max(1, PageCount), 16);
             NodeResident = new GraphicsBuffer(GraphicsBuffer.Target.Structured, Mathf.Max(1, NodeCount), 4);
@@ -913,8 +1217,17 @@ namespace ClusterMesh
 
         void ReleaseGpuBuffers()
         {
-            Vertices?.Dispose(); VerticesTight?.Dispose(); Indices?.Dispose();
-            Weights?.Dispose(); Weights8?.Dispose(); Addresses?.Dispose();
+            if (_sharedPool == null)
+            {
+                Vertices?.Dispose(); VerticesTight?.Dispose(); Indices?.Dispose();
+                Weights?.Dispose(); Weights8?.Dispose();
+            }
+            else if (!_sharedPoolReleased)
+            {
+                ClusterMeshStreaming.ReleaseSharedPool(_sharedPool, this);
+                _sharedPoolReleased = true;
+            }
+            Addresses?.Dispose();
             PageTable?.Dispose(); NodeResident?.Dispose(); Nodes?.Dispose();
             Vertices = null; VerticesTight = null; Indices = null;
             Weights = null; Weights8 = null; Addresses = null;
@@ -958,8 +1271,10 @@ namespace ClusterMesh
             new Dictionary<ClusterMeshAsset, int>();
         static readonly List<ClusterMeshAsset> Stale = new List<ClusterMeshAsset>();
         static readonly List<ClusterMeshPageRuntime> Active = new List<ClusterMeshPageRuntime>();
+        static readonly List<ClusterMeshSharedGpuPool> SharedPools = new List<ClusterMeshSharedGpuPool>();
         static int _lastUpdateFrame = int.MinValue;
         static int _roundRobinStart;
+        static int _updateSerial;
 
         public static int MaxConcurrentReads { get; set; } = 8;
         public static int MaxUploadsPerUpdate { get; set; } = 4;
@@ -968,9 +1283,74 @@ namespace ClusterMesh
         public static long MaxDecodedBytes { get; set; } = 32L * 1024L * 1024L;
         public static int ResidentGraceUpdates { get; set; } = 12;
         public static bool EnablePrefetch { get; set; } = true;
+        public static int SharedGpuPoolCount => SharedPools.Count;
+        internal static int UpdateSerial => _updateSerial;
+
+        internal static bool UseGlobalSharedGpuPool
+        {
+            get
+            {
+                ClusterMeshSettings settings = ClusterMeshSettings.OverrideForTests ?? ClusterMeshSettings.Loaded;
+                return settings == null || settings.EnableGlobalSharedGpuPool;
+            }
+        }
 
         public static string RootPath { get; set; }
         public static Func<ClusterMeshStreamDescriptor, string> FilePathResolver { get; set; }
+
+        internal static ClusterMeshSharedGpuPool AcquireSharedPool(
+            ClusterMeshPageRuntime owner, int vertexStride,
+            ClusterMeshStreamDescriptor descriptor, int rootPages, int detailHeadroom)
+        {
+            if (owner == null || descriptor == null || rootPages <= 0) return null;
+            ClusterMeshSettings settings = ClusterMeshSettings.OverrideForTests ?? ClusterMeshSettings.Loaded;
+            int requestedCapacity = settings != null ? settings.SharedGpuPoolPageCapacity : 256;
+            int capacity = Mathf.NextPowerOfTwo(Mathf.Max(descriptor.poolPageCapacity, requestedCapacity));
+            capacity = Mathf.Clamp(capacity, 8, 4096);
+            var key = new ClusterMeshSharedPoolKey
+            {
+                vertexStride = vertexStride,
+                weightStride = descriptor.weightStride,
+                vertexPageCapacity = descriptor.vertexPageCapacity,
+                indexPageCapacity = descriptor.indexPageCapacity
+            };
+            for (int i = 0; i < SharedPools.Count; i++)
+            {
+                ClusterMeshSharedGpuPool candidate = SharedPools[i];
+                if (!candidate.Key.Equals(key) || candidate.Capacity != capacity ||
+                    !candidate.CanReserve(rootPages, detailHeadroom))
+                    continue;
+                candidate.Acquire(owner, rootPages, detailHeadroom);
+                return candidate;
+            }
+            var pool = new ClusterMeshSharedGpuPool(key, capacity);
+            pool.Acquire(owner, rootPages, detailHeadroom);
+            SharedPools.Add(pool);
+            return pool;
+        }
+
+        internal static void ReleaseSharedPool(
+            ClusterMeshSharedGpuPool pool, ClusterMeshPageRuntime owner)
+        {
+            if (pool == null) return;
+            pool.Release(owner);
+            if (pool.ReferenceCount > 0) return;
+            SharedPools.Remove(pool);
+            pool.Dispose();
+        }
+
+        static void ApplyProjectStreamingSettings()
+        {
+            ClusterMeshSettings settings = ClusterMeshSettings.OverrideForTests ?? ClusterMeshSettings.Loaded;
+            if (settings == null) return;
+            MaxConcurrentReads = settings.MaxConcurrentPageReads;
+            MaxUploadsPerUpdate = settings.MaxPageUploadsPerUpdate;
+            MaxReadBytesPerUpdate = (long)settings.MaxReadMegabytesPerUpdate * 1024L * 1024L;
+            MaxUploadBytesPerUpdate = (long)settings.MaxUploadMegabytesPerUpdate * 1024L * 1024L;
+            MaxDecodedBytes = (long)settings.MaxDecodedMegabytes * 1024L * 1024L;
+            ResidentGraceUpdates = settings.StreamingResidentGraceUpdates;
+            EnablePrefetch = settings.EnableStreamingPrefetch;
+        }
 
         public static ClusterMeshPageRuntime Request(ClusterMeshAsset geometry)
         {
@@ -997,12 +1377,14 @@ namespace ClusterMesh
         // Safe for runtime Batcher and SceneView to both call in one frame.
         public static void Update()
         {
+            ApplyProjectStreamingSettings();
             int frame = Time.frameCount;
             // Time.frameCount can stay constant while editing. The manager is
             // intentionally safe to pump more than once there so async FileStream
             // completions cannot stall until Play starts.
             if (Application.isPlaying && _lastUpdateFrame == frame) return;
             _lastUpdateFrame = frame;
+            _updateSerial = _updateSerial == int.MaxValue ? 1 : _updateSerial + 1;
             Stale.Clear();
             Active.Clear();
             int inflightReads = 0;
@@ -1095,8 +1477,11 @@ namespace ClusterMesh
         public static void DisposeAll()
         {
             foreach (KeyValuePair<ClusterMeshAsset, ClusterMeshPageRuntime> pair in Runtimes) pair.Value?.Dispose();
+            for (int i = SharedPools.Count - 1; i >= 0; i--) SharedPools[i]?.Dispose();
+            SharedPools.Clear();
             Runtimes.Clear(); References.Clear(); Stale.Clear(); Active.Clear(); _lastUpdateFrame = int.MinValue;
             _roundRobinStart = 0;
+            _updateSerial = 0;
         }
 
         internal static string ResolveFilePath(ClusterMeshStreamDescriptor descriptor)

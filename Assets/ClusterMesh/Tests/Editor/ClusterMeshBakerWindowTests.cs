@@ -16,6 +16,78 @@ namespace ClusterMesh.Tests
         }
 
         [Test]
+        public void ProjectStreamingSettings_DefaultToSharedBoundedBudgets()
+        {
+            var settings = ScriptableObject.CreateInstance<ClusterMeshSettings>();
+            try
+            {
+                Assert.That(settings.EnableGlobalSharedGpuPool, Is.True);
+                Assert.That(settings.SharedGpuPoolPageCapacity, Is.EqualTo(256));
+                Assert.That(settings.MaxConcurrentPageReads, Is.EqualTo(8));
+                Assert.That(settings.MaxPageUploadsPerUpdate, Is.EqualTo(4));
+                Assert.That(settings.EnableStreamingPrefetch, Is.True);
+                Assert.That(settings.StreamingResidentGraceUpdates, Is.EqualTo(12));
+            }
+            finally
+            {
+                Object.DestroyImmediate(settings);
+            }
+        }
+
+        [Test]
+        public void StreamingSharedPool_CanBeDisabledWithoutChangingAssetFormat()
+        {
+            const string assetPath = "Assets/ClusterMesh/Tests/__SharedPoolRegression.asset";
+            string sidecarPath = null;
+            var mesh = ClusterMeshTestMeshes.Grid(16, 16);
+            var first = ScriptableObject.CreateInstance<ClusterMeshAsset>();
+            ClusterMeshAsset second = null;
+            var projectSettings = ScriptableObject.CreateInstance<ClusterMeshSettings>();
+            try
+            {
+                projectSettings.SharedGpuPoolPageCapacity = 64;
+                var bakeSettings = new ClusterMeshBakeSettings
+                {
+                    enableStreaming = true,
+                    buildLodHierarchy = true,
+                    streamingPagePoolCapacity = 64
+                };
+                ClusterMeshBakerWindow.WriteAsset(first, mesh, new Material[1], bakeSettings);
+                AssetDatabase.CreateAsset(first, assetPath);
+                ClusterMeshStreamBaker.FinalizeStatic(first, assetPath, bakeSettings);
+                sidecarPath = first.streamDescriptor.editorFilePath;
+                second = Object.Instantiate(first);
+                ClusterMeshSettings.OverrideForTests = projectSettings;
+
+                ClusterMeshPageRuntime sharedFirst = ClusterMeshStreaming.Request(first);
+                ClusterMeshPageRuntime sharedSecond = ClusterMeshStreaming.Request(second);
+                Assert.That(sharedFirst.UsesGlobalSharedGpuPool, Is.True);
+                Assert.That(sharedSecond.UsesGlobalSharedGpuPool, Is.True);
+                Assert.That(ClusterMeshStreaming.SharedGpuPoolCount, Is.EqualTo(1));
+
+                ClusterMeshStreaming.DisposeAll();
+                projectSettings.EnableGlobalSharedGpuPool = false;
+                ClusterMeshPageRuntime localFirst = ClusterMeshStreaming.Request(first);
+                ClusterMeshPageRuntime localSecond = ClusterMeshStreaming.Request(second);
+                Assert.That(localFirst.UsesGlobalSharedGpuPool, Is.False);
+                Assert.That(localSecond.UsesGlobalSharedGpuPool, Is.False);
+                Assert.That(ClusterMeshStreaming.SharedGpuPoolCount, Is.Zero);
+            }
+            finally
+            {
+                ClusterMeshStreaming.DisposeAll();
+                ClusterMeshSettings.OverrideForTests = null;
+                if (!string.IsNullOrEmpty(sidecarPath))
+                    AssetDatabase.DeleteAsset(sidecarPath);
+                AssetDatabase.DeleteAsset(assetPath);
+                if (first != null && !AssetDatabase.Contains(first)) Object.DestroyImmediate(first);
+                if (second != null) Object.DestroyImmediate(second);
+                Object.DestroyImmediate(projectSettings);
+                Object.DestroyImmediate(mesh);
+            }
+        }
+
+        [Test]
         public void WriteAsset_PopulatesClusters()
         {
             var mesh = ClusterMeshTestMeshes.Triangle();

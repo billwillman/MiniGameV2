@@ -13,3 +13,12 @@ MonoBehaviour:
   m_Name: ClusterMeshSettings
   m_EditorClassIdentifier: 
   motionVectorSlot: 0
+  enableGlobalSharedGpuPool: 1
+  sharedGpuPoolPageCapacity: 256
+  maxConcurrentPageReads: 8
+  maxPageUploadsPerUpdate: 4
+  maxReadMegabytesPerUpdate: 8
+  maxUploadMegabytesPerUpdate: 8
+  maxDecodedMegabytes: 32
+  enableStreamingPrefetch: 1
+  streamingResidentGraceUpdates: 12

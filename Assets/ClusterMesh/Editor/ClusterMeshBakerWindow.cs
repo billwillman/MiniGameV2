@@ -234,10 +234,10 @@ namespace ClusterMesh
                 _settings.streamingPagePoolCapacity = EditorGUILayout.IntSlider(
                     new GUIContent(
                         "GPU Page Pool",
-                        "每份流式资产最多使用的物理页槽数。根页永不驱逐；数值越大越不易抖动，但显存占用越高。"),
+                        "流式资产的最低工作集与兼容模式物理页槽数。开启项目级 Global Shared GPU Pool 时，它参与共享池容量下限和整节点空间校验；关闭共享池时，它就是该资产独立页池的容量。根页永不驱逐。"),
                     Mathf.Clamp(_settings.streamingPagePoolCapacity, 8, 512), 8, 512);
                 EditorGUILayout.HelpBox(
-                    "流式资产会在 .asset 旁生成版本化 .cmstream。运行时只保存逻辑文件名，由 ClusterMeshStreaming.RootPath / FilePathResolver 映射到 persistentDataPath、热更目录或其他真实文件路径；读取只使用异步 FileStream。Page 缺失时回退到最近已驻留父 LOD，不应出现空洞。",
+                    "流式资产会在 .asset 旁生成版本化 .cmstream。运行时只保存逻辑文件名，由 ClusterMeshStreaming.RootPath / FilePathResolver 映射到 persistentDataPath、热更目录或其他真实文件路径；读取只使用异步 FileStream。Page 缺失时回退到最近已驻留父 LOD，不应出现空洞。共享池和全局 I/O 预算位于 Tools/ClusterMesh/通用设置。",
                     MessageType.Info);
             }
             else
