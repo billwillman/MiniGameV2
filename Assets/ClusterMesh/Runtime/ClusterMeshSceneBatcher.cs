@@ -31,6 +31,9 @@ namespace ClusterMesh
         static readonly List<bool> MotionVectorFlags = new List<bool>(64);
         static readonly List<bool> CpuCullFlags = new List<bool>(64);
         static readonly List<bool> CameraCullFlags = new List<bool>(64);
+        static readonly List<bool> LightProbeFlags = new List<bool>(64);
+        static readonly List<bool> AmbientSkyFlags = new List<bool>(64);
+        static readonly List<bool> FogFlags = new List<bool>(64);
         static readonly HashSet<int> Seen = new HashSet<int>();
         static readonly List<ClusterMeshDrawContext> UrpPrepared = new List<ClusterMeshDrawContext>();
         static int _flushedFrame = int.MinValue;
@@ -48,6 +51,9 @@ namespace ClusterMesh
             List<bool> motionVectorFlags,
             List<bool> cpuCullFlags,
             List<bool> cameraCullFlags,
+            List<bool> lightProbeFlags,
+            List<bool> ambientSkyFlags,
+            List<bool> fogFlags,
             bool clusterColors,
             float lodErrorThreshold,
             bool batchCast);
@@ -102,7 +108,7 @@ namespace ClusterMesh
                 return;
             _flushedFrame = Time.frameCount;
 
-            ForEachRegisteredBatch((seed, camera, matrices, previousMatrices, motionVectorFlags, cpuCullFlags, cameraCullFlags, clusterColors, lodT, batchCast) =>
+            ForEachRegisteredBatch((seed, camera, matrices, previousMatrices, motionVectorFlags, cpuCullFlags, cameraCullFlags, lightProbeFlags, ambientSkyFlags, fogFlags, clusterColors, lodT, batchCast) =>
             {
                 if (ClusterMeshUrpBridge.ShouldSkipLegacyFlush(camera))
                     return;
@@ -113,7 +119,8 @@ namespace ClusterMesh
                 ctx.EnableClusterColor = clusterColors;
                 ctx.LodErrorThreshold = lodT;
                 ctx.DrawMotion(matrices, previousMatrices, motionVectorFlags,
-                    cpuCullFlags, cameraCullFlags, camera, batchCast, seed.receiveShadows);
+                    cpuCullFlags, cameraCullFlags, camera, batchCast, seed.receiveShadows,
+                    lightProbeFlags, ambientSkyFlags, fogFlags);
             });
         }
 
@@ -130,7 +137,7 @@ namespace ClusterMesh
             _urpPreparedCameraId = cameraId;
             UrpShadowSubmitCountForTests++;
 
-            ForEachRegisteredBatch((seed, resolved, matrices, previousMatrices, motionVectorFlags, cpuCullFlags, cameraCullFlags, clusterColors, lodT, batchCast) =>
+            ForEachRegisteredBatch((seed, resolved, matrices, previousMatrices, motionVectorFlags, cpuCullFlags, cameraCullFlags, lightProbeFlags, ambientSkyFlags, fogFlags, clusterColors, lodT, batchCast) =>
             {
                 if (resolved != camera)
                     return;
@@ -141,7 +148,8 @@ namespace ClusterMesh
                 ctx.EnableClusterColor = clusterColors;
                 ctx.LodErrorThreshold = lodT;
                 if (ctx.PrepareUrpMotion(matrices, previousMatrices, motionVectorFlags,
-                        cpuCullFlags, cameraCullFlags, camera, batchCast, seed.receiveShadows))
+                        cpuCullFlags, cameraCullFlags, camera, batchCast, seed.receiveShadows,
+                        lightProbeFlags, ambientSkyFlags, fogFlags))
                     UrpPrepared.Add(ctx);
             });
         }
@@ -304,12 +312,18 @@ namespace ClusterMesh
                 MotionVectorFlags.Clear();
                 CpuCullFlags.Clear();
                 CameraCullFlags.Clear();
+                LightProbeFlags.Clear();
+                AmbientSkyFlags.Clear();
+                FogFlags.Clear();
                 Matrix4x4 seedMatrix = seed.transform.localToWorldMatrix;
                 Matrices.Add(seedMatrix);
                 PreviousMatrices.Add(seed.CapturePreviousMotionMatrix(seedMatrix, Time.frameCount));
                 MotionVectorFlags.Add(seed.enableMotionVectors);
                 CpuCullFlags.Add(seed.enableCpuObjectCull);
                 CameraCullFlags.Add(seed.enableCameraCull);
+                LightProbeFlags.Add(seed.enableLightProbes);
+                AmbientSkyFlags.Add(seed.enableAmbientSky);
+                FogFlags.Add(seed.enableFog);
                 bool clusterColors = seed.showClusterColors;
                 float lodT = seed.lodErrorThreshold;
                 bool batchCast = seed.castShadows;
@@ -325,13 +339,17 @@ namespace ClusterMesh
                     MotionVectorFlags.Add(other.enableMotionVectors);
                     CpuCullFlags.Add(other.enableCpuObjectCull);
                     CameraCullFlags.Add(other.enableCameraCull);
+                    LightProbeFlags.Add(other.enableLightProbes);
+                    AmbientSkyFlags.Add(other.enableAmbientSky);
+                    FogFlags.Add(other.enableFog);
                     clusterColors |= other.showClusterColors;
                     lodT = Mathf.Max(lodT, other.lodErrorThreshold);
                     batchCast |= other.castShadows;
                 }
 
                 callback(seed, camera, Matrices, PreviousMatrices, MotionVectorFlags,
-                    CpuCullFlags, CameraCullFlags, clusterColors, lodT, batchCast);
+                    CpuCullFlags, CameraCullFlags, LightProbeFlags, AmbientSkyFlags, FogFlags,
+                    clusterColors, lodT, batchCast);
             }
         }
 

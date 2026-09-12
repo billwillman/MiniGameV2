@@ -124,7 +124,7 @@ MonoBehaviour:
   m_Name: RadiantRenderFeature
   m_EditorClassIdentifier: 
   m_Active: 1
-  renderingPath: 0
+  renderingPath: 1
   ignorePostProcessingOption: 1
   ignoreOverlayCameras: 1
   camerasLayerMask:

@@ -293,14 +293,18 @@ namespace ClusterMesh
             int clipIndex, ClusterSkinnedAnimationEvaluation animationEvaluation,
             bool enableParallelBonePrefix, bool enableConeCull, float lodErrorThreshold,
             Camera cullingCamera, Camera drawCamera,
-            bool castShadows, bool receiveShadows, int drawLayer)
+            bool castShadows, bool receiveShadows, int drawLayer,
+            IList<bool> enableLightProbes = null,
+            IList<bool> enableAmbientSky = null,
+            IList<bool> enableFog = null)
         {
             if (drawCamera == null)
                 return;
             if (!TryPrepare(matrices, null, cpuCull, cameraCull, times, null, null,
                     clipIndex, animationEvaluation,
                     enableParallelBonePrefix, enableConeCull, lodErrorThreshold,
-                    cullingCamera, castShadows, receiveShadows, drawLayer))
+                    cullingCamera, castShadows, receiveShadows, drawLayer,
+                    enableLightProbes, enableAmbientSky, enableFog))
                 return;
             SubmitLegacy(drawCamera);
         }
@@ -322,14 +326,18 @@ namespace ClusterMesh
             Camera drawCamera,
             bool castShadows,
             bool receiveShadows,
-            int drawLayer)
+            int drawLayer,
+            IList<bool> enableLightProbes = null,
+            IList<bool> enableAmbientSky = null,
+            IList<bool> enableFog = null)
         {
             if (drawCamera == null)
                 return;
             if (!TryPrepare(matrices, previousMatrices, cpuCull, cameraCull, times, previousTimes,
                     enableMotionVectors, clipIndex, animationEvaluation,
                     enableParallelBonePrefix, enableConeCull, lodErrorThreshold,
-                    cullingCamera, castShadows, receiveShadows, drawLayer))
+                    cullingCamera, castShadows, receiveShadows, drawLayer,
+                    enableLightProbes, enableAmbientSky, enableFog))
                 return;
             SubmitLegacy(drawCamera);
         }
@@ -337,12 +345,16 @@ namespace ClusterMesh
         public bool PrepareUrp(IList<Matrix4x4> matrices, IList<bool> cpuCull, IList<bool> cameraCull, IList<float> times,
             int clipIndex, ClusterSkinnedAnimationEvaluation animationEvaluation,
             bool enableParallelBonePrefix, bool enableConeCull, float lodErrorThreshold,
-            Camera camera, bool castShadows, bool receiveShadows, int drawLayer)
+            Camera camera, bool castShadows, bool receiveShadows, int drawLayer,
+            IList<bool> enableLightProbes = null,
+            IList<bool> enableAmbientSky = null,
+            IList<bool> enableFog = null)
         {
             if (!TryPrepare(matrices, null, cpuCull, cameraCull, times, null, null,
                     clipIndex, animationEvaluation,
                     enableParallelBonePrefix, enableConeCull, lodErrorThreshold,
-                    camera, castShadows, receiveShadows, drawLayer))
+                    camera, castShadows, receiveShadows, drawLayer,
+                    enableLightProbes, enableAmbientSky, enableFog))
                 return false;
             SubmitUrpShadows(camera);
             return true;
@@ -364,12 +376,16 @@ namespace ClusterMesh
             Camera camera,
             bool castShadows,
             bool receiveShadows,
-            int drawLayer)
+            int drawLayer,
+            IList<bool> enableLightProbes = null,
+            IList<bool> enableAmbientSky = null,
+            IList<bool> enableFog = null)
         {
             if (!TryPrepare(matrices, previousMatrices, cpuCull, cameraCull, times, previousTimes,
                     enableMotionVectors, clipIndex, animationEvaluation,
                     enableParallelBonePrefix, enableConeCull, lodErrorThreshold,
-                    camera, castShadows, receiveShadows, drawLayer))
+                    camera, castShadows, receiveShadows, drawLayer,
+                    enableLightProbes, enableAmbientSky, enableFog))
                 return false;
             SubmitUrpShadows(camera);
             return true;
@@ -406,7 +422,10 @@ namespace ClusterMesh
             IList<bool> enableMotionVectors,
             int clipIndex, ClusterSkinnedAnimationEvaluation animationEvaluation,
             bool enableParallelBonePrefix, bool enableConeCull, float lodErrorThreshold,
-            Camera cullingCamera, bool castShadows, bool receiveShadows, int drawLayer)
+            Camera cullingCamera, bool castShadows, bool receiveShadows, int drawLayer,
+            IList<bool> enableLightProbes = null,
+            IList<bool> enableAmbientSky = null,
+            IList<bool> enableFog = null)
         {
             _prepared = false;
             if (!CanDraw || matrices == null || cullingCamera == null)
@@ -478,8 +497,8 @@ namespace ClusterMesh
                     enableMotionVectors[i];
                 _motionVectorEnabled[count] = motionEnabled ? 1f : 0f;
                 hasMotionVectors |= motionEnabled;
-                ClusterMeshLightProbes.Pack(
-                    ClusterMeshLightProbes.Evaluate(m.GetColumn(3)), out _objectSH[count]);
+                ClusterMeshLightProbes.PackForObject(
+                    m.GetColumn(3), enableLightProbes, enableAmbientSky, enableFog, i, out _objectSH[count]);
                 if (useBurstCpu)
                     _burstTimes[count] = _animationTimeData[count];
                 int segmentCount = Mathf.Max(1, clipData.segmentCount);

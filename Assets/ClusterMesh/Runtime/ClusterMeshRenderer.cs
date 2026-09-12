@@ -3,7 +3,7 @@ using UnityEngine;
 namespace ClusterMesh
 {
     [ExecuteAlways]
-    public sealed class ClusterMeshRenderer : MonoBehaviour
+    public sealed class ClusterMeshRenderer : MonoBehaviour, ISerializationCallbackReceiver
     {
         public ClusterMeshAsset asset;
         public Camera targetCamera;
@@ -20,6 +20,15 @@ namespace ClusterMesh
         public bool enableMotionVectors;
         [Tooltip("CPU object cull before dispatch. Off = this object is always submitted.")]
         public bool enableCpuObjectCull = true;
+        [InspectorName("探针")]
+        [Tooltip("按物体原点插值 Light Probe。没有探针组时，只有开着天光才会退回天空 SH。")]
+        public bool enableLightProbes = true;
+        [InspectorName("天光")]
+        [Tooltip("使用 RenderSettings 天空 / 环境 SH。探针关掉或场景没有探针组时作为间接光。")]
+        public bool enableAmbientSky = true;
+        [InspectorName("雾")]
+        [Tooltip("Forward 混 URP 雾。延迟雾仍由管线按深度做，不受此开关影响。")]
+        public bool enableFog = true;
         [Tooltip("Replace lighting with a solid color per cluster.")]
         public bool showClusterColors;
         public bool showClusterAabb;
@@ -28,6 +37,7 @@ namespace ClusterMesh
         [Tooltip("Draw which LOD each visible cluster uses.")]
         public bool showLodLevels;
 
+        [SerializeField, HideInInspector] int lightingToggleVersion;
         bool _registered;
         bool _hasMotionHistory;
         int _motionHistoryFrame = int.MinValue;
@@ -75,6 +85,22 @@ namespace ClusterMesh
             if (litShader == null)
                 litShader = Shader.Find("ClusterMesh/Lit");
             SyncRegistration();
+        }
+
+        public void OnBeforeSerialize()
+        {
+            if (lightingToggleVersion < 1)
+                lightingToggleVersion = 1;
+        }
+
+        public void OnAfterDeserialize()
+        {
+            if (lightingToggleVersion >= 1)
+                return;
+            enableLightProbes = true;
+            enableAmbientSky = true;
+            enableFog = true;
+            lightingToggleVersion = 1;
         }
 
         void OnEnable()

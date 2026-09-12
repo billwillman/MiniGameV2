@@ -29,6 +29,9 @@ namespace ClusterMesh
         static readonly List<float> Times = new List<float>(64);
         static readonly List<float> PreviousTimes = new List<float>(64);
         static readonly List<bool> MotionVectorFlags = new List<bool>(64);
+        static readonly List<bool> LightProbeFlags = new List<bool>(64);
+        static readonly List<bool> AmbientSkyFlags = new List<bool>(64);
+        static readonly List<bool> FogFlags = new List<bool>(64);
 
         public static void RefreshAndRepaint()
         {
@@ -81,6 +84,7 @@ namespace ClusterMesh
                 if (cullCamera == null) continue;
                 Matrices.Clear(); PreviousMatrices.Clear(); CpuCull.Clear(); CameraCull.Clear();
                 Times.Clear(); PreviousTimes.Clear(); MotionVectorFlags.Clear();
+                LightProbeFlags.Clear(); AmbientSkyFlags.Clear(); FogFlags.Clear();
                 Matrix4x4 currentMatrix = r.transform.localToWorldMatrix;
                 float currentTime = r.CurrentNormalizedTime(Application.isPlaying ? Time.time : (float)editorTime);
                 r.CapturePreviousMotion(currentMatrix, currentTime, r.clipIndex, Time.frameCount,
@@ -88,11 +92,13 @@ namespace ClusterMesh
                 Matrices.Add(currentMatrix); PreviousMatrices.Add(previousMatrix);
                 CpuCull.Add(r.enableCpuObjectCull); CameraCull.Add(r.enableCameraCull);
                 Times.Add(currentTime); PreviousTimes.Add(previousTime); MotionVectorFlags.Add(r.enableMotionVectors);
+                LightProbeFlags.Add(r.enableLightProbes); AmbientSkyFlags.Add(r.enableAmbientSky); FogFlags.Add(r.enableFog);
                 entry.context.EnableClusterColor = r.showClusterColors;
                 entry.context.DrawMotion(Matrices, PreviousMatrices, CpuCull, CameraCull, Times, PreviousTimes,
                     MotionVectorFlags, r.clipIndex, r.animationEvaluation,
                     r.enableParallelBonePrefix, r.enableConeCull,
-                    r.lodErrorThreshold, cullCamera, drawCamera, r.castShadows, r.receiveShadows, r.gameObject.layer);
+                    r.lodErrorThreshold, cullCamera, drawCamera, r.castShadows, r.receiveShadows, r.gameObject.layer,
+                    LightProbeFlags, AmbientSkyFlags, FogFlags);
             }
         }
 

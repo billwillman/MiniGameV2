@@ -116,6 +116,9 @@ namespace ClusterMesh
         static readonly List<float> Times = new List<float>(ClusterMeshLimits.MaxBatchedObjects);
         static readonly List<float> PreviousTimes = new List<float>(ClusterMeshLimits.MaxBatchedObjects);
         static readonly List<bool> MotionVectorFlags = new List<bool>(ClusterMeshLimits.MaxBatchedObjects);
+        static readonly List<bool> LightProbeFlags = new List<bool>(ClusterMeshLimits.MaxBatchedObjects);
+        static readonly List<bool> AmbientSkyFlags = new List<bool>(ClusterMeshLimits.MaxBatchedObjects);
+        static readonly List<bool> FogFlags = new List<bool>(ClusterMeshLimits.MaxBatchedObjects);
         static readonly List<ClusterSkinnedMeshDrawContext> UrpPrepared = new List<ClusterSkinnedMeshDrawContext>();
         static int _flushedFrame = int.MinValue;
         static int _urpPreparedFrame = int.MinValue;
@@ -166,7 +169,7 @@ namespace ClusterMesh
                 return;
             _flushedFrame = Time.frameCount;
             UsedContexts.Clear();
-            ForEachRegisteredBatch((seed, batch, matrices, previousMatrices, cpuCull, cameraCull, times, previousTimes, motionVectorFlags, batchSlot) =>
+            ForEachRegisteredBatch((seed, batch, matrices, previousMatrices, cpuCull, cameraCull, times, previousTimes, motionVectorFlags, lightProbeFlags, ambientSkyFlags, fogFlags, batchSlot) =>
             {
                 var contextKey = new ContextKey(batch, batchSlot);
                 UsedContexts.Add(contextKey);
@@ -185,7 +188,8 @@ namespace ClusterMesh
                     motionVectorFlags, batch.clipIndex, batch.animationEvaluation,
                     batch.enableParallelBonePrefix, batch.enableConeCull, batch.lodErrorThreshold,
                     batch.camera, batch.camera,
-                    batch.castShadows, batch.receiveShadows, batch.layer);
+                    batch.castShadows, batch.receiveShadows, batch.layer,
+                    lightProbeFlags, ambientSkyFlags, fogFlags);
             });
             DisposeUnusedContexts();
         }
@@ -203,7 +207,7 @@ namespace ClusterMesh
             _urpPreparedCameraId = cameraId;
             UrpShadowSubmitCountForTests++;
 
-            ForEachRegisteredBatch((seed, batch, matrices, previousMatrices, cpuCull, cameraCull, times, previousTimes, motionVectorFlags, batchSlot) =>
+            ForEachRegisteredBatch((seed, batch, matrices, previousMatrices, cpuCull, cameraCull, times, previousTimes, motionVectorFlags, lightProbeFlags, ambientSkyFlags, fogFlags, batchSlot) =>
             {
                 if (batch.camera != camera)
                     return;
@@ -214,7 +218,8 @@ namespace ClusterMesh
                 if (context.PrepareUrpMotion(matrices, previousMatrices, cpuCull, cameraCull, times, previousTimes,
                     motionVectorFlags, batch.clipIndex, batch.animationEvaluation,
                     batch.enableParallelBonePrefix, batch.enableConeCull, batch.lodErrorThreshold,
-                    camera, batch.castShadows, batch.receiveShadows, batch.layer))
+                    camera, batch.castShadows, batch.receiveShadows, batch.layer,
+                    lightProbeFlags, ambientSkyFlags, fogFlags))
                     UrpPrepared.Add(context);
             });
         }
@@ -303,6 +308,9 @@ namespace ClusterMesh
             List<float> times,
             List<float> previousTimes,
             List<bool> motionVectorFlags,
+            List<bool> lightProbeFlags,
+            List<bool> ambientSkyFlags,
+            List<bool> fogFlags,
             int batchSlot);
 
         static void ForEachRegisteredBatch(BatchCallback callback)
@@ -332,6 +340,9 @@ namespace ClusterMesh
                     Times.Clear();
                     PreviousTimes.Clear();
                     MotionVectorFlags.Clear();
+                    LightProbeFlags.Clear();
+                    AmbientSkyFlags.Clear();
+                    FogFlags.Clear();
                     for (int j = i; j < Renderers.Count && Matrices.Count < ClusterMeshLimits.MaxBatchedObjects; j++)
                     {
                         ClusterSkinnedMeshRenderer candidate = Renderers[j];
@@ -344,7 +355,8 @@ namespace ClusterMesh
                     if (Matrices.Count == 0)
                         break;
                     callback(seed, batch, Matrices, PreviousMatrices, CpuCull, CameraCull,
-                        Times, PreviousTimes, MotionVectorFlags, batchSlot++);
+                        Times, PreviousTimes, MotionVectorFlags, LightProbeFlags, AmbientSkyFlags, FogFlags,
+                        batchSlot++);
                 }
             }
         }
@@ -375,6 +387,9 @@ namespace ClusterMesh
             Times.Add(currentTime);
             PreviousTimes.Add(previousTime);
             MotionVectorFlags.Add(renderer.enableMotionVectors);
+            LightProbeFlags.Add(renderer.enableLightProbes);
+            AmbientSkyFlags.Add(renderer.enableAmbientSky);
+            FogFlags.Add(renderer.enableFog);
         }
 
         static ClusterSkinnedMeshDrawContext GetOrCreate(ContextKey key)

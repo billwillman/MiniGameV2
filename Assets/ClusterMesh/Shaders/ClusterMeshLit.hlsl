@@ -119,7 +119,7 @@ half3 ClusterMeshSampleObjectSH(uint objectIndex, float3 normalWS)
     coeffs[3] = sh.shBr;
     coeffs[4] = sh.shBg;
     coeffs[5] = sh.shBb;
-    coeffs[6] = sh.shC;
+    coeffs[6] = float4(sh.shC.xyz, 0);
     return max(half3(0, 0, 0), SampleSH9(coeffs, normalWS));
 }
 
@@ -190,7 +190,7 @@ half4 ClusterMeshFrag(Varyings input) : SV_Target
     inputData.normalWS = normalWS;
     inputData.viewDirectionWS = GetWorldSpaceNormalizeViewDir(input.positionWS);
     inputData.shadowCoord = TransformWorldToShadowCoord(input.positionWS);
-    inputData.fogCoord = ComputeFogFactor(input.positionCS.z);
+    inputData.fogCoord = _ObjectSH[input.objectIndex].shC.w > 0.5 ? ComputeFogFactor(input.positionCS.z) : 1;
     inputData.bakedGI = ClusterMeshSampleObjectSH(input.objectIndex, normalWS);
 
     SurfaceData surface = (SurfaceData)0;

@@ -4,7 +4,7 @@ namespace ClusterMesh
 {
     /// <summary>GPU vertex-texture-fetch renderer for a baked skeletal ClusterMesh asset.</summary>
     [ExecuteAlways]
-    public sealed class ClusterSkinnedMeshRenderer : MonoBehaviour
+    public sealed class ClusterSkinnedMeshRenderer : MonoBehaviour, ISerializationCallbackReceiver
     {
         public ClusterSkinnedMeshAsset asset;
         public Camera targetCamera;
@@ -18,6 +18,15 @@ namespace ClusterMesh
         [Tooltip("Write transform and baked skeletal deformation into URP's Motion Vector texture. Disabled by default to avoid previous-pose evaluation and draw-pass cost.")]
         public bool enableMotionVectors;
         public bool enableCpuObjectCull = true;
+        [InspectorName("探针")]
+        [Tooltip("按物体原点插值 Light Probe。没有探针组时，只有开着天光才会退回天空 SH。")]
+        public bool enableLightProbes = true;
+        [InspectorName("天光")]
+        [Tooltip("使用 RenderSettings 天空 / 环境 SH。探针关掉或场景没有探针组时作为间接光。")]
+        public bool enableAmbientSky = true;
+        [InspectorName("雾")]
+        [Tooltip("Forward 混 URP 雾。延迟雾仍由管线按深度做，不受此开关影响。")]
+        public bool enableFog = true;
         [Tooltip("Replace lighting with a solid color per cluster.")]
         public bool showClusterColors;
         [Tooltip("Draw the current animated cluster AABBs while this object is selected.")]
@@ -37,6 +46,7 @@ namespace ClusterMesh
         public bool playAutomatically = true;
         public bool playInEditMode = true;
 
+        [SerializeField, HideInInspector] int lightingToggleVersion;
         bool _registered;
         bool _hasMotionHistory;
         int _motionHistoryFrame = int.MinValue;
@@ -115,6 +125,22 @@ namespace ClusterMesh
                 animationEvaluation = ClusterSkinnedAnimationEvaluation.GpuTexture;
             else if (asset.animationDataMode == ClusterSkinnedAnimationDataMode.CpuOnly)
                 animationEvaluation = ClusterSkinnedAnimationEvaluation.CpuCurves;
+        }
+
+        public void OnBeforeSerialize()
+        {
+            if (lightingToggleVersion < 1)
+                lightingToggleVersion = 1;
+        }
+
+        public void OnAfterDeserialize()
+        {
+            if (lightingToggleVersion >= 1)
+                return;
+            enableLightProbes = true;
+            enableAmbientSky = true;
+            enableFog = true;
+            lightingToggleVersion = 1;
         }
 
         void OnEnable() => EnsureInitialized();

@@ -106,6 +106,9 @@ namespace ClusterMesh
         static readonly List<bool> MotionVectorFlags = new List<bool>(64);
         static readonly List<bool> CpuCullFlags = new List<bool>(64);
         static readonly List<bool> CameraCullFlags = new List<bool>(64);
+        static readonly List<bool> LightProbeFlags = new List<bool>(64);
+        static readonly List<bool> AmbientSkyFlags = new List<bool>(64);
+        static readonly List<bool> FogFlags = new List<bool>(64);
 
         static readonly List<ClusterMeshRenderer> Renderers = new List<ClusterMeshRenderer>(64);
 
@@ -166,6 +169,9 @@ namespace ClusterMesh
             MotionVectorFlags.Clear();
             CpuCullFlags.Clear();
             CameraCullFlags.Clear();
+            LightProbeFlags.Clear();
+            AmbientSkyFlags.Clear();
+            FogFlags.Clear();
             Renderers.Clear();
         }
 
@@ -185,6 +191,9 @@ namespace ClusterMesh
                 MotionVectorFlags.Clear();
                 CpuCullFlags.Clear();
                 CameraCullFlags.Clear();
+                LightProbeFlags.Clear();
+                AmbientSkyFlags.Clear();
+                FogFlags.Clear();
                 AddRenderer(seed);
 
                 for (int j = i + 1; j < Renderers.Count; j++)
@@ -214,7 +223,8 @@ namespace ClusterMesh
                 context.DrawEditorPreviewMotion(
                     Matrices, PreviousMatrices, MotionVectorFlags,
                     CpuCullFlags, CameraCullFlags, key.cullingCamera, key.drawCamera,
-                    key.castShadows, key.receiveShadows);
+                    key.castShadows, key.receiveShadows,
+                    LightProbeFlags, AmbientSkyFlags, FogFlags);
             }
         }
 
@@ -268,6 +278,9 @@ namespace ClusterMesh
             MotionVectorFlags.Add(renderer.enableMotionVectors);
             CpuCullFlags.Add(renderer.enableCpuObjectCull);
             CameraCullFlags.Add(renderer.enableCameraCull);
+            LightProbeFlags.Add(renderer.enableLightProbes);
+            AmbientSkyFlags.Add(renderer.enableAmbientSky);
+            FogFlags.Add(renderer.enableFog);
         }
 
         static ClusterMeshDrawContext GetOrCreateContext(BatchKey key)

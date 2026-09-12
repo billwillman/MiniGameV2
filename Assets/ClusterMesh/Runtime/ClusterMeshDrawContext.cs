@@ -304,13 +304,17 @@ namespace ClusterMesh
             IList<bool> enableCameraCull,
             Camera camera,
             bool castShadows = true,
-            bool receiveShadows = true)
+            bool receiveShadows = true,
+            IList<bool> enableLightProbes = null,
+            IList<bool> enableAmbientSky = null,
+            IList<bool> enableFog = null)
         {
             if (localToWorld == null)
                 return;
             Draw(localToWorld, previousLocalToWorld, enableMotionVectors,
                 enableCpuObjectCull, enableCameraCull, localToWorld.Count,
-                camera, camera, castShadows, receiveShadows);
+                camera, camera, castShadows, receiveShadows,
+                enableLightProbes, enableAmbientSky, enableFog);
         }
 
 #if UNITY_EDITOR
@@ -321,13 +325,17 @@ namespace ClusterMesh
             Camera cullingCamera,
             Camera drawCamera,
             bool castShadows = true,
-            bool receiveShadows = true)
+            bool receiveShadows = true,
+            IList<bool> enableLightProbes = null,
+            IList<bool> enableAmbientSky = null,
+            IList<bool> enableFog = null)
         {
             if (localToWorld == null)
                 return;
             Draw(
                 localToWorld, null, null, enableCpuObjectCull, enableCameraCull, localToWorld.Count,
-                cullingCamera, drawCamera, castShadows, receiveShadows);
+                cullingCamera, drawCamera, castShadows, receiveShadows,
+                enableLightProbes, enableAmbientSky, enableFog);
         }
 
         public void DrawEditorPreviewMotion(
@@ -339,14 +347,18 @@ namespace ClusterMesh
             Camera cullingCamera,
             Camera drawCamera,
             bool castShadows = true,
-            bool receiveShadows = true)
+            bool receiveShadows = true,
+            IList<bool> enableLightProbes = null,
+            IList<bool> enableAmbientSky = null,
+            IList<bool> enableFog = null)
         {
             if (localToWorld == null)
                 return;
             Draw(
                 localToWorld, previousLocalToWorld, enableMotionVectors,
                 enableCpuObjectCull, enableCameraCull, localToWorld.Count,
-                cullingCamera, drawCamera, castShadows, receiveShadows);
+                cullingCamera, drawCamera, castShadows, receiveShadows,
+                enableLightProbes, enableAmbientSky, enableFog);
         }
 #endif
 
@@ -360,12 +372,16 @@ namespace ClusterMesh
             Camera cullingCamera,
             Camera drawCamera,
             bool castShadows,
-            bool receiveShadows)
+            bool receiveShadows,
+            IList<bool> enableLightProbes = null,
+            IList<bool> enableAmbientSky = null,
+            IList<bool> enableFog = null)
         {
             if (drawCamera == null || !CanDraw)
                 return;
             if (!PrepareChunks(localToWorld, previousLocalToWorld, enableMotionVectors,
-                    enableCpuObjectCull, enableCameraCull, count, cullingCamera, castShadows, receiveShadows))
+                    enableCpuObjectCull, enableCameraCull, count, cullingCamera, castShadows, receiveShadows,
+                    enableLightProbes, enableAmbientSky, enableFog))
                 return;
             for (int i = 0; i < _urpChunks.Count; i++)
                 SubmitLegacy(_urpChunks[i], drawCamera);
@@ -387,12 +403,16 @@ namespace ClusterMesh
             IList<bool> enableCameraCull,
             Camera camera,
             bool castShadows,
-            bool receiveShadows)
+            bool receiveShadows,
+            IList<bool> enableLightProbes = null,
+            IList<bool> enableAmbientSky = null,
+            IList<bool> enableFog = null)
         {
             if (localToWorld == null)
                 return false;
             if (!PrepareChunks(localToWorld, null, null, enableCpuObjectCull, enableCameraCull,
-                    localToWorld.Count, camera, castShadows, receiveShadows))
+                    localToWorld.Count, camera, castShadows, receiveShadows,
+                    enableLightProbes, enableAmbientSky, enableFog))
                 return false;
             for (int i = 0; i < _urpChunks.Count; i++)
                 SubmitUrpShadows(_urpChunks[i], camera);
@@ -407,13 +427,17 @@ namespace ClusterMesh
             IList<bool> enableCameraCull,
             Camera camera,
             bool castShadows,
-            bool receiveShadows)
+            bool receiveShadows,
+            IList<bool> enableLightProbes = null,
+            IList<bool> enableAmbientSky = null,
+            IList<bool> enableFog = null)
         {
             if (localToWorld == null)
                 return false;
             if (!PrepareChunks(localToWorld, previousLocalToWorld, enableMotionVectors,
                     enableCpuObjectCull, enableCameraCull, localToWorld.Count,
-                    camera, castShadows, receiveShadows))
+                    camera, castShadows, receiveShadows,
+                    enableLightProbes, enableAmbientSky, enableFog))
                 return false;
             for (int i = 0; i < _urpChunks.Count; i++)
                 SubmitUrpShadows(_urpChunks[i], camera);
@@ -464,7 +488,10 @@ namespace ClusterMesh
             int count,
             Camera camera,
             bool castShadows,
-            bool receiveShadows)
+            bool receiveShadows,
+            IList<bool> enableLightProbes = null,
+            IList<bool> enableAmbientSky = null,
+            IList<bool> enableFog = null)
         {
             ReleaseExtras();
             _urpChunks.Clear();
@@ -521,8 +548,9 @@ namespace ClusterMesh
                     _preparedHasMotionVectors |= _motionVectorEnabled[n] > 0.5f;
                     chunkHasMotionVectors |= _motionVectorEnabled[n] > 0.5f;
                     _objectCameraCullFlags[n] = cameraCull ? 1u : 0u;
-                    ClusterMeshLightProbes.Pack(
-                        ClusterMeshLightProbes.Evaluate(l2w.GetColumn(3)), out _objectSH[n]);
+                    ClusterMeshLightProbes.PackForObject(
+                        l2w.GetColumn(3), enableLightProbes, enableAmbientSky, enableFog,
+                        start + i, out _objectSH[n]);
                     if (!hasBounds)
                     {
                         worldBounds = b;

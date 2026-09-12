@@ -62,7 +62,7 @@ half3 ClusterSkinnedSampleObjectSH(uint objectIndex, float3 normalWS)
     coeffs[3] = sh.shBr;
     coeffs[4] = sh.shBg;
     coeffs[5] = sh.shBb;
-    coeffs[6] = sh.shC;
+    coeffs[6] = float4(sh.shC.xyz, 0);
     return max(half3(0, 0, 0), SampleSH9(coeffs, normalWS));
 }
 
@@ -265,7 +265,7 @@ half4 ClusterSkinnedFrag(Varyings i):SV_Target
     half4 albedo=SAMPLE_TEXTURE2D(_BaseMap,sampler_BaseMap,i.uv)*_BaseColor; clip(albedo.a-_Cutoff);
     if (_EnableClusterColor > 0.5f) return half4(ClusterSkinnedDebugRgb(i.clusterId), albedo.a);
     float3 nts=UnpackNormalScale(SAMPLE_TEXTURE2D(_BumpMap,sampler_BumpMap,i.uv),_BumpScale); float3 t=normalize(i.tangentWS.xyz),n=normalize(i.normalWS),b=cross(n,t)*i.tangentWS.w;
-    InputData d=(InputData)0; d.positionWS=i.positionWS; d.normalWS=normalize(mul(nts,float3x3(t,b,n))); d.viewDirectionWS=GetWorldSpaceNormalizeViewDir(i.positionWS); d.shadowCoord=TransformWorldToShadowCoord(i.positionWS); d.fogCoord=ComputeFogFactor(i.positionCS.z); d.bakedGI=ClusterSkinnedSampleObjectSH(i.objectIndex,d.normalWS);
+    InputData d=(InputData)0; d.positionWS=i.positionWS; d.normalWS=normalize(mul(nts,float3x3(t,b,n))); d.viewDirectionWS=GetWorldSpaceNormalizeViewDir(i.positionWS); d.shadowCoord=TransformWorldToShadowCoord(i.positionWS); d.fogCoord=_ObjectSH[i.objectIndex].shC.w>0.5?ComputeFogFactor(i.positionCS.z):1; d.bakedGI=ClusterSkinnedSampleObjectSH(i.objectIndex,d.normalWS);
     SurfaceData s=(SurfaceData)0; s.albedo=albedo.rgb;s.metallic=_Metallic;s.smoothness=_Smoothness;s.normalTS=nts;s.occlusion=1;s.alpha=albedo.a; return UniversalFragmentPBR(d,s);
 }
 #if defined(CLUSTERMESH_GBUFFER_PASS)
