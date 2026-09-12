@@ -243,7 +243,66 @@ Transform:
   m_GameObject: {fileID: 98514833}
   serializedVersion: 2
   m_LocalRotation: {x: 0.017104423, y: 0.70689994, z: 0.70689994, w: -0.017104423}
-  m_LocalPosition: {x: 2.44, y: 0, z: 0.385}
+  m_LocalPosition: {x: 2.58, y: 0, z: 0.49}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: -90, y: 0, z: 182.772}
+--- !u!1 &252152262
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 7
+  m_Component:
+  - component: {fileID: 252152264}
+  - component: {fileID: 252152263}
+  m_Layer: 0
+  m_HasEditorInfo: 1
+  m_Name: ClusterMeshAsset (1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &252152263
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 252152262}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 99e53680ecfb1044fbebd512165424a7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  asset: {fileID: 11400000, guid: d2cdc24894294fe4ab3f661e27d40352, type: 2}
+  targetCamera: {fileID: 0}
+  cullShader: {fileID: 7200000, guid: 62624d1a5bd0e8948821f9c09bf56d55, type: 3}
+  litShader: {fileID: 4800000, guid: 487a515aa7a15f14abb1152f6a8ba524, type: 3}
+  castShadows: 1
+  receiveShadows: 1
+  enableCameraCull: 1
+  enableConeCull: 1
+  enableMotionVectors: 0
+  enableCpuObjectCull: 1
+  showClusterColors: 0
+  showClusterAabb: 0
+  lodErrorThreshold: 0
+  showLodLevels: 0
+--- !u!4 &252152264
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 252152262}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0.017104423, y: 0.70689994, z: 0.70689994, w: -0.017104423}
+  m_LocalPosition: {x: -1.9, y: 0, z: 0.49}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -442,7 +501,7 @@ Light:
   serializedVersion: 10
   m_Type: 1
   m_Shape: 0
-  m_Color: {r: 1, g: 0.95686275, b: 0.8392157, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Intensity: 1
   m_Range: 10
   m_SpotAngle: 30
@@ -687,3 +746,4 @@ SceneRoots:
   - {fileID: 89467276}
   - {fileID: 1719892348}
   - {fileID: 98514835}
+  - {fileID: 252152264}
