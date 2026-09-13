@@ -427,22 +427,59 @@ namespace ClusterMesh
             return false;
         }
 
+        public static bool IsForwardFeatureActive()
+        {
+            return ResolveActiveRendererData(out ScriptableRendererData data) &&
+                IsForwardFeatureActive(data);
+        }
+
+        public static bool IsForwardFeatureActive(ScriptableRendererData data)
+        {
+            return HasActiveFeature(data) && IsForwardRendererData(data);
+        }
+
+        public static bool IsDeferredFeatureActive()
+        {
+            return ResolveActiveRendererData(out ScriptableRendererData data) &&
+                IsDeferredFeatureActive(data);
+        }
+
+        public static bool IsDeferredFeatureActive(ScriptableRendererData data)
+        {
+            return HasActiveFeature(data) && IsDeferredRendererData(data);
+        }
+
         public static bool ShouldExposeDepthNormals()
         {
-            if (RendererDataOverrideForTests != null)
-                return ShouldExposeDepthNormals(RendererDataOverrideForTests);
-            return TryGetDefaultRendererData(out ScriptableRendererData data) &&
-                ShouldExposeDepthNormals(data);
+            return IsForwardFeatureActive();
         }
 
         public static bool ShouldExposeDepthNormals(ScriptableRendererData data)
         {
-            if (!HasActiveFeature(data))
-                return false;
+            return IsForwardFeatureActive(data);
+        }
+
+        static bool ResolveActiveRendererData(out ScriptableRendererData data)
+        {
+            if (RendererDataOverrideForTests != null)
+            {
+                data = RendererDataOverrideForTests;
+                return true;
+            }
+
+            return TryGetDefaultRendererData(out data);
+        }
+
+        static bool IsForwardRendererData(ScriptableRendererData data)
+        {
             var rendererData = data as UniversalRendererData;
-            if (rendererData == null)
-                return false;
-            return !IsDeferredRenderingMode(rendererData.renderingMode);
+            return rendererData != null && !IsDeferredRenderingMode(rendererData.renderingMode);
+        }
+
+        static bool IsDeferredRendererData(ScriptableRendererData data)
+        {
+            var rendererData = data as UniversalRendererData;
+            return rendererData != null && IsDeferredRenderingMode(rendererData.renderingMode);
         }
 
         static bool IsDeferredRenderingMode(RenderingMode mode)

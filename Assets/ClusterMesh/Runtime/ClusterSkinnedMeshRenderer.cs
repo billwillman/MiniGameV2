@@ -15,11 +15,11 @@ namespace ClusterMesh
         public bool enableCameraCull = true;
         [Tooltip("Only used when the baked animation cone for this cluster is conservative.")]
         public bool enableConeCull = true;
-        [Tooltip("Write transform and baked skeletal deformation into URP's Motion Vector texture. Disabled by default to avoid previous-pose evaluation and draw-pass cost.")]
+        [Tooltip("Radiant Temporal / URP TAA 公用。Forward 和延迟都能采这张速度图。默认关。")]
         public bool enableMotionVectors;
         [HideInInspector]
         [InspectorName("Enable DepthNormals")]
-        [Tooltip("仅 ClusterMesh Setup URP Forward 时显示。写出 URP DepthNormals（_CameraNormalsTexture），Radiant GI Forward 采 ClusterMesh 法线需要开。默认关。")]
+        [Tooltip("Radiant Forward 独有。写出 _CameraNormalsTexture。延迟读 GBuffer 法线，此开关无效。默认关。")]
         public bool enableDepthNormals;
         public bool enableCpuObjectCull = true;
         [InspectorName("探针")]

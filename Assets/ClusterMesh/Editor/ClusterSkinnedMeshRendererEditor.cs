@@ -38,7 +38,7 @@ namespace ClusterMesh
                     EditorGUILayout.PropertyField(prop, true);
 
                 if (prop.propertyPath == "enableMotionVectors")
-                    ClusterMeshDepthNormalsInspector.DrawIfForward(serializedObject);
+                    ClusterMeshRadiantPathInspector.DrawAfterMotionVectors(serializedObject);
             }
 
             DrawAnimationGroup(renderer, evaluation, parallelPrefix);

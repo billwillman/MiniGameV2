@@ -30,7 +30,7 @@ namespace ClusterMesh
                     EditorGUILayout.PropertyField(prop, true);
 
                 if (prop.propertyPath == "enableMotionVectors")
-                    ClusterMeshDepthNormalsInspector.DrawIfForward(serializedObject);
+                    ClusterMeshRadiantPathInspector.DrawAfterMotionVectors(serializedObject);
             }
 
             serializedObject.ApplyModifiedProperties();
@@ -59,15 +59,28 @@ namespace ClusterMesh
         }
     }
 
-    static class ClusterMeshDepthNormalsInspector
+    static class ClusterMeshRadiantPathInspector
     {
-        public static void DrawIfForward(SerializedObject so)
+        public static void DrawAfterMotionVectors(SerializedObject so)
         {
-            if (so == null || !ClusterMeshUrpBridge.ShouldExposeDepthNormals())
+            if (so == null)
                 return;
-            SerializedProperty prop = so.FindProperty("enableDepthNormals");
-            if (prop != null)
-                EditorGUILayout.PropertyField(prop, true);
+            if (ClusterMeshUrpBridge.IsForwardFeatureActive())
+            {
+                EditorGUILayout.LabelField("Radiant Forward 独有", EditorStyles.miniBoldLabel);
+                SerializedProperty depthNormals = so.FindProperty("enableDepthNormals");
+                if (depthNormals != null)
+                    EditorGUILayout.PropertyField(depthNormals, true);
+                return;
+            }
+
+            if (ClusterMeshUrpBridge.IsDeferredFeatureActive())
+            {
+                EditorGUILayout.HelpBox(
+                    "当前 URP 延迟：Radiant 读 GBuffer 法线，不显示 DepthNormals。" +
+                    "Organic Light 只在 Radiant Volume 上，且仅延迟有效。Motion Vector 是公用开关。",
+                    MessageType.None);
+            }
         }
     }
 }

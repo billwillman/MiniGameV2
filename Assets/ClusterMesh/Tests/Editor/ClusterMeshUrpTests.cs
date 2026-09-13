@@ -76,20 +76,26 @@ namespace ClusterMesh.Tests
         }
 
         [Test]
-        public void ShouldExposeDepthNormals_OnlyWhenForwardFeatureActive()
+        public void RadiantObjectToggles_SplitForwardUniqueAndShared()
         {
             Assert.That(ClusterMeshUrpBridge.ShouldExposeDepthNormals(null), Is.False);
+            Assert.That(ClusterMeshUrpBridge.IsForwardFeatureActive(null), Is.False);
+            Assert.That(ClusterMeshUrpBridge.IsDeferredFeatureActive(null), Is.False);
             var data = Track(ScriptableObject.CreateInstance<UniversalRendererData>());
             data.renderingMode = RenderingMode.Forward;
-            Assert.That(ClusterMeshUrpBridge.ShouldExposeDepthNormals(data), Is.False);
+            Assert.That(ClusterMeshUrpBridge.IsForwardFeatureActive(data), Is.False);
             ClusterMeshUrpFeatureMenu.EnableOn(data);
+            Assert.That(ClusterMeshUrpBridge.IsForwardFeatureActive(data), Is.True);
+            Assert.That(ClusterMeshUrpBridge.IsDeferredFeatureActive(data), Is.False);
             Assert.That(ClusterMeshUrpBridge.ShouldExposeDepthNormals(data), Is.True);
             data.renderingMode = RenderingMode.ForwardPlus;
-            Assert.That(ClusterMeshUrpBridge.ShouldExposeDepthNormals(data), Is.True);
+            Assert.That(ClusterMeshUrpBridge.IsForwardFeatureActive(data), Is.True);
             ClusterMeshUrpFeatureMenu.ConfigureDeferredOn(data);
+            Assert.That(ClusterMeshUrpBridge.IsForwardFeatureActive(data), Is.False);
+            Assert.That(ClusterMeshUrpBridge.IsDeferredFeatureActive(data), Is.True);
             Assert.That(ClusterMeshUrpBridge.ShouldExposeDepthNormals(data), Is.False);
             ClusterMeshUrpFeatureMenu.ConfigureForwardOn(data);
-            Assert.That(ClusterMeshUrpBridge.ShouldExposeDepthNormals(data), Is.True);
+            Assert.That(ClusterMeshUrpBridge.IsForwardFeatureActive(data), Is.True);
             ClusterMeshUrpBridge.RendererDataOverrideForTests = data;
             Assert.That(ClusterMeshUrpBridge.ShouldExposeDepthNormals(), Is.True);
             for (int i = 0; i < data.rendererFeatures.Count; i++)
@@ -97,21 +103,26 @@ namespace ClusterMesh.Tests
                 if (data.rendererFeatures[i] is ClusterMeshUrpFeature feature)
                     feature.SetActive(false);
             }
-            Assert.That(ClusterMeshUrpBridge.ShouldExposeDepthNormals(data), Is.False);
+            Assert.That(ClusterMeshUrpBridge.IsForwardFeatureActive(data), Is.False);
             Assert.That(ClusterMeshUrpBridge.ShouldExposeDepthNormals(), Is.False);
             string staticEditor = System.IO.File.ReadAllText(
                 "Assets/ClusterMesh/Editor/ClusterMeshRendererEditor.cs");
             string skinnedEditor = System.IO.File.ReadAllText(
                 "Assets/ClusterMesh/Editor/ClusterSkinnedMeshRendererEditor.cs");
-            Assert.That(staticEditor, Does.Contain("ShouldExposeDepthNormals"));
-            Assert.That(skinnedEditor, Does.Contain("ShouldExposeDepthNormals"));
-            Assert.That(
-                System.IO.File.ReadAllText("Assets/ClusterMesh/Runtime/ClusterMeshRenderer.cs"),
-                Does.Match(@"HideInInspector[\s\S]{0,200}enableDepthNormals"));
-            Assert.That(
-                System.IO.File.ReadAllText(
-                    "Assets/ClusterMesh/Runtime/ClusterSkinnedMeshRenderer.cs"),
-                Does.Match(@"HideInInspector[\s\S]{0,200}enableDepthNormals"));
+            Assert.That(staticEditor, Does.Contain("Radiant Forward 独有"));
+            Assert.That(skinnedEditor, Does.Contain("Radiant Forward 独有"));
+            Assert.That(staticEditor, Does.Contain("Organic Light"));
+            Assert.That(skinnedEditor, Does.Contain("Organic Light"));
+            string staticRenderer = System.IO.File.ReadAllText(
+                "Assets/ClusterMesh/Runtime/ClusterMeshRenderer.cs");
+            string skinnedRenderer = System.IO.File.ReadAllText(
+                "Assets/ClusterMesh/Runtime/ClusterSkinnedMeshRenderer.cs");
+            Assert.That(staticRenderer, Does.Match(@"HideInInspector[\s\S]{0,200}enableDepthNormals"));
+            Assert.That(skinnedRenderer, Does.Match(@"HideInInspector[\s\S]{0,200}enableDepthNormals"));
+            Assert.That(staticRenderer, Does.Contain("Radiant Forward 独有"));
+            Assert.That(staticRenderer, Does.Contain("Radiant Temporal / URP TAA 公用"));
+            Assert.That(skinnedRenderer, Does.Contain("Radiant Forward 独有"));
+            Assert.That(skinnedRenderer, Does.Contain("Radiant Temporal / URP TAA 公用"));
         }
 
         [Test]
@@ -362,6 +373,9 @@ namespace ClusterMesh.Tests
             string window = System.IO.File.ReadAllText(
                 "Assets/ClusterMesh/Editor/ClusterMeshSettingsWindow.cs");
             Assert.That(window, Does.Contain("Tools/ClusterMesh/通用设置"));
+            Assert.That(window, Does.Contain("Radiant 公用"));
+            Assert.That(window, Does.Contain("Radiant Forward 独有"));
+            Assert.That(window, Does.Contain("Radiant 延迟独有"));
             Assert.That(window, Does.Contain("仅流式资产"));
             Assert.That(window, Does.Contain("没勾就烤出来的资产"));
             Assert.That(window, Does.Contain("完全无效"));
