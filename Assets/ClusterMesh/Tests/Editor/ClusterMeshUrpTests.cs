@@ -267,7 +267,7 @@ namespace ClusterMesh.Tests
             string menu = System.IO.File.ReadAllText(
                 "Assets/ClusterMesh/Editor/ClusterMeshUrpFeatureMenu.cs");
             Assert.That(menu, Does.Contain("Tools/ClusterMesh/Setup Radiant URP 延迟渲染"));
-            Assert.That(menu, Does.Contain("Tools/ClusterMesh/Setup Radiant GI Forward"));
+            Assert.That(menu, Does.Contain("Tools/ClusterMesh/Setup Radiant URP Forward"));
             Assert.That(menu, Does.Contain("没有安装 Radiant"));
             Assert.That(feature, Does.Contain("HasDepthNormals"));
             Assert.That(feature, Does.Contain("DepthNormals"));

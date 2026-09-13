@@ -49,21 +49,21 @@ namespace ClusterMesh
                 " Volume 里仍需 Radiant Global Illumination 才会出 GI。");
         }
 
-        [MenuItem("Tools/ClusterMesh/Setup Radiant GI Forward", priority = 3)]
+        [MenuItem("Tools/ClusterMesh/Setup Radiant URP Forward", priority = 3)]
         public static void SetupRadiantGiForward()
         {
             if (!IsRadiantInstalled())
             {
                 EditorUtility.DisplayDialog(
                     "ClusterMesh",
-                    "没有安装 Radiant。请先把 Radiant GI 导入项目后再执行 Setup Radiant GI Forward。",
+                    "没有安装 Radiant。请先把 Radiant GI 导入项目后再执行 Setup Radiant URP Forward。",
                     "确定");
-                Debug.LogWarning("ClusterMesh: 没有安装 Radiant，已取消 Setup Radiant GI Forward。");
+                Debug.LogWarning("ClusterMesh: 没有安装 Radiant，已取消 Setup Radiant URP Forward。");
                 return;
             }
 
             SetupUrpForwardCore(data => EnableRadiantOn(data, RadiantPathForward),
-                "ClusterMesh: Radiant GI Forward 已配置。管线资产 {0} 个，Universal Renderer {1} 个，已启用 ClusterMesh URP Feature 和 RadiantRenderFeature（Forward）。" +
+                "ClusterMesh: Radiant URP Forward 已配置。管线资产 {0} 个，Universal Renderer {1} 个，已启用 ClusterMesh URP Feature 和 RadiantRenderFeature（Forward）。" +
                 " Volume 里仍需 Radiant Global Illumination 才会出 GI。");
         }
 
