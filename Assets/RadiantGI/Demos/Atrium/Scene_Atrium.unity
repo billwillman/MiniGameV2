@@ -831,6 +831,7 @@ MonoBehaviour:
   enableCameraCull: 1
   enableConeCull: 1
   enableMotionVectors: 1
+  enableDepthNormals: 1
   enableCpuObjectCull: 1
   enableLightProbes: 1
   enableAmbientSky: 1
@@ -2490,6 +2491,7 @@ MonoBehaviour:
   enableCameraCull: 1
   enableConeCull: 1
   enableMotionVectors: 1
+  enableDepthNormals: 1
   enableCpuObjectCull: 1
   enableLightProbes: 1
   enableAmbientSky: 1
@@ -2639,7 +2641,7 @@ Camera:
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 1
-  m_BackGroundColor: {r: 0, g: 0, b: 0, a: 0}
+  m_BackGroundColor: {r: 0, g: 0, b: 0, a: 1}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0

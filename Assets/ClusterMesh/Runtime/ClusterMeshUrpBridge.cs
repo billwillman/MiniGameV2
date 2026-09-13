@@ -36,6 +36,15 @@ namespace ClusterMesh
             .GetField("m_MotionVectorColor", BindingFlags.Instance | BindingFlags.NonPublic);
         static readonly FieldInfo MotionVectorDepthField = typeof(UniversalRenderer)
             .GetField("m_MotionVectorDepth", BindingFlags.Instance | BindingFlags.NonPublic);
+        static readonly FieldInfo CameraNormalsTextureField = FindStaticField(
+            typeof(UniversalRenderer), "m_NormalsTexture", "m_CameraNormalsTexture");
+        static readonly FieldInfo CameraDepthCopyField = FindStaticField(
+            typeof(UniversalRenderer), "m_DepthTexture", "m_CameraDepthTexture");
+        static readonly FieldInfo DepthNormalPrepassField = FindStaticField(
+            typeof(UniversalRenderer), "m_DepthNormalPrepass");
+        static PropertyInfo _depthNormalPassNormalHandle;
+        static PropertyInfo _depthNormalPassDepthHandle;
+        static bool _depthNormalPassMembersResolved;
         static System.Type _deferredLightsType;
         static PropertyInfo _gbufferAttachmentsProperty;
         static FieldInfo _gbufferAttachmentsField;
@@ -58,7 +67,17 @@ namespace ClusterMesh
         public static readonly RenderPassEvent DepthNormalsPassEvent =
             (RenderPassEvent)((int)RenderPassEvent.AfterRenderingPrePasses + 1);
 
-        static readonly int CameraNormalsTextureId = Shader.PropertyToID("_CameraNormalsTexture");
+        static FieldInfo FindStaticField(System.Type type, params string[] names)
+        {
+            const BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+            for (int i = 0; i < names.Length; i++)
+            {
+                FieldInfo field = type.GetField(names[i], flags);
+                if (field != null)
+                    return field;
+            }
+            return null;
+        }
 
         public static ClusterMeshMotionVectorSlot CurrentMotionVectorSlot =>
             ClusterMeshSettings.CurrentMotionVectorSlot;
@@ -228,18 +247,98 @@ namespace ClusterMesh
             return width > 0 && height > 0;
         }
 
+        public static bool TryGetDepthNormalsTargets(
+            ScriptableRenderer renderer,
+            out RTHandle normals,
+            out RTHandle depth)
+        {
+            normals = null;
+            depth = null;
+            if (!(renderer is UniversalRenderer))
+                return false;
+            try
+            {
+                // Forward DepthNormalPrepass: Setup(m_DepthTexture, m_NormalsTexture).
+                // Read the pass first so we get the pair URP assigned this frame,
+                // then the renderer fields. Never pair normals with cameraDepthTarget.
+                if (TryGetOfficialDepthNormalPassTargets(renderer, out normals, out depth))
+                    return true;
+                if (CameraNormalsTextureField == null || CameraDepthCopyField == null)
+                    return false;
+                normals = CameraNormalsTextureField.GetValue(renderer) as RTHandle;
+                depth = CameraDepthCopyField.GetValue(renderer) as RTHandle;
+                return normals != null && depth != null;
+            }
+            catch
+            {
+                normals = null;
+                depth = null;
+                return false;
+            }
+        }
+
+        static bool TryGetOfficialDepthNormalPassTargets(
+            ScriptableRenderer renderer,
+            out RTHandle normals,
+            out RTHandle depth)
+        {
+            normals = null;
+            depth = null;
+            if (DepthNormalPrepassField == null)
+                return false;
+            object prepass = DepthNormalPrepassField.GetValue(renderer);
+            if (prepass == null)
+                return false;
+            ResolveDepthNormalPassMembers(prepass.GetType());
+            if (_depthNormalPassNormalHandle == null || _depthNormalPassDepthHandle == null)
+                return false;
+            normals = _depthNormalPassNormalHandle.GetValue(prepass) as RTHandle;
+            depth = _depthNormalPassDepthHandle.GetValue(prepass) as RTHandle;
+            return normals != null && depth != null;
+        }
+
+        static void ResolveDepthNormalPassMembers(System.Type passType)
+        {
+            if (_depthNormalPassMembersResolved)
+                return;
+            _depthNormalPassMembersResolved = true;
+            const BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+            _depthNormalPassNormalHandle = passType.GetProperty("normalHandle", flags);
+            _depthNormalPassDepthHandle = passType.GetProperty("depthHandle", flags);
+        }
+
+        public static bool AreCompatibleDepthNormalsTargets(RTHandle normals, RTHandle depth)
+        {
+            if (!AreCompatibleDeferredTargets(new[] { normals }, depth))
+                return false;
+            return HandleSampleCount(normals) == HandleSampleCount(depth);
+        }
+
+        public static bool AreCompatibleDepthNormalsTextures(Texture color, Texture depth)
+        {
+            if (color == null || depth == null || color.width <= 0 || depth.width <= 0)
+                return false;
+            if (color.width != depth.width || color.height != depth.height)
+                return false;
+            int colorSamples = color is RenderTexture colorRt ? Mathf.Max(1, colorRt.antiAliasing) : 1;
+            int depthSamples = depth is RenderTexture depthRt ? Mathf.Max(1, depthRt.antiAliasing) : 1;
+            return colorSamples == depthSamples;
+        }
+
         public static bool TryBindDepthNormalsTargets(CommandBuffer cmd, ScriptableRenderer renderer)
         {
-            if (cmd == null)
+            if (cmd == null ||
+                !TryGetDepthNormalsTargets(renderer, out RTHandle normals, out RTHandle depth) ||
+                !AreCompatibleDepthNormalsTargets(normals, depth))
                 return false;
-            Texture normals = Shader.GetGlobalTexture(CameraNormalsTextureId);
-            if (normals == null)
-                return false;
-            RenderTargetIdentifier depth = renderer != null
-                ? renderer.cameraDepthTarget
-                : (RenderTargetIdentifier)BuiltinRenderTextureType.CameraTarget;
             cmd.SetRenderTarget(normals, depth);
             return true;
+        }
+
+        static int HandleSampleCount(RTHandle handle)
+        {
+            RenderTexture rt = handle != null ? handle.rt : null;
+            return rt != null ? Mathf.Max(1, rt.antiAliasing) : 1;
         }
 
         public static bool TryGetMotionVectorTargets(
@@ -326,6 +425,30 @@ namespace ClusterMesh
             }
 
             return false;
+        }
+
+        public static bool ShouldExposeDepthNormals()
+        {
+            if (RendererDataOverrideForTests != null)
+                return ShouldExposeDepthNormals(RendererDataOverrideForTests);
+            return TryGetDefaultRendererData(out ScriptableRendererData data) &&
+                ShouldExposeDepthNormals(data);
+        }
+
+        public static bool ShouldExposeDepthNormals(ScriptableRendererData data)
+        {
+            if (!HasActiveFeature(data))
+                return false;
+            var rendererData = data as UniversalRendererData;
+            if (rendererData == null)
+                return false;
+            return !IsDeferredRenderingMode(rendererData.renderingMode);
+        }
+
+        static bool IsDeferredRenderingMode(RenderingMode mode)
+        {
+            string name = mode.ToString();
+            return name == "Deferred" || name == "DeferredPlus";
         }
 
         public static bool ShouldSkipLegacyFlush(Camera camera)

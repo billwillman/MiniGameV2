@@ -28,6 +28,9 @@ namespace ClusterMesh
                     DrawLodErrorThreshold(prop);
                 else
                     EditorGUILayout.PropertyField(prop, true);
+
+                if (prop.propertyPath == "enableMotionVectors")
+                    ClusterMeshDepthNormalsInspector.DrawIfForward(serializedObject);
             }
 
             serializedObject.ApplyModifiedProperties();
@@ -53,6 +56,18 @@ namespace ClusterMesh
                 if (preset >= 0)
                     prop.floatValue = ClusterMeshLodQuality.ValueFromPopupIndex(preset);
             }
+        }
+    }
+
+    static class ClusterMeshDepthNormalsInspector
+    {
+        public static void DrawIfForward(SerializedObject so)
+        {
+            if (so == null || !ClusterMeshUrpBridge.ShouldExposeDepthNormals())
+                return;
+            SerializedProperty prop = so.FindProperty("enableDepthNormals");
+            if (prop != null)
+                EditorGUILayout.PropertyField(prop, true);
         }
     }
 }

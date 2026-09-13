@@ -76,6 +76,45 @@ namespace ClusterMesh.Tests
         }
 
         [Test]
+        public void ShouldExposeDepthNormals_OnlyWhenForwardFeatureActive()
+        {
+            Assert.That(ClusterMeshUrpBridge.ShouldExposeDepthNormals(null), Is.False);
+            var data = Track(ScriptableObject.CreateInstance<UniversalRendererData>());
+            data.renderingMode = RenderingMode.Forward;
+            Assert.That(ClusterMeshUrpBridge.ShouldExposeDepthNormals(data), Is.False);
+            ClusterMeshUrpFeatureMenu.EnableOn(data);
+            Assert.That(ClusterMeshUrpBridge.ShouldExposeDepthNormals(data), Is.True);
+            data.renderingMode = RenderingMode.ForwardPlus;
+            Assert.That(ClusterMeshUrpBridge.ShouldExposeDepthNormals(data), Is.True);
+            ClusterMeshUrpFeatureMenu.ConfigureDeferredOn(data);
+            Assert.That(ClusterMeshUrpBridge.ShouldExposeDepthNormals(data), Is.False);
+            ClusterMeshUrpFeatureMenu.ConfigureForwardOn(data);
+            Assert.That(ClusterMeshUrpBridge.ShouldExposeDepthNormals(data), Is.True);
+            ClusterMeshUrpBridge.RendererDataOverrideForTests = data;
+            Assert.That(ClusterMeshUrpBridge.ShouldExposeDepthNormals(), Is.True);
+            for (int i = 0; i < data.rendererFeatures.Count; i++)
+            {
+                if (data.rendererFeatures[i] is ClusterMeshUrpFeature feature)
+                    feature.SetActive(false);
+            }
+            Assert.That(ClusterMeshUrpBridge.ShouldExposeDepthNormals(data), Is.False);
+            Assert.That(ClusterMeshUrpBridge.ShouldExposeDepthNormals(), Is.False);
+            string staticEditor = System.IO.File.ReadAllText(
+                "Assets/ClusterMesh/Editor/ClusterMeshRendererEditor.cs");
+            string skinnedEditor = System.IO.File.ReadAllText(
+                "Assets/ClusterMesh/Editor/ClusterSkinnedMeshRendererEditor.cs");
+            Assert.That(staticEditor, Does.Contain("ShouldExposeDepthNormals"));
+            Assert.That(skinnedEditor, Does.Contain("ShouldExposeDepthNormals"));
+            Assert.That(
+                System.IO.File.ReadAllText("Assets/ClusterMesh/Runtime/ClusterMeshRenderer.cs"),
+                Does.Match(@"HideInInspector[\s\S]{0,200}enableDepthNormals"));
+            Assert.That(
+                System.IO.File.ReadAllText(
+                    "Assets/ClusterMesh/Runtime/ClusterSkinnedMeshRenderer.cs"),
+                Does.Match(@"HideInInspector[\s\S]{0,200}enableDepthNormals"));
+        }
+
+        [Test]
         public void AreCompatibleDeferredTargets_MismatchedSizes_IsFalse()
         {
             RTHandle color = AllocHandle(987, 354, false);
@@ -106,6 +145,68 @@ namespace ClusterMesh.Tests
             {
                 ReleaseHandle(color);
                 ReleaseHandle(depth);
+            }
+        }
+
+        [Test]
+        public void DepthNormalsTargets_ResolveOfficialUrpPairNotFixedSizes()
+        {
+            const BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+            Assert.That(typeof(UniversalRenderer).GetField("m_NormalsTexture", flags), Is.Not.Null);
+            Assert.That(typeof(UniversalRenderer).GetField("m_DepthTexture", flags), Is.Not.Null);
+            Assert.That(typeof(UniversalRenderer).GetField("m_DepthNormalPrepass", flags), Is.Not.Null);
+            System.Type passType = typeof(UnityEngine.Rendering.Universal.Internal.DepthNormalOnlyPass);
+            Assert.That(passType.GetProperty("normalHandle", flags), Is.Not.Null);
+            Assert.That(passType.GetProperty("depthHandle", flags), Is.Not.Null);
+            Assert.That(
+                ClusterMeshUrpBridge.TryGetDepthNormalsTargets(null, out _, out _),
+                Is.False);
+            Assert.That(ClusterMeshUrpBridge.TryBindDepthNormalsTargets(null, null), Is.False);
+
+            RTHandle matchColor = AllocHandle(32, 16, false);
+            RTHandle matchDepth = AllocHandle(32, 16, true);
+            RTHandle otherSize = AllocHandle(48, 24, true);
+            RenderTexture msaa = new RenderTexture(32, 16, 24)
+            {
+                name = "CMTestMsaaDepth",
+                antiAliasing = 4
+            };
+            msaa.Create();
+            try
+            {
+                Assert.That(
+                    ClusterMeshUrpBridge.AreCompatibleDepthNormalsTargets(matchColor, matchDepth),
+                    Is.True);
+                Assert.That(
+                    ClusterMeshUrpBridge.AreCompatibleDepthNormalsTargets(matchColor, otherSize),
+                    Is.False);
+                Assert.That(
+                    ClusterMeshUrpBridge.AreCompatibleDepthNormalsTextures(matchColor.rt, otherSize.rt),
+                    Is.False);
+                Assert.That(
+                    ClusterMeshUrpBridge.AreCompatibleDepthNormalsTextures(matchColor.rt, msaa),
+                    Is.False);
+                Assert.That(
+                    ClusterMeshUrpBridge.AreCompatibleDepthNormalsTextures(matchColor.rt, matchDepth.rt),
+                    Is.True);
+                string bridge = System.IO.File.ReadAllText(
+                    "Assets/ClusterMesh/Runtime/ClusterMeshUrpBridge.cs");
+                string feature = System.IO.File.ReadAllText(
+                    "Assets/ClusterMesh/Runtime/ClusterMeshUrpFeature.cs");
+                Assert.That(bridge, Does.Contain("m_NormalsTexture"));
+                Assert.That(bridge, Does.Contain("m_DepthTexture"));
+                Assert.That(bridge, Does.Contain("m_DepthNormalPrepass"));
+                Assert.That(bridge, Does.Not.Contain("cameraDepthTarget"));
+                Assert.That(feature, Does.Contain("TryGetDepthNormalsTargets"));
+                Assert.That(feature, Does.Contain("AreCompatibleDepthNormalsTargets"));
+                Assert.That(feature, Does.Not.Contain("cameraDepthTarget"));
+            }
+            finally
+            {
+                ReleaseHandle(matchColor);
+                ReleaseHandle(matchDepth);
+                ReleaseHandle(otherSize);
+                UnityEngine.Object.DestroyImmediate(msaa);
             }
         }
 

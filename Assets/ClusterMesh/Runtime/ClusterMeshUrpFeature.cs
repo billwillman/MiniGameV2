@@ -99,6 +99,7 @@ namespace ClusterMesh
         ScriptableRenderer _renderer;
         bool _deferredTargetsReady;
         bool _motionTargetsReady;
+        bool _depthNormalsTargetsReady;
         bool _loggedDeferredTargetFailure;
         static readonly int MotionVectorParamsId = Shader.PropertyToID("unity_MotionVectorsParams");
 
@@ -117,6 +118,7 @@ namespace ClusterMesh
             _renderer = renderer;
             _deferredTargetsReady = false;
             _motionTargetsReady = false;
+            _depthNormalsTargetsReady = false;
         }
 
         public override void Configure(CommandBuffer cmd, RenderTextureDescriptor cameraTextureDescriptor)
@@ -153,6 +155,18 @@ namespace ClusterMesh
                 if (_motionTargetsReady)
                 {
                     ConfigureTarget(color, depth);
+                    ConfigureClear(ClearFlag.None, Color.black);
+                }
+            }
+            else if (_phase == ClusterMeshUrpPhase.DepthNormals)
+            {
+                _depthNormalsTargetsReady =
+                    ClusterMeshUrpBridge.TryGetDepthNormalsTargets(
+                        _renderer, out RTHandle normals, out RTHandle depth) &&
+                    ClusterMeshUrpBridge.AreCompatibleDepthNormalsTargets(normals, depth);
+                if (_depthNormalsTargetsReady)
+                {
+                    ConfigureTarget(normals, depth);
                     ConfigureClear(ClearFlag.None, Color.black);
                 }
             }
@@ -193,8 +207,7 @@ namespace ClusterMesh
                 ClusterMeshSceneBatcher.SubmitUrpMotionVectors(camera, cmd);
                 ClusterSkinnedMeshSceneBatcher.SubmitUrpMotionVectors(camera, cmd);
             }
-            else if (_phase == ClusterMeshUrpPhase.DepthNormals &&
-                ClusterMeshUrpBridge.TryBindDepthNormalsTargets(cmd, _renderer))
+            else if (_phase == ClusterMeshUrpPhase.DepthNormals && _depthNormalsTargetsReady)
             {
                 ClusterMeshSceneBatcher.SubmitUrpDepthNormals(camera, cmd);
                 ClusterSkinnedMeshSceneBatcher.SubmitUrpDepthNormals(camera, cmd);

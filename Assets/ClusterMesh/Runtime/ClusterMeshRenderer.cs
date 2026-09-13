@@ -18,8 +18,9 @@ namespace ClusterMesh
         public bool enableConeCull = true;
         [Tooltip("Write this object's transform motion into URP's Motion Vector texture. Disabled by default to avoid history and draw-pass cost.")]
         public bool enableMotionVectors;
-        [InspectorName("Open Shader DepthNormals LightMode")]
-        [Tooltip("Forward 写出 URP DepthNormals（_CameraNormalsTexture）。Radiant GI Forward 采 ClusterMesh 法线需要开。默认关，避免多一次预通道。")]
+        [HideInInspector]
+        [InspectorName("Enable DepthNormals")]
+        [Tooltip("仅 ClusterMesh Setup URP Forward 时显示。写出 URP DepthNormals（_CameraNormalsTexture），Radiant GI Forward 采 ClusterMesh 法线需要开。默认关。")]
         public bool enableDepthNormals;
         [Tooltip("CPU object cull before dispatch. Off = this object is always submitted.")]
         public bool enableCpuObjectCull = true;

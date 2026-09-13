@@ -36,6 +36,9 @@ namespace ClusterMesh
                     DrawClipIndex(prop, renderer.asset);
                 else
                     EditorGUILayout.PropertyField(prop, true);
+
+                if (prop.propertyPath == "enableMotionVectors")
+                    ClusterMeshDepthNormalsInspector.DrawIfForward(serializedObject);
             }
 
             DrawAnimationGroup(renderer, evaluation, parallelPrefix);
