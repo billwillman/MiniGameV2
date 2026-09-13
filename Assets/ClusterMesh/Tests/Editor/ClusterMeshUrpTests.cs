@@ -11,7 +11,7 @@ namespace ClusterMesh.Tests
 {
     public sealed class ClusterMeshUrpTests
     {
-        readonly List<Object> _trash = new List<Object>();
+        readonly List<UnityEngine.Object> _trash = new List<UnityEngine.Object>();
 
         [TearDown]
         public void TearDown()
@@ -25,7 +25,7 @@ namespace ClusterMesh.Tests
             for (int i = 0; i < _trash.Count; i++)
             {
                 if (_trash[i] != null)
-                    Object.DestroyImmediate(_trash[i]);
+                    UnityEngine.Object.DestroyImmediate(_trash[i]);
             }
 
             _trash.Clear();
@@ -438,7 +438,7 @@ namespace ClusterMesh.Tests
             RenderTexture rt = handle.rt;
             RTHandles.Release(handle);
             if (rt != null)
-                Object.DestroyImmediate(rt);
+                UnityEngine.Object.DestroyImmediate(rt);
         }
 
         static int FeatureCount(ScriptableRendererData data)
@@ -488,7 +488,7 @@ namespace ClusterMesh.Tests
             return -1;
         }
 
-        T Track<T>(T obj) where T : Object
+        T Track<T>(T obj) where T : UnityEngine.Object
         {
             _trash.Add(obj);
             return obj;
