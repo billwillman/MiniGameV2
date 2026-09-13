@@ -109,20 +109,28 @@ namespace ClusterMesh.Tests
                 "Assets/ClusterMesh/Editor/ClusterMeshRendererEditor.cs");
             string skinnedEditor = System.IO.File.ReadAllText(
                 "Assets/ClusterMesh/Editor/ClusterSkinnedMeshRendererEditor.cs");
-            Assert.That(staticEditor, Does.Contain("Radiant Forward 独有"));
-            Assert.That(skinnedEditor, Does.Contain("Radiant Forward 独有"));
+            Assert.That(staticEditor, Does.Contain("Radiant GI 公共"));
+            Assert.That(staticEditor, Does.Contain("Radiant GI Forward"));
+            Assert.That(staticEditor, Does.Contain("Radiant GI 延迟"));
+            Assert.That(skinnedEditor, Does.Contain("Radiant GI 公共"));
+            Assert.That(skinnedEditor, Does.Contain("Radiant GI Forward"));
+            Assert.That(skinnedEditor, Does.Contain("Radiant GI 延迟"));
             Assert.That(staticEditor, Does.Contain("Organic Light"));
             Assert.That(skinnedEditor, Does.Contain("Organic Light"));
             string staticRenderer = System.IO.File.ReadAllText(
                 "Assets/ClusterMesh/Runtime/ClusterMeshRenderer.cs");
             string skinnedRenderer = System.IO.File.ReadAllText(
                 "Assets/ClusterMesh/Runtime/ClusterSkinnedMeshRenderer.cs");
-            Assert.That(staticRenderer, Does.Match(@"HideInInspector[\s\S]{0,200}enableDepthNormals"));
-            Assert.That(skinnedRenderer, Does.Match(@"HideInInspector[\s\S]{0,200}enableDepthNormals"));
-            Assert.That(staticRenderer, Does.Contain("Radiant Forward 独有"));
-            Assert.That(staticRenderer, Does.Contain("Radiant Temporal / URP TAA 公用"));
-            Assert.That(skinnedRenderer, Does.Contain("Radiant Forward 独有"));
-            Assert.That(skinnedRenderer, Does.Contain("Radiant Temporal / URP TAA 公用"));
+            Assert.That(staticRenderer, Does.Contain("[HideInInspector]"));
+            Assert.That(staticRenderer, Does.Contain("public bool enableMotionVectors"));
+            Assert.That(staticRenderer, Does.Contain("[InspectorName(\"Enable DepthNormals\")]"));
+            Assert.That(skinnedRenderer, Does.Contain("[HideInInspector]"));
+            Assert.That(skinnedRenderer, Does.Contain("public bool enableMotionVectors"));
+            Assert.That(skinnedRenderer, Does.Contain("[InspectorName(\"Enable DepthNormals\")]"));
+            Assert.That(staticRenderer, Does.Contain("Radiant GI 公共"));
+            Assert.That(staticRenderer, Does.Contain("Radiant GI Forward 相关"));
+            Assert.That(skinnedRenderer, Does.Contain("Radiant GI 公共"));
+            Assert.That(skinnedRenderer, Does.Contain("Radiant GI Forward 相关"));
         }
 
         [Test]
@@ -373,9 +381,9 @@ namespace ClusterMesh.Tests
             string window = System.IO.File.ReadAllText(
                 "Assets/ClusterMesh/Editor/ClusterMeshSettingsWindow.cs");
             Assert.That(window, Does.Contain("Tools/ClusterMesh/通用设置"));
-            Assert.That(window, Does.Contain("Radiant 公用"));
-            Assert.That(window, Does.Contain("Radiant Forward 独有"));
-            Assert.That(window, Does.Contain("Radiant 延迟独有"));
+            Assert.That(window, Does.Contain("Radiant GI 公共"));
+            Assert.That(window, Does.Contain("Radiant GI Forward"));
+            Assert.That(window, Does.Contain("Radiant GI 延迟"));
             Assert.That(window, Does.Contain("仅流式资产"));
             Assert.That(window, Does.Contain("没勾就烤出来的资产"));
             Assert.That(window, Does.Contain("完全无效"));

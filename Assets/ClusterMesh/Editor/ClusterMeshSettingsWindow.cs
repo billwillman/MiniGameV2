@@ -50,9 +50,9 @@ namespace ClusterMesh
 
             EditorGUILayout.HelpBox(
                 "项目级设置。管线时机对所有 ClusterMesh / Skinned ClusterMesh 生效，不要写在单个 Renderer 上。\n" +
-                "Radiant 公用：Motion Vector 时机（本页）+ 物体 enableMotionVectors。Forward / 延迟都能用。\n" +
-                "Radiant Forward 独有：物体 Enable DepthNormals（写 _CameraNormalsTexture）。延迟不显示、不生效。\n" +
-                "Radiant 延迟独有：Volume 上的 Organic Light。ClusterMesh 物体上没有对应开关。\n" +
+                "Radiant GI 公共：Motion Vector 时机（本页）+ 物体 enableMotionVectors。Forward / 延迟都能用。\n" +
+                "Radiant GI Forward：物体 Enable DepthNormals（写 _CameraNormalsTexture）。延迟组不显示此开关。\n" +
+                "Radiant GI 延迟：Volume 上的 Organic Light。ClusterMesh 物体上没有对应开关。\n" +
                 "物体是否写出 Motion Vector 仍由各 Renderer 的 enableMotionVectors 决定；这里只决定写入时机。\n" +
                 "本工程 Radiant GI 在 AfterRenderingSkybox + 2 读 _MotionVectorTexture，URP TAA 用同一张图。" +
                 "必须先于它写入，Temporal 才认 ClusterMesh 在动。推荐默认 After Skybox + 1。",

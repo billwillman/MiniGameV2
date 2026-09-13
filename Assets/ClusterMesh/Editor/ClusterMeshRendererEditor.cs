@@ -29,8 +29,8 @@ namespace ClusterMesh
                 else
                     EditorGUILayout.PropertyField(prop, true);
 
-                if (prop.propertyPath == "enableMotionVectors")
-                    ClusterMeshRadiantPathInspector.DrawAfterMotionVectors(serializedObject);
+                if (prop.propertyPath == "enableConeCull")
+                    ClusterMeshRadiantPathInspector.DrawGroups(serializedObject);
             }
 
             serializedObject.ApplyModifiedProperties();
@@ -61,26 +61,34 @@ namespace ClusterMesh
 
     static class ClusterMeshRadiantPathInspector
     {
-        public static void DrawAfterMotionVectors(SerializedObject so)
+        public static void DrawGroups(SerializedObject so)
         {
             if (so == null)
                 return;
+
+            EditorGUILayout.Space(4);
+            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+            EditorGUILayout.LabelField("Radiant GI 公共", EditorStyles.boldLabel);
+            SerializedProperty motion = so.FindProperty("enableMotionVectors");
+            if (motion != null)
+                EditorGUILayout.PropertyField(motion, true);
+
+            EditorGUILayout.Space(2);
             if (ClusterMeshUrpBridge.IsForwardFeatureActive())
             {
-                EditorGUILayout.LabelField("Radiant Forward 独有", EditorStyles.miniBoldLabel);
+                EditorGUILayout.LabelField("Radiant GI Forward", EditorStyles.boldLabel);
                 SerializedProperty depthNormals = so.FindProperty("enableDepthNormals");
                 if (depthNormals != null)
                     EditorGUILayout.PropertyField(depthNormals, true);
-                return;
             }
-
-            if (ClusterMeshUrpBridge.IsDeferredFeatureActive())
+            else if (ClusterMeshUrpBridge.IsDeferredFeatureActive())
             {
+                EditorGUILayout.LabelField("Radiant GI 延迟", EditorStyles.boldLabel);
                 EditorGUILayout.HelpBox(
-                    "当前 URP 延迟：Radiant 读 GBuffer 法线，不显示 DepthNormals。" +
-                    "Organic Light 只在 Radiant Volume 上，且仅延迟有效。Motion Vector 是公用开关。",
+                    "延迟读 GBuffer 法线，无 DepthNormals。Organic Light 在 Radiant Volume 上。",
                     MessageType.None);
             }
+            EditorGUILayout.EndVertical();
         }
     }
 }

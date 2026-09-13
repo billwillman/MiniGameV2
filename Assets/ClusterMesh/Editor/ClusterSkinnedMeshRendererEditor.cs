@@ -37,8 +37,8 @@ namespace ClusterMesh
                 else
                     EditorGUILayout.PropertyField(prop, true);
 
-                if (prop.propertyPath == "enableMotionVectors")
-                    ClusterMeshRadiantPathInspector.DrawAfterMotionVectors(serializedObject);
+                if (prop.propertyPath == "enableConeCull")
+                    ClusterMeshRadiantPathInspector.DrawGroups(serializedObject);
             }
 
             DrawAnimationGroup(renderer, evaluation, parallelPrefix);

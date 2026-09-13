@@ -15,11 +15,12 @@ namespace ClusterMesh
         public bool enableCameraCull = true;
         [Tooltip("Only used when the baked animation cone for this cluster is conservative.")]
         public bool enableConeCull = true;
-        [Tooltip("Radiant Temporal / URP TAA 公用。Forward 和延迟都能采这张速度图。默认关。")]
+        [HideInInspector]
+        [Tooltip("Radiant GI 公共。Radiant Temporal / URP TAA 都能采这张速度图。默认关。")]
         public bool enableMotionVectors;
         [HideInInspector]
         [InspectorName("Enable DepthNormals")]
-        [Tooltip("Radiant Forward 独有。写出 _CameraNormalsTexture。延迟读 GBuffer 法线，此开关无效。默认关。")]
+        [Tooltip("Radiant GI Forward 相关。写出 _CameraNormalsTexture。延迟读 GBuffer 法线，此开关无效。默认关。")]
         public bool enableDepthNormals;
         public bool enableCpuObjectCull = true;
         [InspectorName("探针")]
