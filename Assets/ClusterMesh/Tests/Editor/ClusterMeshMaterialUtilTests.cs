@@ -53,6 +53,7 @@ namespace ClusterMesh.Tests
             Assert.That(ClusterMeshMaterialUtil.CanSubmitShaderPass(material, 2), Is.False);
             Assert.That(ClusterMeshMaterialUtil.CanSubmitShaderPass(material, 3), Is.False);
             Assert.That(ClusterMeshMaterialUtil.CanSubmitShaderPass(material, 4), Is.False);
+            Assert.That(ClusterMeshMaterialUtil.CanSubmitShaderPass(material, 5), Is.False);
             Object.DestroyImmediate(material);
         }
 
@@ -66,6 +67,7 @@ namespace ClusterMesh.Tests
             Assert.That(ClusterMeshMaterialUtil.CanSubmitShaderPass(material, 2), Is.True);
             Assert.That(ClusterMeshMaterialUtil.CanSubmitShaderPass(material, 3), Is.True);
             Assert.That(ClusterMeshMaterialUtil.CanSubmitShaderPass(material, 4), Is.True);
+            Assert.That(ClusterMeshMaterialUtil.CanSubmitShaderPass(material, 5), Is.True);
             Object.DestroyImmediate(material);
         }
 

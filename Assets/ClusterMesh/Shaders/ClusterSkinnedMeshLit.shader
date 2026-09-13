@@ -78,6 +78,19 @@ Shader "ClusterMesh/SkinnedLit"
             #define CLUSTERMESH_MOTION_VECTOR_PASS 1
             #include "ClusterSkinnedMeshLit.hlsl"
             ENDHLSL }
+        Pass { Name "DepthNormals" Tags { "LightMode"="DepthNormals" }
+            ZWrite On ZTest LEqual
+            HLSLPROGRAM
+            #pragma editor_sync_compilation
+            #pragma target 4.5
+            #pragma vertex ClusterSkinnedVert
+            #pragma fragment ClusterSkinnedDepthNormalsFrag
+            #pragma multi_compile_instancing
+            #pragma instancing_options procedural:ClusterSkinnedSetup
+            #pragma multi_compile_fragment _ _GBUFFER_NORMALS_OCT
+            #define CLUSTERMESH_DEPTH_NORMALS_PASS 1
+            #include "ClusterSkinnedMeshLit.hlsl"
+            ENDHLSL }
     }
     FallBack Off
 }

@@ -55,6 +55,11 @@ namespace ClusterMesh
         public static readonly RenderPassEvent MotionVectorPassEvent =
             (RenderPassEvent)((int)RenderPassEvent.AfterRenderingSkybox + 1);
 
+        public static readonly RenderPassEvent DepthNormalsPassEvent =
+            (RenderPassEvent)((int)RenderPassEvent.AfterRenderingPrePasses + 1);
+
+        static readonly int CameraNormalsTextureId = Shader.PropertyToID("_CameraNormalsTexture");
+
         public static ClusterMeshMotionVectorSlot CurrentMotionVectorSlot =>
             ClusterMeshSettings.CurrentMotionVectorSlot;
 
@@ -221,6 +226,20 @@ namespace ClusterMesh
             width = scaled.x;
             height = scaled.y;
             return width > 0 && height > 0;
+        }
+
+        public static bool TryBindDepthNormalsTargets(CommandBuffer cmd, ScriptableRenderer renderer)
+        {
+            if (cmd == null)
+                return false;
+            Texture normals = Shader.GetGlobalTexture(CameraNormalsTextureId);
+            if (normals == null)
+                return false;
+            RenderTargetIdentifier depth = renderer != null
+                ? renderer.cameraDepthTarget
+                : (RenderTargetIdentifier)BuiltinRenderTextureType.CameraTarget;
+            cmd.SetRenderTarget(normals, depth);
+            return true;
         }
 
         public static bool TryGetMotionVectorTargets(

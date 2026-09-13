@@ -25,6 +25,19 @@ namespace ClusterMesh.Tests
         }
 
         [Test]
+        public void DepthNormals_DefaultOff_OnBothRenderers()
+        {
+            var staticGo = new GameObject("CMDepthNormalsFlag");
+            var staticRenderer = staticGo.AddComponent<ClusterMeshRenderer>();
+            var skinnedGo = new GameObject("CMSkinnedDepthNormalsFlag");
+            var skinnedRenderer = skinnedGo.AddComponent<ClusterSkinnedMeshRenderer>();
+            Assert.That(staticRenderer.enableDepthNormals, Is.False);
+            Assert.That(skinnedRenderer.enableDepthNormals, Is.False);
+            Object.DestroyImmediate(staticGo);
+            Object.DestroyImmediate(skinnedGo);
+        }
+
+        [Test]
         public void MotionVectors_DefaultOff_AndStaticHistoryAdvancesOncePerFrame()
         {
             var go = new GameObject("CMMotionHistory");

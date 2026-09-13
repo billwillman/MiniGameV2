@@ -154,6 +154,7 @@ namespace ClusterMesh
         const int DepthShaderPass = 2;
         const int GBufferShaderPass = 3;
         const int MotionVectorShaderPass = 4;
+        const int DepthNormalsShaderPass = 5;
         const string ReceiveShadowsOffKeyword = "_RECEIVE_SHADOWS_OFF";
 
         public bool IsReady { get; private set; }
@@ -487,6 +488,11 @@ namespace ClusterMesh
         {
             if (_preparedHasMotionVectors)
                 SubmitUrpCmd(cmd, MotionVectorShaderPass);
+        }
+
+        public void SubmitUrpDepthNormals(CommandBuffer cmd)
+        {
+            SubmitUrpCmd(cmd, DepthNormalsShaderPass);
         }
 
         bool TryPrepare(

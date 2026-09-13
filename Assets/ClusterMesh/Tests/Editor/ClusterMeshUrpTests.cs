@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Reflection;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -127,11 +129,13 @@ namespace ClusterMesh.Tests
             Assert.That(staticMaterial.FindPass("DepthOnly"), Is.EqualTo(2));
             Assert.That(staticMaterial.FindPass("GBuffer"), Is.EqualTo(3));
             Assert.That(staticMaterial.FindPass("MotionVectors"), Is.EqualTo(4));
+            Assert.That(staticMaterial.FindPass("DepthNormals"), Is.EqualTo(5));
             Assert.That(skinnedMaterial.FindPass("ForwardLit"), Is.EqualTo(0));
             Assert.That(skinnedMaterial.FindPass("ShadowCaster"), Is.EqualTo(1));
             Assert.That(skinnedMaterial.FindPass("DepthOnly"), Is.EqualTo(2));
             Assert.That(skinnedMaterial.FindPass("GBuffer"), Is.EqualTo(3));
             Assert.That(skinnedMaterial.FindPass("MotionVectors"), Is.EqualTo(4));
+            Assert.That(skinnedMaterial.FindPass("DepthNormals"), Is.EqualTo(5));
             Assert.That(
                 System.IO.File.ReadAllText("Assets/ClusterMesh/Shaders/ClusterMeshLit.hlsl"),
                 Does.Contain("#pragma editor_sync_compilation"));
@@ -263,7 +267,13 @@ namespace ClusterMesh.Tests
             string menu = System.IO.File.ReadAllText(
                 "Assets/ClusterMesh/Editor/ClusterMeshUrpFeatureMenu.cs");
             Assert.That(menu, Does.Contain("Tools/ClusterMesh/Setup Radiant URP 延迟渲染"));
+            Assert.That(menu, Does.Contain("Tools/ClusterMesh/Setup Radiant GI Forward"));
             Assert.That(menu, Does.Contain("没有安装 Radiant"));
+            Assert.That(feature, Does.Contain("HasDepthNormals"));
+            Assert.That(feature, Does.Contain("DepthNormals"));
+            Assert.That(
+                ClusterMeshUrpBridge.DepthNormalsPassEvent,
+                Is.EqualTo((RenderPassEvent)((int)RenderPassEvent.AfterRenderingPrePasses + 1)));
         }
 
         [Test]
@@ -286,9 +296,26 @@ namespace ClusterMesh.Tests
             Assert.That(ClusterMeshUrpFeatureMenu.HasRadiantFeature(data), Is.False);
             ClusterMeshUrpFeatureMenu.EnableRadiantOn(data);
             Assert.That(ClusterMeshUrpFeatureMenu.HasRadiantFeature(data), Is.True);
+            Assert.That(RadiantRenderingPath(data), Is.EqualTo(1));
             int count = FeatureCount(data);
             ClusterMeshUrpFeatureMenu.EnableRadiantOn(data);
             Assert.That(FeatureCount(data), Is.EqualTo(count));
+        }
+
+        [Test]
+        public void EnableRadiantOn_Forward_SetsPathAndUpdatesExisting()
+        {
+            if (!ClusterMeshUrpFeatureMenu.IsRadiantInstalled())
+                Assert.Ignore("没有安装 Radiant");
+
+            var data = Track(ScriptableObject.CreateInstance<UniversalRendererData>());
+            ClusterMeshUrpFeatureMenu.EnableRadiantOn(data);
+            Assert.That(RadiantRenderingPath(data), Is.EqualTo(1));
+            int count = RadiantFeatureCount(data);
+            ClusterMeshUrpFeatureMenu.EnableRadiantOn(data, 0);
+            Assert.That(ClusterMeshUrpFeatureMenu.HasRadiantFeature(data), Is.True);
+            Assert.That(RadiantFeatureCount(data), Is.EqualTo(count));
+            Assert.That(RadiantRenderingPath(data), Is.EqualTo(0));
         }
 
         [Test]
@@ -426,6 +453,39 @@ namespace ClusterMesh.Tests
             }
 
             return n;
+        }
+
+        static int RadiantFeatureCount(ScriptableRendererData data)
+        {
+            Type type = ClusterMeshUrpFeatureMenu.FindRadiantRenderFeatureType();
+            int n = 0;
+            if (type == null || data == null || data.rendererFeatures == null)
+                return 0;
+            for (int i = 0; i < data.rendererFeatures.Count; i++)
+            {
+                if (data.rendererFeatures[i] != null && type.IsInstanceOfType(data.rendererFeatures[i]))
+                    n++;
+            }
+
+            return n;
+        }
+
+        static int RadiantRenderingPath(ScriptableRendererData data)
+        {
+            Type type = ClusterMeshUrpFeatureMenu.FindRadiantRenderFeatureType();
+            if (type == null || data == null || data.rendererFeatures == null)
+                return -1;
+            FieldInfo field = type.GetField("renderingPath");
+            if (field == null)
+                return -1;
+            for (int i = 0; i < data.rendererFeatures.Count; i++)
+            {
+                ScriptableRendererFeature feature = data.rendererFeatures[i];
+                if (feature != null && type.IsInstanceOfType(feature))
+                    return Convert.ToInt32(field.GetValue(feature));
+            }
+
+            return -1;
         }
 
         T Track<T>(T obj) where T : Object

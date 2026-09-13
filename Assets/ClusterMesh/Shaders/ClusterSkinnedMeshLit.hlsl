@@ -291,6 +291,25 @@ half4 ClusterSkinnedFrag(Varyings i):SV_Target
     InputData d=(InputData)0; d.positionWS=i.positionWS; d.normalWS=normalize(mul(nts,float3x3(t,b,n))); d.viewDirectionWS=GetWorldSpaceNormalizeViewDir(i.positionWS); d.shadowCoord=TransformWorldToShadowCoord(i.positionWS); d.fogCoord=_ObjectSH[i.objectIndex].shC.w>0.5?ComputeFogFactor(i.positionCS.z):1; d.bakedGI=ClusterSkinnedSampleObjectSH(i.objectIndex,d.normalWS);
     SurfaceData s=(SurfaceData)0; s.albedo=albedo.rgb;s.metallic=_Metallic;s.smoothness=_Smoothness;s.normalTS=nts;s.occlusion=1;s.alpha=albedo.a; return UniversalFragmentPBR(d,s);
 }
+#if defined(CLUSTERMESH_DEPTH_NORMALS_PASS)
+half4 ClusterSkinnedEncodeDepthNormal(float3 normalWS)
+{
+#if defined(_GBUFFER_NORMALS_OCT)
+    float2 octNormalWS = PackNormalOctQuadEncode(normalize(normalWS));
+    float2 remappedOctNormalWS = saturate(octNormalWS * 0.5 + 0.5);
+    return half4(PackFloat2To888(remappedOctNormalWS), 0.0);
+#else
+    return half4(NormalizeNormalPerPixel(normalWS), 0.0);
+#endif
+}
+half4 ClusterSkinnedDepthNormalsFrag(Varyings i):SV_Target
+{
+    half4 albedo=SAMPLE_TEXTURE2D(_BaseMap,sampler_BaseMap,i.uv)*_BaseColor; clip(albedo.a-_Cutoff);
+    float3 nts=UnpackNormalScale(SAMPLE_TEXTURE2D(_BumpMap,sampler_BumpMap,i.uv),_BumpScale);
+    float3 t=normalize(i.tangentWS.xyz),n=normalize(i.normalWS),b=cross(n,t)*i.tangentWS.w;
+    return ClusterSkinnedEncodeDepthNormal(normalize(mul(nts,float3x3(t,b,n))));
+}
+#endif
 #if defined(CLUSTERMESH_GBUFFER_PASS)
 FragmentOutput ClusterSkinnedGBufferFrag(Varyings i)
 {

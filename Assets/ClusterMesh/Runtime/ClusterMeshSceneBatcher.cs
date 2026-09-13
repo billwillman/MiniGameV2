@@ -188,6 +188,14 @@ namespace ClusterMesh
                 UrpPrepared[i].SubmitUrpMotionVectors(cmd);
         }
 
+        public static void SubmitUrpDepthNormals(Camera camera, CommandBuffer cmd)
+        {
+            if (cmd == null || !ClusterMeshUrpBridge.ShouldSubmitUrp(camera))
+                return;
+            for (int i = 0; i < UrpPrepared.Count; i++)
+                UrpPrepared[i].SubmitUrpDepthNormals(cmd);
+        }
+
         public static bool HasMotionVectors(Camera camera)
         {
             if (camera == null)
@@ -197,6 +205,20 @@ namespace ClusterMesh
                 ClusterMeshRenderer renderer = Renderers[i];
                 if (renderer != null && renderer.isActiveAndEnabled &&
                     renderer.enableMotionVectors && ResolveCamera(renderer) == camera)
+                    return true;
+            }
+            return false;
+        }
+
+        public static bool HasDepthNormals(Camera camera)
+        {
+            if (camera == null)
+                return false;
+            for (int i = 0; i < Renderers.Count; i++)
+            {
+                ClusterMeshRenderer renderer = Renderers[i];
+                if (renderer != null && renderer.isActiveAndEnabled &&
+                    renderer.enableDepthNormals && ResolveCamera(renderer) == camera)
                     return true;
             }
             return false;

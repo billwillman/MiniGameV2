@@ -235,6 +235,30 @@ half4 ClusterMeshFrag(Varyings input) : SV_Target
     return UniversalFragmentPBR(inputData, surface);
 }
 
+#if defined(CLUSTERMESH_DEPTH_NORMALS_PASS)
+half4 ClusterMeshEncodeDepthNormal(float3 normalWS)
+{
+#if defined(_GBUFFER_NORMALS_OCT)
+    float2 octNormalWS = PackNormalOctQuadEncode(normalize(normalWS));
+    float2 remappedOctNormalWS = saturate(octNormalWS * 0.5 + 0.5);
+    return half4(PackFloat2To888(remappedOctNormalWS), 0.0);
+#else
+    return half4(NormalizeNormalPerPixel(normalWS), 0.0);
+#endif
+}
+
+half4 ClusterMeshDepthNormalsFrag(Varyings input) : SV_Target
+{
+    half4 albedo = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, input.uv) * _BaseColor;
+    clip(albedo.a - _Cutoff);
+    float3 normalTS = UnpackNormalScale(SAMPLE_TEXTURE2D(_BumpMap, sampler_BumpMap, input.uv), _BumpScale);
+    float3 nT = normalize(input.tangentWS.xyz);
+    float3 nN = normalize(input.normalWS);
+    float3 nB = cross(nN, nT) * input.tangentWS.w;
+    return ClusterMeshEncodeDepthNormal(normalize(mul(normalTS, float3x3(nT, nB, nN))));
+}
+#endif
+
 #if defined(CLUSTERMESH_GBUFFER_PASS)
 FragmentOutput ClusterMeshGBufferFrag(Varyings input)
 {

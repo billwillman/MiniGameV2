@@ -112,6 +112,7 @@ namespace ClusterMesh
         const int DepthShaderPass = 2;
         const int GBufferShaderPass = 3;
         const int MotionVectorShaderPass = 4;
+        const int DepthNormalsShaderPass = 5;
 
         sealed class UrpChunk
         {
@@ -548,6 +549,14 @@ namespace ClusterMesh
                 if (_urpChunks[i].hasMotionVectors)
                     SubmitCmd(_urpChunks[i], cmd, MotionVectorShaderPass);
             }
+        }
+
+        public void SubmitUrpDepthNormals(CommandBuffer cmd)
+        {
+            if (cmd == null)
+                return;
+            for (int i = 0; i < _urpChunks.Count; i++)
+                SubmitCmd(_urpChunks[i], cmd, DepthNormalsShaderPass);
         }
 
         bool PrepareChunks(

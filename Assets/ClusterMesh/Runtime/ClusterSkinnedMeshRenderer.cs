@@ -17,6 +17,9 @@ namespace ClusterMesh
         public bool enableConeCull = true;
         [Tooltip("Write transform and baked skeletal deformation into URP's Motion Vector texture. Disabled by default to avoid previous-pose evaluation and draw-pass cost.")]
         public bool enableMotionVectors;
+        [InspectorName("Open Shader DepthNormals LightMode")]
+        [Tooltip("Forward 写出 URP DepthNormals（_CameraNormalsTexture）。Radiant GI Forward 采 ClusterMesh 法线需要开。默认关，避免多一次预通道。")]
+        public bool enableDepthNormals;
         public bool enableCpuObjectCull = true;
         [InspectorName("探针")]
         [Tooltip("按物体原点插值 Light Probe。没有探针组时，只有开着天光才会退回天空 SH。")]

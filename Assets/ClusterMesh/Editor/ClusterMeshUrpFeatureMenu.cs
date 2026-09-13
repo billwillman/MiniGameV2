@@ -15,7 +15,11 @@ namespace ClusterMesh
         const string SettingsFolderName = "Settings";
         const string DeferredPipelineFile = "ClusterMeshURPDeferred.asset";
         const string DeferredRendererFile = "ClusterMeshURPDeferredRenderer.asset";
+        const string ForwardPipelineFile = "ClusterMeshURPForward.asset";
+        const string ForwardRendererFile = "ClusterMeshURPForwardRenderer.asset";
         const string RuntimeAsmdefName = "ClusterMesh.Runtime";
+        const int RadiantPathForward = 0;
+        const int RadiantPathDeferred = 1;
 
         public static bool? RadiantInstalledOverrideForTests;
 
@@ -40,8 +44,26 @@ namespace ClusterMesh
                 return;
             }
 
-            SetupUrpDeferredCore(EnableRadiantOn,
+            SetupUrpDeferredCore(data => EnableRadiantOn(data, RadiantPathDeferred),
                 "ClusterMesh: Radiant URP 延迟渲染已配置。管线资产 {0} 个，Universal Renderer {1} 个，已启用 ClusterMesh URP Feature 和 RadiantRenderFeature。" +
+                " Volume 里仍需 Radiant Global Illumination 才会出 GI。");
+        }
+
+        [MenuItem("Tools/ClusterMesh/Setup Radiant GI Forward", priority = 3)]
+        public static void SetupRadiantGiForward()
+        {
+            if (!IsRadiantInstalled())
+            {
+                EditorUtility.DisplayDialog(
+                    "ClusterMesh",
+                    "没有安装 Radiant。请先把 Radiant GI 导入项目后再执行 Setup Radiant GI Forward。",
+                    "确定");
+                Debug.LogWarning("ClusterMesh: 没有安装 Radiant，已取消 Setup Radiant GI Forward。");
+                return;
+            }
+
+            SetupUrpForwardCore(data => EnableRadiantOn(data, RadiantPathForward),
+                "ClusterMesh: Radiant GI Forward 已配置。管线资产 {0} 个，Universal Renderer {1} 个，已启用 ClusterMesh URP Feature 和 RadiantRenderFeature（Forward）。" +
                 " Volume 里仍需 Radiant Global Illumination 才会出 GI。");
         }
 
@@ -213,6 +235,11 @@ namespace ClusterMesh
 
         public static void EnableRadiantOn(ScriptableRendererData data)
         {
+            EnableRadiantOn(data, RadiantPathDeferred);
+        }
+
+        public static void EnableRadiantOn(ScriptableRendererData data, int radiantRenderingPath)
+        {
             if (data == null)
                 return;
             Type type = FindRadiantRenderFeatureType();
@@ -220,7 +247,7 @@ namespace ClusterMesh
                 return;
             if (HasRadiantFeature(data))
             {
-                ActivateExistingRadiant(data, type);
+                ActivateExistingRadiant(data, type, radiantRenderingPath);
                 data.SetDirty();
                 return;
             }
@@ -230,9 +257,7 @@ namespace ClusterMesh
                 return;
             feature.name = "RadiantRenderFeature";
             feature.SetActive(true);
-            FieldInfo pathField = type.GetField("renderingPath");
-            if (pathField != null && pathField.FieldType.IsEnum)
-                pathField.SetValue(feature, Enum.ToObject(pathField.FieldType, 1));
+            ApplyRadiantRenderingPath(feature, type, radiantRenderingPath);
             string path = AssetDatabase.GetAssetPath(data);
             if (!string.IsNullOrEmpty(path))
                 AssetDatabase.AddObjectToAsset(feature, data);
@@ -267,14 +292,46 @@ namespace ClusterMesh
             return ResolveSettingsFolder() + "/" + DeferredRendererFile;
         }
 
-        static void ActivateExistingRadiant(ScriptableRendererData data, Type type)
+        static string ForwardPipelinePath()
+        {
+            return ResolveSettingsFolder() + "/" + ForwardPipelineFile;
+        }
+
+        static string ForwardRendererPath()
+        {
+            return ResolveSettingsFolder() + "/" + ForwardRendererFile;
+        }
+
+        static string ForwardPipelinePath()
+        {
+            return ResolveSettingsFolder() + "/" + ForwardPipelineFile;
+        }
+
+        static string ForwardRendererPath()
+        {
+            return ResolveSettingsFolder() + "/" + ForwardRendererFile;
+        }
+
+        static void ActivateExistingRadiant(ScriptableRendererData data, Type type, int radiantRenderingPath)
         {
             for (int i = 0; i < data.rendererFeatures.Count; i++)
             {
                 ScriptableRendererFeature feature = data.rendererFeatures[i];
-                if (feature != null && type.IsInstanceOfType(feature))
-                    feature.SetActive(true);
+                if (feature == null || !type.IsInstanceOfType(feature))
+                    continue;
+                feature.SetActive(true);
+                ApplyRadiantRenderingPath(feature, type, radiantRenderingPath);
             }
+        }
+
+        static void ApplyRadiantRenderingPath(ScriptableRendererFeature feature, Type type, int radiantRenderingPath)
+        {
+            if (feature == null || type == null)
+                return;
+            FieldInfo pathField = type.GetField("renderingPath");
+            if (pathField == null || !pathField.FieldType.IsEnum)
+                return;
+            pathField.SetValue(feature, Enum.ToObject(pathField.FieldType, radiantRenderingPath));
         }
 
         static bool IsRendererFeatureType(Type type)
@@ -349,6 +406,38 @@ namespace ClusterMesh
             int configuredRenderers = 0;
             for (int i = 0; i < assets.Count; i++)
                 configuredRenderers += ConfigurePipeline(assets[i], RenderingMode.Deferred, extra);
+
+            GraphicsSettings.renderPipelineAsset = primary;
+            AssignAllQualityLevelsToUrp(primary);
+            EditorUtility.SetDirty(primary);
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+            Selection.activeObject = primary;
+            Debug.Log(string.Format(logFormat, assets.Count, configuredRenderers));
+        }
+
+        static void SetupUrpForwardCore(Action<UniversalRendererData> extra, string logFormat)
+        {
+            List<UniversalRenderPipelineAsset> assets = CollectProjectUrpAssets();
+            if (assets.Count == 0)
+            {
+                UniversalRenderPipelineAsset created = CreateUrpForwardAssets();
+                if (created == null)
+                {
+                    Debug.LogError("ClusterMesh: 找不到 ClusterMesh 模块目录，无法创建 URP 资产。请把 ClusterMesh 作为完整模块导入。");
+                    return;
+                }
+
+                assets.Add(created);
+            }
+
+            UniversalRenderPipelineAsset primary = assets[0];
+            int configuredRenderers = 0;
+            for (int i = 0; i < assets.Count; i++)
+            {
+                assets[i].supportsCameraDepthTexture = true;
+                configuredRenderers += ConfigurePipeline(assets[i], RenderingMode.Forward, extra);
+            }
 
             GraphicsSettings.renderPipelineAsset = primary;
             AssignAllQualityLevelsToUrp(primary);
@@ -451,6 +540,34 @@ namespace ClusterMesh
             return pipeline;
         }
 
+        static UniversalRenderPipelineAsset CreateUrpForwardAssets()
+        {
+            string settingsFolder = ResolveSettingsFolder();
+            if (string.IsNullOrEmpty(settingsFolder))
+                return null;
+            string pipelineAssetPath = ForwardPipelinePath();
+            string rendererAssetPath = ForwardRendererPath();
+            EnsureAssetFolder(settingsFolder);
+            UniversalRenderPipelineAsset existing =
+                AssetDatabase.LoadAssetAtPath<UniversalRenderPipelineAsset>(pipelineAssetPath);
+            if (existing != null)
+                return existing;
+            string rendererPath = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(rendererAssetPath) == null
+                ? rendererAssetPath
+                : AssetDatabase.GenerateUniqueAssetPath(rendererAssetPath);
+            UniversalRendererData rendererData = CreateUniversalRendererData(rendererPath);
+            ConfigureForwardOn(rendererData);
+
+            string pipelinePath = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(pipelineAssetPath) == null
+                ? pipelineAssetPath
+                : AssetDatabase.GenerateUniqueAssetPath(pipelineAssetPath);
+            UniversalRenderPipelineAsset pipeline = UniversalRenderPipelineAsset.Create(rendererData);
+            pipeline.name = Path.GetFileNameWithoutExtension(pipelinePath);
+            pipeline.supportsCameraDepthTexture = true;
+            AssetDatabase.CreateAsset(pipeline, pipelinePath);
+            return pipeline;
+        }
+
         static UniversalRendererData CreateUniversalRendererData(string path)
         {
             MethodInfo method = typeof(UniversalRenderPipelineAsset).GetMethod(
@@ -506,17 +623,23 @@ namespace ClusterMesh
                 configured++;
             }
 
-            if (universalDefault < 0 && mode == RenderingMode.Deferred)
+            if (universalDefault < 0)
             {
                 string pipelinePath = AssetDatabase.GetAssetPath(pipeline);
                 string directory = string.IsNullOrEmpty(pipelinePath)
                     ? ResolveSettingsFolder()
                     : Path.GetDirectoryName(pipelinePath).Replace('\\', '/');
                 EnsureAssetFolder(directory);
+                string suffix = mode == RenderingMode.Deferred
+                    ? "_ClusterMeshDeferredRenderer.asset"
+                    : "_ClusterMeshForwardRenderer.asset";
                 string rendererPath = AssetDatabase.GenerateUniqueAssetPath(
-                    directory + "/" + pipeline.name + "_ClusterMeshDeferredRenderer.asset");
+                    directory + "/" + pipeline.name + suffix);
                 UniversalRendererData data = CreateUniversalRendererData(rendererPath);
-                ConfigureDeferredOn(data);
+                if (mode == RenderingMode.Deferred)
+                    ConfigureDeferredOn(data);
+                else
+                    ConfigureForwardOn(data);
                 extra?.Invoke(data);
                 int index = list.arraySize;
                 list.InsertArrayElementAtIndex(index);

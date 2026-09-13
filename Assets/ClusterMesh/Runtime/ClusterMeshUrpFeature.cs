@@ -10,6 +10,7 @@ namespace ClusterMesh
         ClusterMeshUrpPass _colorPass;
         ClusterMeshUrpPass _gbufferPass;
         ClusterMeshUrpPass _motionPass;
+        ClusterMeshUrpPass _depthNormalsPass;
 
         public override void Create()
         {
@@ -23,6 +24,9 @@ namespace ClusterMesh
             _motionPass = new ClusterMeshUrpPass(
                 ClusterMeshUrpBridge.CurrentMotionVectorPassEvent,
                 ClusterMeshUrpPhase.Motion);
+            _depthNormalsPass = new ClusterMeshUrpPass(
+                ClusterMeshUrpBridge.DepthNormalsPassEvent,
+                ClusterMeshUrpPhase.DepthNormals);
         }
 
         protected override void Dispose(bool disposing)
@@ -69,6 +73,14 @@ namespace ClusterMesh
                 _motionPass.Setup(renderer);
                 renderer.EnqueuePass(_motionPass);
             }
+
+            if (!ClusterMeshUrpBridge.IsDeferred(renderer) &&
+                (ClusterMeshSceneBatcher.HasDepthNormals(camera) ||
+                    ClusterSkinnedMeshSceneBatcher.HasDepthNormals(camera)))
+            {
+                _depthNormalsPass.Setup(renderer);
+                renderer.EnqueuePass(_depthNormalsPass);
+            }
         }
     }
 
@@ -77,7 +89,8 @@ namespace ClusterMesh
         Depth,
         Color,
         GBuffer,
-        Motion
+        Motion,
+        DepthNormals
     }
 
     sealed class ClusterMeshUrpPass : ScriptableRenderPass
@@ -95,6 +108,8 @@ namespace ClusterMesh
             _phase = phase;
             if (_phase == ClusterMeshUrpPhase.Motion)
                 ConfigureInput(ScriptableRenderPassInput.Motion);
+            if (_phase == ClusterMeshUrpPhase.DepthNormals)
+                ConfigureInput(ScriptableRenderPassInput.Normal | ScriptableRenderPassInput.Depth);
         }
 
         public void Setup(ScriptableRenderer renderer)
@@ -149,7 +164,10 @@ namespace ClusterMesh
             string passName = _phase == ClusterMeshUrpPhase.Depth
                 ? "ClusterMesh Depth"
                 : (_phase == ClusterMeshUrpPhase.GBuffer ? "ClusterMesh URP GBuffer"
-                    : (_phase == ClusterMeshUrpPhase.Motion ? "ClusterMesh Motion Vectors" : "ClusterMesh Color"));
+                    : (_phase == ClusterMeshUrpPhase.Motion ? "ClusterMesh Motion Vectors"
+                        : (_phase == ClusterMeshUrpPhase.DepthNormals
+                            ? "ClusterMesh DepthNormals"
+                            : "ClusterMesh Color")));
             CommandBuffer cmd = CommandBufferPool.Get(passName);
             ClusterMeshMaterialUtil.BeginEditorSyncCompilation(cmd);
             if (_phase == ClusterMeshUrpPhase.Depth)
@@ -162,7 +180,7 @@ namespace ClusterMesh
                 ClusterMeshSceneBatcher.SubmitUrpColor(camera, cmd);
                 ClusterSkinnedMeshSceneBatcher.SubmitUrpColor(camera, cmd);
             }
-            else if (_deferredTargetsReady)
+            else if (_phase == ClusterMeshUrpPhase.GBuffer && _deferredTargetsReady)
             {
                 ClusterMeshSceneBatcher.SubmitUrpGBuffer(camera, cmd);
                 ClusterSkinnedMeshSceneBatcher.SubmitUrpGBuffer(camera, cmd);
@@ -174,6 +192,12 @@ namespace ClusterMesh
                 cmd.SetGlobalVector(MotionVectorParamsId, new Vector4(0f, 1f, 0f, 0f));
                 ClusterMeshSceneBatcher.SubmitUrpMotionVectors(camera, cmd);
                 ClusterSkinnedMeshSceneBatcher.SubmitUrpMotionVectors(camera, cmd);
+            }
+            else if (_phase == ClusterMeshUrpPhase.DepthNormals &&
+                ClusterMeshUrpBridge.TryBindDepthNormalsTargets(cmd, _renderer))
+            {
+                ClusterMeshSceneBatcher.SubmitUrpDepthNormals(camera, cmd);
+                ClusterSkinnedMeshSceneBatcher.SubmitUrpDepthNormals(camera, cmd);
             }
             ClusterMeshMaterialUtil.EndEditorSyncCompilation(cmd);
             context.ExecuteCommandBuffer(cmd);

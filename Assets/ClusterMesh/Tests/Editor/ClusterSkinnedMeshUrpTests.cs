@@ -93,10 +93,12 @@ namespace ClusterMesh.Tests
                     Assert.DoesNotThrow(() => ctx.SubmitUrpColor(cmd));
                     Assert.DoesNotThrow(() => ctx.SubmitUrpGBuffer(cmd));
                     Assert.DoesNotThrow(() => ctx.SubmitUrpMotionVectors(cmd));
+                    Assert.DoesNotThrow(() => ctx.SubmitUrpDepthNormals(cmd));
                     Assert.DoesNotThrow(() => ctx.SubmitUrpDepth(null));
                     Assert.DoesNotThrow(() => ctx.SubmitUrpColor(null));
                     Assert.DoesNotThrow(() => ctx.SubmitUrpGBuffer(null));
                     Assert.DoesNotThrow(() => ctx.SubmitUrpMotionVectors(null));
+                    Assert.DoesNotThrow(() => ctx.SubmitUrpDepthNormals(null));
                 }
                 finally
                 {
@@ -113,6 +115,12 @@ namespace ClusterMesh.Tests
             ClusterMeshUrpBridge.RendererDataOverrideForTests = data;
             ClusterSkinnedMeshRenderer skinned = CreateRegisteredRenderer();
             ClusterMeshRenderer staticRenderer = CreateRegisteredStaticRenderer(skinned.targetCamera);
+            Assert.That(ClusterMeshSceneBatcher.HasDepthNormals(skinned.targetCamera), Is.False);
+            Assert.That(ClusterSkinnedMeshSceneBatcher.HasDepthNormals(skinned.targetCamera), Is.False);
+            staticRenderer.enableDepthNormals = true;
+            skinned.enableDepthNormals = true;
+            Assert.That(ClusterMeshSceneBatcher.HasDepthNormals(skinned.targetCamera), Is.True);
+            Assert.That(ClusterSkinnedMeshSceneBatcher.HasDepthNormals(skinned.targetCamera), Is.True);
             ClusterMeshSceneBatcher.PrepareAndSubmitUrpShadows(skinned.targetCamera);
             ClusterSkinnedMeshSceneBatcher.PrepareAndSubmitUrpShadows(skinned.targetCamera);
             Assert.That(ClusterMeshUrpBridge.ShouldSubmitUrp(skinned.targetCamera), Is.True);
@@ -128,6 +136,8 @@ namespace ClusterMesh.Tests
                 Assert.DoesNotThrow(() => ClusterSkinnedMeshSceneBatcher.SubmitUrpGBuffer(skinned.targetCamera, cmd));
                 Assert.DoesNotThrow(() => ClusterMeshSceneBatcher.SubmitUrpMotionVectors(skinned.targetCamera, cmd));
                 Assert.DoesNotThrow(() => ClusterSkinnedMeshSceneBatcher.SubmitUrpMotionVectors(skinned.targetCamera, cmd));
+                Assert.DoesNotThrow(() => ClusterMeshSceneBatcher.SubmitUrpDepthNormals(skinned.targetCamera, cmd));
+                Assert.DoesNotThrow(() => ClusterSkinnedMeshSceneBatcher.SubmitUrpDepthNormals(skinned.targetCamera, cmd));
             }
             finally
             {
