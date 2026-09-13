@@ -302,16 +302,6 @@ namespace ClusterMesh
             return ResolveSettingsFolder() + "/" + ForwardRendererFile;
         }
 
-        static string ForwardPipelinePath()
-        {
-            return ResolveSettingsFolder() + "/" + ForwardPipelineFile;
-        }
-
-        static string ForwardRendererPath()
-        {
-            return ResolveSettingsFolder() + "/" + ForwardRendererFile;
-        }
-
         static void ActivateExistingRadiant(ScriptableRendererData data, Type type, int radiantRenderingPath)
         {
             for (int i = 0; i < data.rendererFeatures.Count; i++)
