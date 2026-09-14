@@ -1,0 +1,13 @@
+{
+    "name": "ClusterMesh.Editor.Tests",
+    "rootNamespace": "ClusterMesh.Tests",
+    "references": [
+        "ClusterMesh.Runtime",
+        "ClusterMesh.Editor",
+        "Unity.RenderPipelines.Core.Runtime",
+        "Unity.RenderPipelines.Universal.Runtime"
+    ],
+    "includePlatforms": ["Editor"],
+    "optionalUnityReferences": ["TestAssemblies"],
+    "allowUnsafeCode": false
+}

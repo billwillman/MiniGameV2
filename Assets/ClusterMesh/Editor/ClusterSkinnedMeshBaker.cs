@@ -1,0 +1,1336 @@
+using System;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
+using UnityEditor;
+using UnityEngine;
+using UnityEngine.Animations;
+using UnityEngine.Playables;
+
+namespace ClusterMesh
+{
+    public sealed class ClusterSkinnedMeshBakeResult
+    {
+        public ClusterMeshBakeResult geometry;
+        public ClusterSkinWeight[] skinWeights;
+        public Matrix4x4[] bindPoses;
+        public string[] bonePaths;
+        public int[] boneParentIndices;
+        public ClusterSkinnedClip[] clips;
+        public Texture2D[] gpuPaletteTextures;
+        public ClusterSkinnedCurveHeader[] cpuCurveHeaders;
+        public ClusterSkinnedCurveSegment[] cpuCurveSegments;
+        public int[] boneEvaluationOrder;
+        public ClusterSkinnedCullFrame[] cullFrames;
+    }
+
+    public static class ClusterSkinnedMeshBaker
+    {
+        // Tiny influences still affect profile distance, but do not create a strong bone region.
+        const float StrongBoneWeightThreshold = 1f / 255f;
+
+        sealed class SampledClip
+        {
+            public ClusterSkinnedClip clip;
+            public float[] times;
+            public Matrix4x4[][] palettes;
+        }
+
+        public static ClusterSkinnedMeshBakeResult Bake(
+            SkinnedMeshRenderer renderer,
+            AnimationClip clip,
+            ClusterMeshBakeSettings settings)
+        {
+            if (clip == null)
+                throw new InvalidOperationException("Skinned ClusterMesh baker requires an AnimationClip.");
+            return Bake(renderer, new[] { clip }, settings, new ClusterSkinnedMeshBakeOptions());
+        }
+
+        public static ClusterSkinnedMeshBakeResult Bake(
+            SkinnedMeshRenderer renderer,
+            AnimationClip[] animationClips,
+            ClusterMeshBakeSettings settings)
+        {
+            return Bake(renderer, animationClips, settings, new ClusterSkinnedMeshBakeOptions());
+        }
+
+        public static ClusterSkinnedMeshBakeResult Bake(
+            SkinnedMeshRenderer renderer,
+            AnimationClip[] animationClips,
+            ClusterMeshBakeSettings settings,
+            ClusterSkinnedMeshBakeOptions bakeOptions)
+        {
+            if (renderer == null || renderer.sharedMesh == null)
+                throw new InvalidOperationException("Skinned ClusterMesh baker requires a SkinnedMeshRenderer with a shared Mesh.");
+            if (animationClips == null || animationClips.Length == 0)
+                throw new InvalidOperationException("Skinned ClusterMesh baker requires at least one AnimationClip.");
+            settings = settings ?? new ClusterMeshBakeSettings();
+            bakeOptions = bakeOptions ?? new ClusterSkinnedMeshBakeOptions();
+            if (settings.maxVerticesPerCluster < 3 || settings.maxTrianglesPerCluster < 1)
+                throw new InvalidOperationException("ClusterMesh baker budgets must allow at least one triangle.");
+
+            Mesh mesh = renderer.sharedMesh;
+            Transform[] bones = renderer.bones;
+            Matrix4x4[] bindPoses = mesh.bindposes;
+            if (bones == null || bones.Length == 0 || bindPoses == null || bindPoses.Length != bones.Length)
+                throw new InvalidOperationException("SkinnedMesh bones and bind poses must exist and have the same length.");
+            if (bones.Length > ushort.MaxValue)
+                throw new InvalidOperationException("Skinned ClusterMesh supports at most 65535 bones.");
+
+            BuildSkeleton(renderer, bones, out string[] bonePaths, out int[] parentIndices);
+            var sampledClips = new SampledClip[animationClips.Length];
+            for (int i = 0; i < animationClips.Length; i++)
+            {
+                if (animationClips[i] == null)
+                    throw new InvalidOperationException("AnimationClip list contains a missing clip.");
+                sampledClips[i] = SampleClip(renderer, animationClips[i], bones, parentIndices, bindPoses,
+                    Mathf.Clamp(bakeOptions.cpuCurveTolerance, 0.000001f, 0.01f),
+                    bakeOptions.IncludesGpu ? Mathf.Clamp(bakeOptions.gpuFramesPerSecond, 1f, 60f) : 0f,
+                    bakeOptions.IncludesCpu,
+                    bakeOptions.compressCullFrames);
+            }
+
+            ClusterSkinWeight[] sourceSkin = ReadSourceWeights(mesh, bones.Length);
+            var qemContext = new ClusterSkinnedQemContext();
+            AddRepresentativePalettes(sampledClips, qemContext);
+            ClusterMeshBakeResult geometry = BakeGeometry(mesh, renderer.sharedMaterials, sourceSkin, settings, qemContext, out List<ClusterSkinWeight> outputSkin);
+
+            var allCullFrames = new List<ClusterSkinnedCullFrame>();
+            var clips = new ClusterSkinnedClip[sampledClips.Length];
+            var gpuPaletteTextures = bakeOptions.IncludesGpu
+                ? new Texture2D[sampledClips.Length]
+                : Array.Empty<Texture2D>();
+            var cpuCurveHeaders = new List<ClusterSkinnedCurveHeader>();
+            var cpuCurveSegments = new List<ClusterSkinnedCurveSegment>();
+            int[] boneEvaluationOrder = bakeOptions.IncludesCpu
+                ? BuildBoneEvaluationOrder(parentIndices)
+                : Array.Empty<int>();
+            for (int i = 0; i < sampledClips.Length; i++)
+            {
+                SampledClip sampled = sampledClips[i];
+                sampled.clip.cullFrameOffset = allCullFrames.Count;
+                sampled.clip.cpuCurveHeaderOffset = -1;
+                if (bakeOptions.IncludesCpu)
+                {
+                    sampled.clip.cpuCurveHeaderOffset = cpuCurveHeaders.Count;
+                    BuildCpuBurstCurves(sampled.clip, cpuCurveHeaders, cpuCurveSegments);
+                }
+                BuildCullFrames(geometry, outputSkin, sampled, allCullFrames);
+                clips[i] = sampled.clip;
+                if (bakeOptions.IncludesGpu)
+                {
+                    gpuPaletteTextures[i] = BuildGpuPaletteTexture(sampled, bindPoses.Length, i,
+                        Mathf.Clamp(bakeOptions.gpuFramesPerSecond, 1f, 60f),
+                        bakeOptions.gpuCompactPalette);
+                }
+                if (!bakeOptions.IncludesCpu || !bakeOptions.retainAnimationCurves)
+                    sampled.clip.boneCurves = null;
+            }
+
+            return new ClusterSkinnedMeshBakeResult
+            {
+                geometry = geometry,
+                skinWeights = outputSkin.ToArray(),
+                bindPoses = bindPoses,
+                bonePaths = bonePaths,
+                boneParentIndices = parentIndices,
+                clips = clips,
+                gpuPaletteTextures = gpuPaletteTextures,
+                cpuCurveHeaders = cpuCurveHeaders.ToArray(),
+                cpuCurveSegments = cpuCurveSegments.ToArray(),
+                boneEvaluationOrder = boneEvaluationOrder,
+                cullFrames = allCullFrames.ToArray()
+            };
+        }
+
+        static int[] BuildBoneEvaluationOrder(int[] parentIndices)
+        {
+            var order = new int[parentIndices.Length];
+            var added = new bool[parentIndices.Length];
+            int count = 0;
+            while (count < order.Length)
+            {
+                bool progressed = false;
+                for (int bone = 0; bone < parentIndices.Length; bone++)
+                {
+                    if (added[bone])
+                        continue;
+                    int parent = parentIndices[bone];
+                    if (parent < -1 || parent >= parentIndices.Length)
+                        throw new InvalidOperationException("SkinnedMesh contains an invalid bone parent index.");
+                    if (parent >= 0 && !added[parent])
+                        continue;
+                    added[bone] = true;
+                    order[count++] = bone;
+                    progressed = true;
+                }
+                if (!progressed)
+                    throw new InvalidOperationException("SkinnedMesh bone hierarchy contains a cycle.");
+            }
+            return order;
+        }
+
+        static void BuildCpuBurstCurves(ClusterSkinnedClip clip,
+            List<ClusterSkinnedCurveHeader> headers, List<ClusterSkinnedCurveSegment> segments)
+        {
+            for (int bone = 0; bone < clip.boneCurves.Length; bone++)
+            {
+                ClusterSkinnedBoneCurves curves = clip.boneCurves[bone];
+                AddCpuCurve(curves.positionX, headers, segments);
+                AddCpuCurve(curves.positionY, headers, segments);
+                AddCpuCurve(curves.positionZ, headers, segments);
+                AddCpuCurve(curves.rotationX, headers, segments);
+                AddCpuCurve(curves.rotationY, headers, segments);
+                AddCpuCurve(curves.rotationZ, headers, segments);
+                AddCpuCurve(curves.rotationW, headers, segments);
+                AddCpuCurve(curves.scaleX, headers, segments);
+                AddCpuCurve(curves.scaleY, headers, segments);
+                AddCpuCurve(curves.scaleZ, headers, segments);
+            }
+        }
+
+        static void AddCpuCurve(AnimationCurve curve, List<ClusterSkinnedCurveHeader> headers,
+            List<ClusterSkinnedCurveSegment> segments)
+        {
+            int offset = segments.Count;
+            Keyframe[] keys = curve != null ? curve.keys : Array.Empty<Keyframe>();
+            if (keys.Length <= 1)
+            {
+                float value = keys.Length == 1 ? keys[0].value : 0f;
+                float time = keys.Length == 1 ? keys[0].time : 0f;
+                segments.Add(new ClusterSkinnedCurveSegment
+                {
+                    coefficients = new Vector4(value, 0f, 0f, 0f),
+                    startTime = time,
+                    inverseDuration = 0f
+                });
+            }
+            else
+            {
+                for (int i = 0; i + 1 < keys.Length; i++)
+                {
+                    Keyframe a = keys[i];
+                    Keyframe b = keys[i + 1];
+                    float duration = Mathf.Max(0f, b.time - a.time);
+                    float outTangent = float.IsNaN(a.outTangent) || float.IsInfinity(a.outTangent) ? 0f : a.outTangent;
+                    float inTangent = float.IsNaN(b.inTangent) || float.IsInfinity(b.inTangent) ? 0f : b.inTangent;
+                    float m0 = outTangent * duration;
+                    float m1 = inTangent * duration;
+                    float c0 = a.value;
+                    float c1 = m0;
+                    float c2 = -3f * a.value + 3f * b.value - 2f * m0 - m1;
+                    float c3 = 2f * a.value - 2f * b.value + m0 + m1;
+                    segments.Add(new ClusterSkinnedCurveSegment
+                    {
+                        coefficients = new Vector4(c0, c1, c2, c3),
+                        startTime = a.time,
+                        inverseDuration = duration > 1e-8f ? 1f / duration : 0f
+                    });
+                }
+            }
+            headers.Add(new ClusterSkinnedCurveHeader
+            {
+                segmentOffset = offset,
+                segmentCount = segments.Count - offset
+            });
+        }
+
+        public static int CullSegmentCount(float duration, float frameRate, bool compress)
+        {
+            float safeRate = Mathf.Max(1f, frameRate);
+            float segmentsPerSecond = compress ? 2f : 4f;
+            return Mathf.Max(1, Mathf.CeilToInt(Mathf.Max(duration, 1f / safeRate) * segmentsPerSecond));
+        }
+
+        public static void MatrixToCompact(Matrix4x4 matrix, out Quaternion rotation, out Vector3 translation, out float scale)
+        {
+            Vector3 x = new Vector3(matrix.m00, matrix.m10, matrix.m20);
+            Vector3 y = new Vector3(matrix.m01, matrix.m11, matrix.m21);
+            Vector3 z = new Vector3(matrix.m02, matrix.m12, matrix.m22);
+            scale = (x.magnitude + y.magnitude + z.magnitude) * (1f / 3f);
+            if (scale < 1e-8f)
+                scale = 1f;
+            rotation = matrix.rotation;
+            if (rotation.x * rotation.x + rotation.y * rotation.y + rotation.z * rotation.z + rotation.w * rotation.w < 1e-12f)
+                rotation = Quaternion.identity;
+            else
+                rotation.Normalize();
+            translation = new Vector3(matrix.m03, matrix.m13, matrix.m23);
+        }
+
+        public static Matrix4x4 CompactToMatrix(Quaternion rotation, Vector3 translation, float scale)
+        {
+            if (rotation.x * rotation.x + rotation.y * rotation.y + rotation.z * rotation.z + rotation.w * rotation.w < 1e-12f)
+                rotation = Quaternion.identity;
+            else
+                rotation.Normalize();
+            return Matrix4x4.TRS(translation, rotation, Vector3.one * Mathf.Max(scale, 1e-8f));
+        }
+
+        static Texture2D BuildGpuPaletteTexture(SampledClip sampled, int boneCount,
+            int clipIndex, float framesPerSecond, bool compact)
+        {
+            int pixelsPerBone = compact ? 2 : 3;
+            int width = boneCount * pixelsPerBone;
+            int frameCount = Mathf.Max(2,
+                Mathf.CeilToInt(Mathf.Max(0f, sampled.clip.duration) * framesPerSecond) + 1);
+            if (width > SystemInfo.maxTextureSize || frameCount > SystemInfo.maxTextureSize)
+                throw new InvalidOperationException(
+                    "Animation clip '" + sampled.clip.name + "' exceeds the GPU palette texture size limit.");
+
+            var pixels = new Color[width * frameCount];
+            for (int frame = 0; frame < frameCount; frame++)
+            {
+                float sampleTime = frameCount > 1
+                    ? sampled.clip.duration * frame / (frameCount - 1f)
+                    : 0f;
+                FindSampleFrames(sampled.times, sampleTime, out int frameA, out int frameB, out float blend);
+                int row = frame * width;
+                for (int bone = 0; bone < boneCount; bone++)
+                {
+                    if (compact)
+                    {
+                        MatrixToCompact(sampled.palettes[frameA][bone], out Quaternion q0, out Vector3 t0, out float s0);
+                        MatrixToCompact(sampled.palettes[frameB][bone], out Quaternion q1, out Vector3 t1, out float s1);
+                        if (Quaternion.Dot(q0, q1) < 0f)
+                            q1 = new Quaternion(-q1.x, -q1.y, -q1.z, -q1.w);
+                        Quaternion q = Quaternion.SlerpUnclamped(q0, q1, blend);
+                        Vector3 t = Vector3.LerpUnclamped(t0, t1, blend);
+                        float s = Mathf.LerpUnclamped(s0, s1, blend);
+                        int pixel = row + bone * 2;
+                        pixels[pixel] = new Color(q.x, q.y, q.z, q.w);
+                        pixels[pixel + 1] = new Color(t.x, t.y, t.z, s);
+                    }
+                    else
+                    {
+                        Matrix4x4 matrix = LerpMatrix(
+                            sampled.palettes[frameA][bone], sampled.palettes[frameB][bone], blend);
+                        int pixel = row + bone * 3;
+                        pixels[pixel] = new Color(matrix.m00, matrix.m01, matrix.m02, matrix.m03);
+                        pixels[pixel + 1] = new Color(matrix.m10, matrix.m11, matrix.m12, matrix.m13);
+                        pixels[pixel + 2] = new Color(matrix.m20, matrix.m21, matrix.m22, matrix.m23);
+                    }
+                }
+            }
+
+            var texture = new Texture2D(width, frameCount, TextureFormat.RGBAHalf, false, true)
+            {
+                name = clipIndex.ToString("D2") + "_" + sampled.clip.name + "_GpuPalette",
+                filterMode = FilterMode.Point,
+                wrapMode = TextureWrapMode.Clamp
+            };
+            texture.SetPixels(pixels);
+            texture.Apply(false, true);
+            return texture;
+        }
+
+        static void FindSampleFrames(float[] times, float time, out int frameA, out int frameB, out float blend)
+        {
+            int low = 0;
+            int high = Mathf.Max(0, times.Length - 1);
+            while (low + 1 < high)
+            {
+                int middle = (low + high) >> 1;
+                if (times[middle] <= time)
+                    low = middle;
+                else
+                    high = middle;
+            }
+            frameA = low;
+            frameB = Mathf.Min(frameA + 1, times.Length - 1);
+            float duration = times[frameB] - times[frameA];
+            blend = duration > 1e-8f ? Mathf.Clamp01((time - times[frameA]) / duration) : 0f;
+        }
+
+        static Matrix4x4 LerpMatrix(Matrix4x4 a, Matrix4x4 b, float t)
+        {
+            Matrix4x4 result = default;
+            for (int i = 0; i < 16; i++)
+                result[i] = Mathf.LerpUnclamped(a[i], b[i], t);
+            return result;
+        }
+
+        public static byte[] PackSkinWeights(ClusterSkinWeight[] weights)
+        {
+            return PackSkinWeights(weights, ClusterSkinnedMeshAsset.PackedSkinWeightStride);
+        }
+
+        public static byte[] PackSkinWeights(ClusterSkinWeight[] weights, int stride)
+        {
+            if (weights == null || weights.Length == 0)
+                return Array.Empty<byte>();
+            if (stride == ClusterSkinnedMeshAsset.PackedSkinWeightStride8)
+            {
+                var packed8 = new ClusterPackedSkinWeight8[weights.Length];
+                for (int i = 0; i < weights.Length; i++)
+                    packed8[i] = PackSkinWeight8(weights[i]);
+                return DeflateStructs(packed8);
+            }
+            var packed = new ClusterPackedSkinWeight[weights.Length];
+            for (int i = 0; i < weights.Length; i++)
+                packed[i] = PackSkinWeight(weights[i]);
+            return DeflateStructs(packed);
+        }
+
+        public static byte[] PackCullFrames(ClusterSkinnedCullFrame[] frames)
+        {
+            if (frames == null || frames.Length == 0)
+                return Array.Empty<byte>();
+            return DeflateStructs(frames);
+        }
+
+        public static bool CanPackSkinWeights8(ClusterSkinWeight[] weights)
+        {
+            if (weights == null)
+                return false;
+            for (int i = 0; i < weights.Length; i++)
+            {
+                ClusterSkinWeight weight = weights[i];
+                if (UsedBoneExceeds255(weight.boneIndex0, weight.weight0) ||
+                    UsedBoneExceeds255(weight.boneIndex1, weight.weight1) ||
+                    UsedBoneExceeds255(weight.boneIndex2, weight.weight2) ||
+                    UsedBoneExceeds255(weight.boneIndex3, weight.weight3))
+                    return false;
+            }
+            return true;
+        }
+
+        static bool UsedBoneExceeds255(int index, float weight)
+        {
+            return weight > 0f && (index < 0 || index > 255);
+        }
+
+        static byte[] DeflateStructs<T>(T[] items) where T : struct
+        {
+            int size = Marshal.SizeOf<T>();
+            var bytes = new byte[items.Length * size];
+            GCHandle handle = GCHandle.Alloc(items, GCHandleType.Pinned);
+            try
+            {
+                Marshal.Copy(handle.AddrOfPinnedObject(), bytes, 0, bytes.Length);
+            }
+            finally
+            {
+                handle.Free();
+            }
+            return ClusterMeshGeometry.Deflate(bytes);
+        }
+
+        public static ClusterPackedSkinWeight PackSkinWeight(in ClusterSkinWeight weight)
+        {
+            ushort i0 = CheckedBoneIndex(weight.boneIndex0, weight.weight0);
+            ushort i1 = CheckedBoneIndex(weight.boneIndex1, weight.weight1);
+            ushort i2 = CheckedBoneIndex(weight.boneIndex2, weight.weight2);
+            ushort i3 = CheckedBoneIndex(weight.boneIndex3, weight.weight3);
+            float sum = Mathf.Max(0f, weight.weight0) + Mathf.Max(0f, weight.weight1)
+                + Mathf.Max(0f, weight.weight2) + Mathf.Max(0f, weight.weight3);
+            float inv = sum > 1e-8f ? 1f / sum : 0f;
+            ushort[] quantized =
+            {
+                (ushort)Mathf.RoundToInt(Mathf.Max(0f, weight.weight0) * inv * 65535f),
+                (ushort)Mathf.RoundToInt(Mathf.Max(0f, weight.weight1) * inv * 65535f),
+                (ushort)Mathf.RoundToInt(Mathf.Max(0f, weight.weight2) * inv * 65535f),
+                (ushort)Mathf.RoundToInt(Mathf.Max(0f, weight.weight3) * inv * 65535f)
+            };
+            if (sum <= 1e-8f)
+            {
+                i0 = 0;
+                quantized[0] = ushort.MaxValue;
+            }
+            else
+            {
+                int total = quantized[0] + quantized[1] + quantized[2] + quantized[3];
+                int largest = 0;
+                for (int i = 1; i < 4; i++)
+                {
+                    if (quantized[i] > quantized[largest])
+                        largest = i;
+                }
+                quantized[largest] = (ushort)Mathf.Clamp(quantized[largest] + (65535 - total), 0, 65535);
+            }
+            return new ClusterPackedSkinWeight
+            {
+                boneIndices01 = i0 | ((uint)i1 << 16),
+                boneIndices23 = i2 | ((uint)i3 << 16),
+                boneWeights01 = quantized[0] | ((uint)quantized[1] << 16),
+                boneWeights23 = quantized[2] | ((uint)quantized[3] << 16)
+            };
+        }
+
+        public static ClusterPackedSkinWeight8 PackSkinWeight8(in ClusterSkinWeight weight)
+        {
+            byte i0 = CheckedBoneIndex8(weight.boneIndex0, weight.weight0);
+            byte i1 = CheckedBoneIndex8(weight.boneIndex1, weight.weight1);
+            byte i2 = CheckedBoneIndex8(weight.boneIndex2, weight.weight2);
+            byte i3 = CheckedBoneIndex8(weight.boneIndex3, weight.weight3);
+            float sum = Mathf.Max(0f, weight.weight0) + Mathf.Max(0f, weight.weight1)
+                + Mathf.Max(0f, weight.weight2) + Mathf.Max(0f, weight.weight3);
+            float inv = sum > 1e-8f ? 1f / sum : 0f;
+            int[] quantized =
+            {
+                Mathf.RoundToInt(Mathf.Max(0f, weight.weight0) * inv * 255f),
+                Mathf.RoundToInt(Mathf.Max(0f, weight.weight1) * inv * 255f),
+                Mathf.RoundToInt(Mathf.Max(0f, weight.weight2) * inv * 255f),
+                Mathf.RoundToInt(Mathf.Max(0f, weight.weight3) * inv * 255f)
+            };
+            if (sum <= 1e-8f)
+            {
+                i0 = 0;
+                quantized[0] = 255;
+            }
+            else
+            {
+                int total = quantized[0] + quantized[1] + quantized[2] + quantized[3];
+                int largest = 0;
+                for (int i = 1; i < 4; i++)
+                {
+                    if (quantized[i] > quantized[largest])
+                        largest = i;
+                }
+                quantized[largest] = Mathf.Clamp(quantized[largest] + (255 - total), 0, 255);
+            }
+            return new ClusterPackedSkinWeight8
+            {
+                boneIndices = i0 | ((uint)i1 << 8) | ((uint)i2 << 16) | ((uint)i3 << 24),
+                boneWeights = (uint)quantized[0] | ((uint)quantized[1] << 8) |
+                    ((uint)quantized[2] << 16) | ((uint)quantized[3] << 24)
+            };
+        }
+
+        static byte CheckedBoneIndex8(int index, float weight)
+        {
+            if (weight <= 0f)
+                return 0;
+            if (index < 0 || index > 255)
+                throw new InvalidOperationException("A skin weight contains a bone index outside the 8-bit range.");
+            return (byte)index;
+        }
+
+        static ushort CheckedBoneIndex(int index, float weight)
+        {
+            if (weight <= 0f)
+                return 0;
+            if (index < 0 || index > ushort.MaxValue)
+                throw new InvalidOperationException("A skin weight contains a bone index outside the supported ushort range.");
+            return (ushort)index;
+        }
+
+        static ClusterMeshBakeResult BakeGeometry(
+            Mesh mesh,
+            Material[] materials,
+            ClusterSkinWeight[] sourceSkin,
+            ClusterMeshBakeSettings settings,
+            ClusterSkinnedQemContext qemContext,
+            out List<ClusterSkinWeight> outputSkin)
+        {
+            Vector3[] positions = mesh.vertices;
+            Vector3[] normals = mesh.normals;
+            Vector4[] tangents = mesh.tangents;
+            Vector2[] uvs = mesh.uv;
+            if (positions == null || positions.Length == 0)
+                throw new InvalidOperationException("Skinned ClusterMesh baker requires mesh vertices.");
+            if (tangents == null || tangents.Length != positions.Length)
+                tangents = RebuildTangents(positions, normals, uvs, mesh);
+
+            var clusters = new List<ClusterHeader>();
+            var vertices = new List<ClusterVertex>();
+            var indices = new List<uint>();
+            var groups = new List<ClusterGroup>();
+            outputSkin = new List<ClusterSkinWeight>();
+            int subMeshCount = Mathf.Max(1, mesh.subMeshCount);
+            for (int sub = 0; sub < subMeshCount; sub++)
+            {
+                int leafStart = clusters.Count;
+                var triangleList = new List<int>();
+                int[] sourceTriangles = mesh.GetTriangles(sub);
+                for (int i = 0; i + 2 < sourceTriangles.Length; i += 3)
+                {
+                    int a = sourceTriangles[i];
+                    int b = sourceTriangles[i + 1];
+                    int c = sourceTriangles[i + 2];
+                    if (a == b || b == c || a == c)
+                        continue;
+                    triangleList.Add(a);
+                    triangleList.Add(b);
+                    triangleList.Add(c);
+                }
+                ClusterTriangles((uint)sub, triangleList, positions, normals, tangents, uvs, sourceSkin,
+                    settings, clusters, vertices, outputSkin, indices, 0f, ClusterMeshLod.PackFlags(0));
+                if (settings.buildLodHierarchy)
+                    ClusterSkinnedMeshLodBaker.BuildHierarchy(clusters, vertices, outputSkin, indices, groups,
+                        leafStart, clusters.Count, settings, qemContext);
+            }
+            if (clusters.Count == 0)
+                throw new InvalidOperationException("Skinned ClusterMesh baker found no valid triangles.");
+
+            var materialSlots = new Material[subMeshCount];
+            for (int i = 0; materials != null && i < subMeshCount && i < materials.Length; i++)
+                materialSlots[i] = materials[i];
+            return new ClusterMeshBakeResult
+            {
+                clusters = clusters.ToArray(),
+                vertices = vertices.ToArray(),
+                indices = indices.ToArray(),
+                groups = groups.ToArray(),
+                materials = materialSlots,
+                hierarchyVersion = settings.buildLodHierarchy ? ClusterMeshLod.HierarchyVersionDag : 0
+            };
+        }
+
+        internal static void ClusterTriangles(
+            uint materialIndex,
+            List<int> triangleList,
+            Vector3[] positions,
+            Vector3[] normals,
+            Vector4[] tangents,
+            Vector2[] uvs,
+            ClusterSkinWeight[] sourceSkin,
+            ClusterMeshBakeSettings settings,
+            List<ClusterHeader> clusters,
+            List<ClusterVertex> vertices,
+            List<ClusterSkinWeight> destinationSkin,
+            List<uint> indices,
+            float lodError,
+            uint flags)
+        {
+            int triangleCount = triangleList.Count / 3;
+            if (triangleCount == 0)
+                return;
+            var unused = new bool[triangleCount];
+            var vertexToTriangles = new Dictionary<int, List<int>>();
+            for (int t = 0; t < triangleCount; t++)
+            {
+                unused[t] = true;
+                for (int k = 0; k < 3; k++)
+                {
+                    int vertex = triangleList[t * 3 + k];
+                    if (!vertexToTriangles.TryGetValue(vertex, out List<int> list))
+                    {
+                        list = new List<int>();
+                        vertexToTriangles.Add(vertex, list);
+                    }
+                    list.Add(t);
+                }
+            }
+
+            int remaining = triangleCount;
+            while (remaining > 0)
+            {
+                int seed = Array.FindIndex(unused, value => value);
+                var clusterTriangles = new List<int>();
+                var usedVertices = new HashSet<int>();
+                var frontier = new HashSet<int>();
+                var usedBones = new HashSet<int>();
+                var boneMass = new Dictionary<int, float>();
+                var candidateBones = new int[12];
+                var candidateMass = new float[12];
+                var candidateStrong = new bool[12];
+                AddTriangle(seed, triangleList, unused, clusterTriangles, usedVertices,
+                    sourceSkin, vertexToTriangles, frontier, usedBones, boneMass);
+                remaining--;
+                while (true)
+                {
+                    if (clusterTriangles.Count >= settings.maxTrianglesPerCluster)
+                        break;
+                    int candidate = FindCandidate(frontier, triangleList, unused, usedVertices,
+                        sourceSkin, usedBones, boneMass, settings,
+                        candidateBones, candidateMass, candidateStrong);
+                    if (candidate < 0)
+                        break;
+                    AddTriangle(candidate, triangleList, unused, clusterTriangles, usedVertices,
+                        sourceSkin, vertexToTriangles, frontier, usedBones, boneMass);
+                    remaining--;
+                }
+                EmitCluster(materialIndex, clusterTriangles, triangleList, positions, normals, tangents, uvs, sourceSkin,
+                    clusters, vertices, destinationSkin, indices, lodError, flags);
+            }
+        }
+
+        static int FindCandidate(HashSet<int> frontier, List<int> triangles, bool[] unused,
+            HashSet<int> usedVertices, ClusterSkinWeight[] sourceSkin, HashSet<int> usedBones,
+            Dictionary<int, float> boneMass, ClusterMeshBakeSettings settings,
+            int[] candidateBones, float[] candidateMass, bool[] candidateStrong)
+        {
+            int best = -1;
+            float bestCost = float.MaxValue;
+            foreach (int candidate in frontier)
+            {
+                if (!unused[candidate])
+                    continue;
+                int added = 0;
+                for (int n = 0; n < 3; n++)
+                {
+                    if (!usedVertices.Contains(triangles[candidate * 3 + n]))
+                        added++;
+                }
+                if (usedVertices.Count + added > settings.maxVerticesPerCluster)
+                    continue;
+
+                float cost = BoneAffinityCost(candidate, triangles, sourceSkin, usedBones, boneMass,
+                    added, usedVertices.Count, candidateBones, candidateMass, candidateStrong);
+                if (float.IsNaN(cost) || float.IsInfinity(cost))
+                    cost = 1e30f;
+                if (best < 0 || cost < bestCost - 1e-6f ||
+                    (Mathf.Abs(cost - bestCost) <= 1e-6f && candidate < best))
+                {
+                    best = candidate;
+                    bestCost = cost;
+                }
+            }
+            return best;
+        }
+
+        static float BoneAffinityCost(int triangle, List<int> triangles, ClusterSkinWeight[] sourceSkin,
+            HashSet<int> usedBones, Dictionary<int, float> clusterBoneMass, int addedVertices,
+            int usedVertexCount, int[] candidateBones, float[] candidateMass, bool[] candidateStrong)
+        {
+            // A triangle has at most twelve influences; scratch arrays are reused for
+            // every frontier candidate and remain independent of skeleton size.
+            int candidateBoneCount = 0;
+            float candidateTotal = 0f;
+            for (int corner = 0; corner < 3; corner++)
+            {
+                ClusterSkinWeight skin = sourceSkin[triangles[triangle * 3 + corner]];
+                for (int influence = 0; influence < 4; influence++)
+                {
+                    float weight = Mathf.Max(0f, skin.GetWeight(influence));
+                    if (weight <= 0f || float.IsNaN(weight) || float.IsInfinity(weight))
+                        continue;
+                    int bone = skin.GetBoneIndex(influence);
+                    int slot = -1;
+                    for (int i = 0; i < candidateBoneCount; i++)
+                    {
+                        if (candidateBones[i] == bone)
+                        {
+                            slot = i;
+                            break;
+                        }
+                    }
+                    if (slot < 0)
+                    {
+                        slot = candidateBoneCount++;
+                        candidateBones[slot] = bone;
+                        candidateMass[slot] = 0f;
+                        candidateStrong[slot] = false;
+                    }
+                    candidateMass[slot] += weight;
+                    candidateStrong[slot] |= weight >= StrongBoneWeightThreshold;
+                    candidateTotal += weight;
+                }
+            }
+
+            float clusterTotal = Mathf.Max(1, usedVertexCount);
+            float inverseCandidateTotal = candidateTotal > 1e-8f ? 1f / candidateTotal : 0f;
+            float overlap = 0f;
+            float outsideWeight = 0f;
+            int newStrongBones = 0;
+            for (int i = 0; i < candidateBoneCount; i++)
+            {
+                int bone = candidateBones[i];
+                float candidateWeight = candidateMass[i] * inverseCandidateTotal;
+                clusterBoneMass.TryGetValue(bone, out float clusterWeight);
+                clusterWeight /= clusterTotal;
+                overlap += Mathf.Min(candidateWeight, clusterWeight);
+                if (!usedBones.Contains(bone))
+                {
+                    outsideWeight += candidateWeight;
+                    if (candidateStrong[i])
+                        newStrongBones++;
+                }
+            }
+
+            float profileDistance = 1f - Mathf.Clamp01(overlap);
+            int sharedVertices = 3 - addedVertices;
+            return newStrongBones * 16f + outsideWeight * 6f + profileDistance * 4f
+                + addedVertices * 2f - sharedVertices;
+        }
+
+        static void AddTriangle(int triangle, List<int> triangles, bool[] unused,
+            List<int> clusterTriangles, HashSet<int> usedVertices, ClusterSkinWeight[] sourceSkin,
+            Dictionary<int, List<int>> adjacency, HashSet<int> frontier, HashSet<int> usedBones,
+            Dictionary<int, float> boneMass)
+        {
+            unused[triangle] = false;
+            frontier.Remove(triangle);
+            clusterTriangles.Add(triangle);
+            for (int i = 0; i < 3; i++)
+            {
+                int vertex = triangles[triangle * 3 + i];
+                if (usedVertices.Add(vertex))
+                    AccumulateBoneProfile(sourceSkin[vertex], usedBones, boneMass);
+                foreach (int adjacent in adjacency[vertex])
+                {
+                    if (unused[adjacent])
+                        frontier.Add(adjacent);
+                }
+            }
+        }
+
+        static void AccumulateBoneProfile(in ClusterSkinWeight skin, HashSet<int> usedBones,
+            Dictionary<int, float> boneMass)
+        {
+            for (int influence = 0; influence < 4; influence++)
+            {
+                float weight = Mathf.Max(0f, skin.GetWeight(influence));
+                if (weight <= 0f || float.IsNaN(weight) || float.IsInfinity(weight))
+                    continue;
+                int bone = skin.GetBoneIndex(influence);
+                boneMass.TryGetValue(bone, out float mass);
+                boneMass[bone] = mass + weight;
+                if (weight >= StrongBoneWeightThreshold)
+                    usedBones.Add(bone);
+            }
+        }
+
+        static void EmitCluster(
+            uint materialIndex, List<int> clusterTriangles, List<int> triangles,
+            Vector3[] positions, Vector3[] normals, Vector4[] tangents, Vector2[] uvs,
+            ClusterSkinWeight[] sourceSkin, List<ClusterHeader> clusters, List<ClusterVertex> vertices,
+            List<ClusterSkinWeight> destinationSkin, List<uint> destinationIndices, float lodError, uint flags)
+        {
+            var remap = new Dictionary<int, uint>();
+            uint vertexOffset = (uint)vertices.Count;
+            uint indexOffset = (uint)destinationIndices.Count;
+            var clusterPositions = new List<Vector3>();
+            foreach (int triangle in clusterTriangles)
+            {
+                for (int k = 0; k < 3; k++)
+                {
+                    int source = triangles[triangle * 3 + k];
+                    if (!remap.TryGetValue(source, out uint local))
+                    {
+                        local = (uint)remap.Count;
+                        remap.Add(source, local);
+                        Vector3 normal = normals != null && source < normals.Length ? normals[source] : Vector3.up;
+                        Vector4 tangent = tangents != null && source < tangents.Length ? tangents[source] : new Vector4(1f, 0f, 0f, 1f);
+                        Vector2 uv = uvs != null && source < uvs.Length ? uvs[source] : Vector2.zero;
+                        vertices.Add(new ClusterVertex
+                        {
+                            position = positions[source], normal = normal, tangent = tangent,
+                            uv = new Vector4(uv.x, uv.y, 0f, 0f)
+                        });
+                        destinationSkin.Add(sourceSkin[source]);
+                        clusterPositions.Add(positions[source]);
+                    }
+                    destinationIndices.Add(local);
+                }
+            }
+            Vector3 min = clusterPositions[0];
+            Vector3 max = min;
+            for (int i = 1; i < clusterPositions.Count; i++)
+            {
+                min = Vector3.Min(min, clusterPositions[i]);
+                max = Vector3.Max(max, clusterPositions[i]);
+            }
+            Vector3 center = (min + max) * 0.5f;
+            BuildCone(clusterTriangles, triangles, positions, out Vector3 axis, out float cutoff);
+            clusters.Add(new ClusterHeader
+            {
+                vertexOffset = vertexOffset, vertexCount = (uint)remap.Count,
+                indexOffset = indexOffset, triangleCount = (uint)clusterTriangles.Count,
+                materialIndex = materialIndex, parentIndex = ClusterMeshLod.NoParent,
+                lodError = lodError, flags = flags, aabbCenter = center,
+                aabbExtents = (max - min) * 0.5f,
+                coneAxisCutoff = new Vector4(axis.x, axis.y, axis.z, cutoff), coneApex = center
+            });
+        }
+
+        static void BuildCone(List<int> clusterTriangles, List<int> triangles, Vector3[] positions, out Vector3 axis, out float cutoff)
+        {
+            Vector3 weighted = Vector3.zero;
+            var normals = new List<Vector3>();
+            foreach (int triangle in clusterTriangles)
+            {
+                Vector3 a = positions[triangles[triangle * 3]];
+                Vector3 b = positions[triangles[triangle * 3 + 1]];
+                Vector3 c = positions[triangles[triangle * 3 + 2]];
+                Vector3 normal = Vector3.Cross(b - a, c - a);
+                float area = normal.magnitude;
+                if (area < 1e-12f) continue;
+                normal /= area;
+                normals.Add(normal);
+                weighted += normal * area;
+            }
+            if (weighted.sqrMagnitude < 1e-12f)
+            {
+                axis = Vector3.up;
+                cutoff = -1f;
+                return;
+            }
+            axis = weighted.normalized;
+            float minDot = 1f;
+            for (int i = 0; i < normals.Count; i++) minDot = Mathf.Min(minDot, Vector3.Dot(axis, normals[i]));
+            cutoff = minDot < 0f ? -1f : minDot;
+        }
+
+        static ClusterSkinWeight[] ReadSourceWeights(Mesh mesh, int boneCount)
+        {
+            BoneWeight[] source = mesh.boneWeights;
+            if (source == null || source.Length != mesh.vertexCount)
+                throw new InvalidOperationException("SkinnedMesh must have four-influence bone weights for every vertex.");
+            var result = new ClusterSkinWeight[source.Length];
+            for (int i = 0; i < source.Length; i++)
+            {
+                BoneWeight value = source[i];
+                ValidateBone(value.boneIndex0, value.weight0, boneCount);
+                ValidateBone(value.boneIndex1, value.weight1, boneCount);
+                ValidateBone(value.boneIndex2, value.weight2, boneCount);
+                ValidateBone(value.boneIndex3, value.weight3, boneCount);
+                result[i] = ClusterSkinnedMeshQem.BlendWeights(new ClusterSkinWeight
+                {
+                    boneIndex0 = value.boneIndex0, boneIndex1 = value.boneIndex1,
+                    boneIndex2 = value.boneIndex2, boneIndex3 = value.boneIndex3,
+                    weight0 = value.weight0, weight1 = value.weight1,
+                    weight2 = value.weight2, weight3 = value.weight3
+                }, default, 0f);
+            }
+            return result;
+        }
+
+        static void ValidateBone(int index, float weight, int boneCount)
+        {
+            if (weight > 0f && (index < 0 || index >= boneCount))
+                throw new InvalidOperationException("SkinnedMesh contains a bone weight outside the renderer bone array.");
+        }
+
+        static void BuildSkeleton(SkinnedMeshRenderer renderer, Transform[] bones, out string[] paths, out int[] parents)
+        {
+            Transform animationRoot = renderer.transform.root;
+            paths = new string[bones.Length];
+            parents = new int[bones.Length];
+            var lookup = new Dictionary<Transform, int>();
+            for (int i = 0; i < bones.Length; i++)
+            {
+                if (bones[i] == null)
+                    throw new InvalidOperationException("SkinnedMesh bone array contains a missing transform.");
+                lookup[bones[i]] = i;
+                paths[i] = AnimationUtility.CalculateTransformPath(bones[i], animationRoot);
+            }
+            for (int i = 0; i < bones.Length; i++)
+                parents[i] = bones[i].parent != null && lookup.TryGetValue(bones[i].parent, out int parent) ? parent : -1;
+        }
+
+        static SampledClip SampleClip(SkinnedMeshRenderer sourceRenderer, AnimationClip sourceClip, Transform[] sourceBones,
+            int[] parentIndices, Matrix4x4[] bindPoses, float curveTolerance, float minimumSampleRate,
+            bool buildCpuCurves, bool compressCullFrames)
+        {
+            GameObject sourceRoot = sourceRenderer.transform.root.gameObject;
+            GameObject clone = UnityEngine.Object.Instantiate(sourceRoot);
+            clone.hideFlags = HideFlags.HideAndDontSave;
+            try
+            {
+                string rendererPath = AnimationUtility.CalculateTransformPath(sourceRenderer.transform, sourceRoot.transform);
+                Transform rendererTransform = string.IsNullOrEmpty(rendererPath) ? clone.transform : clone.transform.Find(rendererPath);
+                SkinnedMeshRenderer renderer = rendererTransform != null ? rendererTransform.GetComponent<SkinnedMeshRenderer>() : null;
+                if (renderer == null)
+                    throw new InvalidOperationException("Could not locate the SkinnedMeshRenderer in the animation sampling clone.");
+                Transform[] bones = new Transform[sourceBones.Length];
+                for (int i = 0; i < sourceBones.Length; i++)
+                {
+                    string path = AnimationUtility.CalculateTransformPath(sourceBones[i], sourceRoot.transform);
+                    bones[i] = string.IsNullOrEmpty(path) ? clone.transform : clone.transform.Find(path);
+                    if (bones[i] == null)
+                        throw new InvalidOperationException("Could not locate bone '" + path + "' in the animation sampling clone.");
+                }
+
+                Animator animator = FindSamplingAnimator(sourceRenderer, sourceRoot.transform, clone.transform);
+                if (sourceClip.isHumanMotion &&
+                    (animator == null || animator.avatar == null || !animator.avatar.isValid || !animator.avatar.isHuman))
+                {
+                    throw new InvalidOperationException(
+                        "Humanoid clip '" + sourceClip.name + "' requires a valid Humanoid Animator/Avatar " +
+                        "above the selected SkinnedMeshRenderer.");
+                }
+
+                PlayableGraph graph = default;
+                AnimationClipPlayable playable = default;
+                // Humanoid clips contain muscle curves and must be retargeted by an Animator.
+                // Generic and Legacy clips contain Transform bindings and are sampled directly.
+                bool usePlayable = sourceClip.isHumanMotion;
+                GameObject directSampleTarget = usePlayable
+                    ? null
+                    : FindDirectSampleTarget(sourceRenderer, sourceRoot.transform, clone.transform, sourceClip);
+                if (usePlayable)
+                {
+                    animator.enabled = true;
+                    animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+                    animator.applyRootMotion = false;
+                    // Baking only needs the sampled pose. Suppress gameplay AnimationEvents
+                    // such as footsteps on the temporary clone to avoid missing-receiver warnings.
+                    animator.fireEvents = false;
+                    animator.runtimeAnimatorController = null;
+                    animator.Rebind();
+                    animator.Update(0f);
+                    graph = PlayableGraph.Create("ClusterSkinnedMeshBaker");
+                    graph.SetTimeUpdateMode(DirectorUpdateMode.Manual);
+                    playable = AnimationClipPlayable.Create(graph, sourceClip);
+                    playable.SetApplyFootIK(false);
+                    playable.SetApplyPlayableIK(false);
+                    AnimationPlayableOutput output = AnimationPlayableOutput.Create(graph, "Animation", animator);
+                    output.SetSourcePlayable(playable);
+                    graph.Play();
+                }
+
+                float sourceFrameRate = sourceClip.frameRate > 0f ? sourceClip.frameRate : 30f;
+                float frameRate = Mathf.Clamp(Mathf.Max(sourceFrameRate, minimumSampleRate), 1f, 60f);
+                float duration = Mathf.Max(0f, sourceClip.length);
+                int frameCount = Mathf.Max(2, Mathf.CeilToInt(duration * frameRate) + 1);
+                var times = new float[frameCount];
+                var palettes = new Matrix4x4[frameCount][];
+                var positions = buildCpuCurves ? new Vector3[sourceBones.Length][] : null;
+                var rotations = buildCpuCurves ? new Quaternion[sourceBones.Length][] : null;
+                var scales = buildCpuCurves ? new Vector3[sourceBones.Length][] : null;
+                if (buildCpuCurves)
+                {
+                    for (int b = 0; b < sourceBones.Length; b++)
+                    {
+                        positions[b] = new Vector3[frameCount];
+                        rotations[b] = new Quaternion[frameCount];
+                        scales[b] = new Vector3[frameCount];
+                    }
+                }
+                try
+                {
+                    for (int frame = 0; frame < frameCount; frame++)
+                    {
+                        float time = frameCount > 1 ? duration * frame / (frameCount - 1f) : 0f;
+                        times[frame] = time;
+                        if (usePlayable)
+                        {
+                            playable.SetTime(time);
+                            graph.Evaluate(0f);
+                        }
+                        else
+                        {
+                            sourceClip.SampleAnimation(directSampleTarget, time);
+                        }
+                        palettes[frame] = new Matrix4x4[sourceBones.Length];
+                        for (int bone = 0; bone < sourceBones.Length; bone++)
+                        {
+                            if (buildCpuCurves)
+                            {
+                                Transform parent = parentIndices[bone] >= 0 ? bones[parentIndices[bone]] : null;
+                                Matrix4x4 local = parent != null
+                                    ? parent.worldToLocalMatrix * bones[bone].localToWorldMatrix
+                                    : renderer.transform.worldToLocalMatrix * bones[bone].localToWorldMatrix;
+                                Decompose(local, out positions[bone][frame], out rotations[bone][frame], out scales[bone][frame]);
+                                if (frame > 0 && Quaternion.Dot(rotations[bone][frame - 1], rotations[bone][frame]) < 0f)
+                                {
+                                    Quaternion q = rotations[bone][frame];
+                                    rotations[bone][frame] = new Quaternion(-q.x, -q.y, -q.z, -q.w);
+                                }
+                            }
+                            palettes[frame][bone] = renderer.transform.worldToLocalMatrix * bones[bone].localToWorldMatrix * bindPoses[bone];
+                        }
+                    }
+                }
+                finally
+                {
+                    if (graph.IsValid())
+                        graph.Destroy();
+                }
+                if (!sourceClip.empty && duration > 0f && !HasSampledMotion(palettes))
+                {
+                    throw new InvalidOperationException(
+                        "Animation clip '" + sourceClip.name + "' produced no bone motion. " +
+                        (sourceClip.isHumanMotion
+                            ? "Check that the Humanoid Animator Avatar matches the selected SkinnedMeshRenderer."
+                            : "Check that the Generic/Legacy clip binding root matches the selected SkinnedMeshRenderer hierarchy."));
+                }
+                ClusterSkinnedBoneCurves[] curves = null;
+                if (buildCpuCurves)
+                {
+                    curves = new ClusterSkinnedBoneCurves[sourceBones.Length];
+                    for (int bone = 0; bone < sourceBones.Length; bone++)
+                        curves[bone] = FitBoneCurves(
+                            times, positions[bone], rotations[bone], scales[bone], curveTolerance);
+                }
+                int segmentCount = CullSegmentCount(duration, frameRate, compressCullFrames);
+                return new SampledClip
+                {
+                    clip = new ClusterSkinnedClip
+                    {
+                        name = sourceClip.name, duration = duration, frameRate = frameRate,
+                        segmentCount = segmentCount, boneCurves = curves
+                    },
+                    times = times,
+                    palettes = palettes
+                };
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(clone);
+            }
+        }
+
+        static Animator FindSamplingAnimator(
+            SkinnedMeshRenderer sourceRenderer,
+            Transform sourceRoot,
+            Transform cloneRoot)
+        {
+            Animator sourceAnimator = sourceRenderer.GetComponentInParent<Animator>();
+            if (sourceAnimator == null)
+                return null;
+            string path = AnimationUtility.CalculateTransformPath(sourceAnimator.transform, sourceRoot);
+            Transform animatorTransform = string.IsNullOrEmpty(path) ? cloneRoot : cloneRoot.Find(path);
+            return animatorTransform != null ? animatorTransform.GetComponent<Animator>() : null;
+        }
+
+        static GameObject FindDirectSampleTarget(
+            SkinnedMeshRenderer sourceRenderer,
+            Transform sourceRoot,
+            Transform cloneRoot,
+            AnimationClip clip)
+        {
+            Animation sourceAnimation = sourceRenderer.GetComponentInParent<Animation>();
+            if (sourceAnimation != null)
+            {
+                string animationPath = AnimationUtility.CalculateTransformPath(sourceAnimation.transform, sourceRoot);
+                Transform animationTransform = string.IsNullOrEmpty(animationPath)
+                    ? cloneRoot
+                    : cloneRoot.Find(animationPath);
+                if (animationTransform != null)
+                    return animationTransform.gameObject;
+            }
+
+            EditorCurveBinding[] bindings = AnimationUtility.GetCurveBindings(clip);
+            Transform[] candidates = cloneRoot.GetComponentsInChildren<Transform>(true);
+            Transform best = cloneRoot;
+            int bestMatches = -1;
+            for (int candidateIndex = 0; candidateIndex < candidates.Length; candidateIndex++)
+            {
+                Transform candidate = candidates[candidateIndex];
+                int matches = 0;
+                for (int bindingIndex = 0; bindingIndex < bindings.Length; bindingIndex++)
+                {
+                    EditorCurveBinding binding = bindings[bindingIndex];
+                    if (binding.type != typeof(Transform))
+                        continue;
+                    if (string.IsNullOrEmpty(binding.path) || candidate.Find(binding.path) != null)
+                        matches++;
+                }
+                if (matches > bestMatches)
+                {
+                    bestMatches = matches;
+                    best = candidate;
+                }
+            }
+            return best.gameObject;
+        }
+
+        static bool HasSampledMotion(Matrix4x4[][] palettes)
+        {
+            if (palettes == null || palettes.Length < 2 || palettes[0] == null)
+                return false;
+            Matrix4x4[] first = palettes[0];
+            for (int frame = 1; frame < palettes.Length; frame++)
+            {
+                Matrix4x4[] current = palettes[frame];
+                if (current == null || current.Length != first.Length)
+                    continue;
+                for (int bone = 0; bone < first.Length; bone++)
+                {
+                    for (int element = 0; element < 16; element++)
+                    {
+                        if (Mathf.Abs(first[bone][element] - current[bone][element]) > 1e-5f)
+                            return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        static void AddRepresentativePalettes(SampledClip[] clips, ClusterSkinnedQemContext context)
+        {
+            for (int c = 0; c < clips.Length; c++)
+            {
+                int step = Mathf.Max(1, clips[c].palettes.Length / 8);
+                for (int i = 0; i < clips[c].palettes.Length; i += step)
+                    context.posePalettes.Add(clips[c].palettes[i]);
+                if ((clips[c].palettes.Length - 1) % step != 0)
+                    context.posePalettes.Add(clips[c].palettes[clips[c].palettes.Length - 1]);
+            }
+        }
+
+        static ClusterSkinnedBoneCurves FitBoneCurves(float[] times, Vector3[] positions, Quaternion[] rotations,
+            Vector3[] scales, float tolerance)
+        {
+            return new ClusterSkinnedBoneCurves
+            {
+                positionX = FitCurve(times, i => positions[i].x, tolerance),
+                positionY = FitCurve(times, i => positions[i].y, tolerance),
+                positionZ = FitCurve(times, i => positions[i].z, tolerance),
+                rotationX = FitCurve(times, i => rotations[i].x, tolerance),
+                rotationY = FitCurve(times, i => rotations[i].y, tolerance),
+                rotationZ = FitCurve(times, i => rotations[i].z, tolerance),
+                rotationW = FitCurve(times, i => rotations[i].w, tolerance),
+                scaleX = FitCurve(times, i => scales[i].x, tolerance),
+                scaleY = FitCurve(times, i => scales[i].y, tolerance),
+                scaleZ = FitCurve(times, i => scales[i].z, tolerance)
+            };
+        }
+
+        static AnimationCurve FitCurve(float[] times, Func<int, float> sample, float tolerance)
+        {
+            int count = times.Length;
+            var keep = new bool[count];
+            keep[0] = true;
+            keep[count - 1] = true;
+            ReduceCurve(times, sample, 0, count - 1, tolerance, keep);
+            var keys = new List<Keyframe>();
+            for (int i = 0; i < count; i++)
+            {
+                if (keep[i]) keys.Add(new Keyframe(times[i], sample(i)));
+            }
+            var curve = new AnimationCurve(keys.ToArray());
+            for (int i = 0; i < curve.length; i++)
+                AnimationUtility.SetKeyLeftTangentMode(curve, i, AnimationUtility.TangentMode.ClampedAuto);
+            for (int i = 0; i < curve.length; i++)
+                AnimationUtility.SetKeyRightTangentMode(curve, i, AnimationUtility.TangentMode.ClampedAuto);
+            return curve;
+        }
+
+        static void ReduceCurve(float[] times, Func<int, float> sample, int first, int last, float tolerance, bool[] keep)
+        {
+            if (last <= first + 1) return;
+            float dt = times[last] - times[first];
+            float a = sample(first);
+            float b = sample(last);
+            int worst = -1;
+            float worstError = tolerance;
+            for (int i = first + 1; i < last; i++)
+            {
+                float t = dt > 1e-8f ? (times[i] - times[first]) / dt : 0f;
+                float error = Mathf.Abs(sample(i) - Mathf.Lerp(a, b, t));
+                if (error > worstError)
+                {
+                    worstError = error;
+                    worst = i;
+                }
+            }
+            if (worst < 0) return;
+            keep[worst] = true;
+            ReduceCurve(times, sample, first, worst, tolerance, keep);
+            ReduceCurve(times, sample, worst, last, tolerance, keep);
+        }
+
+        static void BuildCullFrames(ClusterMeshBakeResult geometry, List<ClusterSkinWeight> skin, SampledClip clip,
+            List<ClusterSkinnedCullFrame> destination)
+        {
+            int clusterCount = geometry.clusters.Length;
+            for (int segment = 0; segment < clip.clip.segmentCount; segment++)
+            {
+                float start = clip.clip.duration * segment / clip.clip.segmentCount;
+                float end = clip.clip.duration * (segment + 1) / clip.clip.segmentCount;
+                for (int cluster = 0; cluster < clusterCount; cluster++)
+                    destination.Add(BuildCullFrame(geometry, skin, cluster, clip, start, end));
+            }
+        }
+
+        static ClusterSkinnedCullFrame BuildCullFrame(ClusterMeshBakeResult geometry, List<ClusterSkinWeight> skin,
+            int clusterIndex, SampledClip clip, float start, float end)
+        {
+            ClusterHeader header = geometry.clusters[clusterIndex];
+            Vector3 min = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
+            Vector3 max = new Vector3(float.MinValue, float.MinValue, float.MinValue);
+            Vector3 normalSum = Vector3.zero;
+            var normals = new List<Vector3>();
+            bool sampledAny = false;
+            for (int frame = 0; frame < clip.times.Length; frame++)
+            {
+                if (clip.times[frame] + 1e-6f < start || clip.times[frame] - 1e-6f > end)
+                    continue;
+                sampledAny = true;
+                AccumulateCullSample(geometry, skin, header, clip.palettes[frame], ref min, ref max, normalSum, normals);
+            }
+            if (!sampledAny)
+            {
+                int frame = NearestFrame(clip.times, (start + end) * 0.5f);
+                AccumulateCullSample(geometry, skin, header, clip.palettes[frame], ref min, ref max, normalSum, normals);
+            }
+            for (int i = 0; i < normals.Count; i++) normalSum += normals[i];
+            Vector3 center = (min + max) * 0.5f;
+            Vector3 axis = normalSum.sqrMagnitude > 1e-12f ? normalSum.normalized : Vector3.up;
+            float cutoff = 1f;
+            for (int i = 0; i < normals.Count; i++) cutoff = Mathf.Min(cutoff, Vector3.Dot(axis, normals[i]));
+            if (normalSum.sqrMagnitude <= 1e-12f || cutoff < 0f) cutoff = -1f;
+            return new ClusterSkinnedCullFrame
+            {
+                aabbCenter = center, aabbExtents = (max - min) * 0.5f,
+                coneAxisCutoff = new Vector4(axis.x, axis.y, axis.z, cutoff), coneApex = center
+            };
+        }
+
+        static void AccumulateCullSample(ClusterMeshBakeResult geometry, List<ClusterSkinWeight> skin,
+            ClusterHeader header, Matrix4x4[] palette, ref Vector3 min, ref Vector3 max,
+            Vector3 unusedNormalSum, List<Vector3> normals)
+        {
+            int count = (int)header.vertexCount;
+            var positions = new Vector3[count];
+            for (int i = 0; i < count; i++)
+            {
+                int vertex = (int)header.vertexOffset + i;
+                positions[i] = SkinPosition(geometry.vertices[vertex].position, skin[vertex], palette);
+                min = Vector3.Min(min, positions[i]);
+                max = Vector3.Max(max, positions[i]);
+            }
+            for (int triangle = 0; triangle < header.triangleCount; triangle++)
+            {
+                int offset = (int)header.indexOffset + triangle * 3;
+                Vector3 normal = Vector3.Cross(
+                    positions[(int)geometry.indices[offset + 1]] - positions[(int)geometry.indices[offset]],
+                    positions[(int)geometry.indices[offset + 2]] - positions[(int)geometry.indices[offset]]);
+                if (normal.sqrMagnitude > 1e-12f) normals.Add(normal.normalized);
+            }
+        }
+
+        static int NearestFrame(float[] times, float target)
+        {
+            int best = 0;
+            float distance = float.MaxValue;
+            for (int i = 0; i < times.Length; i++)
+            {
+                float d = Mathf.Abs(times[i] - target);
+                if (d < distance) { distance = d; best = i; }
+            }
+            return best;
+        }
+
+        static Vector3 SkinPosition(Vector3 position, in ClusterSkinWeight skin, Matrix4x4[] palette)
+        {
+            Vector3 result = Vector3.zero;
+            for (int i = 0; i < 4; i++)
+            {
+                float weight = skin.GetWeight(i);
+                if (weight > 0f) result += palette[skin.GetBoneIndex(i)].MultiplyPoint3x4(position) * weight;
+            }
+            return result;
+        }
+
+        static void Decompose(Matrix4x4 matrix, out Vector3 position, out Quaternion rotation, out Vector3 scale)
+        {
+            position = matrix.GetColumn(3);
+            Vector3 right = matrix.GetColumn(0);
+            Vector3 up = matrix.GetColumn(1);
+            Vector3 forward = matrix.GetColumn(2);
+            scale = new Vector3(right.magnitude, up.magnitude, forward.magnitude);
+            if (Vector3.Dot(Vector3.Cross(right, up), forward) < 0f) scale.x = -scale.x;
+            if (Mathf.Abs(scale.x) > 1e-8f) right /= scale.x;
+            if (Mathf.Abs(scale.y) > 1e-8f) up /= scale.y;
+            if (Mathf.Abs(scale.z) > 1e-8f) forward /= scale.z;
+            rotation = forward.sqrMagnitude > 1e-12f && up.sqrMagnitude > 1e-12f
+                ? Quaternion.LookRotation(forward, up) : Quaternion.identity;
+        }
+
+        static Vector4[] RebuildTangents(Vector3[] positions, Vector3[] normals, Vector2[] uvs, Mesh mesh)
+        {
+            var result = new Vector4[positions.Length];
+            for (int i = 0; i < result.Length; i++)
+            {
+                Vector3 normal = normals != null && i < normals.Length ? normals[i] : Vector3.up;
+                Vector3 tangent = Vector3.Cross(normal, Mathf.Abs(normal.y) < 0.99f ? Vector3.up : Vector3.right).normalized;
+                result[i] = new Vector4(tangent.x, tangent.y, tangent.z, 1f);
+            }
+            return result;
+        }
+    }
+}

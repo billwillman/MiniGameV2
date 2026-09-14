@@ -1,0 +1,27 @@
+namespace ClusterMesh
+{
+    public static class ClusterMeshLimits
+    {
+        public const int MaxVerticesPerCluster = 64;
+        public const int MaxTrianglesPerCluster = 124;
+        public const int TemplateVertexCount = MaxTrianglesPerCluster * 3;
+        public const int MaxBatchedObjects = 256;
+        public const int ClusterHeaderStride = 96;
+        public const int ClusterGroupStride = 48;
+        public const int ClusterVertexStride = 32;
+        public const int TightVertexStride = 24;
+        public const int ObjectSHStride = 112;
+        public const int GeometryVersion = 1;
+
+        public static uint PackVisibleId(int objectIndex, int clusterIndex)
+        {
+            return ((uint)objectIndex << 16) | (uint)clusterIndex;
+        }
+
+        public static void UnpackVisibleId(uint packed, out int objectIndex, out int clusterIndex)
+        {
+            objectIndex = (int)(packed >> 16);
+            clusterIndex = (int)(packed & 0xFFFFu);
+        }
+    }
+}

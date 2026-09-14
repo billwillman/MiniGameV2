@@ -1,0 +1,220 @@
+using UnityEngine;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
+
+namespace ClusterMesh
+{
+    public sealed class ClusterMeshUrpFeature : ScriptableRendererFeature
+    {
+        ClusterMeshUrpPass _depthPass;
+        ClusterMeshUrpPass _colorPass;
+        ClusterMeshUrpPass _gbufferPass;
+        ClusterMeshUrpPass _motionPass;
+        ClusterMeshUrpPass _depthNormalsPass;
+
+        public override void Create()
+        {
+            RenderPipelineManager.beginCameraRendering -= OnBeginCameraRendering;
+            RenderPipelineManager.beginCameraRendering += OnBeginCameraRendering;
+            _depthPass = new ClusterMeshUrpPass(RenderPassEvent.BeforeRenderingPrePasses, ClusterMeshUrpPhase.Depth);
+            _colorPass = new ClusterMeshUrpPass(RenderPassEvent.BeforeRenderingOpaques, ClusterMeshUrpPhase.Color);
+            _gbufferPass = new ClusterMeshUrpPass(
+                (RenderPassEvent)((int)RenderPassEvent.BeforeRenderingGbuffer + 1),
+                ClusterMeshUrpPhase.GBuffer);
+            _motionPass = new ClusterMeshUrpPass(
+                ClusterMeshUrpBridge.CurrentMotionVectorPassEvent,
+                ClusterMeshUrpPhase.Motion);
+            _depthNormalsPass = new ClusterMeshUrpPass(
+                ClusterMeshUrpBridge.DepthNormalsPassEvent,
+                ClusterMeshUrpPhase.DepthNormals);
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            RenderPipelineManager.beginCameraRendering -= OnBeginCameraRendering;
+            base.Dispose(disposing);
+        }
+
+        static void OnBeginCameraRendering(ScriptableRenderContext context, Camera camera)
+        {
+            ClusterMeshUrpBridge.SubmitUrpShadowsBeforeCull(camera);
+        }
+
+        public override void OnCameraPreCull(ScriptableRenderer renderer, in CameraData cameraData)
+        {
+            ClusterMeshUrpBridge.SubmitUrpShadowsBeforeCull(cameraData.camera);
+        }
+
+        public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)
+        {
+            Camera camera = renderingData.cameraData.camera;
+            if (!ClusterMeshUrpBridge.ShouldSubmitUrp(camera))
+                return;
+
+            ClusterMeshUrpBridge.SubmitUrpShadowsBeforeCull(camera);
+            // One shading raster only. A DepthOnly pass plus Forward/GBuffer writes the
+            // same clusters twice (often onto the camera target). Scene View is a single
+            // Graphics.Draw; the extra prepass showed up as stacked / broken silhouettes
+            // in Game View. Color and GBuffer already ZWrite.
+            if (ClusterMeshUrpBridge.IsDeferred(renderer))
+            {
+                _gbufferPass.Setup(renderer);
+                renderer.EnqueuePass(_gbufferPass);
+            }
+            else
+            {
+                renderer.EnqueuePass(_colorPass);
+            }
+
+            if (ClusterMeshSceneBatcher.HasMotionVectors(camera) ||
+                ClusterSkinnedMeshSceneBatcher.HasMotionVectors(camera))
+            {
+                _motionPass.renderPassEvent = ClusterMeshUrpBridge.CurrentMotionVectorPassEvent;
+                _motionPass.Setup(renderer);
+                renderer.EnqueuePass(_motionPass);
+            }
+
+            if (!ClusterMeshUrpBridge.IsDeferred(renderer) &&
+                (ClusterMeshSceneBatcher.HasDepthNormals(camera) ||
+                    ClusterSkinnedMeshSceneBatcher.HasDepthNormals(camera)))
+            {
+                _depthNormalsPass.Setup(renderer);
+                renderer.EnqueuePass(_depthNormalsPass);
+            }
+        }
+    }
+
+    enum ClusterMeshUrpPhase
+    {
+        Depth,
+        Color,
+        GBuffer,
+        Motion,
+        DepthNormals
+    }
+
+    sealed class ClusterMeshUrpPass : ScriptableRenderPass
+    {
+        readonly ClusterMeshUrpPhase _phase;
+        ScriptableRenderer _renderer;
+        bool _deferredTargetsReady;
+        bool _motionTargetsReady;
+        bool _depthNormalsTargetsReady;
+        bool _loggedDeferredTargetFailure;
+        static readonly int MotionVectorParamsId = Shader.PropertyToID("unity_MotionVectorsParams");
+
+        public ClusterMeshUrpPass(RenderPassEvent evt, ClusterMeshUrpPhase phase)
+        {
+            renderPassEvent = evt;
+            _phase = phase;
+            if (_phase == ClusterMeshUrpPhase.Motion)
+                ConfigureInput(ScriptableRenderPassInput.Motion);
+            if (_phase == ClusterMeshUrpPhase.DepthNormals)
+                ConfigureInput(ScriptableRenderPassInput.Normal | ScriptableRenderPassInput.Depth);
+        }
+
+        public void Setup(ScriptableRenderer renderer)
+        {
+            _renderer = renderer;
+            _deferredTargetsReady = false;
+            _motionTargetsReady = false;
+            _depthNormalsTargetsReady = false;
+        }
+
+        public override void Configure(CommandBuffer cmd, RenderTextureDescriptor cameraTextureDescriptor)
+        {
+            // URP calls every OnCameraSetup first, then every Configure. GBufferPass
+            // reallocates _GBuffer0 in Configure. Binding here keeps color/depth sizes aligned.
+            if (_phase == ClusterMeshUrpPhase.GBuffer)
+            {
+                bool found = ClusterMeshUrpBridge.TryGetDeferredTargets(
+                    _renderer, out RTHandle[] colors, out RTHandle depth, out _);
+                _deferredTargetsReady = found &&
+                    ClusterMeshUrpBridge.AreCompatibleDeferredTargets(colors, depth);
+                if (_deferredTargetsReady)
+                {
+                    ConfigureTarget(colors, depth);
+                    ConfigureClear(ClearFlag.None, Color.black);
+                    _loggedDeferredTargetFailure = false;
+                }
+                else if (!_loggedDeferredTargetFailure)
+                {
+                    Debug.LogError(
+                        "ClusterMesh: URP Deferred GBuffer binding failed; ClusterMesh GBuffer submission was skipped. " +
+                        (found
+                            ? "GBuffer color and depth attachments have different dimensions."
+                            : ClusterMeshUrpBridge.LastDeferredBindingError));
+                    _loggedDeferredTargetFailure = true;
+                }
+            }
+            else if (_phase == ClusterMeshUrpPhase.Motion)
+            {
+                _motionTargetsReady = ClusterMeshUrpBridge.TryGetMotionVectorTargets(
+                    _renderer, out RTHandle color, out RTHandle depth) &&
+                    ClusterMeshUrpBridge.AreCompatibleDeferredTargets(new[] { color }, depth);
+                if (_motionTargetsReady)
+                {
+                    ConfigureTarget(color, depth);
+                    ConfigureClear(ClearFlag.None, Color.black);
+                }
+            }
+            else if (_phase == ClusterMeshUrpPhase.DepthNormals)
+            {
+                _depthNormalsTargetsReady =
+                    ClusterMeshUrpBridge.TryGetDepthNormalsTargets(
+                        _renderer, out RTHandle normals, out RTHandle depth) &&
+                    ClusterMeshUrpBridge.AreCompatibleDepthNormalsTargets(normals, depth);
+                if (_depthNormalsTargetsReady)
+                {
+                    ConfigureTarget(normals, depth);
+                    ConfigureClear(ClearFlag.None, Color.black);
+                }
+            }
+        }
+
+        public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
+        {
+            Camera camera = renderingData.cameraData.camera;
+            string passName = _phase == ClusterMeshUrpPhase.Depth
+                ? "ClusterMesh Depth"
+                : (_phase == ClusterMeshUrpPhase.GBuffer ? "ClusterMesh URP GBuffer"
+                    : (_phase == ClusterMeshUrpPhase.Motion ? "ClusterMesh Motion Vectors"
+                        : (_phase == ClusterMeshUrpPhase.DepthNormals
+                            ? "ClusterMesh DepthNormals"
+                            : "ClusterMesh Color")));
+            CommandBuffer cmd = CommandBufferPool.Get(passName);
+            ClusterMeshMaterialUtil.BeginEditorSyncCompilation(cmd);
+            if (_phase == ClusterMeshUrpPhase.Depth)
+            {
+                ClusterMeshSceneBatcher.SubmitUrpDepth(camera, cmd);
+                ClusterSkinnedMeshSceneBatcher.SubmitUrpDepth(camera, cmd);
+            }
+            else if (_phase == ClusterMeshUrpPhase.Color)
+            {
+                ClusterMeshSceneBatcher.SubmitUrpColor(camera, cmd);
+                ClusterSkinnedMeshSceneBatcher.SubmitUrpColor(camera, cmd);
+            }
+            else if (_phase == ClusterMeshUrpPhase.GBuffer && _deferredTargetsReady)
+            {
+                ClusterMeshSceneBatcher.SubmitUrpGBuffer(camera, cmd);
+                ClusterSkinnedMeshSceneBatcher.SubmitUrpGBuffer(camera, cmd);
+            }
+            else if (_phase == ClusterMeshUrpPhase.Motion && _motionTargetsReady)
+            {
+                // Indirect draws do not receive Unity's per-Renderer motion constants.
+                // Keep the official URP convention enabled for our explicit history data.
+                cmd.SetGlobalVector(MotionVectorParamsId, new Vector4(0f, 1f, 0f, 0f));
+                ClusterMeshSceneBatcher.SubmitUrpMotionVectors(camera, cmd);
+                ClusterSkinnedMeshSceneBatcher.SubmitUrpMotionVectors(camera, cmd);
+            }
+            else if (_phase == ClusterMeshUrpPhase.DepthNormals && _depthNormalsTargetsReady)
+            {
+                ClusterMeshSceneBatcher.SubmitUrpDepthNormals(camera, cmd);
+                ClusterSkinnedMeshSceneBatcher.SubmitUrpDepthNormals(camera, cmd);
+            }
+            ClusterMeshMaterialUtil.EndEditorSyncCompilation(cmd);
+            context.ExecuteCommandBuffer(cmd);
+            CommandBufferPool.Release(cmd);
+        }
+    }
+}

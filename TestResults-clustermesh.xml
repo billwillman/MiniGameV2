@@ -1,0 +1,759 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="207" result="Skipped:Ignored" total="207" passed="204" failed="0" inconclusive="0" skipped="3" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-09-12 06:10:46Z" end-time="2026-09-12 06:10:50Z" duration="4.0111258">
+  <test-suite type="TestSuite" id="1240" name="MiniGameV2" fullname="MiniGameV2" runstate="Runnable" testcasecount="207" result="Skipped" label="Ignored" start-time="2026-09-12 06:10:46Z" end-time="2026-09-12 06:10:50Z" duration="4.011126" total="207" passed="204" failed="0" inconclusive="0" skipped="3" asserts="0">
+    <properties />
+    <reason>
+      <message><![CDATA[One or more child tests were ignored]]></message>
+    </reason>
+    <test-suite type="Assembly" id="1473" name="ClusterMesh.Editor.Tests.dll" fullname="D:/MiniGameV2/Library/ScriptAssemblies/ClusterMesh.Editor.Tests.dll" runstate="Runnable" testcasecount="207" result="Skipped" label="Ignored" start-time="2026-09-12 06:10:46Z" end-time="2026-09-12 06:10:50Z" duration="3.988012" total="207" passed="204" failed="0" inconclusive="0" skipped="3" asserts="0">
+      <properties>
+        <property name="_PID" value="15332" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="EditMode" />
+      </properties>
+      <reason>
+        <message><![CDATA[One or more child tests were ignored]]></message>
+      </reason>
+      <test-suite type="TestSuite" id="1474" name="ClusterMesh" fullname="ClusterMesh" runstate="Runnable" testcasecount="207" result="Skipped" label="Ignored" start-time="2026-09-12 06:10:46Z" end-time="2026-09-12 06:10:50Z" duration="3.984965" total="207" passed="204" failed="0" inconclusive="0" skipped="3" asserts="0">
+        <properties />
+        <reason>
+          <message><![CDATA[One or more child tests were ignored]]></message>
+        </reason>
+        <test-suite type="TestSuite" id="1475" name="Tests" fullname="ClusterMesh.Tests" runstate="Runnable" testcasecount="207" result="Skipped" label="Ignored" start-time="2026-09-12 06:10:46Z" end-time="2026-09-12 06:10:50Z" duration="3.979503" total="207" passed="204" failed="0" inconclusive="0" skipped="3" asserts="0">
+          <properties />
+          <reason>
+            <message><![CDATA[One or more child tests were ignored]]></message>
+          </reason>
+          <test-suite type="TestFixture" id="1241" name="ClusterMeshBakerTests" fullname="ClusterMesh.Tests.ClusterMeshBakerTests" classname="ClusterMesh.Tests.ClusterMeshBakerTests" runstate="Runnable" testcasecount="16" result="Passed" start-time="2026-09-12 06:10:46Z" end-time="2026-09-12 06:10:47Z" duration="0.582407" total="16" passed="16" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-case id="1257" name="Bake_EmptyTangents_RebuildsFromUvAndPosition" fullname="ClusterMesh.Tests.ClusterMeshBakerTests.Bake_EmptyTangents_RebuildsFromUvAndPosition" methodname="Bake_EmptyTangents_RebuildsFromUvAndPosition" classname="ClusterMesh.Tests.ClusterMeshBakerTests" runstate="Runnable" seed="1041329649" result="Passed" start-time="2026-09-12 06:10:46Z" end-time="2026-09-12 06:10:46Z" duration="0.028005" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1243" name="Bake_GridLargerThanBudget_SplitsAndCoversEveryTriangleOnce" fullname="ClusterMesh.Tests.ClusterMeshBakerTests.Bake_GridLargerThanBudget_SplitsAndCoversEveryTriangleOnce" methodname="Bake_GridLargerThanBudget_SplitsAndCoversEveryTriangleOnce" classname="ClusterMesh.Tests.ClusterMeshBakerTests" runstate="Runnable" seed="1543538370" result="Passed" start-time="2026-09-12 06:10:46Z" end-time="2026-09-12 06:10:46Z" duration="0.194972" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1246" name="Bake_LodOff_Grid_TriangleCountEqualsSource" fullname="ClusterMesh.Tests.ClusterMeshBakerTests.Bake_LodOff_Grid_TriangleCountEqualsSource" methodname="Bake_LodOff_Grid_TriangleCountEqualsSource" classname="ClusterMesh.Tests.ClusterMeshBakerTests" runstate="Runnable" seed="212363178" result="Passed" start-time="2026-09-12 06:10:46Z" end-time="2026-09-12 06:10:46Z" duration="0.010643" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1252" name="Bake_LodOn_BumpyFourQuads_ParentErrorTracksHeight" fullname="ClusterMesh.Tests.ClusterMeshBakerTests.Bake_LodOn_BumpyFourQuads_ParentErrorTracksHeight" methodname="Bake_LodOn_BumpyFourQuads_ParentErrorTracksHeight" classname="ClusterMesh.Tests.ClusterMeshBakerTests" runstate="Runnable" seed="2101256019" result="Passed" start-time="2026-09-12 06:10:46Z" end-time="2026-09-12 06:10:46Z" duration="0.002174" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1255" name="Bake_LodOn_FourIsolatedGrids_DoesNotForceParentGroup" fullname="ClusterMesh.Tests.ClusterMeshBakerTests.Bake_LodOn_FourIsolatedGrids_DoesNotForceParentGroup" methodname="Bake_LodOn_FourIsolatedGrids_DoesNotForceParentGroup" classname="ClusterMesh.Tests.ClusterMeshBakerTests" runstate="Runnable" seed="549363809" result="Passed" start-time="2026-09-12 06:10:46Z" end-time="2026-09-12 06:10:46Z" duration="0.003119" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1249" name="Bake_LodOn_FourQuads_LockedBorderInParents" fullname="ClusterMesh.Tests.ClusterMeshBakerTests.Bake_LodOn_FourQuads_LockedBorderInParents" methodname="Bake_LodOn_FourQuads_LockedBorderInParents" classname="ClusterMesh.Tests.ClusterMeshBakerTests" runstate="Runnable" seed="1224952414" result="Passed" start-time="2026-09-12 06:10:46Z" end-time="2026-09-12 06:10:46Z" duration="0.003119" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1248" name="Bake_LodOn_FourQuads_OneGroup_SharedParentIndex" fullname="ClusterMesh.Tests.ClusterMeshBakerTests.Bake_LodOn_FourQuads_OneGroup_SharedParentIndex" methodname="Bake_LodOn_FourQuads_OneGroup_SharedParentIndex" classname="ClusterMesh.Tests.ClusterMeshBakerTests" runstate="Runnable" seed="1238941966" result="Passed" start-time="2026-09-12 06:10:46Z" end-time="2026-09-12 06:10:46Z" duration="0.000833" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1250" name="Bake_LodOn_FourQuads_WeldedSoup_NineVertsEightBoundaryEdges" fullname="ClusterMesh.Tests.ClusterMeshBakerTests.Bake_LodOn_FourQuads_WeldedSoup_NineVertsEightBoundaryEdges" methodname="Bake_LodOn_FourQuads_WeldedSoup_NineVertsEightBoundaryEdges" classname="ClusterMesh.Tests.ClusterMeshBakerTests" runstate="Runnable" seed="1462216776" result="Passed" start-time="2026-09-12 06:10:46Z" end-time="2026-09-12 06:10:46Z" duration="0.001454" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1247" name="Bake_LodOn_Grid_HasParent_LeafTrisEqualSource" fullname="ClusterMesh.Tests.ClusterMeshBakerTests.Bake_LodOn_Grid_HasParent_LeafTrisEqualSource" methodname="Bake_LodOn_Grid_HasParent_LeafTrisEqualSource" classname="ClusterMesh.Tests.ClusterMeshBakerTests" runstate="Runnable" seed="1017825764" result="Passed" start-time="2026-09-12 06:10:46Z" end-time="2026-09-12 06:10:47Z" duration="0.164107" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1254" name="Bake_LodOn_Grid_OwningGroupParentIsSharedByAllMembers" fullname="ClusterMesh.Tests.ClusterMeshBakerTests.Bake_LodOn_Grid_OwningGroupParentIsSharedByAllMembers" methodname="Bake_LodOn_Grid_OwningGroupParentIsSharedByAllMembers" classname="ClusterMesh.Tests.ClusterMeshBakerTests" runstate="Runnable" seed="470956330" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.150461" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1256" name="Bake_NullMesh_Throws" fullname="ClusterMesh.Tests.ClusterMeshBakerTests.Bake_NullMesh_Throws" methodname="Bake_NullMesh_Throws" classname="ClusterMesh.Tests.ClusterMeshBakerTests" runstate="Runnable" seed="1996934350" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.001404" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1242" name="Bake_SingleTriangle_OneClusterWithinBudget" fullname="ClusterMesh.Tests.ClusterMeshBakerTests.Bake_SingleTriangle_OneClusterWithinBudget" methodname="Bake_SingleTriangle_OneClusterWithinBudget" classname="ClusterMesh.Tests.ClusterMeshBakerTests" runstate="Runnable" seed="1653524070" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.001118" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1245" name="Bake_SkipsDegenerateTriangles" fullname="ClusterMesh.Tests.ClusterMeshBakerTests.Bake_SkipsDegenerateTriangles" methodname="Bake_SkipsDegenerateTriangles" classname="ClusterMesh.Tests.ClusterMeshBakerTests" runstate="Runnable" seed="1193348416" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000428" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1253" name="Bake_TwoFarTriangles_DefaultBudget_TwoClusters" fullname="ClusterMesh.Tests.ClusterMeshBakerTests.Bake_TwoFarTriangles_DefaultBudget_TwoClusters" methodname="Bake_TwoFarTriangles_DefaultBudget_TwoClusters" classname="ClusterMesh.Tests.ClusterMeshBakerTests" runstate="Runnable" seed="1761550526" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000517" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1244" name="Bake_TwoSubmeshes_SetsDistinctMaterialIndices" fullname="ClusterMesh.Tests.ClusterMeshBakerTests.Bake_TwoSubmeshes_SetsDistinctMaterialIndices" methodname="Bake_TwoSubmeshes_SetsDistinctMaterialIndices" classname="ClusterMesh.Tests.ClusterMeshBakerTests" runstate="Runnable" seed="336364501" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000641" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1251" name="SurfaceDeviation_PointAboveFlatQuad_IsHeight" fullname="ClusterMesh.Tests.ClusterMeshBakerTests.SurfaceDeviation_PointAboveFlatQuad_IsHeight" methodname="SurfaceDeviation_PointAboveFlatQuad_IsHeight" classname="ClusterMesh.Tests.ClusterMeshBakerTests" runstate="Runnable" seed="789180532" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000830" asserts="0">
+              <properties />
+            </test-case>
+          </test-suite>
+          <test-suite type="TestFixture" id="1258" name="ClusterMeshBakerWindowTests" fullname="ClusterMesh.Tests.ClusterMeshBakerWindowTests" classname="ClusterMesh.Tests.ClusterMeshBakerWindowTests" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.030573" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-case id="1261" name="WriteAsset_Default_Keeps32ByteStride" fullname="ClusterMesh.Tests.ClusterMeshBakerWindowTests.WriteAsset_Default_Keeps32ByteStride" methodname="WriteAsset_Default_Keeps32ByteStride" classname="ClusterMesh.Tests.ClusterMeshBakerWindowTests" runstate="Runnable" seed="588980073" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.015154" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1260" name="WriteAsset_LodOff_WritesVersionZero" fullname="ClusterMesh.Tests.ClusterMeshBakerWindowTests.WriteAsset_LodOff_WritesVersionZero" methodname="WriteAsset_LodOff_WritesVersionZero" classname="ClusterMesh.Tests.ClusterMeshBakerWindowTests" runstate="Runnable" seed="210515257" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.009934" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1259" name="WriteAsset_PopulatesClusters" fullname="ClusterMesh.Tests.ClusterMeshBakerWindowTests.WriteAsset_PopulatesClusters" methodname="WriteAsset_PopulatesClusters" classname="ClusterMesh.Tests.ClusterMeshBakerWindowTests" runstate="Runnable" seed="418514209" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000630" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1262" name="WriteAsset_TightRestOn_Writes24ByteStride" fullname="ClusterMesh.Tests.ClusterMeshBakerWindowTests.WriteAsset_TightRestOn_Writes24ByteStride" methodname="WriteAsset_TightRestOn_Writes24ByteStride" classname="ClusterMesh.Tests.ClusterMeshBakerWindowTests" runstate="Runnable" seed="1720327810" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.002774" asserts="0">
+              <properties />
+            </test-case>
+          </test-suite>
+          <test-suite type="TestFixture" id="1263" name="ClusterMeshBatcherTests" fullname="ClusterMesh.Tests.ClusterMeshBatcherTests" classname="ClusterMesh.Tests.ClusterMeshBatcherTests" runstate="Runnable" testcasecount="7" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.017165" total="7" passed="7" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-case id="1267" name="CollectBatches_TenSameAssetSameCamera_OneDraw" fullname="ClusterMesh.Tests.ClusterMeshBatcherTests.CollectBatches_TenSameAssetSameCamera_OneDraw" methodname="CollectBatches_TenSameAssetSameCamera_OneDraw" classname="ClusterMesh.Tests.ClusterMeshBatcherTests" runstate="Runnable" seed="300046894" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.005314" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1268" name="CollectBatches_TwoAssets_TwoBatches" fullname="ClusterMesh.Tests.ClusterMeshBatcherTests.CollectBatches_TwoAssets_TwoBatches" methodname="CollectBatches_TwoAssets_TwoBatches" classname="ClusterMesh.Tests.ClusterMeshBatcherTests" runstate="Runnable" seed="1106260211" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000922" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1269" name="CollectBatches_TwoCameras_TwoBatches" fullname="ClusterMesh.Tests.ClusterMeshBatcherTests.CollectBatches_TwoCameras_TwoBatches" methodname="CollectBatches_TwoCameras_TwoBatches" classname="ClusterMesh.Tests.ClusterMeshBatcherTests" runstate="Runnable" seed="508095294" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000718" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1266" name="CountDrawCalls_MatchesMaterialAndChunkRules" fullname="ClusterMesh.Tests.ClusterMeshBatcherTests.CountDrawCalls_MatchesMaterialAndChunkRules" methodname="CountDrawCalls_MatchesMaterialAndChunkRules" classname="ClusterMesh.Tests.ClusterMeshBatcherTests" runstate="Runnable" seed="370964314" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000284" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1265" name="DisposeCachedContexts_Twice_DoesNotThrow" fullname="ClusterMesh.Tests.ClusterMeshBatcherTests.DisposeCachedContexts_Twice_DoesNotThrow" methodname="DisposeCachedContexts_Twice_DoesNotThrow" classname="ClusterMesh.Tests.ClusterMeshBatcherTests" runstate="Runnable" seed="1913562255" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000932" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1264" name="PackVisibleId_RoundTripsObjectAndCluster" fullname="ClusterMesh.Tests.ClusterMeshBatcherTests.PackVisibleId_RoundTripsObjectAndCluster" methodname="PackVisibleId_RoundTripsObjectAndCluster" classname="ClusterMesh.Tests.ClusterMeshBatcherTests" runstate="Runnable" seed="880818212" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000466" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1270" name="Unregister_RemovesRendererFromRegisteredBatches" fullname="ClusterMesh.Tests.ClusterMeshBatcherTests.Unregister_RemovesRendererFromRegisteredBatches" methodname="Unregister_RemovesRendererFromRegisteredBatches" classname="ClusterMesh.Tests.ClusterMeshBatcherTests" runstate="Runnable" seed="418486201" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.005718" asserts="0">
+              <properties />
+              <output><![CDATA[ClusterMesh: Vertex-stage compute buffers are insufficient for ClusterMesh.
+]]></output>
+            </test-case>
+          </test-suite>
+          <test-suite type="TestFixture" id="1271" name="ClusterMeshCapabilityTests" fullname="ClusterMesh.Tests.ClusterMeshCapabilityTests" classname="ClusterMesh.Tests.ClusterMeshCapabilityTests" runstate="Runnable" testcasecount="1" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.002110" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-case id="1272" name="IsSupported_MatchesReasonRule" fullname="ClusterMesh.Tests.ClusterMeshCapabilityTests.IsSupported_MatchesReasonRule" methodname="IsSupported_MatchesReasonRule" classname="ClusterMesh.Tests.ClusterMeshCapabilityTests" runstate="Runnable" seed="1112945822" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.001156" asserts="0">
+              <properties />
+            </test-case>
+          </test-suite>
+          <test-suite type="TestFixture" id="1273" name="ClusterMeshCpuCullTests" fullname="ClusterMesh.Tests.ClusterMeshCpuCullTests" classname="ClusterMesh.Tests.ClusterMeshCpuCullTests" runstate="Runnable" testcasecount="14" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.017536" total="14" passed="14" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-case id="1285" name="CompactCount_OneInView_ThreeBehindLightFromFront_KeepsOne" fullname="ClusterMesh.Tests.ClusterMeshCpuCullTests.CompactCount_OneInView_ThreeBehindLightFromFront_KeepsOne" methodname="CompactCount_OneInView_ThreeBehindLightFromFront_KeepsOne" classname="ClusterMesh.Tests.ClusterMeshCpuCullTests" runstate="Runnable" seed="287815440" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.001694" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1278" name="CountIndirectDraws_SplitsWhenRequested" fullname="ClusterMesh.Tests.ClusterMeshCpuCullTests.CountIndirectDraws_SplitsWhenRequested" methodname="CountIndirectDraws_SplitsWhenRequested" classname="ClusterMesh.Tests.ClusterMeshCpuCullTests" runstate="Runnable" seed="1250822793" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000428" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1275" name="EnableCameraCull_DefaultsTrue" fullname="ClusterMesh.Tests.ClusterMeshCpuCullTests.EnableCameraCull_DefaultsTrue" methodname="EnableCameraCull_DefaultsTrue" classname="ClusterMesh.Tests.ClusterMeshCpuCullTests" runstate="Runnable" seed="629137219" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000716" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1274" name="EnableCpuObjectCull_DefaultsTrue" fullname="ClusterMesh.Tests.ClusterMeshCpuCullTests.EnableCpuObjectCull_DefaultsTrue" methodname="EnableCpuObjectCull_DefaultsTrue" classname="ClusterMesh.Tests.ClusterMeshCpuCullTests" runstate="Runnable" seed="2075044186" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000362" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1284" name="ExtrudeTowardBack_DropsNear_KeepsBehindPoint" fullname="ClusterMesh.Tests.ClusterMeshCpuCullTests.ExtrudeTowardBack_DropsNear_KeepsBehindPoint" methodname="ExtrudeTowardBack_DropsNear_KeepsBehindPoint" classname="ClusterMesh.Tests.ClusterMeshCpuCullTests" runstate="Runnable" seed="813005918" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000328" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1280" name="KeepObject_Behind_DisableCpuCull_True" fullname="ClusterMesh.Tests.ClusterMeshCpuCullTests.KeepObject_Behind_DisableCpuCull_True" methodname="KeepObject_Behind_DisableCpuCull_True" classname="ClusterMesh.Tests.ClusterMeshCpuCullTests" runstate="Runnable" seed="654587504" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000277" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1282" name="KeepObject_Behind_LightFromBehind_Kept" fullname="ClusterMesh.Tests.ClusterMeshCpuCullTests.KeepObject_Behind_LightFromBehind_Kept" methodname="KeepObject_Behind_LightFromBehind_Kept" classname="ClusterMesh.Tests.ClusterMeshCpuCullTests" runstate="Runnable" seed="1575164797" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000275" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1283" name="KeepObject_Behind_LightFromFront_Dropped" fullname="ClusterMesh.Tests.ClusterMeshCpuCullTests.KeepObject_Behind_LightFromFront_Dropped" methodname="KeepObject_Behind_LightFromFront_Dropped" classname="ClusterMesh.Tests.ClusterMeshCpuCullTests" runstate="Runnable" seed="334383792" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000261" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1281" name="KeepObject_Behind_NoShadowVolume_False" fullname="ClusterMesh.Tests.ClusterMeshCpuCullTests.KeepObject_Behind_NoShadowVolume_False" methodname="KeepObject_Behind_NoShadowVolume_False" classname="ClusterMesh.Tests.ClusterMeshCpuCullTests" runstate="Runnable" seed="1318928386" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000219" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1279" name="KeepObject_InsideCamera_AlwaysTrue" fullname="ClusterMesh.Tests.ClusterMeshCpuCullTests.KeepObject_InsideCamera_AlwaysTrue" methodname="KeepObject_InsideCamera_AlwaysTrue" classname="ClusterMesh.Tests.ClusterMeshCpuCullTests" runstate="Runnable" seed="497215565" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000414" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1276" name="MotionVectors_DefaultOff_AndStaticHistoryAdvancesOncePerFrame" fullname="ClusterMesh.Tests.ClusterMeshCpuCullTests.MotionVectors_DefaultOff_AndStaticHistoryAdvancesOncePerFrame" methodname="MotionVectors_DefaultOff_AndStaticHistoryAdvancesOncePerFrame" classname="ClusterMesh.Tests.ClusterMeshCpuCullTests" runstate="Runnable" seed="1531426713" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.001979" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1286" name="ShadowDistance_AtMostCameraFarAndUrp" fullname="ClusterMesh.Tests.ClusterMeshCpuCullTests.ShadowDistance_AtMostCameraFarAndUrp" methodname="ShadowDistance_AtMostCameraFarAndUrp" classname="ClusterMesh.Tests.ClusterMeshCpuCullTests" runstate="Runnable" seed="1243888471" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.001618" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1277" name="SkinnedMotionVectors_DefaultOff_AndHistoryTracksPoseTime" fullname="ClusterMesh.Tests.ClusterMeshCpuCullTests.SkinnedMotionVectors_DefaultOff_AndHistoryTracksPoseTime" methodname="SkinnedMotionVectors_DefaultOff_AndHistoryTracksPoseTime" classname="ClusterMesh.Tests.ClusterMeshCpuCullTests" runstate="Runnable" seed="1307702465" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.002316" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1287" name="TryGetMainDirectionalShadowLight_OnlyUsesSun" fullname="ClusterMesh.Tests.ClusterMeshCpuCullTests.TryGetMainDirectionalShadowLight_OnlyUsesSun" methodname="TryGetMainDirectionalShadowLight_OnlyUsesSun" classname="ClusterMesh.Tests.ClusterMeshCpuCullTests" runstate="Runnable" seed="659428212" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.001126" asserts="0">
+              <properties />
+            </test-case>
+          </test-suite>
+          <test-suite type="TestFixture" id="1288" name="ClusterMeshDebugColorsTests" fullname="ClusterMesh.Tests.ClusterMeshDebugColorsTests" classname="ClusterMesh.Tests.ClusterMeshDebugColorsTests" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.004387" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-case id="1292" name="DrawContext_ClusterColorDefaultsOff" fullname="ClusterMesh.Tests.ClusterMeshDebugColorsTests.DrawContext_ClusterColorDefaultsOff" methodname="DrawContext_ClusterColorDefaultsOff" classname="ClusterMesh.Tests.ClusterMeshDebugColorsTests" runstate="Runnable" seed="282284477" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000351" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1289" name="Rgb_DifferentIds_AreDifferent" fullname="ClusterMesh.Tests.ClusterMeshDebugColorsTests.Rgb_DifferentIds_AreDifferent" methodname="Rgb_DifferentIds_AreDifferent" classname="ClusterMesh.Tests.ClusterMeshDebugColorsTests" runstate="Runnable" seed="480771603" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.001040" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1290" name="Rgb_SameId_IsStable" fullname="ClusterMesh.Tests.ClusterMeshDebugColorsTests.Rgb_SameId_IsStable" methodname="Rgb_SameId_IsStable" classname="ClusterMesh.Tests.ClusterMeshDebugColorsTests" runstate="Runnable" seed="1798954472" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000221" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1291" name="Rgb_SequentialIds_HaveUniqueHues" fullname="ClusterMesh.Tests.ClusterMeshDebugColorsTests.Rgb_SequentialIds_HaveUniqueHues" methodname="Rgb_SequentialIds_HaveUniqueHues" classname="ClusterMesh.Tests.ClusterMeshDebugColorsTests" runstate="Runnable" seed="391401380" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000906" asserts="0">
+              <properties />
+            </test-case>
+          </test-suite>
+          <test-suite type="TestFixture" id="1293" name="ClusterMeshDemoSceneTests" fullname="ClusterMesh.Tests.ClusterMeshDemoSceneTests" classname="ClusterMesh.Tests.ClusterMeshDemoSceneTests" runstate="Runnable" testcasecount="2" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.527697" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-case id="1294" name="CreateDemoObjects_AddsRendererWithBakedAsset" fullname="ClusterMesh.Tests.ClusterMeshDemoSceneTests.CreateDemoObjects_AddsRendererWithBakedAsset" methodname="CreateDemoObjects_AddsRendererWithBakedAsset" classname="ClusterMesh.Tests.ClusterMeshDemoSceneTests" runstate="Runnable" seed="1242788022" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.006772" asserts="0">
+              <properties />
+              <output><![CDATA[ClusterMesh: Vertex-stage compute buffers are insufficient for ClusterMesh.
+]]></output>
+            </test-case>
+            <test-case id="1295" name="PersistDemoAsset_CalledTwice_DoesNotThrow" fullname="ClusterMesh.Tests.ClusterMeshDemoSceneTests.PersistDemoAsset_CalledTwice_DoesNotThrow" methodname="PersistDemoAsset_CalledTwice_DoesNotThrow" classname="ClusterMesh.Tests.ClusterMeshDemoSceneTests" runstate="Runnable" seed="1131601126" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.519534" asserts="0">
+              <properties />
+              <output><![CDATA[ClusterMesh: Vertex-stage compute buffers are insufficient for ClusterMesh.
+]]></output>
+            </test-case>
+          </test-suite>
+          <test-suite type="TestFixture" id="1296" name="ClusterMeshDrawContextTests" fullname="ClusterMesh.Tests.ClusterMeshDrawContextTests" classname="ClusterMesh.Tests.ClusterMeshDrawContextTests" runstate="Runnable" testcasecount="12" result="Skipped" label="Ignored" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.015796" total="12" passed="9" failed="0" inconclusive="0" skipped="3" asserts="0">
+            <properties />
+            <reason>
+              <message><![CDATA[One or more child tests were ignored]]></message>
+            </reason>
+            <test-case id="1297" name="Constructor_NullAsset_IsNotReady" fullname="ClusterMesh.Tests.ClusterMeshDrawContextTests.Constructor_NullAsset_IsNotReady" methodname="Constructor_NullAsset_IsNotReady" classname="ClusterMesh.Tests.ClusterMeshDrawContextTests" runstate="Runnable" seed="1364560984" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000457" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1298" name="Constructor_OldGeometryVersion_IsNotReady" fullname="ClusterMesh.Tests.ClusterMeshDrawContextTests.Constructor_OldGeometryVersion_IsNotReady" methodname="Constructor_OldGeometryVersion_IsNotReady" classname="ClusterMesh.Tests.ClusterMeshDrawContextTests" runstate="Runnable" seed="700501528" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000622" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1301" name="Constructor_TightRest_ReadyIffCapabilityAllows" fullname="ClusterMesh.Tests.ClusterMeshDrawContextTests.Constructor_TightRest_ReadyIffCapabilityAllows" methodname="Constructor_TightRest_ReadyIffCapabilityAllows" classname="ClusterMesh.Tests.ClusterMeshDrawContextTests" runstate="Runnable" seed="1644816655" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000943" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1300" name="Constructor_ValidBake_ReadyIffCapabilityAllows" fullname="ClusterMesh.Tests.ClusterMeshDrawContextTests.Constructor_ValidBake_ReadyIffCapabilityAllows" methodname="Constructor_ValidBake_ReadyIffCapabilityAllows" classname="ClusterMesh.Tests.ClusterMeshDrawContextTests" runstate="Runnable" seed="1933909524" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000578" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1299" name="Constructor_ValidBake_ShadowMaterialIsDistinctInstance" fullname="ClusterMesh.Tests.ClusterMeshDrawContextTests.Constructor_ValidBake_ShadowMaterialIsDistinctInstance" methodname="Constructor_ValidBake_ShadowMaterialIsDistinctInstance" classname="ClusterMesh.Tests.ClusterMeshDrawContextTests" runstate="Runnable" seed="1181626093" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000697" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1305" name="Dispose_SetsIsReadyFalse" fullname="ClusterMesh.Tests.ClusterMeshDrawContextTests.Dispose_SetsIsReadyFalse" methodname="Dispose_SetsIsReadyFalse" classname="ClusterMesh.Tests.ClusterMeshDrawContextTests" runstate="Runnable" seed="1469508221" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000468" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1304" name="Dispose_Twice_DoesNotThrow" fullname="ClusterMesh.Tests.ClusterMeshDrawContextTests.Dispose_Twice_DoesNotThrow" methodname="Dispose_Twice_DoesNotThrow" classname="ClusterMesh.Tests.ClusterMeshDrawContextTests" runstate="Runnable" seed="1468019522" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000333" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1302" name="Draw_AfterRuntimeMaterialsDestroyed_DoesNotThrow" fullname="ClusterMesh.Tests.ClusterMeshDrawContextTests.Draw_AfterRuntimeMaterialsDestroyed_DoesNotThrow" methodname="Draw_AfterRuntimeMaterialsDestroyed_DoesNotThrow" classname="ClusterMesh.Tests.ClusterMeshDrawContextTests" runstate="Runnable" seed="1071912332" result="Skipped" label="Ignored" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.004042" asserts="0">
+              <properties />
+              <reason>
+                <message><![CDATA[Vertex-stage compute buffers are insufficient for ClusterMesh.]]></message>
+              </reason>
+            </test-case>
+            <test-case id="1306" name="PrepareUrp_CameraCullFlagControlsGpuFrustum" fullname="ClusterMesh.Tests.ClusterMeshDrawContextTests.PrepareUrp_CameraCullFlagControlsGpuFrustum" methodname="PrepareUrp_CameraCullFlagControlsGpuFrustum" classname="ClusterMesh.Tests.ClusterMeshDrawContextTests" runstate="Runnable" seed="483914184" result="Skipped" label="Ignored" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000642" asserts="0">
+              <properties />
+              <reason>
+                <message><![CDATA[Vertex-stage compute buffers are insufficient for ClusterMesh.]]></message>
+              </reason>
+            </test-case>
+            <test-case id="1307" name="Renderer_OnEnableWithEmptyAsset_DoesNotThrow" fullname="ClusterMesh.Tests.ClusterMeshDrawContextTests.Renderer_OnEnableWithEmptyAsset_DoesNotThrow" methodname="Renderer_OnEnableWithEmptyAsset_DoesNotThrow" classname="ClusterMesh.Tests.ClusterMeshDrawContextTests" runstate="Runnable" seed="269428759" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000403" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1308" name="Renderer_ShadowFlags_DefaultOn" fullname="ClusterMesh.Tests.ClusterMeshDrawContextTests.Renderer_ShadowFlags_DefaultOn" methodname="Renderer_ShadowFlags_DefaultOn" classname="ClusterMesh.Tests.ClusterMeshDrawContextTests" runstate="Runnable" seed="2041119365" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000286" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1303" name="SubmitUrpDepth_WhenShaderIsInternalLoading_DoesNotLogInvalidPass" fullname="ClusterMesh.Tests.ClusterMeshDrawContextTests.SubmitUrpDepth_WhenShaderIsInternalLoading_DoesNotLogInvalidPass" methodname="SubmitUrpDepth_WhenShaderIsInternalLoading_DoesNotLogInvalidPass" classname="ClusterMesh.Tests.ClusterMeshDrawContextTests" runstate="Runnable" seed="1480235054" result="Skipped" label="Ignored" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000678" asserts="0">
+              <properties />
+              <reason>
+                <message><![CDATA[Vertex-stage compute buffers are insufficient for ClusterMesh.]]></message>
+              </reason>
+            </test-case>
+          </test-suite>
+          <test-suite type="TestFixture" id="1309" name="ClusterMeshEditModeTickTests" fullname="ClusterMesh.Tests.ClusterMeshEditModeTickTests" classname="ClusterMesh.Tests.ClusterMeshEditModeTickTests" runstate="Runnable" testcasecount="11" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.011495" total="11" passed="11" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-case id="1316" name="IsLayerVisible_RequiresEditorAndCameraMasks" fullname="ClusterMesh.Tests.ClusterMeshEditModeTickTests.IsLayerVisible_RequiresEditorAndCameraMasks" methodname="IsLayerVisible_RequiresEditorAndCameraMasks" classname="ClusterMesh.Tests.ClusterMeshEditModeTickTests" runstate="Runnable" seed="1827668942" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000693" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1314" name="RegisteredCount_DestroyedWithoutUnregister_IsZero" fullname="ClusterMesh.Tests.ClusterMeshEditModeTickTests.RegisteredCount_DestroyedWithoutUnregister_IsZero" methodname="RegisteredCount_DestroyedWithoutUnregister_IsZero" classname="ClusterMesh.Tests.ClusterMeshEditModeTickTests" runstate="Runnable" seed="461947420" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.001765" asserts="0">
+              <properties />
+              <output><![CDATA[ClusterMesh: Vertex-stage compute buffers are insufficient for ClusterMesh.
+]]></output>
+            </test-case>
+            <test-case id="1312" name="RegisteredCount_Empty_IsZero" fullname="ClusterMesh.Tests.ClusterMeshEditModeTickTests.RegisteredCount_Empty_IsZero" methodname="RegisteredCount_Empty_IsZero" classname="ClusterMesh.Tests.ClusterMeshEditModeTickTests" runstate="Runnable" seed="459387489" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000226" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1313" name="RegisteredCount_OneRegistered_IsOne" fullname="ClusterMesh.Tests.ClusterMeshEditModeTickTests.RegisteredCount_OneRegistered_IsOne" methodname="RegisteredCount_OneRegistered_IsOne" classname="ClusterMesh.Tests.ClusterMeshEditModeTickTests" runstate="Runnable" seed="381579098" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.001029" asserts="0">
+              <properties />
+              <output><![CDATA[ClusterMesh: Vertex-stage compute buffers are insufficient for ClusterMesh.
+]]></output>
+            </test-case>
+            <test-case id="1315" name="SceneViewRenderer_DisposeEmptyCache_DoesNotThrow" fullname="ClusterMesh.Tests.ClusterMeshEditModeTickTests.SceneViewRenderer_DisposeEmptyCache_DoesNotThrow" methodname="SceneViewRenderer_DisposeEmptyCache_DoesNotThrow" classname="ClusterMesh.Tests.ClusterMeshEditModeTickTests" runstate="Runnable" seed="745416668" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000301" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1311" name="ShouldQueuePlayerLoop_One_IsTrue" fullname="ClusterMesh.Tests.ClusterMeshEditModeTickTests.ShouldQueuePlayerLoop_One_IsTrue" methodname="ShouldQueuePlayerLoop_One_IsTrue" classname="ClusterMesh.Tests.ClusterMeshEditModeTickTests" runstate="Runnable" seed="532471252" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000238" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1310" name="ShouldQueuePlayerLoop_Zero_IsFalse" fullname="ClusterMesh.Tests.ClusterMeshEditModeTickTests.ShouldQueuePlayerLoop_Zero_IsFalse" methodname="ShouldQueuePlayerLoop_Zero_IsFalse" classname="ClusterMesh.Tests.ClusterMeshEditModeTickTests" runstate="Runnable" seed="1612082255" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000204" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1317" name="SyncEditModeTick_False_SetsActive" fullname="ClusterMesh.Tests.ClusterMeshEditModeTickTests.SyncEditModeTick_False_SetsActive" methodname="SyncEditModeTick_False_SetsActive" classname="ClusterMesh.Tests.ClusterMeshEditModeTickTests" runstate="Runnable" seed="1922778778" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000205" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1320" name="SyncEditModeTick_FalseTwice_StaysActive" fullname="ClusterMesh.Tests.ClusterMeshEditModeTickTests.SyncEditModeTick_FalseTwice_StaysActive" methodname="SyncEditModeTick_FalseTwice_StaysActive" classname="ClusterMesh.Tests.ClusterMeshEditModeTickTests" runstate="Runnable" seed="1800279113" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000202" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1318" name="SyncEditModeTick_True_ClearsActive" fullname="ClusterMesh.Tests.ClusterMeshEditModeTickTests.SyncEditModeTick_True_ClearsActive" methodname="SyncEditModeTick_True_ClearsActive" classname="ClusterMesh.Tests.ClusterMeshEditModeTickTests" runstate="Runnable" seed="3271034" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000237" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1319" name="SyncSceneViewTick_TracksIndependentSubscription" fullname="ClusterMesh.Tests.ClusterMeshEditModeTickTests.SyncSceneViewTick_TracksIndependentSubscription" methodname="SyncSceneViewTick_TracksIndependentSubscription" classname="ClusterMesh.Tests.ClusterMeshEditModeTickTests" runstate="Runnable" seed="574563656" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000201" asserts="0">
+              <properties />
+            </test-case>
+          </test-suite>
+          <test-suite type="TestFixture" id="1321" name="ClusterMeshFrustumTests" fullname="ClusterMesh.Tests.ClusterMeshFrustumTests" classname="ClusterMesh.Tests.ClusterMeshFrustumTests" runstate="Runnable" testcasecount="14" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.012000" total="14" passed="14" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-case id="1330" name="AssetLocalBounds_EncapsulatesClusters" fullname="ClusterMesh.Tests.ClusterMeshFrustumTests.AssetLocalBounds_EncapsulatesClusters" methodname="AssetLocalBounds_EncapsulatesClusters" classname="ClusterMesh.Tests.ClusterMeshFrustumTests" runstate="Runnable" seed="899481639" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.001094" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1329" name="CameraToLocalPlanes_IdentityCameraContainsOrigin" fullname="ClusterMesh.Tests.ClusterMeshFrustumTests.CameraToLocalPlanes_IdentityCameraContainsOrigin" methodname="CameraToLocalPlanes_IdentityCameraContainsOrigin" classname="ClusterMesh.Tests.ClusterMeshFrustumTests" runstate="Runnable" seed="24595944" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.001774" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1322" name="TestAabb_InsideInwardPlanes" fullname="ClusterMesh.Tests.ClusterMeshFrustumTests.TestAabb_InsideInwardPlanes" methodname="TestAabb_InsideInwardPlanes" classname="ClusterMesh.Tests.ClusterMeshFrustumTests" runstate="Runnable" seed="1042898126" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000311" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1323" name="TestAabb_OutsideFarPlane" fullname="ClusterMesh.Tests.ClusterMeshFrustumTests.TestAabb_OutsideFarPlane" methodname="TestAabb_OutsideFarPlane" classname="ClusterMesh.Tests.ClusterMeshFrustumTests" runstate="Runnable" seed="1561431647" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000332" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1324" name="TestCone_BackfaceCulls_FrontDoesNot_DisabledNeverCulls" fullname="ClusterMesh.Tests.ClusterMeshFrustumTests.TestCone_BackfaceCulls_FrontDoesNot_DisabledNeverCulls" methodname="TestCone_BackfaceCulls_FrontDoesNot_DisabledNeverCulls" classname="ClusterMesh.Tests.ClusterMeshFrustumTests" runstate="Runnable" seed="1941459029" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000492" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1328" name="TestCone_BakedFlatTriangle_SideViewVisible" fullname="ClusterMesh.Tests.ClusterMeshFrustumTests.TestCone_BakedFlatTriangle_SideViewVisible" methodname="TestCone_BakedFlatTriangle_SideViewVisible" classname="ClusterMesh.Tests.ClusterMeshFrustumTests" runstate="Runnable" seed="822204475" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000338" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1326" name="TestCone_CameraInsideClusterBounds_DoesNotCull" fullname="ClusterMesh.Tests.ClusterMeshFrustumTests.TestCone_CameraInsideClusterBounds_DoesNotCull" methodname="TestCone_CameraInsideClusterBounds_DoesNotCull" classname="ClusterMesh.Tests.ClusterMeshFrustumTests" runstate="Runnable" seed="405910592" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000206" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1327" name="TestCone_FarBehind_StillCullsWithExtents" fullname="ClusterMesh.Tests.ClusterMeshFrustumTests.TestCone_FarBehind_StillCullsWithExtents" methodname="TestCone_FarBehind_StillCullsWithExtents" classname="ClusterMesh.Tests.ClusterMeshFrustumTests" runstate="Runnable" seed="724038798" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000203" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1325" name="TestCone_GrazingAngle_DoesNotCull" fullname="ClusterMesh.Tests.ClusterMeshFrustumTests.TestCone_GrazingAngle_DoesNotCull" methodname="TestCone_GrazingAngle_DoesNotCull" classname="ClusterMesh.Tests.ClusterMeshFrustumTests" runstate="Runnable" seed="124739330" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000267" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1331" name="TransformAabb_Identity_MatchesLocal" fullname="ClusterMesh.Tests.ClusterMeshFrustumTests.TransformAabb_Identity_MatchesLocal" methodname="TransformAabb_Identity_MatchesLocal" classname="ClusterMesh.Tests.ClusterMeshFrustumTests" runstate="Runnable" seed="83364406" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.001067" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1332" name="TransformAabb_Translation_MovesCenterKeepsExtents" fullname="ClusterMesh.Tests.ClusterMeshFrustumTests.TransformAabb_Translation_MovesCenterKeepsExtents" methodname="TransformAabb_Translation_MovesCenterKeepsExtents" classname="ClusterMesh.Tests.ClusterMeshFrustumTests" runstate="Runnable" seed="939015692" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000317" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1335" name="TransformLocalBounds_AssetBoxContainsClusterWorldCorners" fullname="ClusterMesh.Tests.ClusterMeshFrustumTests.TransformLocalBounds_AssetBoxContainsClusterWorldCorners" methodname="TransformLocalBounds_AssetBoxContainsClusterWorldCorners" classname="ClusterMesh.Tests.ClusterMeshFrustumTests" runstate="Runnable" seed="1678475697" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.001217" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1333" name="TransformLocalBounds_Identity_MatchesLocal" fullname="ClusterMesh.Tests.ClusterMeshFrustumTests.TransformLocalBounds_Identity_MatchesLocal" methodname="TransformLocalBounds_Identity_MatchesLocal" classname="ClusterMesh.Tests.ClusterMeshFrustumTests" runstate="Runnable" seed="1322502508" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000273" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1334" name="TransformLocalBounds_Translation_MovesCenterKeepsSize" fullname="ClusterMesh.Tests.ClusterMeshFrustumTests.TransformLocalBounds_Translation_MovesCenterKeepsSize" methodname="TransformLocalBounds_Translation_MovesCenterKeepsSize" classname="ClusterMesh.Tests.ClusterMeshFrustumTests" runstate="Runnable" seed="419667855" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000274" asserts="0">
+              <properties />
+            </test-case>
+          </test-suite>
+          <test-suite type="TestFixture" id="1336" name="ClusterMeshGeometryTests" fullname="ClusterMesh.Tests.ClusterMeshGeometryTests" classname="ClusterMesh.Tests.ClusterMeshGeometryTests" runstate="Runnable" testcasecount="8" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.006842" total="8" passed="8" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-case id="1343" name="CopyFrom_WritesGeometryVersionOne" fullname="ClusterMesh.Tests.ClusterMeshGeometryTests.CopyFrom_WritesGeometryVersionOne" methodname="CopyFrom_WritesGeometryVersionOne" classname="ClusterMesh.Tests.ClusterMeshGeometryTests" runstate="Runnable" seed="798861022" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.002084" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1342" name="Deflate_RandomBytes_RoundTrip" fullname="ClusterMesh.Tests.ClusterMeshGeometryTests.Deflate_RandomBytes_RoundTrip" methodname="Deflate_RandomBytes_RoundTrip" classname="ClusterMesh.Tests.ClusterMeshGeometryTests" runstate="Runnable" seed="2068205486" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000625" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1337" name="PackedVertex_StrideIs32" fullname="ClusterMesh.Tests.ClusterMeshGeometryTests.PackedVertex_StrideIs32" methodname="PackedVertex_StrideIs32" classname="ClusterMesh.Tests.ClusterMeshGeometryTests" runstate="Runnable" seed="1328165499" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000233" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1341" name="PackIndices_OddCount_PadsAndRoundTrips" fullname="ClusterMesh.Tests.ClusterMeshGeometryTests.PackIndices_OddCount_PadsAndRoundTrips" methodname="PackIndices_OddCount_PadsAndRoundTrips" classname="ClusterMesh.Tests.ClusterMeshGeometryTests" runstate="Runnable" seed="714078197" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000259" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1339" name="PackUnpack_Normal_DotProductAbove999" fullname="ClusterMesh.Tests.ClusterMeshGeometryTests.PackUnpack_Normal_DotProductAbove999" methodname="PackUnpack_Normal_DotProductAbove999" classname="ClusterMesh.Tests.ClusterMeshGeometryTests" runstate="Runnable" seed="308456459" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000372" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1338" name="PackUnpack_PositionInUnitCube_ErrorBelow1e4" fullname="ClusterMesh.Tests.ClusterMeshGeometryTests.PackUnpack_PositionInUnitCube_ErrorBelow1e4" methodname="PackUnpack_PositionInUnitCube_ErrorBelow1e4" classname="ClusterMesh.Tests.ClusterMeshGeometryTests" runstate="Runnable" seed="1777800680" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000275" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1340" name="PackUnpack_TangentZ_WhenNormalAlongX" fullname="ClusterMesh.Tests.ClusterMeshGeometryTests.PackUnpack_TangentZ_WhenNormalAlongX" methodname="PackUnpack_TangentZ_WhenNormalAlongX" classname="ClusterMesh.Tests.ClusterMeshGeometryTests" runstate="Runnable" seed="239714022" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000290" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1344" name="TryReadGpuGeometry_VersionZero_Fails" fullname="ClusterMesh.Tests.ClusterMeshGeometryTests.TryReadGpuGeometry_VersionZero_Fails" methodname="TryReadGpuGeometry_VersionZero_Fails" classname="ClusterMesh.Tests.ClusterMeshGeometryTests" runstate="Runnable" seed="1957107717" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000269" asserts="0">
+              <properties />
+            </test-case>
+          </test-suite>
+          <test-suite type="TestFixture" id="1345" name="ClusterMeshLightProbesTests" fullname="ClusterMesh.Tests.ClusterMeshLightProbesTests" classname="ClusterMesh.Tests.ClusterMeshLightProbesTests" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.006646" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-case id="1348" name="Evaluate_NoProbeGroup_EqualsAmbientProbe" fullname="ClusterMesh.Tests.ClusterMeshLightProbesTests.Evaluate_NoProbeGroup_EqualsAmbientProbe" methodname="Evaluate_NoProbeGroup_EqualsAmbientProbe" classname="ClusterMesh.Tests.ClusterMeshLightProbesTests" runstate="Runnable" seed="1169430902" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000782" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1349" name="LitShaders_SampleObjectSH_AndForwardFog" fullname="ClusterMesh.Tests.ClusterMeshLightProbesTests.LitShaders_SampleObjectSH_AndForwardFog" methodname="LitShaders_SampleObjectSH_AndForwardFog" classname="ClusterMesh.Tests.ClusterMeshLightProbesTests" runstate="Runnable" seed="2070011883" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.002754" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1346" name="ObjectSH_Stride_Is112" fullname="ClusterMesh.Tests.ClusterMeshLightProbesTests.ObjectSH_Stride_Is112" methodname="ObjectSH_Stride_Is112" classname="ClusterMesh.Tests.ClusterMeshLightProbesTests" runstate="Runnable" seed="124111339" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000388" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1347" name="Pack_L0Only_PositiveYMatchesHandEval" fullname="ClusterMesh.Tests.ClusterMeshLightProbesTests.Pack_L0Only_PositiveYMatchesHandEval" methodname="Pack_L0Only_PositiveYMatchesHandEval" classname="ClusterMesh.Tests.ClusterMeshLightProbesTests" runstate="Runnable" seed="1870185308" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.001043" asserts="0">
+              <properties />
+            </test-case>
+          </test-suite>
+          <test-suite type="TestFixture" id="1350" name="ClusterMeshLodTests" fullname="ClusterMesh.Tests.ClusterMeshLodTests" classname="ClusterMesh.Tests.ClusterMeshLodTests" runstate="Runnable" testcasecount="20" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.011586" total="20" passed="20" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-case id="1370" name="BuildOwningGroupIndices_BakedGrid_MatchesTryGetOwningGroup" fullname="ClusterMesh.Tests.ClusterMeshLodTests.BuildOwningGroupIndices_BakedGrid_MatchesTryGetOwningGroup" methodname="BuildOwningGroupIndices_BakedGrid_MatchesTryGetOwningGroup" classname="ClusterMesh.Tests.ClusterMeshLodTests" runstate="Runnable" seed="1977482964" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000743" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1366" name="BuildOwningGroupIndices_LeavesMinusOne_ParentsGetGroup" fullname="ClusterMesh.Tests.ClusterMeshLodTests.BuildOwningGroupIndices_LeavesMinusOne_ParentsGetGroup" methodname="BuildOwningGroupIndices_LeavesMinusOne_ParentsGetGroup" classname="ClusterMesh.Tests.ClusterMeshLodTests" runstate="Runnable" seed="1614282257" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000506" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1367" name="BuildOwningGroupIndices_NullOrEmpty_AllMinusOne" fullname="ClusterMesh.Tests.ClusterMeshLodTests.BuildOwningGroupIndices_NullOrEmpty_AllMinusOne" methodname="BuildOwningGroupIndices_NullOrEmpty_AllMinusOne" classname="ClusterMesh.Tests.ClusterMeshLodTests" runstate="Runnable" seed="1230103956" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000647" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1368" name="BuildOwningGroupIndices_OutOfRangeStart_Skipped" fullname="ClusterMesh.Tests.ClusterMeshLodTests.BuildOwningGroupIndices_OutOfRangeStart_Skipped" methodname="BuildOwningGroupIndices_OutOfRangeStart_Skipped" classname="ClusterMesh.Tests.ClusterMeshLodTests" runstate="Runnable" seed="1711237119" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000228" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1369" name="BuildOwningGroupIndices_Overlap_FirstGroupWins" fullname="ClusterMesh.Tests.ClusterMeshLodTests.BuildOwningGroupIndices_Overlap_FirstGroupWins" methodname="BuildOwningGroupIndices_Overlap_FirstGroupWins" classname="ClusterMesh.Tests.ClusterMeshLodTests" runstate="Runnable" seed="1133511059" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000249" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1358" name="DagVersion_LargeThreshold_ShowsParent_HidesChild" fullname="ClusterMesh.Tests.ClusterMeshLodTests.DagVersion_LargeThreshold_ShowsParent_HidesChild" methodname="DagVersion_LargeThreshold_ShowsParent_HidesChild" classname="ClusterMesh.Tests.ClusterMeshLodTests" runstate="Runnable" seed="1490997886" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000397" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1360" name="DagVersion_SiblingParents_ShareGroupVisibility" fullname="ClusterMesh.Tests.ClusterMeshLodTests.DagVersion_SiblingParents_ShareGroupVisibility" methodname="DagVersion_SiblingParents_ShareGroupVisibility" classname="ClusterMesh.Tests.ClusterMeshLodTests" runstate="Runnable" seed="1212553503" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.001073" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1357" name="DagVersion_ThresholdZero_HidesParents" fullname="ClusterMesh.Tests.ClusterMeshLodTests.DagVersion_ThresholdZero_HidesParents" methodname="DagVersion_ThresholdZero_HidesParents" classname="ClusterMesh.Tests.ClusterMeshLodTests" runstate="Runnable" seed="1471180422" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000234" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1352" name="Group_StrideIs48" fullname="ClusterMesh.Tests.ClusterMeshLodTests.Group_StrideIs48" methodname="Group_StrideIs48" classname="ClusterMesh.Tests.ClusterMeshLodTests" runstate="Runnable" seed="803466871" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000229" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1351" name="Header_StrideIs96" fullname="ClusterMesh.Tests.ClusterMeshLodTests.Header_StrideIs96" methodname="Header_StrideIs96" classname="ClusterMesh.Tests.ClusterMeshLodTests" runstate="Runnable" seed="1818324483" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000217" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1354" name="LargeThreshold_ShowsParent_HidesChild" fullname="ClusterMesh.Tests.ClusterMeshLodTests.LargeThreshold_ShowsParent_HidesChild" methodname="LargeThreshold_ShowsParent_HidesChild" classname="ClusterMesh.Tests.ClusterMeshLodTests" runstate="Runnable" seed="1203119211" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000251" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1356" name="Level_ParentIsOne_LeafIsZero" fullname="ClusterMesh.Tests.ClusterMeshLodTests.Level_ParentIsOne_LeafIsZero" methodname="Level_ParentIsOne_LeafIsZero" classname="ClusterMesh.Tests.ClusterMeshLodTests" runstate="Runnable" seed="1992117879" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000209" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1362" name="LodQuality_FromValue_MatchesPresetOrCustom" fullname="ClusterMesh.Tests.ClusterMeshLodTests.LodQuality_FromValue_MatchesPresetOrCustom" methodname="LodQuality_FromValue_MatchesPresetOrCustom" classname="ClusterMesh.Tests.ClusterMeshLodTests" runstate="Runnable" seed="1291374470" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000479" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1361" name="LodQuality_Presets_AreUltraFine05_Fine1_Medium2_Coarse4" fullname="ClusterMesh.Tests.ClusterMeshLodTests.LodQuality_Presets_AreUltraFine05_Fine1_Medium2_Coarse4" methodname="LodQuality_Presets_AreUltraFine05_Fine1_Medium2_Coarse4" classname="ClusterMesh.Tests.ClusterMeshLodTests" runstate="Runnable" seed="622601903" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000232" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1364" name="MaxAxisScale_UniformScale2_IsTwo" fullname="ClusterMesh.Tests.ClusterMeshLodTests.MaxAxisScale_UniformScale2_IsTwo" methodname="MaxAxisScale_UniformScale2_IsTwo" classname="ClusterMesh.Tests.ClusterMeshLodTests" runstate="Runnable" seed="501621124" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000270" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1365" name="ProjectError_ObjectScale2_DoublesScreenError" fullname="ClusterMesh.Tests.ClusterMeshLodTests.ProjectError_ObjectScale2_DoublesScreenError" methodname="ProjectError_ObjectScale2_DoublesScreenError" classname="ClusterMesh.Tests.ClusterMeshLodTests" runstate="Runnable" seed="20548396" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000192" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1353" name="ThresholdZero_HidesParents_ShowsLeaves" fullname="ClusterMesh.Tests.ClusterMeshLodTests.ThresholdZero_HidesParents_ShowsLeaves" methodname="ThresholdZero_HidesParents_ShowsLeaves" classname="ClusterMesh.Tests.ClusterMeshLodTests" runstate="Runnable" seed="507105257" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000192" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1359" name="TryGetOwningGroup_FindsRange_LeavesMiss" fullname="ClusterMesh.Tests.ClusterMeshLodTests.TryGetOwningGroup_FindsRange_LeavesMiss" methodname="TryGetOwningGroup_FindsRange_LeavesMiss" classname="ClusterMesh.Tests.ClusterMeshLodTests" runstate="Runnable" seed="1632423221" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000223" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1363" name="UsePerClusterCone_SkipsOwningGroupWhenDagAndThresholdOn" fullname="ClusterMesh.Tests.ClusterMeshLodTests.UsePerClusterCone_SkipsOwningGroupWhenDagAndThresholdOn" methodname="UsePerClusterCone_SkipsOwningGroupWhenDagAndThresholdOn" classname="ClusterMesh.Tests.ClusterMeshLodTests" runstate="Runnable" seed="1046319354" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000196" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1355" name="VersionZero_AlwaysVisibleRegardlessOfFlags" fullname="ClusterMesh.Tests.ClusterMeshLodTests.VersionZero_AlwaysVisibleRegardlessOfFlags" methodname="VersionZero_AlwaysVisibleRegardlessOfFlags" classname="ClusterMesh.Tests.ClusterMeshLodTests" runstate="Runnable" seed="352630912" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000159" asserts="0">
+              <properties />
+            </test-case>
+          </test-suite>
+          <test-suite type="TestFixture" id="1371" name="ClusterMeshMaterialUtilTests" fullname="ClusterMesh.Tests.ClusterMeshMaterialUtilTests" classname="ClusterMesh.Tests.ClusterMeshMaterialUtilTests" runstate="Runnable" testcasecount="6" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.007416" total="6" passed="6" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-case id="1376" name="CanSubmitShaderPass_ClusterMeshLit_AllowsForwardDepthGBufferAndMotionVectors" fullname="ClusterMesh.Tests.ClusterMeshMaterialUtilTests.CanSubmitShaderPass_ClusterMeshLit_AllowsForwardDepthGBufferAndMotionVectors" methodname="CanSubmitShaderPass_ClusterMeshLit_AllowsForwardDepthGBufferAndMotionVectors" classname="ClusterMesh.Tests.ClusterMeshMaterialUtilTests" runstate="Runnable" seed="1799491454" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000849" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1375" name="CanSubmitShaderPass_InternalLoading_RejectsDepthGBufferAndMotionVectors" fullname="ClusterMesh.Tests.ClusterMeshMaterialUtilTests.CanSubmitShaderPass_InternalLoading_RejectsDepthGBufferAndMotionVectors" methodname="CanSubmitShaderPass_InternalLoading_RejectsDepthGBufferAndMotionVectors" classname="ClusterMesh.Tests.ClusterMeshMaterialUtilTests" runstate="Runnable" seed="688845157" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000367" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1372" name="CreateRuntimeMaterial_CopiesBaseMapAndColorAndEnablesInstancing" fullname="ClusterMesh.Tests.ClusterMeshMaterialUtilTests.CreateRuntimeMaterial_CopiesBaseMapAndColorAndEnablesInstancing" methodname="CreateRuntimeMaterial_CopiesBaseMapAndColorAndEnablesInstancing" classname="ClusterMesh.Tests.ClusterMeshMaterialUtilTests" runstate="Runnable" seed="2047740606" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.002287" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1374" name="CreateRuntimeMaterial_MarksHideAndDontSave" fullname="ClusterMesh.Tests.ClusterMeshMaterialUtilTests.CreateRuntimeMaterial_MarksHideAndDontSave" methodname="CreateRuntimeMaterial_MarksHideAndDontSave" classname="ClusterMesh.Tests.ClusterMeshMaterialUtilTests" runstate="Runnable" seed="1933438215" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000398" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1373" name="CreateRuntimeMaterial_NullSource_StillUsesLitShader" fullname="ClusterMesh.Tests.ClusterMeshMaterialUtilTests.CreateRuntimeMaterial_NullSource_StillUsesLitShader" methodname="CreateRuntimeMaterial_NullSource_StillUsesLitShader" classname="ClusterMesh.Tests.ClusterMeshMaterialUtilTests" runstate="Runnable" seed="1623442327" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000246" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1377" name="EditorSyncCompilation_NullOrEmptyCommandBuffer_DoesNotThrow" fullname="ClusterMesh.Tests.ClusterMeshMaterialUtilTests.EditorSyncCompilation_NullOrEmptyCommandBuffer_DoesNotThrow" methodname="EditorSyncCompilation_NullOrEmptyCommandBuffer_DoesNotThrow" classname="ClusterMesh.Tests.ClusterMeshMaterialUtilTests" runstate="Runnable" seed="1390522094" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.001112" asserts="0">
+              <properties />
+            </test-case>
+          </test-suite>
+          <test-suite type="TestFixture" id="1378" name="ClusterMeshPlaceMenuTests" fullname="ClusterMesh.Tests.ClusterMeshPlaceMenuTests" classname="ClusterMesh.Tests.ClusterMeshPlaceMenuTests" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.008528" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-case id="1379" name="CreateInScene_AssignsRendererAssetAndShaders" fullname="ClusterMesh.Tests.ClusterMeshPlaceMenuTests.CreateInScene_AssignsRendererAssetAndShaders" methodname="CreateInScene_AssignsRendererAssetAndShaders" classname="ClusterMesh.Tests.ClusterMeshPlaceMenuTests" runstate="Runnable" seed="1451080484" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.003273" asserts="0">
+              <properties />
+              <output><![CDATA[ClusterMesh: Vertex-stage compute buffers are insufficient for ClusterMesh.
+]]></output>
+            </test-case>
+            <test-case id="1381" name="CreateInScene_MultipleAssets_OffsetsOnX" fullname="ClusterMesh.Tests.ClusterMeshPlaceMenuTests.CreateInScene_MultipleAssets_OffsetsOnX" methodname="CreateInScene_MultipleAssets_OffsetsOnX" classname="ClusterMesh.Tests.ClusterMeshPlaceMenuTests" runstate="Runnable" seed="834860009" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000908" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1380" name="CreateInScene_NullAsset_CreatesEmptyNamedNode" fullname="ClusterMesh.Tests.ClusterMeshPlaceMenuTests.CreateInScene_NullAsset_CreatesEmptyNamedNode" methodname="CreateInScene_NullAsset_CreatesEmptyNamedNode" classname="ClusterMesh.Tests.ClusterMeshPlaceMenuTests" runstate="Runnable" seed="1300324534" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000452" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1382" name="CreateInScene_Undo_DestroysObject" fullname="ClusterMesh.Tests.ClusterMeshPlaceMenuTests.CreateInScene_Undo_DestroysObject" methodname="CreateInScene_Undo_DestroysObject" classname="ClusterMesh.Tests.ClusterMeshPlaceMenuTests" runstate="Runnable" seed="261127326" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.002382" asserts="0">
+              <properties />
+            </test-case>
+          </test-suite>
+          <test-suite type="TestFixture" id="1383" name="ClusterMeshPreviewOrbitTests" fullname="ClusterMesh.Tests.ClusterMeshPreviewOrbitTests" classname="ClusterMesh.Tests.ClusterMeshPreviewOrbitTests" runstate="Runnable" testcasecount="2" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.005025" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-case id="1385" name="ApplyDrag_AddsYawAndClampsPitch" fullname="ClusterMesh.Tests.ClusterMeshPreviewOrbitTests.ApplyDrag_AddsYawAndClampsPitch" methodname="ApplyDrag_AddsYawAndClampsPitch" classname="ClusterMesh.Tests.ClusterMeshPreviewOrbitTests" runstate="Runnable" seed="158661779" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000607" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1384" name="DefaultOffset_MatchesFixedInspectorCamera" fullname="ClusterMesh.Tests.ClusterMeshPreviewOrbitTests.DefaultOffset_MatchesFixedInspectorCamera" methodname="DefaultOffset_MatchesFixedInspectorCamera" classname="ClusterMesh.Tests.ClusterMeshPreviewOrbitTests" runstate="Runnable" seed="1336905683" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000415" asserts="0">
+              <properties />
+            </test-case>
+          </test-suite>
+          <test-suite type="TestFixture" id="1386" name="ClusterMeshQemTests" fullname="ClusterMesh.Tests.ClusterMeshQemTests" classname="ClusterMesh.Tests.ClusterMeshQemTests" runstate="Runnable" testcasecount="7" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.006450" total="7" passed="7" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-case id="1393" name="Bake_UseQem_FourQuads_LockedBorderInParents_LodErrorIsMeters" fullname="ClusterMesh.Tests.ClusterMeshQemTests.Bake_UseQem_FourQuads_LockedBorderInParents_LodErrorIsMeters" methodname="Bake_UseQem_FourQuads_LockedBorderInParents_LodErrorIsMeters" classname="ClusterMesh.Tests.ClusterMeshQemTests" runstate="Runnable" seed="1680548293" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.001193" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1387" name="Settings_Default_UseQemSimplifyIsTrue" fullname="ClusterMesh.Tests.ClusterMeshQemTests.Settings_Default_UseQemSimplifyIsTrue" methodname="Settings_Default_UseQemSimplifyIsTrue" classname="ClusterMesh.Tests.ClusterMeshQemTests" runstate="Runnable" seed="564482611" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000181" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1388" name="ShowsQemToggle_OnlyWhenHierarchyOn" fullname="ClusterMesh.Tests.ClusterMeshQemTests.ShowsQemToggle_OnlyWhenHierarchyOn" methodname="ShowsQemToggle_OnlyWhenHierarchyOn" classname="ClusterMesh.Tests.ClusterMeshQemTests" runstate="Runnable" seed="217704969" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000180" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1389" name="TryCollapseQem_LockLock_DoesNotCollapse" fullname="ClusterMesh.Tests.ClusterMeshQemTests.TryCollapseQem_LockLock_DoesNotCollapse" methodname="TryCollapseQem_LockLock_DoesNotCollapse" classname="ClusterMesh.Tests.ClusterMeshQemTests" runstate="Runnable" seed="1115955460" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000589" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1390" name="TryCollapseQem_UnlockToLock_KeepsLockPosition" fullname="ClusterMesh.Tests.ClusterMeshQemTests.TryCollapseQem_UnlockToLock_KeepsLockPosition" methodname="TryCollapseQem_UnlockToLock_KeepsLockPosition" classname="ClusterMesh.Tests.ClusterMeshQemTests" runstate="Runnable" seed="1086972772" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000368" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1392" name="TryCollapseQemAndShortest_BumpyBorderLockedGrid_BothReachHalf_QemKeepsLocks" fullname="ClusterMesh.Tests.ClusterMeshQemTests.TryCollapseQemAndShortest_BumpyBorderLockedGrid_BothReachHalf_QemKeepsLocks" methodname="TryCollapseQemAndShortest_BumpyBorderLockedGrid_BothReachHalf_QemKeepsLocks" classname="ClusterMesh.Tests.ClusterMeshQemTests" runstate="Runnable" seed="589857245" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.001687" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1391" name="Weights_AreOne" fullname="ClusterMesh.Tests.ClusterMeshQemTests.Weights_AreOne" methodname="Weights_AreOne" classname="ClusterMesh.Tests.ClusterMeshQemTests" runstate="Runnable" seed="816429240" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000215" asserts="0">
+              <properties />
+            </test-case>
+          </test-suite>
+          <test-suite type="TestFixture" id="1394" name="ClusterMeshTemplateTests" fullname="ClusterMesh.Tests.ClusterMeshTemplateTests" classname="ClusterMesh.Tests.ClusterMeshTemplateTests" runstate="Runnable" testcasecount="1" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.001687" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-case id="1395" name="Create_Has372SequentialTriangles" fullname="ClusterMesh.Tests.ClusterMeshTemplateTests.Create_Has372SequentialTriangles" methodname="Create_Has372SequentialTriangles" classname="ClusterMesh.Tests.ClusterMeshTemplateTests" runstate="Runnable" seed="1148160352" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000752" asserts="0">
+              <properties />
+            </test-case>
+          </test-suite>
+          <test-suite type="TestFixture" id="1396" name="ClusterMeshUrpTests" fullname="ClusterMesh.Tests.ClusterMeshUrpTests" classname="ClusterMesh.Tests.ClusterMeshUrpTests" runstate="Runnable" testcasecount="17" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.043785" total="17" passed="17" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-case id="1408" name="AddRenderPasses_Forward_DoesNotEnqueueDepthPrepass" fullname="ClusterMesh.Tests.ClusterMeshUrpTests.AddRenderPasses_Forward_DoesNotEnqueueDepthPrepass" methodname="AddRenderPasses_Forward_DoesNotEnqueueDepthPrepass" classname="ClusterMesh.Tests.ClusterMeshUrpTests" runstate="Runnable" seed="378401489" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.016564" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1402" name="AreCompatibleDeferredTargets_MatchingSizes_IsTrue" fullname="ClusterMesh.Tests.ClusterMeshUrpTests.AreCompatibleDeferredTargets_MatchingSizes_IsTrue" methodname="AreCompatibleDeferredTargets_MatchingSizes_IsTrue" classname="ClusterMesh.Tests.ClusterMeshUrpTests" runstate="Runnable" seed="318981641" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.003911" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1401" name="AreCompatibleDeferredTargets_MismatchedSizes_IsFalse" fullname="ClusterMesh.Tests.ClusterMeshUrpTests.AreCompatibleDeferredTargets_MismatchedSizes_IsFalse" methodname="AreCompatibleDeferredTargets_MismatchedSizes_IsFalse" classname="ClusterMesh.Tests.ClusterMeshUrpTests" runstate="Runnable" seed="1656850645" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000521" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1399" name="ConfigureDeferredOn_EnablesDeferredAndFeature" fullname="ClusterMesh.Tests.ClusterMeshUrpTests.ConfigureDeferredOn_EnablesDeferredAndFeature" methodname="ConfigureDeferredOn_EnablesDeferredAndFeature" classname="ClusterMesh.Tests.ClusterMeshUrpTests" runstate="Runnable" seed="1619465569" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.001419" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1400" name="ConfigureForwardOn_SwitchesFromDeferredAndKeepsFeature" fullname="ClusterMesh.Tests.ClusterMeshUrpTests.ConfigureForwardOn_SwitchesFromDeferredAndKeepsFeature" methodname="ConfigureForwardOn_SwitchesFromDeferredAndKeepsFeature" classname="ClusterMesh.Tests.ClusterMeshUrpTests" runstate="Runnable" seed="1620167456" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000514" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1405" name="DeferredSupport_IsExplicitlyUrpOnly" fullname="ClusterMesh.Tests.ClusterMeshUrpTests.DeferredSupport_IsExplicitlyUrpOnly" methodname="DeferredSupport_IsExplicitlyUrpOnly" classname="ClusterMesh.Tests.ClusterMeshUrpTests" runstate="Runnable" seed="477789198" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000324" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1406" name="EditorGameCamera_WithActiveFeature_UsesUrp" fullname="ClusterMesh.Tests.ClusterMeshUrpTests.EditorGameCamera_WithActiveFeature_UsesUrp" methodname="EditorGameCamera_WithActiveFeature_UsesUrp" classname="ClusterMesh.Tests.ClusterMeshUrpTests" runstate="Runnable" seed="1083559714" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000605" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1407" name="EditorGameCamera_WithoutFeature_KeepsLegacyFlush" fullname="ClusterMesh.Tests.ClusterMeshUrpTests.EditorGameCamera_WithoutFeature_KeepsLegacyFlush" methodname="EditorGameCamera_WithoutFeature_KeepsLegacyFlush" classname="ClusterMesh.Tests.ClusterMeshUrpTests" runstate="Runnable" seed="107976751" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000357" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1413" name="EditorLegacyFallback_WithActiveFeature_DoesNotThrow" fullname="ClusterMesh.Tests.ClusterMeshUrpTests.EditorLegacyFallback_WithActiveFeature_DoesNotThrow" methodname="EditorLegacyFallback_WithActiveFeature_DoesNotThrow" classname="ClusterMesh.Tests.ClusterMeshUrpTests" runstate="Runnable" seed="375201310" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.002129" asserts="0">
+              <properties />
+              <output><![CDATA[ClusterMesh: Vertex-stage compute buffers are insufficient for ClusterMesh.
+]]></output>
+            </test-case>
+            <test-case id="1398" name="EnableThenDisable_DefaultRendererData_TogglesFeature" fullname="ClusterMesh.Tests.ClusterMeshUrpTests.EnableThenDisable_DefaultRendererData_TogglesFeature" methodname="EnableThenDisable_DefaultRendererData_TogglesFeature" classname="ClusterMesh.Tests.ClusterMeshUrpTests" runstate="Runnable" seed="1886106153" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000870" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1397" name="HasActiveFeature_NullOrEmpty_IsFalse" fullname="ClusterMesh.Tests.ClusterMeshUrpTests.HasActiveFeature_NullOrEmpty_IsFalse" methodname="HasActiveFeature_NullOrEmpty_IsFalse" classname="ClusterMesh.Tests.ClusterMeshUrpTests" runstate="Runnable" seed="1183751396" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000287" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1409" name="MotionVectorPassEvent_IsAfterSkyboxBeforeRadiant" fullname="ClusterMesh.Tests.ClusterMeshUrpTests.MotionVectorPassEvent_IsAfterSkyboxBeforeRadiant" methodname="MotionVectorPassEvent_IsAfterSkyboxBeforeRadiant" classname="ClusterMesh.Tests.ClusterMeshUrpTests" runstate="Runnable" seed="817533175" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.003218" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1412" name="PrepareAndSubmitUrpShadows_SameGameCameraTwice_SubmitsOnce" fullname="ClusterMesh.Tests.ClusterMeshUrpTests.PrepareAndSubmitUrpShadows_SameGameCameraTwice_SubmitsOnce" methodname="PrepareAndSubmitUrpShadows_SameGameCameraTwice_SubmitsOnce" classname="ClusterMesh.Tests.ClusterMeshUrpTests" runstate="Runnable" seed="1638096526" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.002293" asserts="0">
+              <properties />
+              <output><![CDATA[ClusterMesh: Vertex-stage compute buffers are insufficient for ClusterMesh.
+]]></output>
+            </test-case>
+            <test-case id="1403" name="ShouldSkipLegacyFlush_NullCamera_IsFalse" fullname="ClusterMesh.Tests.ClusterMeshUrpTests.ShouldSkipLegacyFlush_NullCamera_IsFalse" methodname="ShouldSkipLegacyFlush_NullCamera_IsFalse" classname="ClusterMesh.Tests.ClusterMeshUrpTests" runstate="Runnable" seed="1073567498" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000218" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1411" name="ShouldSubmitUrp_PreviewAndReflection_AreFalse" fullname="ClusterMesh.Tests.ClusterMeshUrpTests.ShouldSubmitUrp_PreviewAndReflection_AreFalse" methodname="ShouldSubmitUrp_PreviewAndReflection_AreFalse" classname="ClusterMesh.Tests.ClusterMeshUrpTests" runstate="Runnable" seed="820672576" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000674" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1410" name="ShouldSubmitUrp_SceneCamera_IsFalse" fullname="ClusterMesh.Tests.ClusterMeshUrpTests.ShouldSubmitUrp_SceneCamera_IsFalse" methodname="ShouldSubmitUrp_SceneCamera_IsFalse" classname="ClusterMesh.Tests.ClusterMeshUrpTests" runstate="Runnable" seed="61631556" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.000387" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1404" name="UrpShaders_AppendGBufferWithoutChangingExistingPassIndices" fullname="ClusterMesh.Tests.ClusterMeshUrpTests.UrpShaders_AppendGBufferWithoutChangingExistingPassIndices" methodname="UrpShaders_AppendGBufferWithoutChangingExistingPassIndices" classname="ClusterMesh.Tests.ClusterMeshUrpTests" runstate="Runnable" seed="2123041883" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.003175" asserts="0">
+              <properties />
+            </test-case>
+          </test-suite>
+          <test-suite type="TestFixture" id="1414" name="ClusterMeshViewerTests" fullname="ClusterMesh.Tests.ClusterMeshViewerTests" classname="ClusterMesh.Tests.ClusterMeshViewerTests" runstate="Runnable" testcasecount="2" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.056295" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-case id="1415" name="CreatePreviewContext_UsesSameTypeAsRuntime" fullname="ClusterMesh.Tests.ClusterMeshViewerTests.CreatePreviewContext_UsesSameTypeAsRuntime" methodname="CreatePreviewContext_UsesSameTypeAsRuntime" classname="ClusterMesh.Tests.ClusterMeshViewerTests" runstate="Runnable" seed="1430507005" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.001023" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1416" name="OnEnable_WithSerializedAsset_RebuildsContext" fullname="ClusterMesh.Tests.ClusterMeshViewerTests.OnEnable_WithSerializedAsset_RebuildsContext" methodname="OnEnable_WithSerializedAsset_RebuildsContext" classname="ClusterMesh.Tests.ClusterMeshViewerTests" runstate="Runnable" seed="2081645304" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:47Z" duration="0.053770" asserts="0">
+              <properties />
+            </test-case>
+          </test-suite>
+          <test-suite type="TestFixture" id="1417" name="ClusterSkinnedAnimationClipFolderScanTests" fullname="ClusterMesh.Tests.ClusterSkinnedAnimationClipFolderScanTests" classname="ClusterMesh.Tests.ClusterSkinnedAnimationClipFolderScanTests" runstate="Runnable" testcasecount="8" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:50Z" duration="2.491166" total="8" passed="8" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-case id="1425" name="AppendUnique_EmptyIncoming_DoesNotChangeList" fullname="ClusterMesh.Tests.ClusterSkinnedAnimationClipFolderScanTests.AppendUnique_EmptyIncoming_DoesNotChangeList" methodname="AppendUnique_EmptyIncoming_DoesNotChangeList" classname="ClusterMesh.Tests.ClusterSkinnedAnimationClipFolderScanTests" runstate="Runnable" seed="910036863" result="Passed" start-time="2026-09-12 06:10:47Z" end-time="2026-09-12 06:10:48Z" duration="0.015441" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1424" name="AppendUnique_SkipsExistingAndNulls_PreservesOrder" fullname="ClusterMesh.Tests.ClusterSkinnedAnimationClipFolderScanTests.AppendUnique_SkipsExistingAndNulls_PreservesOrder" methodname="AppendUnique_SkipsExistingAndNulls_PreservesOrder" classname="ClusterMesh.Tests.ClusterSkinnedAnimationClipFolderScanTests" runstate="Runnable" seed="140815028" result="Passed" start-time="2026-09-12 06:10:48Z" end-time="2026-09-12 06:10:48Z" duration="0.010249" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1419" name="Collect_EmptyFolder_ReturnsEmpty" fullname="ClusterMesh.Tests.ClusterSkinnedAnimationClipFolderScanTests.Collect_EmptyFolder_ReturnsEmpty" methodname="Collect_EmptyFolder_ReturnsEmpty" classname="ClusterMesh.Tests.ClusterSkinnedAnimationClipFolderScanTests" runstate="Runnable" seed="599156477" result="Passed" start-time="2026-09-12 06:10:48Z" end-time="2026-09-12 06:10:48Z" duration="0.247036" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1418" name="Collect_InvalidFolder_ReturnsEmpty" fullname="ClusterMesh.Tests.ClusterSkinnedAnimationClipFolderScanTests.Collect_InvalidFolder_ReturnsEmpty" methodname="Collect_InvalidFolder_ReturnsEmpty" classname="ClusterMesh.Tests.ClusterSkinnedAnimationClipFolderScanTests" runstate="Runnable" seed="48114131" result="Passed" start-time="2026-09-12 06:10:48Z" end-time="2026-09-12 06:10:48Z" duration="0.012011" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1420" name="Collect_LooseClips_AreSortedByPath" fullname="ClusterMesh.Tests.ClusterSkinnedAnimationClipFolderScanTests.Collect_LooseClips_AreSortedByPath" methodname="Collect_LooseClips_AreSortedByPath" classname="ClusterMesh.Tests.ClusterSkinnedAnimationClipFolderScanTests" runstate="Runnable" seed="2073842586" result="Passed" start-time="2026-09-12 06:10:48Z" end-time="2026-09-12 06:10:48Z" duration="0.663949" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1421" name="Collect_NestedFolderClip_IsIncluded" fullname="ClusterMesh.Tests.ClusterSkinnedAnimationClipFolderScanTests.Collect_NestedFolderClip_IsIncluded" methodname="Collect_NestedFolderClip_IsIncluded" classname="ClusterMesh.Tests.ClusterSkinnedAnimationClipFolderScanTests" runstate="Runnable" seed="581964275" result="Passed" start-time="2026-09-12 06:10:48Z" end-time="2026-09-12 06:10:49Z" duration="0.443413" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1422" name="Collect_PrefabEmbeddedClips_AreAllReturned" fullname="ClusterMesh.Tests.ClusterSkinnedAnimationClipFolderScanTests.Collect_PrefabEmbeddedClips_AreAllReturned" methodname="Collect_PrefabEmbeddedClips_AreAllReturned" classname="ClusterMesh.Tests.ClusterSkinnedAnimationClipFolderScanTests" runstate="Runnable" seed="1740875668" result="Passed" start-time="2026-09-12 06:10:49Z" end-time="2026-09-12 06:10:49Z" duration="0.554094" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1423" name="Collect_SameClipFromBothSources_AppearsOnce" fullname="ClusterMesh.Tests.ClusterSkinnedAnimationClipFolderScanTests.Collect_SameClipFromBothSources_AppearsOnce" methodname="Collect_SameClipFromBothSources_AppearsOnce" classname="ClusterMesh.Tests.ClusterSkinnedAnimationClipFolderScanTests" runstate="Runnable" seed="1958950616" result="Passed" start-time="2026-09-12 06:10:49Z" end-time="2026-09-12 06:10:50Z" duration="0.539731" asserts="0">
+              <properties />
+            </test-case>
+          </test-suite>
+          <test-suite type="TestFixture" id="1426" name="ClusterSkinnedCompressionAdvisorTests" fullname="ClusterMesh.Tests.ClusterSkinnedCompressionAdvisorTests" classname="ClusterMesh.Tests.ClusterSkinnedCompressionAdvisorTests" runstate="Runnable" testcasecount="10" result="Passed" start-time="2026-09-12 06:10:50Z" end-time="2026-09-12 06:10:50Z" duration="0.014875" total="10" passed="10" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-case id="1431" name="AdviseCompactPalette_NonUniformBindPose_NotRecommended" fullname="ClusterMesh.Tests.ClusterSkinnedCompressionAdvisorTests.AdviseCompactPalette_NonUniformBindPose_NotRecommended" methodname="AdviseCompactPalette_NonUniformBindPose_NotRecommended" classname="ClusterMesh.Tests.ClusterSkinnedCompressionAdvisorTests" runstate="Runnable" seed="1996540188" result="Passed" start-time="2026-09-12 06:10:50Z" end-time="2026-09-12 06:10:50Z" duration="0.003265" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1430" name="AdviseCompactPalette_UniformBindPose_Recommends" fullname="ClusterMesh.Tests.ClusterSkinnedCompressionAdvisorTests.AdviseCompactPalette_UniformBindPose_Recommends" methodname="AdviseCompactPalette_UniformBindPose_Recommends" classname="ClusterMesh.Tests.ClusterSkinnedCompressionAdvisorTests" runstate="Runnable" seed="1635483190" result="Passed" start-time="2026-09-12 06:10:50Z" end-time="2026-09-12 06:10:50Z" duration="0.001358" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1434" name="AdviseCull_LongClip_Recommends" fullname="ClusterMesh.Tests.ClusterSkinnedCompressionAdvisorTests.AdviseCull_LongClip_Recommends" methodname="AdviseCull_LongClip_Recommends" classname="ClusterMesh.Tests.ClusterSkinnedCompressionAdvisorTests" runstate="Runnable" seed="800684216" result="Passed" start-time="2026-09-12 06:10:50Z" end-time="2026-09-12 06:10:50Z" duration="0.003823" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1435" name="AdviseCull_ShortTinyClip_NotRecommended" fullname="ClusterMesh.Tests.ClusterSkinnedCompressionAdvisorTests.AdviseCull_ShortTinyClip_NotRecommended" methodname="AdviseCull_ShortTinyClip_NotRecommended" classname="ClusterMesh.Tests.ClusterSkinnedCompressionAdvisorTests" runstate="Runnable" seed="1168122777" result="Passed" start-time="2026-09-12 06:10:50Z" end-time="2026-09-12 06:10:50Z" duration="0.000454" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1429" name="AdviseSkinWeights8_BoneIndex300_NotRecommended" fullname="ClusterMesh.Tests.ClusterSkinnedCompressionAdvisorTests.AdviseSkinWeights8_BoneIndex300_NotRecommended" methodname="AdviseSkinWeights8_BoneIndex300_NotRecommended" classname="ClusterMesh.Tests.ClusterSkinnedCompressionAdvisorTests" runstate="Runnable" seed="274907863" result="Passed" start-time="2026-09-12 06:10:50Z" end-time="2026-09-12 06:10:50Z" duration="0.000397" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1428" name="AdviseSkinWeights8_SmallSkeleton_Recommends" fullname="ClusterMesh.Tests.ClusterSkinnedCompressionAdvisorTests.AdviseSkinWeights8_SmallSkeleton_Recommends" methodname="AdviseSkinWeights8_SmallSkeleton_Recommends" classname="ClusterMesh.Tests.ClusterSkinnedCompressionAdvisorTests" runstate="Runnable" seed="850496641" result="Passed" start-time="2026-09-12 06:10:50Z" end-time="2026-09-12 06:10:50Z" duration="0.000377" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1433" name="AdviseTightRest_VertexCountGatesRecommendation" fullname="ClusterMesh.Tests.ClusterSkinnedCompressionAdvisorTests.AdviseTightRest_VertexCountGatesRecommendation" methodname="AdviseTightRest_VertexCountGatesRecommendation" classname="ClusterMesh.Tests.ClusterSkinnedCompressionAdvisorTests" runstate="Runnable" seed="1214311451" result="Passed" start-time="2026-09-12 06:10:50Z" end-time="2026-09-12 06:10:50Z" duration="0.000503" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1432" name="AdviseTightRestVertices_NullMesh_UnknownForStatic" fullname="ClusterMesh.Tests.ClusterSkinnedCompressionAdvisorTests.AdviseTightRestVertices_NullMesh_UnknownForStatic" methodname="AdviseTightRestVertices_NullMesh_UnknownForStatic" classname="ClusterMesh.Tests.ClusterSkinnedCompressionAdvisorTests" runstate="Runnable" seed="962762641" result="Passed" start-time="2026-09-12 06:10:50Z" end-time="2026-09-12 06:10:50Z" duration="0.000325" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1427" name="Analyze_NoMesh_AllUnknown" fullname="ClusterMesh.Tests.ClusterSkinnedCompressionAdvisorTests.Analyze_NoMesh_AllUnknown" methodname="Analyze_NoMesh_AllUnknown" classname="ClusterMesh.Tests.ClusterSkinnedCompressionAdvisorTests" runstate="Runnable" seed="809002491" result="Passed" start-time="2026-09-12 06:10:50Z" end-time="2026-09-12 06:10:50Z" duration="0.000250" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1436" name="Label_Recommend_StartsWithRecommended" fullname="ClusterMesh.Tests.ClusterSkinnedCompressionAdvisorTests.Label_Recommend_StartsWithRecommended" methodname="Label_Recommend_StartsWithRecommended" classname="ClusterMesh.Tests.ClusterSkinnedCompressionAdvisorTests" runstate="Runnable" seed="172426946" result="Passed" start-time="2026-09-12 06:10:50Z" end-time="2026-09-12 06:10:50Z" duration="0.000178" asserts="0">
+              <properties />
+            </test-case>
+          </test-suite>
+          <test-suite type="TestFixture" id="1437" name="ClusterSkinnedCompressionTests" fullname="ClusterMesh.Tests.ClusterSkinnedCompressionTests" classname="ClusterMesh.Tests.ClusterSkinnedCompressionTests" runstate="Runnable" testcasecount="15" result="Passed" start-time="2026-09-12 06:10:50Z" end-time="2026-09-12 06:10:50Z" duration="0.014349" total="15" passed="15" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-case id="1443" name="Asset_TryReadSkinWeights_OldStrideZero_Reads16" fullname="ClusterMesh.Tests.ClusterSkinnedCompressionTests.Asset_TryReadSkinWeights_OldStrideZero_Reads16" methodname="Asset_TryReadSkinWeights_OldStrideZero_Reads16" classname="ClusterMesh.Tests.ClusterSkinnedCompressionTests" runstate="Runnable" seed="397615667" result="Passed" start-time="2026-09-12 06:10:50Z" end-time="2026-09-12 06:10:50Z" duration="0.001724" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1438" name="BakeOptions_AdvancedCompression_DefaultsOff" fullname="ClusterMesh.Tests.ClusterSkinnedCompressionTests.BakeOptions_AdvancedCompression_DefaultsOff" methodname="BakeOptions_AdvancedCompression_DefaultsOff" classname="ClusterMesh.Tests.ClusterSkinnedCompressionTests" runstate="Runnable" seed="1391288400" result="Passed" start-time="2026-09-12 06:10:50Z" end-time="2026-09-12 06:10:50Z" duration="0.000378" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1440" name="CanPackSkinWeights8_RejectsBoneIndexAbove255" fullname="ClusterMesh.Tests.ClusterSkinnedCompressionTests.CanPackSkinWeights8_RejectsBoneIndexAbove255" methodname="CanPackSkinWeights8_RejectsBoneIndexAbove255" classname="ClusterMesh.Tests.ClusterSkinnedCompressionTests" runstate="Runnable" seed="1163313960" result="Passed" start-time="2026-09-12 06:10:50Z" end-time="2026-09-12 06:10:50Z" duration="0.000356" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1449" name="CompactPalette_UniformScale_RoundTripsTranslationAndRotation" fullname="ClusterMesh.Tests.ClusterSkinnedCompressionTests.CompactPalette_UniformScale_RoundTripsTranslationAndRotation" methodname="CompactPalette_UniformScale_RoundTripsTranslationAndRotation" classname="ClusterMesh.Tests.ClusterSkinnedCompressionTests" runstate="Runnable" seed="1627015753" result="Passed" start-time="2026-09-12 06:10:50Z" end-time="2026-09-12 06:10:50Z" duration="0.001462" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1451" name="CopyFrom_Default_Keeps32ByteStride" fullname="ClusterMesh.Tests.ClusterSkinnedCompressionTests.CopyFrom_Default_Keeps32ByteStride" methodname="CopyFrom_Default_Keeps32ByteStride" classname="ClusterMesh.Tests.ClusterSkinnedCompressionTests" runstate="Runnable" seed="663649443" result="Passed" start-time="2026-09-12 06:10:50Z" end-time="2026-09-12 06:10:50Z" duration="0.000534" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1452" name="CopyFrom_TightRest_Writes24AndStaticReaderRejects" fullname="ClusterMesh.Tests.ClusterSkinnedCompressionTests.CopyFrom_TightRest_Writes24AndStaticReaderRejects" methodname="CopyFrom_TightRest_Writes24AndStaticReaderRejects" classname="ClusterMesh.Tests.ClusterSkinnedCompressionTests" runstate="Runnable" seed="703912960" result="Passed" start-time="2026-09-12 06:10:50Z" end-time="2026-09-12 06:10:50Z" duration="0.001050" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1444" name="CullSegmentCount_CompressHalvesRate" fullname="ClusterMesh.Tests.ClusterSkinnedCompressionTests.CullSegmentCount_CompressHalvesRate" methodname="CullSegmentCount_CompressHalvesRate" classname="ClusterMesh.Tests.ClusterSkinnedCompressionTests" runstate="Runnable" seed="760890585" result="Passed" start-time="2026-09-12 06:10:50Z" end-time="2026-09-12 06:10:50Z" duration="0.000196" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1447" name="HasGpuPalette_CompactWidthUsesTwoPixelsPerBone" fullname="ClusterMesh.Tests.ClusterSkinnedCompressionTests.HasGpuPalette_CompactWidthUsesTwoPixelsPerBone" methodname="HasGpuPalette_CompactWidthUsesTwoPixelsPerBone" classname="ClusterMesh.Tests.ClusterSkinnedCompressionTests" runstate="Runnable" seed="1110991488" result="Passed" start-time="2026-09-12 06:10:50Z" end-time="2026-09-12 06:10:50Z" duration="0.001037" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1439" name="PackSkinWeight8_NormalizesTo255_AndIs8Bytes" fullname="ClusterMesh.Tests.ClusterSkinnedCompressionTests.PackSkinWeight8_NormalizesTo255_AndIs8Bytes" methodname="PackSkinWeight8_NormalizesTo255_AndIs8Bytes" classname="ClusterMesh.Tests.ClusterSkinnedCompressionTests" runstate="Runnable" seed="497928391" result="Passed" start-time="2026-09-12 06:10:50Z" end-time="2026-09-12 06:10:50Z" duration="0.000748" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1441" name="PackSkinWeights_DefaultStride_Stays16AndDeflates" fullname="ClusterMesh.Tests.ClusterSkinnedCompressionTests.PackSkinWeights_DefaultStride_Stays16AndDeflates" methodname="PackSkinWeights_DefaultStride_Stays16AndDeflates" classname="ClusterMesh.Tests.ClusterSkinnedCompressionTests" runstate="Runnable" seed="1480099718" result="Passed" start-time="2026-09-12 06:10:50Z" end-time="2026-09-12 06:10:50Z" duration="0.000399" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1442" name="PackSkinWeights_Stride8_Writes8Bytes" fullname="ClusterMesh.Tests.ClusterSkinnedCompressionTests.PackSkinWeights_Stride8_Writes8Bytes" methodname="PackSkinWeights_Stride8_Writes8Bytes" classname="ClusterMesh.Tests.ClusterSkinnedCompressionTests" runstate="Runnable" seed="1638289781" result="Passed" start-time="2026-09-12 06:10:50Z" end-time="2026-09-12 06:10:50Z" duration="0.000404" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1450" name="TightVertex_StrideIs24_AndNormalRoundTrips" fullname="ClusterMesh.Tests.ClusterSkinnedCompressionTests.TightVertex_StrideIs24_AndNormalRoundTrips" methodname="TightVertex_StrideIs24_AndNormalRoundTrips" classname="ClusterMesh.Tests.ClusterSkinnedCompressionTests" runstate="Runnable" seed="1107470909" result="Passed" start-time="2026-09-12 06:10:50Z" end-time="2026-09-12 06:10:50Z" duration="0.000483" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1448" name="TryGetCullFrames_EmptyArray_IsRejected" fullname="ClusterMesh.Tests.ClusterSkinnedCompressionTests.TryGetCullFrames_EmptyArray_IsRejected" methodname="TryGetCullFrames_EmptyArray_IsRejected" classname="ClusterMesh.Tests.ClusterSkinnedCompressionTests" runstate="Runnable" seed="1838668039" result="Passed" start-time="2026-09-12 06:10:50Z" end-time="2026-09-12 06:10:50Z" duration="0.000529" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1445" name="TryGetCullFrames_Packed_RoundTrips" fullname="ClusterMesh.Tests.ClusterSkinnedCompressionTests.TryGetCullFrames_Packed_RoundTrips" methodname="TryGetCullFrames_Packed_RoundTrips" classname="ClusterMesh.Tests.ClusterSkinnedCompressionTests" runstate="Runnable" seed="1976477122" result="Passed" start-time="2026-09-12 06:10:50Z" end-time="2026-09-12 06:10:50Z" duration="0.000826" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1446" name="TryGetCullFrames_UnpackedArray_StillWorks" fullname="ClusterMesh.Tests.ClusterSkinnedCompressionTests.TryGetCullFrames_UnpackedArray_StillWorks" methodname="TryGetCullFrames_UnpackedArray_StillWorks" classname="ClusterMesh.Tests.ClusterSkinnedCompressionTests" runstate="Runnable" seed="1424112646" result="Passed" start-time="2026-09-12 06:10:50Z" end-time="2026-09-12 06:10:50Z" duration="0.000339" asserts="0">
+              <properties />
+            </test-case>
+          </test-suite>
+          <test-suite type="TestFixture" id="1453" name="ClusterSkinnedMeshQemTests" fullname="ClusterMesh.Tests.ClusterSkinnedMeshQemTests" classname="ClusterMesh.Tests.ClusterSkinnedMeshQemTests" runstate="Runnable" testcasecount="11" result="Passed" start-time="2026-09-12 06:10:50Z" end-time="2026-09-12 06:10:50Z" duration="0.026346" total="11" passed="11" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-case id="1454" name="BakerWindow_SkinnedMode_HidesQemToggle" fullname="ClusterMesh.Tests.ClusterSkinnedMeshQemTests.BakerWindow_SkinnedMode_HidesQemToggle" methodname="BakerWindow_SkinnedMode_HidesQemToggle" classname="ClusterMesh.Tests.ClusterSkinnedMeshQemTests" runstate="Runnable" seed="527427313" result="Passed" start-time="2026-09-12 06:10:50Z" end-time="2026-09-12 06:10:50Z" duration="0.000221" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1455" name="BlendWeights_Midpoint_MergesAndNormalizesInfluences" fullname="ClusterMesh.Tests.ClusterSkinnedMeshQemTests.BlendWeights_Midpoint_MergesAndNormalizesInfluences" methodname="BlendWeights_Midpoint_MergesAndNormalizesInfluences" classname="ClusterMesh.Tests.ClusterSkinnedMeshQemTests" runstate="Runnable" seed="392717016" result="Passed" start-time="2026-09-12 06:10:50Z" end-time="2026-09-12 06:10:50Z" duration="0.003091" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1458" name="ClusterTriangles_PrefersBoneAffineCandidateOverTriangleOrder" fullname="ClusterMesh.Tests.ClusterSkinnedMeshQemTests.ClusterTriangles_PrefersBoneAffineCandidateOverTriangleOrder" methodname="ClusterTriangles_PrefersBoneAffineCandidateOverTriangleOrder" classname="ClusterMesh.Tests.ClusterSkinnedMeshQemTests" runstate="Runnable" seed="2049692114" result="Passed" start-time="2026-09-12 06:10:50Z" end-time="2026-09-12 06:10:50Z" duration="0.005859" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1463" name="CpuBurstCurve_HermiteCoefficients_MatchAnimationCurve" fullname="ClusterMesh.Tests.ClusterSkinnedMeshQemTests.CpuBurstCurve_HermiteCoefficients_MatchAnimationCurve" methodname="CpuBurstCurve_HermiteCoefficients_MatchAnimationCurve" classname="ClusterMesh.Tests.ClusterSkinnedMeshQemTests" runstate="Runnable" seed="1289251669" result="Passed" start-time="2026-09-12 06:10:50Z" end-time="2026-09-12 06:10:50Z" duration="0.002346" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1464" name="CpuBurstCurve_VersionedData_IsRecognized" fullname="ClusterMesh.Tests.ClusterSkinnedMeshQemTests.CpuBurstCurve_VersionedData_IsRecognized" methodname="CpuBurstCurve_VersionedData_IsRecognized" classname="ClusterMesh.Tests.ClusterSkinnedMeshQemTests" runstate="Runnable" seed="149199877" result="Passed" start-time="2026-09-12 06:10:50Z" end-time="2026-09-12 06:10:50Z" duration="0.000553" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1461" name="DisposeCachedContexts_Twice_DoesNotThrow" fullname="ClusterMesh.Tests.ClusterSkinnedMeshQemTests.DisposeCachedContexts_Twice_DoesNotThrow" methodname="DisposeCachedContexts_Twice_DoesNotThrow" classname="ClusterMesh.Tests.ClusterSkinnedMeshQemTests" runstate="Runnable" seed="1742911667" result="Passed" start-time="2026-09-12 06:10:50Z" end-time="2026-09-12 06:10:50Z" duration="0.000535" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1460" name="DrawContext_NullAsset_CannotDraw" fullname="ClusterMesh.Tests.ClusterSkinnedMeshQemTests.DrawContext_NullAsset_CannotDraw" methodname="DrawContext_NullAsset_CannotDraw" classname="ClusterMesh.Tests.ClusterSkinnedMeshQemTests" runstate="Runnable" seed="893435854" result="Passed" start-time="2026-09-12 06:10:50Z" end-time="2026-09-12 06:10:50Z" duration="0.003928" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1459" name="EvaluatePalette_UsesNormalizedClipTime" fullname="ClusterMesh.Tests.ClusterSkinnedMeshQemTests.EvaluatePalette_UsesNormalizedClipTime" methodname="EvaluatePalette_UsesNormalizedClipTime" classname="ClusterMesh.Tests.ClusterSkinnedMeshQemTests" runstate="Runnable" seed="1460593882" result="Passed" start-time="2026-09-12 06:10:50Z" end-time="2026-09-12 06:10:50Z" duration="0.001701" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1462" name="GpuPalette_DefaultModeAndVersionedTexture_AreRecognized" fullname="ClusterMesh.Tests.ClusterSkinnedMeshQemTests.GpuPalette_DefaultModeAndVersionedTexture_AreRecognized" methodname="GpuPalette_DefaultModeAndVersionedTexture_AreRecognized" classname="ClusterMesh.Tests.ClusterSkinnedMeshQemTests" runstate="Runnable" seed="807766839" result="Passed" start-time="2026-09-12 06:10:50Z" end-time="2026-09-12 06:10:50Z" duration="0.000946" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1457" name="PackedWeight_Is16Bytes_AndWeightsSumTo65535" fullname="ClusterMesh.Tests.ClusterSkinnedMeshQemTests.PackedWeight_Is16Bytes_AndWeightsSumTo65535" methodname="PackedWeight_Is16Bytes_AndWeightsSumTo65535" classname="ClusterMesh.Tests.ClusterSkinnedMeshQemTests" runstate="Runnable" seed="1057363729" result="Passed" start-time="2026-09-12 06:10:50Z" end-time="2026-09-12 06:10:50Z" duration="0.000283" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1456" name="TryCollapse_FreeToLocked_PreservesLockedPositionAndSkin" fullname="ClusterMesh.Tests.ClusterSkinnedMeshQemTests.TryCollapse_FreeToLocked_PreservesLockedPositionAndSkin" methodname="TryCollapse_FreeToLocked_PreservesLockedPositionAndSkin" classname="ClusterMesh.Tests.ClusterSkinnedMeshQemTests" runstate="Runnable" seed="1220275242" result="Passed" start-time="2026-09-12 06:10:50Z" end-time="2026-09-12 06:10:50Z" duration="0.003656" asserts="0">
+              <properties />
+            </test-case>
+          </test-suite>
+          <test-suite type="TestFixture" id="1465" name="ClusterSkinnedMeshUrpTests" fullname="ClusterMesh.Tests.ClusterSkinnedMeshUrpTests" classname="ClusterMesh.Tests.ClusterSkinnedMeshUrpTests" runstate="Runnable" testcasecount="7" result="Passed" start-time="2026-09-12 06:10:50Z" end-time="2026-09-12 06:10:50Z" duration="0.046791" total="7" passed="7" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-case id="1472" name="BakedGpuOnly_PrepareUrp_ReadyIffCapabilityAllows" fullname="ClusterMesh.Tests.ClusterSkinnedMeshUrpTests.BakedGpuOnly_PrepareUrp_ReadyIffCapabilityAllows" methodname="BakedGpuOnly_PrepareUrp_ReadyIffCapabilityAllows" classname="ClusterMesh.Tests.ClusterSkinnedMeshUrpTests" runstate="Runnable" seed="1837074804" result="Passed" start-time="2026-09-12 06:10:50Z" end-time="2026-09-12 06:10:50Z" duration="0.018126" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1470" name="DrawContext_PrepareUrp_NullOrUnready_IsFalseAndSubmitSafe" fullname="ClusterMesh.Tests.ClusterSkinnedMeshUrpTests.DrawContext_PrepareUrp_NullOrUnready_IsFalseAndSubmitSafe" methodname="DrawContext_PrepareUrp_NullOrUnready_IsFalseAndSubmitSafe" classname="ClusterMesh.Tests.ClusterSkinnedMeshUrpTests" runstate="Runnable" seed="1601101819" result="Passed" start-time="2026-09-12 06:10:50Z" end-time="2026-09-12 06:10:50Z" duration="0.001928" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1471" name="Feature_GameCamera_PreparesSkinnedAndStaticTogether" fullname="ClusterMesh.Tests.ClusterSkinnedMeshUrpTests.Feature_GameCamera_PreparesSkinnedAndStaticTogether" methodname="Feature_GameCamera_PreparesSkinnedAndStaticTogether" classname="ClusterMesh.Tests.ClusterSkinnedMeshUrpTests" runstate="Runnable" seed="1450080928" result="Passed" start-time="2026-09-12 06:10:50Z" end-time="2026-09-12 06:10:50Z" duration="0.020457" asserts="0">
+              <properties />
+              <output><![CDATA[ClusterMesh: Vertex-stage compute buffers are insufficient for ClusterMesh.
+]]></output>
+            </test-case>
+            <test-case id="1467" name="Flush_GameCameraWithFeature_SkipsLegacySubmit" fullname="ClusterMesh.Tests.ClusterSkinnedMeshUrpTests.Flush_GameCameraWithFeature_SkipsLegacySubmit" methodname="Flush_GameCameraWithFeature_SkipsLegacySubmit" classname="ClusterMesh.Tests.ClusterSkinnedMeshUrpTests" runstate="Runnable" seed="809727850" result="Passed" start-time="2026-09-12 06:10:50Z" end-time="2026-09-12 06:10:50Z" duration="0.001789" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1466" name="Flush_GameCameraWithoutFeature_CountsLegacySubmit" fullname="ClusterMesh.Tests.ClusterSkinnedMeshUrpTests.Flush_GameCameraWithoutFeature_CountsLegacySubmit" methodname="Flush_GameCameraWithoutFeature_CountsLegacySubmit" classname="ClusterMesh.Tests.ClusterSkinnedMeshUrpTests" runstate="Runnable" seed="741563775" result="Passed" start-time="2026-09-12 06:10:50Z" end-time="2026-09-12 06:10:50Z" duration="0.000620" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1469" name="PrepareAndSubmitUrpShadows_WithoutFeature_DoesNotPrepare" fullname="ClusterMesh.Tests.ClusterSkinnedMeshUrpTests.PrepareAndSubmitUrpShadows_WithoutFeature_DoesNotPrepare" methodname="PrepareAndSubmitUrpShadows_WithoutFeature_DoesNotPrepare" classname="ClusterMesh.Tests.ClusterSkinnedMeshUrpTests" runstate="Runnable" seed="1595194507" result="Passed" start-time="2026-09-12 06:10:50Z" end-time="2026-09-12 06:10:50Z" duration="0.000466" asserts="0">
+              <properties />
+            </test-case>
+            <test-case id="1468" name="SubmitUrpShadowsBeforeCull_SameGameCameraTwice_SubmitsOnce" fullname="ClusterMesh.Tests.ClusterSkinnedMeshUrpTests.SubmitUrpShadowsBeforeCull_SameGameCameraTwice_SubmitsOnce" methodname="SubmitUrpShadowsBeforeCull_SameGameCameraTwice_SubmitsOnce" classname="ClusterMesh.Tests.ClusterSkinnedMeshUrpTests" runstate="Runnable" seed="1256362942" result="Passed" start-time="2026-09-12 06:10:50Z" end-time="2026-09-12 06:10:50Z" duration="0.000539" asserts="0">
+              <properties />
+              <output><![CDATA[Executing cleanup for: Unity.PerformanceTesting.Editor.TestRunBuilder
+]]></output>
+            </test-case>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

@@ -1,0 +1,578 @@
+using System.Reflection;
+using UnityEngine;
+using UnityEngine.Experimental.Rendering;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
+
+namespace ClusterMesh
+{
+    public enum ClusterMeshMotionVectorSlot
+    {
+        [InspectorName("After Skybox + 1（推荐：Radiant GI / TAA）")]
+        AfterSkyboxPlus1 = 0,
+        [InspectorName("After Opaques")]
+        AfterOpaques = 1,
+        [InspectorName("After Skybox")]
+        AfterSkybox = 2,
+        [InspectorName("Before PostProcessing - 1（旧挂点）")]
+        BeforePostProcessingMinus1 = 3
+    }
+
+    public static class ClusterMeshUrpBridge
+    {
+        static readonly FieldInfo RendererIndexField = typeof(UniversalAdditionalCameraData)
+            .GetField("m_RendererIndex", BindingFlags.Instance | BindingFlags.NonPublic);
+        static readonly FieldInfo RendererDataListField = typeof(UniversalRenderPipelineAsset)
+            .GetField("m_RendererDataList", BindingFlags.Instance | BindingFlags.NonPublic);
+        static readonly FieldInfo DefaultRendererIndexField = typeof(UniversalRenderPipelineAsset)
+            .GetField("m_DefaultRendererIndex", BindingFlags.Instance | BindingFlags.NonPublic);
+        static readonly PropertyInfo RenderingModeActualProperty = typeof(UniversalRenderer)
+            .GetProperty("renderingModeActual", BindingFlags.Instance | BindingFlags.NonPublic);
+        static readonly FieldInfo DeferredLightsField = typeof(UniversalRenderer)
+            .GetField("m_DeferredLights", BindingFlags.Instance | BindingFlags.NonPublic);
+        static readonly PropertyInfo DeferredLightsProperty = typeof(UniversalRenderer)
+            .GetProperty("deferredLights", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+        static readonly FieldInfo MotionVectorColorField = typeof(UniversalRenderer)
+            .GetField("m_MotionVectorColor", BindingFlags.Instance | BindingFlags.NonPublic);
+        static readonly FieldInfo MotionVectorDepthField = typeof(UniversalRenderer)
+            .GetField("m_MotionVectorDepth", BindingFlags.Instance | BindingFlags.NonPublic);
+        static readonly FieldInfo CameraNormalsTextureField = FindStaticField(
+            typeof(UniversalRenderer), "m_NormalsTexture", "m_CameraNormalsTexture");
+        static readonly FieldInfo CameraDepthCopyField = FindStaticField(
+            typeof(UniversalRenderer), "m_DepthTexture", "m_CameraDepthTexture");
+        static readonly FieldInfo DepthNormalPrepassField = FindStaticField(
+            typeof(UniversalRenderer), "m_DepthNormalPrepass");
+        static PropertyInfo _depthNormalPassNormalHandle;
+        static PropertyInfo _depthNormalPassDepthHandle;
+        static bool _depthNormalPassMembersResolved;
+        static System.Type _deferredLightsType;
+        static PropertyInfo _gbufferAttachmentsProperty;
+        static FieldInfo _gbufferAttachmentsField;
+        static PropertyInfo _depthAttachmentProperty;
+        static PropertyInfo _depthAttachmentHandleProperty;
+        static FieldInfo _depthAttachmentField;
+        static PropertyInfo _gbufferFormatsProperty;
+        static FieldInfo _gbufferFormatsField;
+
+        public static string LastDeferredBindingError { get; private set; }
+
+        public static ScriptableRendererData RendererDataOverrideForTests;
+
+        public const string DeferredSupportDescription =
+            "ClusterMesh deferred rendering is supported only by URP Deferred; Built-in and HDRP deferred are not supported.";
+
+        public static readonly RenderPassEvent MotionVectorPassEvent =
+            (RenderPassEvent)((int)RenderPassEvent.AfterRenderingSkybox + 1);
+
+        public static readonly RenderPassEvent DepthNormalsPassEvent =
+            (RenderPassEvent)((int)RenderPassEvent.AfterRenderingPrePasses + 1);
+
+        static FieldInfo FindStaticField(System.Type type, params string[] names)
+        {
+            const BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+            for (int i = 0; i < names.Length; i++)
+            {
+                FieldInfo field = type.GetField(names[i], flags);
+                if (field != null)
+                    return field;
+            }
+            return null;
+        }
+
+        public static ClusterMeshMotionVectorSlot CurrentMotionVectorSlot =>
+            ClusterMeshSettings.CurrentMotionVectorSlot;
+
+        public static RenderPassEvent CurrentMotionVectorPassEvent =>
+            ResolveMotionVectorPassEvent(CurrentMotionVectorSlot);
+
+        public static string MotionVectorSlotLabel(ClusterMeshMotionVectorSlot slot)
+        {
+            switch (slot)
+            {
+                case ClusterMeshMotionVectorSlot.AfterOpaques:
+                    return "After Opaques";
+                case ClusterMeshMotionVectorSlot.AfterSkybox:
+                    return "After Skybox";
+                case ClusterMeshMotionVectorSlot.BeforePostProcessingMinus1:
+                    return "Before PostProcessing - 1（旧挂点）";
+                default:
+                    return "After Skybox + 1（推荐：Radiant GI / TAA）";
+            }
+        }
+
+        public static string MotionVectorSlotDescription(ClusterMeshMotionVectorSlot slot)
+        {
+            switch (slot)
+            {
+                case ClusterMeshMotionVectorSlot.AfterOpaques:
+                    return "AfterRenderingOpaques。比天空盒和官方物体 MV 更早写入。" +
+                           "排查用，不推荐日常。可能和官方物体 MV 抢同一张图；Radiant GI / TAA 一般不需要这么早。";
+                case ClusterMeshMotionVectorSlot.AfterSkybox:
+                    return "AfterRenderingSkybox。紧贴天空盒之后，仍早于 Radiant + 2。" +
+                           "Radiant GI / TAA 通常仍有效，但和官方物体 MV 不同级，可能互盖。无特殊冲突时用默认 +1。";
+                case ClusterMeshMotionVectorSlot.BeforePostProcessingMinus1:
+                    return "BeforeRenderingPostProcessing - 1。旧挂点；2022.3 上晚于 Radiant + 2，Temporal 会把角色当静态世界。" +
+                           "Radiant GI / TAA 选这项无效。";
+                default:
+                    return "AfterRenderingSkybox + 1。官方物体 MV 同级，早于 Radiant + 2。" +
+                           "推荐本档：本工程 Radiant GI 的 Temporal 和 URP TAA 能采到 ClusterMesh 速度，转相机 / 走角色不把轮廓当静态世界拖边。";
+            }
+        }
+
+        public static RenderPassEvent ResolveMotionVectorPassEvent(ClusterMeshMotionVectorSlot slot)
+        {
+            switch (slot)
+            {
+                case ClusterMeshMotionVectorSlot.AfterOpaques:
+                    return RenderPassEvent.AfterRenderingOpaques;
+                case ClusterMeshMotionVectorSlot.AfterSkybox:
+                    return RenderPassEvent.AfterRenderingSkybox;
+                case ClusterMeshMotionVectorSlot.BeforePostProcessingMinus1:
+                    return (RenderPassEvent)((int)RenderPassEvent.BeforeRenderingPostProcessing - 1);
+                default:
+                    return MotionVectorPassEvent;
+            }
+        }
+
+        public static bool IsDeferred(ScriptableRenderer renderer)
+        {
+            if (!(renderer is UniversalRenderer) || RenderingModeActualProperty == null)
+                return false;
+            try
+            {
+                object value = RenderingModeActualProperty.GetValue(renderer);
+                if (value == null)
+                    return false;
+                // Tuanjie URP 14 has Forward / ForwardPlus / Deferred only.
+                // Compare by name so a later DeferredPlus member is optional.
+                string name = value.ToString();
+                return name == "Deferred" || name == "DeferredPlus";
+            }
+            catch
+            {
+                // A different URP implementation must keep the established Forward path alive.
+                return false;
+            }
+        }
+
+        public static bool TryGetDeferredTargets(
+            ScriptableRenderer renderer,
+            out RTHandle[] colors,
+            out RTHandle depth,
+            out GraphicsFormat[] formats)
+        {
+            colors = null;
+            depth = null;
+            formats = null;
+            if (!IsDeferred(renderer) || (DeferredLightsField == null && DeferredLightsProperty == null))
+                return FailDeferredBinding("active renderer is not URP Deferred/Deferred+, or DeferredLights is unavailable");
+            try
+            {
+                object deferredLights = DeferredLightsProperty != null
+                    ? DeferredLightsProperty.GetValue(renderer)
+                    : DeferredLightsField.GetValue(renderer);
+                if (deferredLights == null)
+                    return FailDeferredBinding("URP DeferredLights has not been initialized");
+                CacheDeferredProperties(deferredLights.GetType());
+                colors = ReadMember<RTHandle[]>(
+                    deferredLights, _gbufferAttachmentsProperty, _gbufferAttachmentsField);
+                depth = ReadMember<RTHandle>(
+                    deferredLights, _depthAttachmentProperty, _depthAttachmentField);
+                if (depth == null && _depthAttachmentHandleProperty != null)
+                    depth = _depthAttachmentHandleProperty.GetValue(deferredLights) as RTHandle;
+                formats = ReadMember<GraphicsFormat[]>(
+                    deferredLights, _gbufferFormatsProperty, _gbufferFormatsField);
+
+                if (colors == null || colors.Length < 4)
+                    return FailDeferredBinding("URP returned fewer than the four required GBuffer MRT attachments");
+                if (depth == null)
+                    return FailDeferredBinding("URP returned no GBuffer depth attachment");
+                if (formats == null || formats.Length != colors.Length)
+                    return FailDeferredBinding("URP GBuffer format count does not match the MRT attachment count");
+                if (colors.Length > SystemInfo.supportedRenderTargetCount)
+                    return FailDeferredBinding("GBuffer MRT count exceeds this device's supported render-target count");
+                for (int i = 0; i < colors.Length; i++)
+                {
+                    if (colors[i] == null)
+                        return FailDeferredBinding("URP GBuffer MRT attachment " + i + " is null");
+                    // URP index 3 is the lighting/camera-color attachment and
+                    // intentionally reports None because its format is inherited.
+                    if (formats[i] == GraphicsFormat.None && i != 3)
+                        return FailDeferredBinding("URP GBuffer MRT format " + i + " is invalid");
+                }
+
+                LastDeferredBindingError = null;
+                return true;
+            }
+            catch (System.Exception exception)
+            {
+                return FailDeferredBinding("reflection failed: " + exception.GetType().Name);
+            }
+        }
+
+        public static bool AreCompatibleDeferredTargets(RTHandle[] colors, RTHandle depth)
+        {
+            if (colors == null || colors.Length == 0 || depth == null)
+                return false;
+            if (!TryGetPixelSize(depth, out int width, out int height))
+                return false;
+            for (int i = 0; i < colors.Length; i++)
+            {
+                if (!TryGetPixelSize(colors[i], out int colorWidth, out int colorHeight))
+                    return false;
+                if (colorWidth != width || colorHeight != height)
+                    return false;
+            }
+
+            return true;
+        }
+
+        static bool TryGetPixelSize(RTHandle handle, out int width, out int height)
+        {
+            width = 0;
+            height = 0;
+            if (handle == null)
+                return false;
+            RenderTexture rt = handle.rt;
+            if (rt != null)
+            {
+                width = rt.width;
+                height = rt.height;
+                return width > 0 && height > 0;
+            }
+
+            Vector2Int scaled = handle.GetScaledSize();
+            width = scaled.x;
+            height = scaled.y;
+            return width > 0 && height > 0;
+        }
+
+        public static bool TryGetDepthNormalsTargets(
+            ScriptableRenderer renderer,
+            out RTHandle normals,
+            out RTHandle depth)
+        {
+            normals = null;
+            depth = null;
+            if (!(renderer is UniversalRenderer))
+                return false;
+            try
+            {
+                // Forward DepthNormalPrepass: Setup(m_DepthTexture, m_NormalsTexture).
+                // Read the pass first so we get the pair URP assigned this frame,
+                // then the renderer fields. Never pair normals with cameraDepthTarget.
+                if (TryGetOfficialDepthNormalPassTargets(renderer, out normals, out depth))
+                    return true;
+                if (CameraNormalsTextureField == null || CameraDepthCopyField == null)
+                    return false;
+                normals = CameraNormalsTextureField.GetValue(renderer) as RTHandle;
+                depth = CameraDepthCopyField.GetValue(renderer) as RTHandle;
+                return normals != null && depth != null;
+            }
+            catch
+            {
+                normals = null;
+                depth = null;
+                return false;
+            }
+        }
+
+        static bool TryGetOfficialDepthNormalPassTargets(
+            ScriptableRenderer renderer,
+            out RTHandle normals,
+            out RTHandle depth)
+        {
+            normals = null;
+            depth = null;
+            if (DepthNormalPrepassField == null)
+                return false;
+            object prepass = DepthNormalPrepassField.GetValue(renderer);
+            if (prepass == null)
+                return false;
+            ResolveDepthNormalPassMembers(prepass.GetType());
+            if (_depthNormalPassNormalHandle == null || _depthNormalPassDepthHandle == null)
+                return false;
+            normals = _depthNormalPassNormalHandle.GetValue(prepass) as RTHandle;
+            depth = _depthNormalPassDepthHandle.GetValue(prepass) as RTHandle;
+            return normals != null && depth != null;
+        }
+
+        static void ResolveDepthNormalPassMembers(System.Type passType)
+        {
+            if (_depthNormalPassMembersResolved)
+                return;
+            _depthNormalPassMembersResolved = true;
+            const BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+            _depthNormalPassNormalHandle = passType.GetProperty("normalHandle", flags);
+            _depthNormalPassDepthHandle = passType.GetProperty("depthHandle", flags);
+        }
+
+        public static bool AreCompatibleDepthNormalsTargets(RTHandle normals, RTHandle depth)
+        {
+            if (!AreCompatibleDeferredTargets(new[] { normals }, depth))
+                return false;
+            return HandleSampleCount(normals) == HandleSampleCount(depth);
+        }
+
+        public static bool AreCompatibleDepthNormalsTextures(Texture color, Texture depth)
+        {
+            if (color == null || depth == null || color.width <= 0 || depth.width <= 0)
+                return false;
+            if (color.width != depth.width || color.height != depth.height)
+                return false;
+            int colorSamples = color is RenderTexture colorRt ? Mathf.Max(1, colorRt.antiAliasing) : 1;
+            int depthSamples = depth is RenderTexture depthRt ? Mathf.Max(1, depthRt.antiAliasing) : 1;
+            return colorSamples == depthSamples;
+        }
+
+        public static bool TryBindDepthNormalsTargets(CommandBuffer cmd, ScriptableRenderer renderer)
+        {
+            if (cmd == null ||
+                !TryGetDepthNormalsTargets(renderer, out RTHandle normals, out RTHandle depth) ||
+                !AreCompatibleDepthNormalsTargets(normals, depth))
+                return false;
+            cmd.SetRenderTarget(normals, depth);
+            return true;
+        }
+
+        static int HandleSampleCount(RTHandle handle)
+        {
+            RenderTexture rt = handle != null ? handle.rt : null;
+            return rt != null ? Mathf.Max(1, rt.antiAliasing) : 1;
+        }
+
+        public static bool TryGetMotionVectorTargets(
+            ScriptableRenderer renderer,
+            out RTHandle color,
+            out RTHandle depth)
+        {
+            color = null;
+            depth = null;
+            if (!(renderer is UniversalRenderer) ||
+                MotionVectorColorField == null || MotionVectorDepthField == null)
+                return false;
+            try
+            {
+                color = MotionVectorColorField.GetValue(renderer) as RTHandle;
+                depth = MotionVectorDepthField.GetValue(renderer) as RTHandle;
+                return color != null && depth != null;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        static void CacheDeferredProperties(System.Type type)
+        {
+            if (_deferredLightsType == type)
+                return;
+            const BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+            _deferredLightsType = type;
+            _gbufferAttachmentsProperty = FindProperty(type, flags, "GbufferAttachments", "GBufferAttachments");
+            _gbufferAttachmentsField = FindField(type, flags, "m_GbufferAttachments", "m_GBufferAttachments");
+            _depthAttachmentProperty = FindProperty(type, flags, "DepthAttachment");
+            _depthAttachmentHandleProperty = FindProperty(type, flags, "DepthAttachmentHandle");
+            _depthAttachmentField = FindField(type, flags, "m_DepthAttachment", "m_DepthAttachmentHandle");
+            _gbufferFormatsProperty = FindProperty(type, flags, "GbufferFormats", "GBufferFormats");
+            _gbufferFormatsField = FindField(type, flags, "m_GbufferFormats", "m_GBufferFormats");
+        }
+
+        static PropertyInfo FindProperty(System.Type type, BindingFlags flags, params string[] names)
+        {
+            for (int i = 0; i < names.Length; i++)
+            {
+                PropertyInfo property = type.GetProperty(names[i], flags);
+                if (property != null)
+                    return property;
+            }
+            return null;
+        }
+
+        static FieldInfo FindField(System.Type type, BindingFlags flags, params string[] names)
+        {
+            for (int i = 0; i < names.Length; i++)
+            {
+                FieldInfo field = type.GetField(names[i], flags);
+                if (field != null)
+                    return field;
+            }
+            return null;
+        }
+
+        static T ReadMember<T>(object instance, PropertyInfo property, FieldInfo field) where T : class
+        {
+            if (property != null)
+                return property.GetValue(instance) as T;
+            return field != null ? field.GetValue(instance) as T : null;
+        }
+
+        static bool FailDeferredBinding(string reason)
+        {
+            LastDeferredBindingError = reason;
+            return false;
+        }
+
+        public static bool HasActiveFeature(ScriptableRendererData data)
+        {
+            if (data == null || data.rendererFeatures == null)
+                return false;
+            for (int i = 0; i < data.rendererFeatures.Count; i++)
+            {
+                ScriptableRendererFeature feature = data.rendererFeatures[i];
+                if (feature is ClusterMeshUrpFeature && feature.isActive)
+                    return true;
+            }
+
+            return false;
+        }
+
+        public static bool IsForwardFeatureActive()
+        {
+            return ResolveActiveRendererData(out ScriptableRendererData data) &&
+                IsForwardFeatureActive(data);
+        }
+
+        public static bool IsForwardFeatureActive(ScriptableRendererData data)
+        {
+            return HasActiveFeature(data) && IsForwardRendererData(data);
+        }
+
+        public static bool IsDeferredFeatureActive()
+        {
+            return ResolveActiveRendererData(out ScriptableRendererData data) &&
+                IsDeferredFeatureActive(data);
+        }
+
+        public static bool IsDeferredFeatureActive(ScriptableRendererData data)
+        {
+            return HasActiveFeature(data) && IsDeferredRendererData(data);
+        }
+
+        public static bool ShouldExposeDepthNormals()
+        {
+            return IsForwardFeatureActive();
+        }
+
+        public static bool ShouldExposeDepthNormals(ScriptableRendererData data)
+        {
+            return IsForwardFeatureActive(data);
+        }
+
+        static bool ResolveActiveRendererData(out ScriptableRendererData data)
+        {
+            if (RendererDataOverrideForTests != null)
+            {
+                data = RendererDataOverrideForTests;
+                return true;
+            }
+
+            return TryGetDefaultRendererData(out data);
+        }
+
+        static bool IsForwardRendererData(ScriptableRendererData data)
+        {
+            var rendererData = data as UniversalRendererData;
+            return rendererData != null && !IsDeferredRenderingMode(rendererData.renderingMode);
+        }
+
+        static bool IsDeferredRendererData(ScriptableRendererData data)
+        {
+            var rendererData = data as UniversalRendererData;
+            return rendererData != null && IsDeferredRenderingMode(rendererData.renderingMode);
+        }
+
+        static bool IsDeferredRenderingMode(RenderingMode mode)
+        {
+            string name = mode.ToString();
+            return name == "Deferred" || name == "DeferredPlus";
+        }
+
+        public static bool ShouldSkipLegacyFlush(Camera camera)
+        {
+            return ShouldSubmitUrp(camera);
+        }
+
+        // ShadowsOnly must be queued before URP Cull. AddRenderPasses runs after
+        // Cull, which is why Game View lost shadows while Scene View (BeginCameraRendering) kept them.
+        public static void SubmitUrpShadowsBeforeCull(Camera camera)
+        {
+            if (!ShouldSubmitUrp(camera))
+                return;
+            ClusterMeshSceneBatcher.PrepareAndSubmitUrpShadows(camera);
+            ClusterSkinnedMeshSceneBatcher.PrepareAndSubmitUrpShadows(camera);
+        }
+
+        public static bool ShouldSubmitUrp(Camera camera)
+        {
+            // Game cameras (Play, Edit Mode Game View, and Player) use the Feature
+            // when Setup URP attached an active ClusterMeshUrpFeature. Scene / Preview /
+            // Reflection stay on Lifetime Update + Graphics.Draw.
+            if (camera == null || camera.cameraType != CameraType.Game)
+                return false;
+            return TryGetRendererData(camera, out ScriptableRendererData data) && HasActiveFeature(data);
+        }
+
+        public static bool TryGetDefaultRendererData(out ScriptableRendererData data)
+        {
+            data = null;
+            UniversalRenderPipelineAsset urp = UniversalRenderPipeline.asset;
+            if (urp == null)
+                return false;
+            ScriptableRendererData[] list = RendererDataList(urp);
+            if (list == null || list.Length == 0)
+                return false;
+            int index = DefaultRendererIndex(urp);
+            if (index < 0 || index >= list.Length)
+                index = 0;
+            data = list[index];
+            return data != null;
+        }
+
+        public static bool TryGetRendererData(Camera camera, out ScriptableRendererData data)
+        {
+            if (RendererDataOverrideForTests != null)
+            {
+                data = RendererDataOverrideForTests;
+                return true;
+            }
+
+            data = null;
+            if (camera == null)
+                return false;
+            UniversalRenderPipelineAsset urp = UniversalRenderPipeline.asset;
+            if (urp == null)
+                return false;
+            ScriptableRendererData[] list = RendererDataList(urp);
+            if (list == null || list.Length == 0)
+                return false;
+            int index = DefaultRendererIndex(urp);
+            var extra = camera.GetUniversalAdditionalCameraData();
+            if (extra != null && RendererIndexField != null)
+            {
+                int cameraIndex = (int)RendererIndexField.GetValue(extra);
+                if (cameraIndex >= 0)
+                    index = cameraIndex;
+            }
+
+            if (index < 0 || index >= list.Length)
+                return false;
+            data = list[index];
+            return data != null;
+        }
+
+        static ScriptableRendererData[] RendererDataList(UniversalRenderPipelineAsset urp)
+        {
+            return RendererDataListField != null
+                ? RendererDataListField.GetValue(urp) as ScriptableRendererData[]
+                : null;
+        }
+
+        static int DefaultRendererIndex(UniversalRenderPipelineAsset urp)
+        {
+            if (DefaultRendererIndexField == null)
+                return 0;
+            return (int)DefaultRendererIndexField.GetValue(urp);
+        }
+    }
+}

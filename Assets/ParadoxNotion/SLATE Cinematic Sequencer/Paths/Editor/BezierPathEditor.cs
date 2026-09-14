@@ -79,7 +79,7 @@ namespace Slate
             if ( point == selectedPoint ) {
                 newPosition = Handles.PositionHandle(point.position, Quaternion.identity);
             }
-            Handles.FreeMoveHandle(point.position, Quaternion.identity, pointGUISize, Vector3.zero, Handles.RectangleHandleCap);
+            var fmh_82_52_639049656203049777 = Quaternion.identity; Handles.FreeMoveHandle(point.position, pointGUISize, Vector3.zero, Handles.RectangleHandleCap);
 
             if ( newPosition != point.position ) {
                 point.position = newPosition;
@@ -87,7 +87,7 @@ namespace Slate
             }
 
 
-            var newGlobal1 = Handles.FreeMoveHandle(point.handle1Position, Quaternion.identity, HandleUtility.GetHandleSize(point.handle1Position) * 0.075f, Vector3.zero, Handles.CircleHandleCap);
+            var fmh_90_76_639049656203082413 = Quaternion.identity; var newGlobal1 = Handles.FreeMoveHandle(point.handle1Position, HandleUtility.GetHandleSize(point.handle1Position) * 0.075f, Vector3.zero, Handles.CircleHandleCap);
             if ( selectedPoint == point ) { newGlobal1 = Handles.PositionHandle(newGlobal1, Quaternion.identity); }
 
             if ( point.handle1Position != newGlobal1 ) {
@@ -95,7 +95,7 @@ namespace Slate
                 path.SetDirty();
             }
 
-            var newGlobal2 = Handles.FreeMoveHandle(point.handle2Position, Quaternion.identity, HandleUtility.GetHandleSize(point.handle2Position) * 0.075f, Vector3.zero, Handles.CircleHandleCap);
+            var fmh_98_76_639049656203087080 = Quaternion.identity; var newGlobal2 = Handles.FreeMoveHandle(point.handle2Position, HandleUtility.GetHandleSize(point.handle2Position) * 0.075f, Vector3.zero, Handles.CircleHandleCap);
             if ( selectedPoint == point ) { newGlobal2 = Handles.PositionHandle(newGlobal2, Quaternion.identity); }
 
             if ( point.handle2Position != newGlobal2 ) {
