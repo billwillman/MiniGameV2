@@ -1030,13 +1030,18 @@ namespace ClusterMesh
                     if (graph.IsValid())
                         graph.Destroy();
                 }
-                if (!sourceClip.empty && duration > 0f && !HasSampledMotion(palettes))
+                if (!sourceClip.empty && duration > 0f && !HasSampledMotion(palettes) && ClipChangesOverTime(sourceClip))
                 {
-                    throw new InvalidOperationException(
-                        "Animation clip '" + sourceClip.name + "' produced no bone motion. " +
-                        (sourceClip.isHumanMotion
-                            ? "Check that the Humanoid Animator Avatar matches the selected SkinnedMeshRenderer."
-                            : "Check that the Generic/Legacy clip binding root matches the selected SkinnedMeshRenderer hierarchy."));
+                    if (usePlayable || ClipDrivesBones(sourceClip, directSampleTarget, bones))
+                    {
+                        throw new InvalidOperationException(
+                            "Animation clip '" + sourceClip.name + "' produced no bone motion. " +
+                            (sourceClip.isHumanMotion
+                                ? "Check that the Humanoid Animator Avatar matches the selected SkinnedMeshRenderer."
+                                : "Check that the Generic/Legacy clip binding root matches the selected SkinnedMeshRenderer hierarchy."));
+                    }
+
+                    Debug.LogWarning("Animation clip '" + sourceClip.name + "' does not drive this SkinnedMeshRenderer. It was baked as a static pose.");
                 }
                 ClusterSkinnedBoneCurves[] curves = null;
                 if (buildCpuCurves)
@@ -1117,6 +1122,58 @@ namespace ClusterMesh
                 }
             }
             return best.gameObject;
+        }
+
+        static bool ClipDrivesBones(AnimationClip clip, GameObject sampleTarget, Transform[] bones)
+        {
+            if (clip == null || sampleTarget == null || bones == null)
+                return false;
+            var boneSet = new HashSet<Transform>();
+            for (int i = 0; i < bones.Length; i++)
+            {
+                if (bones[i] != null)
+                    boneSet.Add(bones[i]);
+            }
+
+            Transform root = sampleTarget.transform;
+            EditorCurveBinding[] bindings = AnimationUtility.GetCurveBindings(clip);
+            for (int i = 0; i < bindings.Length; i++)
+            {
+                EditorCurveBinding binding = bindings[i];
+                if (binding.type != typeof(Transform))
+                    continue;
+                Transform target = string.IsNullOrEmpty(binding.path) ? root : root.Find(binding.path);
+                if (target != null && boneSet.Contains(target))
+                    return true;
+            }
+
+            return false;
+        }
+
+        static bool ClipChangesOverTime(AnimationClip clip)
+        {
+            EditorCurveBinding[] bindings = AnimationUtility.GetCurveBindings(clip);
+            for (int i = 0; i < bindings.Length; i++)
+            {
+                if (CurveChanges(AnimationUtility.GetEditorCurve(clip, bindings[i])))
+                    return true;
+            }
+
+            return false;
+        }
+
+        static bool CurveChanges(AnimationCurve curve)
+        {
+            if (curve == null || curve.length < 2)
+                return false;
+            float first = curve.keys[0].value;
+            for (int i = 1; i < curve.length; i++)
+            {
+                if (Mathf.Abs(curve.keys[i].value - first) > 0.00001f)
+                    return true;
+            }
+
+            return false;
         }
 
         static bool HasSampledMotion(Matrix4x4[][] palettes)
