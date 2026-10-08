@@ -536,6 +536,8 @@ namespace ClusterMesh
             var indices = new List<uint>();
             var groups = new List<ClusterGroup>();
             outputSkin = new List<ClusterSkinWeight>();
+            HashSet<(int, int, int, int, int, int)> sourceInteriorEdges =
+                ClusterMeshLodBaker.BuildSourceInteriorEdges(mesh);
             int subMeshCount = Mathf.Max(1, mesh.subMeshCount);
             for (int sub = 0; sub < subMeshCount; sub++)
             {
@@ -557,7 +559,7 @@ namespace ClusterMesh
                     settings, clusters, vertices, outputSkin, indices, 0f, ClusterMeshLod.PackFlags(0));
                 if (settings.buildLodHierarchy)
                     ClusterSkinnedMeshLodBaker.BuildHierarchy(clusters, vertices, outputSkin, indices, groups,
-                        leafStart, clusters.Count, settings, qemContext);
+                        leafStart, clusters.Count, settings, qemContext, sourceInteriorEdges);
             }
             if (clusters.Count == 0)
                 throw new InvalidOperationException("Skinned ClusterMesh baker found no valid triangles.");

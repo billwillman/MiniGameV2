@@ -16,6 +16,50 @@ namespace ClusterMesh.Tests
         }
 
         [Test]
+        public void BuildHierarchy_OpenQuad_AssetOuterBoundaryToggleAlsoAppliesToSkinnedQem()
+        {
+            var mesh = new Mesh();
+            mesh.vertices = new[] { Vector3.zero, Vector3.right, Vector3.one, Vector3.up };
+            mesh.normals = new[] { Vector3.forward, Vector3.forward, Vector3.forward, Vector3.forward };
+            mesh.uv = new[] { Vector2.zero, Vector2.right, Vector2.one, Vector2.up };
+            mesh.triangles = new[] { 0, 1, 2, 0, 2, 3 };
+
+            Assert.That(BuildSkinnedQuadGroupCount(mesh, false), Is.GreaterThan(0));
+            Assert.That(BuildSkinnedQuadGroupCount(mesh, true), Is.EqualTo(0));
+
+            Object.DestroyImmediate(mesh);
+        }
+
+        static int BuildSkinnedQuadGroupCount(Mesh mesh, bool preserveAssetOuterBoundary)
+        {
+            var leafSettings = new ClusterMeshBakeSettings
+            {
+                maxVerticesPerCluster = 3,
+                maxTrianglesPerCluster = 1,
+                buildLodHierarchy = false
+            };
+            ClusterMeshBakeResult leaf = ClusterMeshBaker.Bake(mesh, new Material[1], leafSettings);
+            var clusters = new List<ClusterHeader>(leaf.clusters);
+            var vertices = new List<ClusterVertex>(leaf.vertices);
+            var indices = new List<uint>(leaf.indices);
+            var groups = new List<ClusterGroup>();
+            var skin = new List<ClusterSkinWeight>(vertices.Count);
+            for (int i = 0; i < vertices.Count; i++)
+                skin.Add(new ClusterSkinWeight { boneIndex0 = 0, weight0 = 1f });
+            var settings = new ClusterMeshBakeSettings
+            {
+                maxVerticesPerCluster = 3,
+                maxTrianglesPerCluster = 1,
+                buildLodHierarchy = true,
+                preserveAssetOuterBoundary = preserveAssetOuterBoundary
+            };
+            ClusterSkinnedMeshLodBaker.BuildHierarchy(
+                clusters, vertices, skin, indices, groups, 0, clusters.Count, settings,
+                new ClusterSkinnedQemContext(), ClusterMeshLodBaker.BuildSourceInteriorEdges(mesh));
+            return groups.Count;
+        }
+
+        [Test]
         public void BlendWeights_Midpoint_MergesAndNormalizesInfluences()
         {
             var a = new ClusterSkinWeight { boneIndex0 = 2, weight0 = 1f };

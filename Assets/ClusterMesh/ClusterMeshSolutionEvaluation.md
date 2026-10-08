@@ -19,6 +19,7 @@
 - Built-in Render Pipeline、URP Forward、URP Deferred、GBuffer、阴影和 Motion Vectors。
 - GameView 与 SceneView，支持 Play 和非 Play 编辑状态。
 - Camera Cull、Cone Cull、LOD 和 Cluster 调试显示。
+- Baker 提供默认关闭的 `Asset 外边界` 保护；开启后 Static/Skinned QEM 保持源 Mesh 开放轮廓，关闭时仍自动保护当前 LOD 分组共享边及材质/属性接缝。Page Streaming 直接复用同一套 Bake 层次。
 - SceneView 的裁剪使用业务目标相机，不使用 SceneView 内置相机替代。
 
 ### Skinned Mesh 与动画

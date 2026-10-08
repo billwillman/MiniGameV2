@@ -86,6 +86,8 @@ namespace ClusterMesh
         public int maxTrianglesPerCluster = ClusterMeshLimits.MaxTrianglesPerCluster;
         public bool buildLodHierarchy = true;
         public bool useQemSimplify = true;
+        [Tooltip("Keep the source asset's open outer boundary fixed during LOD simplification. Disabled by default; LOD group seams and material/attribute seams remain protected independently.")]
+        public bool preserveAssetOuterBoundary;
         public bool packTightRestVertices;
         [Tooltip("Write geometry into a page-streamed sidecar file. Disabled keeps the legacy embedded asset format unchanged.")]
         public bool enableStreaming;

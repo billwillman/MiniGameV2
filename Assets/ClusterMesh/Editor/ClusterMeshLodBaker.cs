@@ -15,7 +15,8 @@ namespace ClusterMesh
             List<ClusterGroup> groups,
             int leafStart,
             int leafEnd,
-            ClusterMeshBakeSettings settings)
+            ClusterMeshBakeSettings settings,
+            HashSet<(int, int, int, int, int, int)> sourceInteriorEdges = null)
         {
             if (clusters == null || groups == null || settings == null || leafEnd - leafStart < 2)
                 return;
@@ -37,6 +38,8 @@ namespace ClusterMesh
                     int levelStart = remaining.Count;
 
                     var edgeCache = new Dictionary<int, HashSet<(int, int, int, int, int, int)>>();
+                    HashSet<(int, int, int, int, int, int)> levelSharedEdges =
+                        SharedBoundaryEdges(clusters, vertices, indices, pending, edgeCache);
                     while (remaining.Count >= 2)
                     {
                         EditorUtility.DisplayProgressBar(
@@ -56,7 +59,9 @@ namespace ClusterMesh
                         RemoveAll(remaining, group);
 
                         int startClusters = clusters.Count;
-                        if (!TryEmitGroup(clusters, vertices, indices, groups, group, settings, level))
+                        if (!TryEmitGroup(
+                            clusters, vertices, indices, groups, group, settings, level,
+                            levelSharedEdges, sourceInteriorEdges))
                         {
                             for (int i = 0; i < group.Count; i++)
                                 next.Add(group[i]);
@@ -80,6 +85,38 @@ namespace ClusterMesh
             {
                 EditorUtility.ClearProgressBar();
             }
+        }
+
+        public static HashSet<(int, int, int, int, int, int)> BuildSourceInteriorEdges(Mesh mesh)
+        {
+            var result = new HashSet<(int, int, int, int, int, int)>();
+            if (mesh == null)
+                return result;
+
+            Vector3[] positions = mesh.vertices;
+            if (positions == null || positions.Length == 0)
+                return result;
+            var counts = new Dictionary<(int, int, int, int, int, int), int>();
+            int subMeshCount = Mathf.Max(1, mesh.subMeshCount);
+            for (int subMesh = 0; subMesh < subMeshCount; subMesh++)
+            {
+                if (mesh.GetTopology(subMesh) != MeshTopology.Triangles)
+                    continue;
+                int[] triangles = mesh.GetTriangles(subMesh);
+                for (int i = 0; i + 2 < triangles.Length; i += 3)
+                {
+                    CountPositionEdge(counts, positions, triangles[i], triangles[i + 1]);
+                    CountPositionEdge(counts, positions, triangles[i + 1], triangles[i + 2]);
+                    CountPositionEdge(counts, positions, triangles[i + 2], triangles[i]);
+                }
+            }
+
+            foreach (KeyValuePair<(int, int, int, int, int, int), int> pair in counts)
+            {
+                if (pair.Value > 1)
+                    result.Add(pair.Key);
+            }
+            return result;
         }
 
         public static void BuildWeldedGroupSoup(
@@ -166,7 +203,7 @@ namespace ClusterMesh
             var tris = new List<int>();
             BuildWeldedGroupSoup(clusters, vertices, indices, group, pos, nrm, tan, uv, tris);
             var locked = new List<bool>();
-            MarkLocked(pos, tris, locked);
+            MarkLocked(pos, tris, locked, true, null, null);
             var seen = new HashSet<(int, int, int)>();
             for (int i = 0; i < pos.Count; i++)
             {
@@ -285,6 +322,33 @@ namespace ClusterMesh
             return false;
         }
 
+        static HashSet<(int, int, int, int, int, int)> SharedBoundaryEdges(
+            List<ClusterHeader> clusters,
+            List<ClusterVertex> vertices,
+            List<uint> indices,
+            List<int> clusterIndices,
+            Dictionary<int, HashSet<(int, int, int, int, int, int)>> edgeCache)
+        {
+            var counts = new Dictionary<(int, int, int, int, int, int), int>();
+            for (int i = 0; i < clusterIndices.Count; i++)
+            {
+                foreach (var edge in BoundaryEdges(
+                    clusters, vertices, indices, clusterIndices[i], edgeCache))
+                {
+                    counts.TryGetValue(edge, out int count);
+                    counts[edge] = count + 1;
+                }
+            }
+
+            var result = new HashSet<(int, int, int, int, int, int)>();
+            foreach (var pair in counts)
+            {
+                if (pair.Value > 1)
+                    result.Add(pair.Key);
+            }
+            return result;
+        }
+
         static HashSet<(int, int, int, int, int, int)> BoundaryEdges(
             List<ClusterHeader> clusters,
             List<ClusterVertex> vertices,
@@ -353,6 +417,23 @@ namespace ClusterMesh
             return (a.Item1, a.Item2, a.Item3, b.Item1, b.Item2, b.Item3);
         }
 
+        static void CountPositionEdge(
+            Dictionary<(int, int, int, int, int, int), int> counts,
+            Vector3[] positions,
+            int indexA,
+            int indexB)
+        {
+            if ((uint)indexA >= (uint)positions.Length || (uint)indexB >= (uint)positions.Length)
+                return;
+            var a = Quantize(positions[indexA]);
+            var b = Quantize(positions[indexB]);
+            if (a == b)
+                return;
+            var edge = OrderedEdge(a, b);
+            counts.TryGetValue(edge, out int count);
+            counts[edge] = count + 1;
+        }
+
         static void RemoveAll(List<int> remaining, List<int> group)
         {
             for (int i = remaining.Count - 1; i >= 0; i--)
@@ -388,7 +469,9 @@ namespace ClusterMesh
             List<ClusterGroup> groups,
             List<int> group,
             ClusterMeshBakeSettings settings,
-            int level)
+            int level,
+            HashSet<(int, int, int, int, int, int)> levelSharedEdges,
+            HashSet<(int, int, int, int, int, int)> sourceInteriorEdges)
         {
             var pos = new List<Vector3>();
             var nrm = new List<Vector3>();
@@ -403,7 +486,9 @@ namespace ClusterMesh
             var srcTris = new List<int>(tris);
             int srcTriCount = tris.Count / 3;
             var locked = new List<bool>();
-            MarkLocked(pos, tris, locked);
+            MarkLocked(
+                pos, tris, locked, settings.preserveAssetOuterBoundary,
+                levelSharedEdges, sourceInteriorEdges);
             CollapseHalf(pos, nrm, tan, uv, tris, locked, srcTriCount, settings.useQemSimplify);
             if (tris.Count < 3 || tris.Count / 3 >= srcTriCount)
                 return false;
@@ -542,7 +627,13 @@ namespace ClusterMesh
             }
         }
 
-        static void MarkLocked(List<Vector3> pos, List<int> tris, List<bool> locked)
+        static void MarkLocked(
+            List<Vector3> pos,
+            List<int> tris,
+            List<bool> locked,
+            bool preserveAssetOuterBoundary,
+            HashSet<(int, int, int, int, int, int)> levelSharedEdges,
+            HashSet<(int, int, int, int, int, int)> sourceInteriorEdges)
         {
             locked.Clear();
             var weld = new int[pos.Count];
@@ -572,6 +663,12 @@ namespace ClusterMesh
             foreach (var kv in edges)
             {
                 if (kv.Value != 1)
+                    continue;
+                var edge = OrderedEdge(Quantize(pos[kv.Key.Item1]), Quantize(pos[kv.Key.Item2]));
+                bool shouldLock = preserveAssetOuterBoundary ||
+                    (levelSharedEdges != null && levelSharedEdges.Contains(edge)) ||
+                    (sourceInteriorEdges != null && sourceInteriorEdges.Contains(edge));
+                if (!shouldLock)
                     continue;
                 lockedCanon.Add(kv.Key.Item1);
                 lockedCanon.Add(kv.Key.Item2);

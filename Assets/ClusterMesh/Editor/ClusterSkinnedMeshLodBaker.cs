@@ -17,7 +17,8 @@ namespace ClusterMesh
             int leafStart,
             int leafEnd,
             ClusterMeshBakeSettings settings,
-            ClusterSkinnedQemContext qemContext)
+            ClusterSkinnedQemContext qemContext,
+            HashSet<(int, int, int, int, int, int)> sourceInteriorEdges = null)
         {
             if (clusters == null || vertices == null || skinWeights == null || indices == null || groups == null ||
                 settings == null || leafEnd - leafStart < 2 || vertices.Count != skinWeights.Count)
@@ -32,12 +33,16 @@ namespace ClusterMesh
                 var next = new List<int>();
                 bool emitted = false;
                 var edgeCache = new Dictionary<int, HashSet<EdgeKey>>();
+                var positionEdgeCache = new Dictionary<int, HashSet<(int, int, int, int, int, int)>>();
+                HashSet<(int, int, int, int, int, int)> levelSharedEdges =
+                    SharedPositionBoundaryEdges(
+                        clusters, vertices, indices, pending, positionEdgeCache);
                 while (remaining.Count >= 2)
                 {
                     List<int> group = PickGroup(clusters, vertices, skinWeights, indices, groups, remaining, edgeCache);
                     RemoveAll(remaining, group);
                     if (group.Count < 2 || !TryEmitGroup(clusters, vertices, skinWeights, indices, groups,
-                        group, settings, qemContext, level))
+                        group, settings, qemContext, level, levelSharedEdges, sourceInteriorEdges))
                     {
                         next.AddRange(group);
                         continue;
@@ -133,7 +138,9 @@ namespace ClusterMesh
             List<int> group,
             ClusterMeshBakeSettings settings,
             ClusterSkinnedQemContext context,
-            int level)
+            int level,
+            HashSet<(int, int, int, int, int, int)> levelSharedEdges,
+            HashSet<(int, int, int, int, int, int)> sourceInteriorEdges)
         {
             var pos = new List<Vector3>();
             var nrm = new List<Vector3>();
@@ -151,7 +158,9 @@ namespace ClusterMesh
             var sourceTriangles = new List<int>(tris);
             int sourceTriangleCount = tris.Count / 3;
             var locked = new List<bool>();
-            MarkLocked(pos, nrm, tan, uv, skin, tris, locked);
+            MarkLocked(
+                pos, nrm, tan, uv, skin, tris, locked,
+                settings.preserveAssetOuterBoundary, levelSharedEdges, sourceInteriorEdges);
             int target = Mathf.Max(1, sourceTriangleCount / 2);
             int guard = pos.Count * 8 + 8;
             while (guard-- > 0 && tris.Count / 3 > target)
@@ -295,7 +304,10 @@ namespace ClusterMesh
         }
 
         static void MarkLocked(List<Vector3> pos, List<Vector3> nrm, List<Vector4> tan, List<Vector2> uv,
-            List<ClusterSkinWeight> skin, List<int> tris, List<bool> locked)
+            List<ClusterSkinWeight> skin, List<int> tris, List<bool> locked,
+            bool preserveAssetOuterBoundary,
+            HashSet<(int, int, int, int, int, int)> levelSharedEdges,
+            HashSet<(int, int, int, int, int, int)> sourceInteriorEdges)
         {
             locked.Clear();
             for (int i = 0; i < pos.Count; i++) locked.Add(false);
@@ -304,6 +316,11 @@ namespace ClusterMesh
             foreach (KeyValuePair<EdgeKey, int> pair in counts)
             {
                 if (pair.Value != 1) continue;
+                var positionEdge = MakePositionEdge(pair.Key.a, pair.Key.b);
+                bool shouldLock = preserveAssetOuterBoundary ||
+                    (levelSharedEdges != null && levelSharedEdges.Contains(positionEdge)) ||
+                    (sourceInteriorEdges != null && sourceInteriorEdges.Contains(positionEdge));
+                if (!shouldLock) continue;
                 boundary.Add(pair.Key.a); boundary.Add(pair.Key.b);
             }
             for (int i = 0; i < pos.Count; i++)
@@ -376,6 +393,75 @@ namespace ClusterMesh
             return result;
         }
 
+        static HashSet<(int, int, int, int, int, int)> SharedPositionBoundaryEdges(
+            List<ClusterHeader> clusters,
+            List<ClusterVertex> vertices,
+            List<uint> indices,
+            List<int> clusterIndices,
+            Dictionary<int, HashSet<(int, int, int, int, int, int)>> cache)
+        {
+            var counts = new Dictionary<(int, int, int, int, int, int), int>();
+            for (int i = 0; i < clusterIndices.Count; i++)
+            {
+                foreach (var edge in PositionBoundaryEdges(
+                    clusters, vertices, indices, clusterIndices[i], cache))
+                {
+                    counts.TryGetValue(edge, out int count);
+                    counts[edge] = count + 1;
+                }
+            }
+
+            var result = new HashSet<(int, int, int, int, int, int)>();
+            foreach (var pair in counts)
+            {
+                if (pair.Value > 1)
+                    result.Add(pair.Key);
+            }
+            return result;
+        }
+
+        static HashSet<(int, int, int, int, int, int)> PositionBoundaryEdges(
+            List<ClusterHeader> clusters,
+            List<ClusterVertex> vertices,
+            List<uint> indices,
+            int cluster,
+            Dictionary<int, HashSet<(int, int, int, int, int, int)>> cache)
+        {
+            if (cache.TryGetValue(cluster, out var result))
+                return result;
+            ClusterHeader header = clusters[cluster];
+            var counts = new Dictionary<(int, int, int, int, int, int), int>();
+            for (int t = 0; t < header.triangleCount; t++)
+            {
+                int offset = (int)header.indexOffset + t * 3;
+                int i0 = (int)header.vertexOffset + (int)indices[offset];
+                int i1 = (int)header.vertexOffset + (int)indices[offset + 1];
+                int i2 = (int)header.vertexOffset + (int)indices[offset + 2];
+                CountPositionEdge(counts, MakePositionEdge(vertices[i0].position, vertices[i1].position));
+                CountPositionEdge(counts, MakePositionEdge(vertices[i1].position, vertices[i2].position));
+                CountPositionEdge(counts, MakePositionEdge(vertices[i2].position, vertices[i0].position));
+            }
+
+            result = new HashSet<(int, int, int, int, int, int)>();
+            foreach (var pair in counts)
+            {
+                if (pair.Value == 1)
+                    result.Add(pair.Key);
+            }
+            cache.Add(cluster, result);
+            return result;
+        }
+
+        static void CountPositionEdge(
+            Dictionary<(int, int, int, int, int, int), int> counts,
+            (int, int, int, int, int, int) edge)
+        {
+            if (edge.Item1 == edge.Item4 && edge.Item2 == edge.Item5 && edge.Item3 == edge.Item6)
+                return;
+            counts.TryGetValue(edge, out int count);
+            counts[edge] = count + 1;
+        }
+
         static void CountEdge(Dictionary<EdgeKey, int> counts, EdgeKey edge)
         {
             counts.TryGetValue(edge, out int count); counts[edge] = count + 1;
@@ -413,6 +499,30 @@ namespace ClusterMesh
         static EdgeKey MakeEdge(VertexKey a, VertexKey b)
         {
             return a.CompareTo(b) <= 0 ? new EdgeKey { a = a, b = b } : new EdgeKey { a = b, b = a };
+        }
+
+        static (int, int, int, int, int, int) MakePositionEdge(Vector3 a, Vector3 b)
+        {
+            return MakePositionEdge(
+                Mathf.RoundToInt(a.x * QuantizeScale),
+                Mathf.RoundToInt(a.y * QuantizeScale),
+                Mathf.RoundToInt(a.z * QuantizeScale),
+                Mathf.RoundToInt(b.x * QuantizeScale),
+                Mathf.RoundToInt(b.y * QuantizeScale),
+                Mathf.RoundToInt(b.z * QuantizeScale));
+        }
+
+        static (int, int, int, int, int, int) MakePositionEdge(VertexKey a, VertexKey b)
+        {
+            return MakePositionEdge(a.x, a.y, a.z, b.x, b.y, b.z);
+        }
+
+        static (int, int, int, int, int, int) MakePositionEdge(
+            int ax, int ay, int az, int bx, int by, int bz)
+        {
+            if (ax > bx || (ax == bx && ay > by) || (ax == bx && ay == by && az > bz))
+                return (bx, by, bz, ax, ay, az);
+            return (ax, ay, az, bx, by, bz);
         }
 
         static Vector3 AverageCenter(List<ClusterHeader> clusters, List<int> group)

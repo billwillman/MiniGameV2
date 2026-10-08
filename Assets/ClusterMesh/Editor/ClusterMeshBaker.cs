@@ -30,6 +30,8 @@ namespace ClusterMesh
             var vertices = new List<ClusterVertex>();
             var indices = new List<uint>();
             var groups = new List<ClusterGroup>();
+            HashSet<(int, int, int, int, int, int)> sourceInteriorEdges =
+                ClusterMeshLodBaker.BuildSourceInteriorEdges(mesh);
 
             for (int sub = 0; sub < subMeshCount; sub++)
             {
@@ -48,7 +50,8 @@ namespace ClusterMesh
                     indices);
                 if (settings.buildLodHierarchy)
                     ClusterMeshLodBaker.BuildHierarchy(
-                        clusters, vertices, indices, groups, leafStart, clusters.Count, settings);
+                        clusters, vertices, indices, groups, leafStart, clusters.Count, settings,
+                        sourceInteriorEdges);
             }
 
             if (clusters.Count == 0)

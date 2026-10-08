@@ -10,7 +10,69 @@ namespace ClusterMesh.Tests
         public void Settings_Default_UseQemSimplifyIsTrue()
         {
             Assert.That(new ClusterMeshBakeSettings().useQemSimplify, Is.True);
+            Assert.That(new ClusterMeshBakeSettings().preserveAssetOuterBoundary, Is.False);
             Assert.That(new ClusterMeshBakeSettings().packTightRestVertices, Is.False);
+        }
+
+        [Test]
+        public void Bake_OpenQuad_AssetOuterBoundaryToggleChangesSimplification()
+        {
+            var mesh = new Mesh();
+            mesh.vertices = new[]
+            {
+                Vector3.zero,
+                Vector3.right,
+                Vector3.one,
+                Vector3.up
+            };
+            mesh.normals = new[] { Vector3.forward, Vector3.forward, Vector3.forward, Vector3.forward };
+            mesh.uv = new[] { Vector2.zero, Vector2.right, Vector2.one, Vector2.up };
+            mesh.triangles = new[] { 0, 1, 2, 0, 2, 3 };
+
+            var unlocked = new ClusterMeshBakeSettings
+            {
+                maxVerticesPerCluster = 3,
+                maxTrianglesPerCluster = 1,
+                buildLodHierarchy = true,
+                useQemSimplify = true,
+                preserveAssetOuterBoundary = false,
+                enableStreaming = true
+            };
+            var locked = new ClusterMeshBakeSettings
+            {
+                maxVerticesPerCluster = 3,
+                maxTrianglesPerCluster = 1,
+                buildLodHierarchy = true,
+                useQemSimplify = true,
+                preserveAssetOuterBoundary = true,
+                enableStreaming = true
+            };
+
+            ClusterMeshBakeResult unlockedResult = ClusterMeshBaker.Bake(mesh, new Material[1], unlocked);
+            ClusterMeshBakeResult lockedResult = ClusterMeshBaker.Bake(mesh, new Material[1], locked);
+
+            Assert.That(unlockedResult.groups.Length, Is.GreaterThan(0),
+                "An unlocked open boundary should be simplifiable.");
+            Assert.That(lockedResult.groups.Length, Is.EqualTo(0),
+                "Every vertex of this open quad is on the protected Asset boundary.");
+
+            Object.DestroyImmediate(mesh);
+        }
+
+        [Test]
+        public void BuildSourceInteriorEdges_DistinguishesOuterEdgesFromCrossSubmeshSeam()
+        {
+            var mesh = new Mesh { subMeshCount = 2 };
+            mesh.vertices = new[] { Vector3.zero, Vector3.right, Vector3.one, Vector3.up };
+            mesh.SetTriangles(new[] { 0, 1, 2 }, 0);
+            mesh.SetTriangles(new[] { 0, 2, 3 }, 1);
+
+            HashSet<(int, int, int, int, int, int)> interior =
+                ClusterMeshLodBaker.BuildSourceInteriorEdges(mesh);
+
+            Assert.That(interior.Count, Is.EqualTo(1),
+                "Only the shared diagonal is an interior/material seam; four outline edges remain optional.");
+            Object.DestroyImmediate(mesh);
         }
 
         [Test]

@@ -220,6 +220,19 @@ namespace ClusterMesh
                         "勾选：组内用 QEM（位置+法线+UV）折叠。不勾：最短边，和以前一样。阈值 T 仍在 Renderer 上调。"),
                     _settings.useQemSimplify);
             }
+            if (_settings.buildLodHierarchy)
+            {
+                _settings.preserveAssetOuterBoundary = EditorGUILayout.Toggle(
+                    new GUIContent(
+                        "Asset 外边界",
+                        "默认关闭。开启后，LOD 简化不会折叠 source Mesh 的开放外轮廓；关闭可获得更高简化率。当前 LOD 分组锁边以及材质/顶点属性接缝始终由 Baker 内部保护，不需要额外开关。"),
+                    _settings.preserveAssetOuterBoundary);
+                EditorGUILayout.HelpBox(
+                    _settings.preserveAssetOuterBoundary
+                        ? "开启：保护 Asset 开放外轮廓，降低轮廓漂移和跨 Asset 拼接裂缝风险；代价是边界较多的网格可能更难降面。"
+                        : "关闭（默认）：允许简化 Asset 开放外轮廓以提高降面率。LOD 分组锁边和材质/属性接缝仍会自动保护。Static、Skinned、Page Streaming 共用此 Bake 结果。",
+                    MessageType.None);
+            }
 
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("存储与流式加载", EditorStyles.boldLabel);
