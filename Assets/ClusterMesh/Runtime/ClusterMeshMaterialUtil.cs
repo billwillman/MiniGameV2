@@ -42,6 +42,20 @@ namespace ClusterMesh
             if (lit == null)
                 throw new System.InvalidOperationException("ClusterMesh Lit shader is missing.");
 
+            // Adapted procedural shaders already expose their own map fields.
+            // Preserve all properties instead of copying only standard Lit ones.
+            if (source != null && source.shader == lit)
+            {
+                long copyStamp=0;ClusterMeshCpuTiming.Begin(ref copyStamp);
+                var copy = new Material(source);
+                ClusterMeshCpuTiming.End("MaterialClone",copyStamp);
+                long flagsStamp=0;ClusterMeshCpuTiming.Begin(ref flagsStamp);
+                copy.hideFlags=HideFlags.HideAndDontSave;
+                copy.enableInstancing = true;
+                ClusterMeshCpuTiming.End("MaterialFlags",flagsStamp);
+                return copy;
+            }
+
             var material = new Material(lit)
             {
                 name = source != null ? source.name + " (ClusterMesh)" : "ClusterMeshLit",

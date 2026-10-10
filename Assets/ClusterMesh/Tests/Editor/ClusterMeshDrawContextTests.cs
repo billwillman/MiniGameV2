@@ -42,7 +42,7 @@ namespace ClusterMesh.Tests
         }
 
         [Test]
-        public void Constructor_ValidBake_ShadowMaterialIsDistinctInstance()
+        public void Constructor_ValidBake_ContextsShareImmutableMaterial()
         {
             var mesh = ClusterMeshTestMeshes.Triangle();
             var bake = ClusterMeshBaker.Bake(mesh, new Material[1], new ClusterMeshBakeSettings());
@@ -52,6 +52,7 @@ namespace ClusterMesh.Tests
             var cull = AssetDatabase.LoadAssetAtPath<ComputeShader>("Assets/ClusterMesh/Shaders/ClusterMeshCull.compute");
             var lit = Shader.Find("ClusterMesh/Lit");
             using (var ctx = new ClusterMeshDrawContext(asset, cull, lit))
+            using (var other = new ClusterMeshDrawContext(asset, cull, lit))
             {
                 if (!ctx.IsReady)
                 {
@@ -62,10 +63,9 @@ namespace ClusterMesh.Tests
 
                 var flags = System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance;
                 var color = (Material[])typeof(ClusterMeshDrawContext).GetField("_materials", flags).GetValue(ctx);
-                var shadow = (Material[])typeof(ClusterMeshDrawContext).GetField("_shadowMaterials", flags).GetValue(ctx);
-                Assert.That(shadow, Is.Not.Null);
-                Assert.That(shadow.Length, Is.EqualTo(color.Length));
-                Assert.That(shadow[0], Is.Not.SameAs(color[0]));
+                var shared = (Material[])typeof(ClusterMeshDrawContext).GetField("_materials", flags).GetValue(other);
+                Assert.That(shared[0], Is.SameAs(color[0]));
+                Assert.That(typeof(ClusterMeshDrawContext).GetField("_shadowMaterials",flags),Is.Null);
             }
 
             Object.DestroyImmediate(asset);
@@ -216,6 +216,57 @@ namespace ClusterMesh.Tests
             var lit = Shader.Find("ClusterMesh/Lit");
             var ctx = new ClusterMeshDrawContext(null, cull, lit);
             Assert.DoesNotThrow(() => { ctx.Dispose(); ctx.Dispose(); });
+        }
+
+        [Test]
+        public void SharedMaterial_QueuedDrawsKeepIndependentTransformsAndBuffers()
+        {
+            if(!ClusterMeshCapability.IsSupported())Assert.Ignore(ClusterMeshCapability.GetUnsupportedReason());
+            var mesh=ClusterMeshTestMeshes.Triangle();mesh.triangles=new[]{0,2,1,0,1,2};
+            var source=new Material(Shader.Find("ClusterMesh/Lit")){enableInstancing=true};
+            var settings=new ClusterMeshBakeSettings{buildLodHierarchy=false};
+            var a=ScriptableObject.CreateInstance<ClusterMeshAsset>();var b=ScriptableObject.CreateInstance<ClusterMeshAsset>();
+            a.CopyFrom(ClusterMeshBaker.Bake(mesh,new[]{source},settings),mesh,settings);
+            b.CopyFrom(ClusterMeshBaker.Bake(mesh,new[]{source},settings),mesh,settings);
+            var go=new GameObject("MPB isolation camera");var camera=go.AddComponent<Camera>();camera.enabled=false;
+            camera.transform.position=new Vector3(0,0,-5);camera.orthographic=true;camera.orthographicSize=2;camera.aspect=1;camera.nearClipPlane=.1f;camera.farClipPlane=20;
+            var target=new RenderTexture(128,128,24);target.Create();var pixels=new Texture2D(128,128,TextureFormat.RGBA32,false);
+            var cmd=new CommandBuffer();var previous=RenderTexture.active;
+            var cull=AssetDatabase.LoadAssetAtPath<ComputeShader>("Assets/ClusterMesh/Shaders/ClusterMeshCull.compute");
+            try
+            {
+                using(var left=new ClusterMeshDrawContext(a,cull,source.shader))
+                using(var right=new ClusterMeshDrawContext(b,cull,source.shader))
+                {
+                    Assert.That(left.IsReady&&right.IsReady,Is.True);
+                    left.EnableConeCull=right.EnableConeCull=false;left.EnableClusterColor=right.EnableClusterColor=true;
+                    Assert.That(left.PrepareUrp(new[]{Matrix4x4.Translate(new Vector3(-1.5f,-.5f,0))},new[]{false},new[]{false},camera,false,true),Is.True);
+                    Assert.That(right.PrepareUrp(new[]{Matrix4x4.Translate(new Vector3(.5f,-.5f,0))},new[]{false},new[]{false},camera,false,true),Is.True);
+                    cmd.SetRenderTarget(target);cmd.ClearRenderTarget(true,true,Color.black);
+                    cmd.SetViewProjectionMatrices(camera.worldToCameraMatrix,GL.GetGPUProjectionMatrix(camera.projectionMatrix,true));
+                    left.SubmitUrpColor(cmd);right.SubmitUrpColor(cmd);
+                    // Deliberately overwrite the reusable MPB after submission.
+                    var flags=System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic;
+                    ((MaterialPropertyBlock)typeof(ClusterMeshDrawContext).GetField("_drawProperties",flags).GetValue(left)).Clear();
+                    Graphics.ExecuteCommandBuffer(cmd);RenderTexture.active=target;
+                    pixels.ReadPixels(new Rect(0,0,128,128),0,0);pixels.Apply();
+                    int leftPixels=0,rightPixels=0;
+                    for(int y=0;y<128;y++)for(int x=0;x<128;x++)
+                    {var p=pixels.GetPixel(x,y);if(Mathf.Max(p.r,Mathf.Max(p.g,p.b))>.1f){if(x<64)leftPixels++;else rightPixels++;}}
+                    Assert.That(leftPixels,Is.GreaterThan(100),"left draw was overwritten by right draw");
+                    Assert.That(rightPixels,Is.GreaterThan(100));
+                    var materials=(Material[])typeof(ClusterMeshDrawContext).GetField("_materials",flags).GetValue(left);
+                    Assert.That(materials[0],Is.SameAs(source));
+                    Assert.That(source.GetFloat("_EnableClusterColor"),Is.Zero,"per-draw data must not touch source");
+                }
+                Assert.That(source!=null,Is.True,"borrowed source must survive disposal");
+            }
+            finally
+            {
+                RenderTexture.active=previous;cmd.Release();target.Release();
+                Object.DestroyImmediate(target);Object.DestroyImmediate(pixels);Object.DestroyImmediate(go);
+                Object.DestroyImmediate(a);Object.DestroyImmediate(b);Object.DestroyImmediate(source);Object.DestroyImmediate(mesh);
+            }
         }
 
         [Test]

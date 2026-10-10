@@ -14,7 +14,6 @@ namespace ClusterMesh
         static readonly int VerticesId = Shader.PropertyToID("_Vertices");
         static readonly int VerticesTightId = Shader.PropertyToID("_VerticesTight");
         static readonly int RestVertexTightId = Shader.PropertyToID("_RestVertexTight");
-        const string ReceiveShadowsOffKeyword = "_RECEIVE_SHADOWS_OFF";
         static readonly int IndicesId = Shader.PropertyToID("_Indices");
         static readonly int VisibleId = Shader.PropertyToID("_VisibleClusterIds");
         static readonly int ShadowVisibleId = Shader.PropertyToID("_ShadowClusterIds");
@@ -54,6 +53,7 @@ namespace ClusterMesh
 
         readonly ClusterMeshAsset _asset;
         readonly ComputeShader _cullShader;
+        readonly Shader _litShader;
         readonly int _cullKernel;
         readonly Mesh _template;
         readonly GraphicsBuffer _clusterBuffer;
@@ -77,7 +77,9 @@ namespace ClusterMesh
         readonly GraphicsBuffer[] _argsBuffers;
         readonly GraphicsBuffer[] _shadowArgsBuffers;
         readonly Material[] _materials;
-        readonly Material[] _shadowMaterials;
+        readonly ClusterMeshSharedMaterials.Lease[] _materialLeases;
+        ClusterMeshSharedMaterials.Lease[] _noReceiveLeases;
+        readonly MaterialPropertyBlock _drawProperties = new MaterialPropertyBlock();
         readonly Plane[] _planes = new Plane[6];
         readonly Plane[] _receiverPlanes = new Plane[6];
         readonly Plane[] _shadowPlanes = new Plane[6];
@@ -141,7 +143,7 @@ namespace ClusterMesh
                     return false;
                 if (_streaming && (_streamRuntime == null || !_streamRuntime.IsReady || _streamRuntime.Failed))
                     return false;
-                return MaterialsAlive(_materials) && MaterialsAlive(_shadowMaterials);
+                return MaterialsAlive(_materials);
             }
         }
         public bool IsWaitingForStreaming => IsReady && !_disposed && _streaming &&
@@ -160,6 +162,7 @@ namespace ClusterMesh
         {
             _asset = asset;
             _cullShader = cullShader;
+            _litShader = litShader;
             if (asset == null || asset.clusters == null || asset.clusters.Length == 0)
             {
                 Error = "ClusterMesh asset is missing or empty.";
@@ -218,9 +221,12 @@ namespace ClusterMesh
                 return;
             }
 
+            long setupStamp=0;ClusterMeshCpuTiming.Begin(ref setupStamp);
             _cullKernel = cullShader.FindKernel(_streaming ? "CullStreamedClusters" : "CullClusters");
             _template = ClusterMeshTemplate.Create();
+            ClusterMeshCpuTiming.End("DrawSetup",setupStamp);
 
+            long metadataStamp=0;ClusterMeshCpuTiming.Begin(ref metadataStamp);
             _clusterBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, asset.clusters.Length, ClusterMeshLimits.ClusterHeaderStride);
             _clusterBuffer.SetData(asset.clusters);
             int groupCount = asset.groups != null ? asset.groups.Length : 0;
@@ -241,6 +247,8 @@ namespace ClusterMesh
                 GraphicsBuffer.Target.Structured, ClusterMeshLimits.MaxBatchedObjects, ClusterMeshLimits.ObjectSHStride);
             _localBounds = ClusterMeshFrustum.AssetLocalBounds(asset);
             _restVertexTight = tightRest;
+            ClusterMeshCpuTiming.End("DrawMetadata",metadataStamp);
+            long streamStamp=0;ClusterMeshCpuTiming.Begin(ref streamStamp);
             if (_streaming)
             {
                 int nodeCount = _streamRuntime.NodeCount;
@@ -297,11 +305,12 @@ namespace ClusterMesh
                     _indexBuffer.SetData(packedIndices);
             }
 
+            ClusterMeshCpuTiming.End("DrawStreamBuffers",streamStamp);
             int materialCount = Mathf.Max(1, asset.materials != null ? asset.materials.Length : 1);
             int visibleCapacity = Mathf.Max(1, asset.clusters.Length) * ClusterMeshLimits.MaxBatchedObjects;
             _visibleCapacity = visibleCapacity;
             _materials = new Material[materialCount];
-            _shadowMaterials = new Material[materialCount];
+            _materialLeases = new ClusterMeshSharedMaterials.Lease[materialCount];
             _argsBuffers = new GraphicsBuffer[materialCount];
             _shadowArgsBuffers = new GraphicsBuffer[materialCount];
             _visibleBuffers = new GraphicsBuffer[materialCount];
@@ -310,8 +319,11 @@ namespace ClusterMesh
             for (int i = 0; i < materialCount; i++)
             {
                 Material source = asset.materials != null && i < asset.materials.Length ? asset.materials[i] : null;
-                _materials[i] = ClusterMeshMaterialUtil.CreateRuntimeMaterial(source, litShader);
-                _shadowMaterials[i] = ClusterMeshMaterialUtil.CreateRuntimeMaterial(source, litShader);
+                long materialStamp=0;ClusterMeshCpuTiming.Begin(ref materialStamp);
+                _materialLeases[i] = ClusterMeshSharedMaterials.Acquire(source, litShader, true);
+                _materials[i] = _materialLeases[i].Material;
+                ClusterMeshCpuTiming.End("DrawMaterials",materialStamp);
+                long drawBuffersStamp=0;ClusterMeshCpuTiming.Begin(ref drawBuffersStamp);
                 _argsBuffers[i] = new GraphicsBuffer(GraphicsBuffer.Target.IndirectArguments, 1, 20);
                 _argsBuffers[i].SetData(_argsSeed);
                 _shadowArgsBuffers[i] = new GraphicsBuffer(GraphicsBuffer.Target.IndirectArguments, 1, 20);
@@ -324,6 +336,7 @@ namespace ClusterMesh
                     GraphicsBuffer.Target.Append | GraphicsBuffer.Target.Structured,
                     visibleCapacity,
                     4);
+                ClusterMeshCpuTiming.End("DrawOutputBuffers",drawBuffersStamp);
             }
 
             IsReady = true;
@@ -927,23 +940,23 @@ namespace ClusterMesh
             RestoreChunk(chunk);
             for (int materialIndex = 0; materialIndex < _materials.Length; materialIndex++)
             {
-                Material colorMat = _materials[materialIndex];
-                BindDrawMaterial(colorMat, chunk.visible[materialIndex]);
+                Material colorMat = DrawMaterial(materialIndex);
+                BindDrawProperties(chunk.visible[materialIndex]);
                 if (_preparedSplit)
                 {
                     Graphics.DrawMeshInstancedIndirect(
-                        _template, 0, colorMat, chunk.bounds, chunk.colorArgs[materialIndex], 0, null,
+                        _template, 0, colorMat, chunk.bounds, chunk.colorArgs[materialIndex], 0, _drawProperties,
                         ShadowCastingMode.Off, _preparedReceive, ResolveDrawLayer(), camera);
-                    Material shadowMat = _shadowMaterials[materialIndex];
-                    BindDrawMaterial(shadowMat, chunk.shadowVisible[materialIndex]);
+                    Material shadowMat = _materials[materialIndex];
+                    BindDrawProperties(chunk.shadowVisible[materialIndex]);
                     Graphics.DrawMeshInstancedIndirect(
-                        _template, 0, shadowMat, chunk.bounds, chunk.shadowArgs[materialIndex], 0, null,
+                        _template, 0, shadowMat, chunk.bounds, chunk.shadowArgs[materialIndex], 0, _drawProperties,
                         ShadowCastingMode.ShadowsOnly, false, ResolveDrawLayer(), camera);
                 }
                 else
                 {
                     Graphics.DrawMeshInstancedIndirect(
-                        _template, 0, colorMat, chunk.bounds, chunk.colorArgs[materialIndex], 0, null,
+                        _template, 0, colorMat, chunk.bounds, chunk.colorArgs[materialIndex], 0, _drawProperties,
                         _preparedCast ? ShadowCastingMode.On : ShadowCastingMode.Off,
                         _preparedReceive, ResolveDrawLayer(), camera);
                 }
@@ -957,12 +970,12 @@ namespace ClusterMesh
             RestoreChunk(chunk);
             for (int materialIndex = 0; materialIndex < _materials.Length; materialIndex++)
             {
-                Material shadowMat = _shadowMaterials[materialIndex];
+                Material shadowMat = _materials[materialIndex];
                 GraphicsBuffer visible = _preparedSplit ? chunk.shadowVisible[materialIndex] : chunk.visible[materialIndex];
                 GraphicsBuffer args = _preparedSplit ? chunk.shadowArgs[materialIndex] : chunk.colorArgs[materialIndex];
-                BindDrawMaterial(shadowMat, visible);
+                BindDrawProperties(visible);
                 Graphics.DrawMeshInstancedIndirect(
-                    _template, 0, shadowMat, chunk.bounds, args, 0, null,
+                    _template, 0, shadowMat, chunk.bounds, args, 0, _drawProperties,
                     ShadowCastingMode.ShadowsOnly, false, ResolveDrawLayer(), camera);
             }
         }
@@ -974,12 +987,12 @@ namespace ClusterMesh
             RestoreChunk(chunk);
             for (int materialIndex = 0; materialIndex < _materials.Length; materialIndex++)
             {
-                Material colorMat = _materials[materialIndex];
+                Material colorMat = DrawMaterial(materialIndex);
                 if (!ClusterMeshMaterialUtil.CanSubmitShaderPass(colorMat, shaderPass))
                     continue;
-                BindDrawMaterial(colorMat, chunk.visible[materialIndex], shaderPass == MotionVectorShaderPass);
+                BindDrawProperties(chunk.visible[materialIndex], shaderPass == MotionVectorShaderPass);
                 cmd.DrawMeshInstancedIndirect(
-                    _template, 0, colorMat, shaderPass, chunk.colorArgs[materialIndex]);
+                    _template, 0, colorMat, shaderPass, chunk.colorArgs[materialIndex], 0, _drawProperties);
             }
         }
 
@@ -1033,10 +1046,24 @@ namespace ClusterMesh
             _extraVisible.Clear();
         }
 
-        void BindDrawMaterial(Material mat, GraphicsBuffer visible, bool bindMotion = false)
+        Material DrawMaterial(int index)
         {
-            if (mat == null)
-                return;
+            if (_preparedReceive) return _materials[index];
+            if (_noReceiveLeases == null)
+                _noReceiveLeases = new ClusterMeshSharedMaterials.Lease[_materials.Length];
+            if (_noReceiveLeases[index] == null)
+            {
+                Material source = _asset.materials != null && index < _asset.materials.Length ? _asset.materials[index] : null;
+                _noReceiveLeases[index] = ClusterMeshSharedMaterials.Acquire(source, _litShader, false);
+            }
+            return _noReceiveLeases[index].Material;
+        }
+
+        void BindDrawProperties(GraphicsBuffer visible, bool bindMotion = false)
+        {
+            // Both APIs copy properties on submission; never mutate the shared material.
+            var mat = _drawProperties;
+            mat.Clear();
             mat.SetBuffer(ClustersId, _clusterBuffer);
             if (_streaming)
             {
@@ -1067,10 +1094,6 @@ namespace ClusterMesh
                 mat.SetFloatArray(ObjectMotionVectorEnabledId, _motionVectorEnabled);
             }
             mat.SetFloat(EnableClusterColorId, EnableClusterColor ? 1f : 0f);
-            if (_preparedReceive)
-                mat.DisableKeyword(ReceiveShadowsOffKeyword);
-            else
-                mat.EnableKeyword(ReceiveShadowsOffKeyword);
         }
 
         static bool MaterialsAlive(Material[] materials)
@@ -1143,23 +1166,9 @@ namespace ClusterMesh
                     _shadowArgsBuffers[i]?.Dispose();
             }
 
-            if (_materials != null)
-            {
-                for (int i = 0; i < _materials.Length; i++)
-                {
-                    if (_materials[i] != null)
-                        DestroyUnityObject(_materials[i]);
-                }
-            }
-
-            if (_shadowMaterials != null)
-            {
-                for (int i = 0; i < _shadowMaterials.Length; i++)
-                {
-                    if (_shadowMaterials[i] != null)
-                        DestroyUnityObject(_shadowMaterials[i]);
-                }
-            }
+            _drawProperties.Clear();
+            if (_materialLeases != null) foreach (var lease in _materialLeases) lease?.Dispose();
+            if (_noReceiveLeases != null) foreach (var lease in _noReceiveLeases) lease?.Dispose();
 
             if (_template != null)
                 DestroyUnityObject(_template);

@@ -7,6 +7,49 @@ namespace ClusterMesh.Tests
     public sealed class ClusterMeshMaterialUtilTests
     {
         [Test]
+        public void SharedMaterial_BorrowsCompatibleSourceAndReleasesReferences()
+        {
+            int initial=ClusterMeshSharedMaterials.EntryCount;
+            var source=new Material(Shader.Find("ClusterMesh/Lit")){enableInstancing=true};
+            var a=ClusterMeshSharedMaterials.Acquire(source,source.shader,true);
+            var b=ClusterMeshSharedMaterials.Acquire(source,source.shader,true);
+            try
+            {
+                Assert.That(a.Material,Is.SameAs(source));Assert.That(b.Material,Is.SameAs(source));
+                Assert.That(ClusterMeshSharedMaterials.EntryCount,Is.EqualTo(initial+1));
+                a.Dispose();Assert.That(b.Material!=null,Is.True);
+                b.Dispose();Assert.That(source!=null,Is.True);Assert.That(ClusterMeshSharedMaterials.EntryCount,Is.EqualTo(initial));
+            }
+            finally{a.Dispose();b.Dispose();Object.DestroyImmediate(source);}
+        }
+        [Test]
+        public void SharedMaterial_KeywordVariantsAreSharedAndDoNotMutateSource()
+        {
+            int initial=ClusterMeshSharedMaterials.EntryCount;
+            var source=new Material(Shader.Find("ClusterMesh/Lit")){enableInstancing=true};
+            using(var on=ClusterMeshSharedMaterials.Acquire(source,source.shader,true))
+            using(var off=ClusterMeshSharedMaterials.Acquire(source,source.shader,false))
+            using(var anotherOff=ClusterMeshSharedMaterials.Acquire(source,source.shader,false))
+            {
+                Assert.That(on.Material,Is.SameAs(source));Assert.That(off.Material,Is.Not.SameAs(source));
+                Assert.That(off.Material,Is.SameAs(anotherOff.Material));
+                Assert.That(source.IsKeywordEnabled("_RECEIVE_SHADOWS_OFF"),Is.False);
+                Assert.That(off.Material.IsKeywordEnabled("_RECEIVE_SHADOWS_OFF"),Is.True);
+            }
+            Assert.That(ClusterMeshSharedMaterials.EntryCount,Is.EqualTo(initial));Object.DestroyImmediate(source);
+        }
+        [Test]
+        public void SharedMaterial_AdaptationIsSharedAndDestroyedAfterLastLease()
+        {
+            var source=new Material(Shader.Find("Unlit/Color"));
+            var a=ClusterMeshSharedMaterials.Acquire(source,Shader.Find("ClusterMesh/Lit"),true);
+            var b=ClusterMeshSharedMaterials.Acquire(source,Shader.Find("ClusterMesh/Lit"),true);
+            var shared=a.Material;
+            Assert.That(shared,Is.SameAs(b.Material));Assert.That(shared,Is.Not.SameAs(source));
+            a.Dispose();Assert.That(shared!=null,Is.True);b.Dispose();Assert.That(shared==null,Is.True);
+            Assert.That(source!=null,Is.True);Object.DestroyImmediate(source);
+        }
+        [Test]
         public void CreateRuntimeMaterial_CopiesBaseMapAndColorAndEnablesInstancing()
         {
             var shader = Shader.Find("Unlit/Color");
