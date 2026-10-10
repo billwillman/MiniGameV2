@@ -127,12 +127,45 @@ namespace ClusterMesh
         }
     }
 
+    // Virtual pages and their on-disk ownership stay unchanged. Small pinned
+    // root pages may occupy disjoint ranges of one physical slot; page-table
+    // bases already support these offsets. Detail slots remain independently
+    // evictable. No extra GPU buffer or rebake is required.
+    internal sealed class ClusterMeshRootPageLayout
+    {
+        public readonly int[] slots, vertexOffsets, indexOffsets;
+        public int SlotCount { get; private set; }
+
+        public ClusterMeshRootPageLayout(ClusterMeshStreamDescriptor descriptor, bool pack)
+        {
+            int count = descriptor.pages.Length;
+            slots = new int[count]; vertexOffsets = new int[count]; indexOffsets = new int[count];
+            int vertices = 0, indices = 0;
+            for (int i = 0; i < count; i++)
+            {
+                slots[i] = -1;
+                var page = descriptor.pages[i];
+                if (!page.root && descriptor.nodes[page.nodeIndex].parentNodeIndex >= 0) continue;
+                if (SlotCount == 0 || !pack ||
+                    vertices + page.vertexCount > descriptor.vertexPageCapacity ||
+                    indices + page.indexWordCount > descriptor.indexPageCapacity)
+                {
+                    SlotCount++; vertices = 0; indices = 0;
+                }
+                slots[i] = SlotCount - 1;
+                vertexOffsets[i] = vertices; indexOffsets[i] = indices;
+                vertices += page.vertexCount; indices += page.indexWordCount;
+            }
+        }
+    }
+
     internal sealed class ClusterMeshSharedGpuPool : IDisposable
     {
         sealed class Reservation
         {
             public int rootPages;
             public int detailHeadroom;
+            public int[] rootSlots;
         }
 
         sealed class Slot
@@ -144,10 +177,13 @@ namespace ClusterMesh
         }
 
         readonly Slot[] _slots;
+        readonly int[] _admissionSlots;
+        int _admissionCount, _admissionCursor;
         readonly Dictionary<ClusterMeshPageRuntime, Reservation> _reservations =
             new Dictionary<ClusterMeshPageRuntime, Reservation>();
         ClusterMeshPageRuntime _admittedOwner;
         int _admittedNode = -1;
+        int _spaceSerial = int.MinValue, _availableDetailSlots;
 
         public ClusterMeshSharedPoolKey Key { get; }
         public int Capacity => _slots.Length;
@@ -164,6 +200,7 @@ namespace ClusterMesh
         {
             Key = key;
             _slots = new Slot[capacity];
+            _admissionSlots = new int[capacity];
             for (int i = 0; i < capacity; i++) _slots[i] = new Slot();
             try
             {
@@ -193,9 +230,13 @@ namespace ClusterMesh
         {
             if (rootPages <= 0 || detailHeadroom < 0) return false;
             long roots = (long)ReservedRootPages + rootPages;
-            // Another owner's pinned roots must not consume the detail window.
             int detail = Mathf.Max(ReservedDetailHeadroom, detailHeadroom);
-            return roots <= Capacity - detail;
+            if (roots > Capacity - detail) return false;
+            int available = 0;
+            foreach (Slot slot in _slots)
+                if (slot.owner == null || (!slot.pinned && slot.owner.CanEvictSharedPage(slot.pageId)))
+                    available++;
+            return available >= rootPages;
         }
 
         public void Acquire(ClusterMeshPageRuntime owner, int rootPages, int detailHeadroom)
@@ -204,11 +245,26 @@ namespace ClusterMesh
                 throw new InvalidOperationException("ClusterMesh shared GPU pool owner is invalid or already acquired.");
             if (!CanReserve(rootPages, detailHeadroom))
                 throw new InvalidOperationException("ClusterMesh shared GPU pool cannot reserve roots and its detail window.");
-            _reservations.Add(owner, new Reservation
+            var reservation = new Reservation
             {
                 rootPages = rootPages,
-                detailHeadroom = detailHeadroom
-            });
+                detailHeadroom = detailHeadroom,
+                rootSlots = new int[rootPages]
+            };
+            // Reserve the physical root slots now. Later owners cannot steal
+            // them while their FileStream reads are still in flight.
+            int next = 0;
+            for (int pass = 0; pass < 2 && next < rootPages; pass++)
+                for (int i = 0; i < _slots.Length && next < rootPages; i++)
+                {
+                    Slot slot = _slots[i];
+                    if (slot.owner != null && (pass == 0 || slot.pinned || !slot.owner.CanEvictSharedPage(slot.pageId))) continue;
+                    if (slot.owner != null) slot.owner.OnSharedPageEvicted(slot.pageId);
+                    slot.owner = owner; slot.pageId = -1; slot.pinned = true;
+                    reservation.rootSlots[next++] = i;
+                }
+            _reservations.Add(owner, reservation);
+            _spaceSerial = int.MinValue;
             ReservedRootPages += rootPages;
             ReservedDetailHeadroom = Mathf.Max(ReservedDetailHeadroom, detailHeadroom);
         }
@@ -217,35 +273,24 @@ namespace ClusterMesh
             bool pinned, int tick, out int slotIndex)
         {
             slotIndex = -1;
+            if (pinned)
+            {
+                int rootSlot = owner.RootLayout.slots[pageId];
+                if (rootSlot < 0 || !_reservations.TryGetValue(owner, out Reservation reservation)) return false;
+                slotIndex = reservation.rootSlots[rootSlot];
+                return true;
+            }
             if (!pinned && !TryBeginNodeAdmission(owner, nodeIndex))
                 return false;
 
-            for (int i = 0; i < _slots.Length; i++)
-                if (_slots[i].owner == null) { slotIndex = i; break; }
-            if (slotIndex < 0)
-            {
-                int oldest = int.MaxValue;
-                for (int i = 0; i < _slots.Length; i++)
-                {
-                    Slot slot = _slots[i];
-                    if (slot.pinned || slot.lastUsed >= oldest ||
-                        tick - slot.lastUsed < ClusterMeshStreaming.ResidentGraceUpdates ||
-                        !slot.owner.CanEvictSharedPage(slot.pageId))
-                        continue;
-                    oldest = slot.lastUsed;
-                    slotIndex = i;
-                }
-            }
-            if (slotIndex < 0)
-                return false;
-
+            if (_admissionCursor >= _admissionCount) return false;
+            slotIndex = _admissionSlots[_admissionCursor++];
             Slot selected = _slots[slotIndex];
-            if (selected.owner != null)
-                selected.owner.OnSharedPageEvicted(selected.pageId);
             selected.owner = owner;
             selected.pageId = pageId;
             selected.pinned = pinned;
             selected.lastUsed = tick;
+            _spaceSerial = int.MinValue;
             return true;
         }
 
@@ -253,6 +298,49 @@ namespace ClusterMesh
         {
             if (_admittedOwner == null)
             {
+                // Check the ENTIRE node before reading its first page. A pool
+                // with no recyclable space must queue requests, not pin decoded
+                // memory and block other pools' I/O. Existing roots stay visible.
+                if (_spaceSerial != ClusterMeshStreaming.UpdateSerial)
+                {
+                    _availableDetailSlots = 0;
+                    foreach (Slot slot in _slots)
+                        if (slot.owner == null || (!slot.pinned &&
+                            ClusterMeshStreaming.UpdateSerial - slot.lastUsed >= ClusterMeshStreaming.ResidentGraceUpdates &&
+                            slot.owner.CanEvictSharedPage(slot.pageId))) _availableDetailSlots++;
+                    _spaceSerial = ClusterMeshStreaming.UpdateSerial;
+                }
+                // Existing pages of THIS node become protected on admission.
+                // Counting them as victims would admit a batch with no actual
+                // destination for its missing pages (partial-residency deadlock).
+                if (_availableDetailSlots - owner.RecyclableNodePageCount(nodeIndex) < owner.MissingNodePageCount(nodeIndex))
+                {
+                    return false;
+                }
+                int needed = owner.MissingNodePageCount(nodeIndex);
+                _admissionCount = _admissionCursor = 0;
+                // Reserve actual destinations, not just a count. Neither a new
+                // owner's roots nor a delayed GPU Touch can steal these slots
+                // while FileStream reads are in flight. Pages already belonging
+                // to this partial node are preserved, never counted as victims.
+                for (int pass = 0; pass < 2 && _admissionCount < needed; pass++)
+                    for (int i = 0; i < _slots.Length && _admissionCount < needed; i++)
+                    {
+                        Slot slot = _slots[i];
+                        if (slot.owner == null && pass != 0) continue;
+                        if (slot.owner != null && (pass == 0 || !IsRecyclableSlot(i) ||
+                            (ReferenceEquals(slot.owner, owner) && owner.PageBelongsToNode(slot.pageId, nodeIndex)))) continue;
+                        _admissionSlots[_admissionCount++] = i;
+                    }
+                if (_admissionCount != needed) { _admissionCount = 0; return false; }
+                for (int i = 0; i < _admissionCount; i++)
+                {
+                    Slot slot = _slots[_admissionSlots[i]];
+                    if (slot.owner != null) slot.owner.OnSharedPageEvicted(slot.pageId);
+                    slot.owner = owner; slot.pageId = -1; slot.pinned = false;
+                    slot.lastUsed = ClusterMeshStreaming.UpdateSerial;
+                }
+                _spaceSerial = int.MinValue;
                 _admittedOwner = owner;
                 _admittedNode = nodeIndex;
             }
@@ -262,17 +350,35 @@ namespace ClusterMesh
         public void CompleteNodeAdmission(ClusterMeshPageRuntime owner, int nodeIndex)
         {
             if (!ReferenceEquals(_admittedOwner, owner) || _admittedNode != nodeIndex) return;
+            for (int i = _admissionCursor; i < _admissionCount; i++)
+            {
+                Slot slot = _slots[_admissionSlots[i]];
+                slot.owner = null; slot.pageId = -1; slot.pinned = false; slot.lastUsed = 0;
+            }
+            _admissionCount = _admissionCursor = 0;
             _admittedOwner = null;
             _admittedNode = -1;
+            _spaceSerial = int.MinValue;
+        }
+
+        internal bool IsRecyclableSlot(int index)
+        {
+            if (index < 0 || index >= _slots.Length) return false;
+            Slot slot = _slots[index];
+            return slot.owner != null && !slot.pinned &&
+                ClusterMeshStreaming.UpdateSerial - slot.lastUsed >= ClusterMeshStreaming.ResidentGraceUpdates &&
+                slot.owner.CanEvictSharedPage(slot.pageId);
         }
 
         public void CancelAllocation(ClusterMeshPageRuntime owner, int pageId)
         {
+            if (owner.RootLayout.slots[pageId] >= 0) return; // shared pinned range; Release owns its lifetime
             for (int i = 0; i < _slots.Length; i++)
             {
                 Slot slot = _slots[i];
                 if (!ReferenceEquals(slot.owner, owner) || slot.pageId != pageId) continue;
                 slot.owner = null; slot.pageId = -1; slot.pinned = false; slot.lastUsed = 0;
+                _spaceSerial = int.MinValue;
                 break;
             }
         }
@@ -280,11 +386,15 @@ namespace ClusterMesh
         public void Touch(int slotIndex, int tick)
         {
             if (slotIndex >= 0 && slotIndex < _slots.Length)
+            {
                 _slots[slotIndex].lastUsed = tick;
+                _spaceSerial = int.MinValue;
+            }
         }
 
         public void Release(ClusterMeshPageRuntime owner)
         {
+            _spaceSerial = int.MinValue;
             for (int i = 0; i < _slots.Length; i++)
             {
                 Slot slot = _slots[i];
@@ -295,6 +405,7 @@ namespace ClusterMesh
             {
                 _admittedOwner = null;
                 _admittedNode = -1;
+                _admissionCount = _admissionCursor = 0;
             }
             if (_reservations.TryGetValue(owner, out Reservation reservation))
             {
@@ -359,6 +470,7 @@ namespace ClusterMesh
         readonly Slot[] _slots;
         readonly ClusterMeshSharedGpuPool _sharedPool;
         readonly int _rootPageCount;
+        internal readonly ClusterMeshRootPageLayout RootLayout;
         struct PageRequest
         {
             public uint priority;
@@ -395,6 +507,25 @@ namespace ClusterMesh
         internal ClusterMeshNodeIndexTable.Range GetNodeChildren(int nodeIndex) =>
             nodeIndex >= 0 && nodeIndex < NodeCount && _nodeChildren != null ? _nodeChildren[nodeIndex] : default;
         internal int InflightReadCount => _reads.Count;
+        public int LogicalRootPageCount => _rootPageCount;
+        public int PhysicalRootSlotCount => _sharedPool != null ? RootLayout.SlotCount : _rootPageCount;
+        internal int MissingNodePageCount(int nodeIndex)
+        {
+            int count = 0;
+            var pages = _nodePages[nodeIndex];
+            for (int i = 0; i < pages.Length; i++) if (_pageSlots[pages[i]] < 0) count++;
+            return count;
+        }
+        internal int RecyclableNodePageCount(int nodeIndex)
+        {
+            int count = 0;
+            var pages = _nodePages[nodeIndex];
+            for (int i = 0; i < pages.Length; i++)
+                if (_sharedPool.IsRecyclableSlot(_pageSlots[pages[i]])) count++;
+            return count;
+        }
+        internal bool PageBelongsToNode(int pageId, int nodeIndex) =>
+            pageId >= 0 && pageId < PageCount && _descriptor.pages[pageId].nodeIndex == nodeIndex;
         internal long PendingDecodedBytes
         {
             get
@@ -435,6 +566,8 @@ namespace ClusterMesh
             _pageSlots = new int[descriptor.pages.Length];
             for (int i = 0; i < _pageSlots.Length; i++) _pageSlots[i] = -1;
             _rootPageCount = rootPages;
+            var settings = ClusterMeshSettings.OverrideForTests ?? ClusterMeshSettings.Loaded;
+            RootLayout = new ClusterMeshRootPageLayout(descriptor, settings == null || settings.PackRootPages);
             ClusterMeshSharedGpuPool sharedPool = null;
             if (ClusterMeshStreaming.UseGlobalSharedGpuPool)
             {
@@ -723,6 +856,11 @@ namespace ClusterMesh
                 _loadingNode = page.nodeIndex;
             int vertexBase = slot * _descriptor.vertexPageCapacity;
             int indexBase = slot * _descriptor.indexPageCapacity;
+            if (_sharedPool != null && RootLayout.slots[pageId] >= 0)
+            {
+                vertexBase += RootLayout.vertexOffsets[pageId];
+                indexBase += RootLayout.indexOffsets[pageId];
+            }
             var scratch = ClusterMeshUploadScratch.Acquire(
                 _geometry.ResolvedVertexStride == ClusterMeshLimits.TightVertexStride,
                 page.vertexCount, page.indexWordCount, page.weightCount, _descriptor.weightStride);
@@ -1278,19 +1416,18 @@ namespace ClusterMesh
                 maxDetailPages > descriptor.pages.Length - rootPages)
                 throw new InvalidDataException("ClusterMesh shared GPU pool reservation metadata is invalid.");
 
-            // The baseline also targets a detail window outside pinned roots.
-            // Root-only assets need no window. Never derive it from the expanded
-            // capacity, which would feed back into its own reservation.
+            // Preserve the original fixed pool budget. Detail demand must not
+            // silently double GPU allocations.
             requestedCapacity = Mathf.Max(8, requestedCapacity);
-            int nonRootPages = descriptor.pages.Length - rootPages;
-            detailWindow = Mathf.Min(nonRootPages, Mathf.Max(maxDetailPages, requestedCapacity));
-            long required = Math.Max(descriptor.poolPageCapacity,
-                Math.Max((long)requestedCapacity, (long)rootPages + detailWindow));
+            detailWindow = maxDetailPages;
+            long required = Math.Max(descriptor.poolPageCapacity, (long)requestedCapacity);
+            if ((long)rootPages + maxDetailPages > required)
+                throw new InvalidDataException("ClusterMesh pool cannot hold roots and a complete detail node within its fixed budget.");
             if (required > limit)
                 throw new InvalidDataException("ClusterMesh shared GPU pool requires " + required +
                     " pages (roots=" + rootPages + ", detailWindow=" + detailWindow +
                     ", requested=" + requestedCapacity + "), exceeding the 4096-page limit; " +
-                    "roots and detail reservation were not reduced. Split the streaming asset or reduce its root footprint.");
+                    "the fixed budget was not expanded. Split the streaming asset or reduce its root footprint.");
             return Mathf.NextPowerOfTwo((int)required);
         }
 
@@ -1303,6 +1440,9 @@ namespace ClusterMesh
             int requestedCapacity = settings != null ? settings.SharedGpuPoolPageCapacity : 256;
             int capacity = CalculateSharedPoolCapacity(descriptor, requestedCapacity,
                 rootPages, detailHeadroom, out int detailWindow);
+            int physicalRoots = owner.RootLayout.SlotCount;
+            detailWindow = Mathf.Min(capacity - physicalRoots,
+                Mathf.Min(descriptor.pages.Length - rootPages, Mathf.Max(detailHeadroom, requestedCapacity)));
             var key = new ClusterMeshSharedPoolKey
             {
                 vertexStride = vertexStride,
@@ -1314,13 +1454,13 @@ namespace ClusterMesh
             {
                 ClusterMeshSharedGpuPool candidate = SharedPools[i];
                 if (!candidate.Key.Equals(key) || candidate.Capacity != capacity ||
-                    !candidate.CanReserve(rootPages, detailWindow))
+                    !candidate.CanReserve(physicalRoots, detailWindow))
                     continue;
-                candidate.Acquire(owner, rootPages, detailWindow);
+                candidate.Acquire(owner, physicalRoots, detailWindow);
                 return candidate;
             }
             var pool = new ClusterMeshSharedGpuPool(key, capacity);
-            try { pool.Acquire(owner, rootPages, detailWindow); }
+            try { pool.Acquire(owner, physicalRoots, detailWindow); }
             catch { pool.Dispose(); throw; }
             SharedPools.Add(pool);
             return pool;

@@ -12,8 +12,10 @@ namespace ClusterMesh
 
         [Header("Page Streaming")]
         [SerializeField] bool enableGlobalSharedGpuPool = true;
-        [SerializeField, Min(8), Tooltip("共享池总容量基准，同时作为根页之外的目标细节窗口（不超过实际细节页，并能容纳完整节点）。必要时按 2 的幂增大，最大 4096 页；数值越大显存越高。纯根页资产不额外保留细节窗口。")]
+        [SerializeField, Min(8), Tooltip("每个兼容池的容量基准，与烘焙必需容量取最大后按 2 的幂对齐；不会因细节排队自动扩容。不是全世界总显存上限。重新加载资产后生效。")]
         int sharedGpuPoolPageCapacity = 256;
+        [SerializeField, Tooltip("在既有 GPU 页池内紧凑排列常驻根页；不改模型和流式文件。重新加载资产后生效。")]
+        bool packRootPages = true;
         [SerializeField, Range(1, 32)] int maxConcurrentPageReads = 8;
         [SerializeField, Range(1, 16)] int maxPageUploadsPerUpdate = 4;
         [SerializeField, Min(1)] int maxReadMegabytesPerUpdate = 8;
@@ -29,6 +31,7 @@ namespace ClusterMesh
         }
 
         public bool EnableGlobalSharedGpuPool { get => enableGlobalSharedGpuPool; set => enableGlobalSharedGpuPool = value; }
+        public bool PackRootPages { get => packRootPages; set => packRootPages = value; }
         public int SharedGpuPoolPageCapacity { get => Mathf.Clamp(sharedGpuPoolPageCapacity, 8, 4096); set => sharedGpuPoolPageCapacity = Mathf.Clamp(value, 8, 4096); }
         public int MaxConcurrentPageReads { get => Mathf.Clamp(maxConcurrentPageReads, 1, 32); set => maxConcurrentPageReads = Mathf.Clamp(value, 1, 32); }
         public int MaxPageUploadsPerUpdate { get => Mathf.Clamp(maxPageUploadsPerUpdate, 1, 16); set => maxPageUploadsPerUpdate = Mathf.Clamp(value, 1, 16); }

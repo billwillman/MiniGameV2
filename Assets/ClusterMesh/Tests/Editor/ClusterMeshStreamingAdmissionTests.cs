@@ -113,24 +113,24 @@ namespace ClusterMesh.Tests
         }
 
         [Test]
-        public void SharedPool_RootHeavyGeometryRetainsRequestedDetailWindow()
+        public void SharedPool_RootHeavyGeometryDoesNotExpandTheOriginalBudget()
         {
             int window;
             int capacity = CalculateCapacity(2810, 980, 1, 981, 256, out window);
-            Assert.That(window, Is.EqualTo(256), "Use requested 256, not the expanded capacity.");
-            Assert.That(capacity, Is.EqualTo(2048));
+            Assert.That(window, Is.EqualTo(1));
+            Assert.That(capacity, Is.EqualTo(1024));
             Assert.That(capacity - 980, Is.GreaterThanOrEqualTo(window));
         }
 
         [Test]
-        public void SharedPool_RootsCannotConsumeCameraAndShadowDetailBudget()
+        public void SharedPool_DetailDemandDoesNotDoubleTheOriginalBudget()
         {
             // The South America runtime fixture has 382 pinned roots and over
             // 200 hot detail pages. Rounding roots alone to 512 left only 130.
             int window;
             int capacity = CalculateCapacity(1143, 382, 1, 383, 256, out window);
-            Assert.That(window, Is.EqualTo(256));
-            Assert.That(capacity, Is.EqualTo(1024));
+            Assert.That(window, Is.EqualTo(1));
+            Assert.That(capacity, Is.EqualTo(512));
             Assert.That(capacity - 382, Is.GreaterThanOrEqualTo(window));
         }
 
@@ -179,12 +179,12 @@ namespace ClusterMesh.Tests
         {
             int window;
             Assert.That(CalculateCapacity(4096, 3968, 1, 3969, 256, out window), Is.EqualTo(4096));
-            Assert.That(window, Is.EqualTo(128));
+            Assert.That(window, Is.EqualTo(1));
             var error = Assert.Throws<TargetInvocationException>(() =>
-                CalculateCapacity(4097, 3969, 1, 3970, 256, out window));
+                CalculateCapacity(4097, 4096, 1, 4097, 256, out window));
             Assert.That(error.InnerException, Is.TypeOf<InvalidDataException>());
             StringAssert.Contains("4096-page limit", error.InnerException.Message);
-            StringAssert.Contains("were not reduced", error.InnerException.Message);
+            StringAssert.Contains("was not expanded", error.InnerException.Message);
         }
 
         [Test]
@@ -192,15 +192,140 @@ namespace ClusterMesh.Tests
         {
             settings.SharedGpuPoolPageCapacity = 256;
             LogAssert.Expect(LogType.Error, new System.Text.RegularExpressions.Regex(
-                "ClusterMesh page streaming: .*4096-page limit"));
-            var runtime = CreateRuntime("limit-rejected", 3969, 1, 128, 4096, true);
+                "ClusterMesh page streaming: .*exceeds supported resource limits"));
+            var runtime = CreateRuntime("limit-rejected", 4096, 1, 1, 4097, true);
             Assert.That(runtime.Failed, Is.True);
-            StringAssert.Contains("4096-page limit", runtime.Error);
+            StringAssert.Contains("exceeds supported resource limits", runtime.Error);
             Assert.That(SharedPool(runtime), Is.Null);
             Assert.That(typeof(ClusterMeshPageRuntime).GetField("_slots", PrivateInstance).GetValue(runtime), Is.Null);
             Assert.That(typeof(ClusterMeshPageRuntime).GetField("_metadataRead", PrivateInstance).GetValue(runtime), Is.Null,
                 "Rejected runtime must not start loading a silently smaller fallback pool.");
-            Assert.That(runtime.Descriptor.poolPageCapacity, Is.EqualTo(4096));
+            Assert.That(runtime.Descriptor.poolPageCapacity, Is.EqualTo(4097));
+        }
+
+        [UnityTest]
+        public IEnumerator SharedPool_PackedRootsUseDisjointGpuRangesWithoutGrowingBuffers()
+        {
+            var runtime = CreateRuntime("packed-roots", 3, 3, 1, 8, false, 9, 6);
+            yield return WaitUntil(() => runtime.IsReady);
+            Assert.That(runtime.LogicalRootPageCount, Is.EqualTo(3));
+            Assert.That(runtime.PhysicalRootSlotCount, Is.EqualTo(1));
+            Assert.That(PoolValue(runtime, "Capacity"), Is.EqualTo(8));
+            Assert.That(runtime.Vertices.count, Is.EqualTo(8 * 9));
+            var table = new ClusterMeshStreamPageTableEntry[runtime.PageCount];
+            runtime.PageTable.GetData(table);
+            for (int i = 0; i < 3; i++)
+            {
+                Assert.That(table[i].vertexBase, Is.EqualTo(i * 3));
+                Assert.That(table[i].indexBase, Is.EqualTo(i * 2));
+                Assert.That(table[i].flags, Is.EqualTo(1));
+                var vertex = new ClusterPackedVertex[1];
+                runtime.Vertices.GetData(vertex, 0, (int)table[i].vertexBase, 1);
+                Assert.That(vertex[0].position.x, Is.EqualTo(i + 1), "Each packed root must retain its own payload.");
+            }
+            runtime.RequestNode(1);
+            yield return WaitUntil(() => runtime.IsNodeResident(1));
+            runtime.PageTable.GetData(table);
+            for (int i = 3; i < table.Length; i++) Assert.That(table[i].vertexBase, Is.GreaterThanOrEqualTo(9));
+            Assert.That(runtime.IsNodeResident(0), Is.True, "Detail loading must never overwrite packed pinned roots.");
+        }
+
+        [UnityTest]
+        public IEnumerator SharedPool_AdmissionReservesDestinationsAcrossReadsAndNewOwners()
+        {
+            var first = CreateRuntime("reserved-reader");
+            yield return WaitUntil(() => first.IsReady);
+            first.RequestNode(1); Pump(first, 1, 0);
+            object pool = SharedPool(first);
+            Assert.That((int)pool.GetType().GetField("_admissionCount", PrivateInstance).GetValue(pool), Is.EqualTo(3));
+            var second = CreateRuntime("new-root-owner", 4, 0, 0);
+            Assert.That(SharedPool(second), Is.SameAs(pool));
+            yield return WaitUntil(() => first.IsNodeResident(1) && second.IsReady);
+            Assert.That(PoolValue(first, "Capacity"), Is.EqualTo(8));
+        }
+
+        [UnityTest]
+        public IEnumerator SharedPool_ReservedBatchSurvivesOldPagesBecomingHot()
+        {
+            var runtime = CreateRuntime("touch-during-read", 1, 3, 3);
+            yield return WaitUntil(() => runtime.IsReady);
+            runtime.RequestNode(1); runtime.RequestNode(2);
+            yield return WaitUntil(() => runtime.IsNodeResident(1) && runtime.IsNodeResident(2));
+            object pool = SharedPool(runtime);
+            var slots = (Array)pool.GetType().GetField("_slots", PrivateInstance).GetValue(pool);
+            foreach (object slot in slots)
+            {
+                int id = (int)slot.GetType().GetField("pageId").GetValue(slot);
+                if (id >= 1 && id <= 3) slot.GetType().GetField("lastUsed").SetValue(slot, -1000);
+            }
+            pool.GetType().GetField("_spaceSerial", PrivateInstance).SetValue(pool, int.MinValue);
+            runtime.RequestNode(3); Pump(runtime, 1, 0);
+            runtime.MarkNodeUsed(1); // delayed GPU residency feedback during I/O
+            yield return WaitUntil(() => runtime.IsNodeResident(3));
+            Assert.That(runtime.IsNodeResident(0) && runtime.IsNodeResident(2), Is.True);
+            var table = new ClusterMeshStreamPageTableEntry[runtime.PageCount]; runtime.PageTable.GetData(table);
+            Assert.That(table[7].vertexBase, Is.Not.EqualTo(table[8].vertexBase));
+            Assert.That(table[7].vertexBase, Is.Not.EqualTo(table[9].vertexBase));
+            Assert.That(table[8].vertexBase, Is.Not.EqualTo(table[9].vertexBase));
+        }
+
+        [UnityTest]
+        public IEnumerator SharedPool_PartialNodeCannotCountItsOwnPagesAsUploadDestinations()
+        {
+            var runtime = CreateRuntime("partial-self", 1, 3, 3);
+            yield return WaitUntil(() => runtime.IsReady);
+            runtime.RequestNode(1); runtime.RequestNode(2);
+            yield return WaitUntil(() => runtime.IsNodeResident(1) && runtime.IsNodeResident(2));
+            object pool = SharedPool(runtime);
+            var slots = (Array)pool.GetType().GetField("_slots", PrivateInstance).GetValue(pool);
+            var pageSlots = (int[])typeof(ClusterMeshPageRuntime).GetField("_pageSlots", PrivateInstance).GetValue(runtime);
+            int victim = pageSlots[1];
+            typeof(ClusterMeshPageRuntime).GetMethod("OnSharedPageEvicted", PrivateInstance).Invoke(runtime, new object[]{1});
+            // Construct the valid allocator state after later nodes evicted part
+            // of node 1: all slots occupied, only node 1's own pages are cold.
+            int replacement = 7;
+            int serial = (int)typeof(ClusterMeshStreaming).GetProperty("UpdateSerial", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null);
+            for (int i = 0; i < slots.Length; i++)
+            {
+                object slot = slots.GetValue(i); var type = slot.GetType();
+                type.GetField("lastUsed").SetValue(slot, serial);
+                if (i == victim || type.GetField("owner").GetValue(slot) == null)
+                {
+                    type.GetField("owner").SetValue(slot, runtime);
+                    type.GetField("pageId").SetValue(slot, replacement);
+                    type.GetField("pinned").SetValue(slot, false);
+                    type.GetField("lastUsed").SetValue(slot, serial);
+                    pageSlots[replacement++] = i;
+                }
+                int id = (int)type.GetField("pageId").GetValue(slot);
+                if (id == 2 || id == 3) type.GetField("lastUsed").SetValue(slot, -1000);
+            }
+            pool.GetType().GetField("_spaceSerial", PrivateInstance).SetValue(pool, int.MinValue);
+            runtime.RequestNode(1); // Request normally refreshes resident pages; emulate a stale queued request below.
+            foreach (object slot in slots)
+            {
+                int id = (int)slot.GetType().GetField("pageId").GetValue(slot);
+                if (id == 2 || id == 3) slot.GetType().GetField("lastUsed").SetValue(slot, -1000);
+            }
+            pool.GetType().GetField("_spaceSerial", PrivateInstance).SetValue(pool, int.MinValue);
+            Pump(runtime, 1, 0);
+            Assert.That((long)PendingBytes.GetValue(runtime), Is.Zero);
+            Assert.That(pool.GetType().GetField("_admittedOwner", PrivateInstance).GetValue(pool), Is.Null);
+        }
+
+        [UnityTest]
+        public IEnumerator SharedPool_FixedCapacityQueuesBeforeReadingWhenHotPagesFillThePool()
+        {
+            var runtime = CreateRuntime("fixed-pressure", 1, 3, 3);
+            yield return WaitUntil(() => runtime.IsReady);
+            runtime.RequestNode(1); runtime.RequestNode(2);
+            yield return WaitUntil(() => runtime.IsNodeResident(1) && runtime.IsNodeResident(2));
+            runtime.RequestNode(3);
+            Pump(runtime, 1, 0);
+            Assert.That((long)PendingBytes.GetValue(runtime), Is.Zero, "No decoded memory may be held by a batch without enough recyclable GPU space.");
+            Assert.That(runtime.IsReady, Is.True);
+            Assert.That(runtime.IsNodeResident(3), Is.False);
+            Assert.That(PoolValue(runtime, "Capacity"), Is.EqualTo(8));
         }
 
         static int CalculateCapacity(int pages, int roots, int largestDetailNode,
@@ -261,7 +386,8 @@ namespace ClusterMesh.Tests
         }
 
         ClusterMeshPageRuntime CreateRuntime(string name, int rootPages = 1,
-            int detailNodePages = 3, int detailNodeCount = 1, int poolCapacity = 8, bool expectFailure = false)
+            int detailNodePages = 3, int detailNodeCount = 1, int poolCapacity = 8, bool expectFailure = false,
+            int vertexCapacity = 3, int indexCapacity = 2)
         {
             // Default: one root page plus a three-page detail node. Both owners
             // fit eight GPU slots, but one detail node exceeds the decode budget.
@@ -274,19 +400,22 @@ namespace ClusterMesh.Tests
                 writer.Write(new byte[PayloadBytes - 12]);
                 payload = memory.ToArray();
             }
-            uint crc = 0xffffffffu;
-            foreach (byte value in payload)
-            {
-                crc ^= value;
-                for (int bit = 0; bit < 8; bit++) crc = (crc >> 1) ^ ((crc & 1) != 0 ? 0xedb88320u : 0u);
-            }
-            crc ^= 0xffffffffu;
             int pageCount = checked(rootPages + detailNodePages * detailNodeCount);
+            var payloads = new byte[pageCount][];
             var pages = new ClusterMeshStreamPage[pageCount];
             var addresses = new ClusterMeshStreamAddress[pageCount];
             var clusters = new ClusterHeader[pageCount];
             for (int i = 0; i < pages.Length; i++)
             {
+                payloads[i] = (byte[])payload.Clone();
+                Buffer.BlockCopy(BitConverter.GetBytes((float)(i + 1)), 0, payloads[i], 12, 4);
+                uint crc = 0xffffffffu;
+                foreach (byte value in payloads[i])
+                {
+                    crc ^= value;
+                    for (int bit = 0; bit < 8; bit++) crc = (crc >> 1) ^ ((crc & 1) != 0 ? 0xedb88320u : 0u);
+                }
+                crc ^= 0xffffffffu;
                 pages[i] = new ClusterMeshStreamPage
                 {
                     fileOffset = 16 + 40 * pages.Length + i * PayloadBytes,
@@ -308,7 +437,7 @@ namespace ClusterMesh.Tests
                     writer.Write(page.vertexCount); writer.Write(page.indexWordCount); writer.Write(page.weightCount);
                     writer.Write(page.crc32); writer.Write(page.nodeIndex); writer.Write(page.flags);
                 }
-                foreach (var page in pages) writer.Write(payload);
+                foreach (var bytes in payloads) writer.Write(bytes);
             }
             var nodes = new ClusterMeshStreamNode[1 + detailNodeCount];
             nodes[0] = new ClusterMeshStreamNode
@@ -323,7 +452,7 @@ namespace ClusterMesh.Tests
             {
                 formatVersion = ClusterMeshStreaming.FormatVersion, kind = ClusterMeshStreamKind.Static,
                 fileName = path, editorFilePath = path, fileSize = new FileInfo(path).Length,
-                poolPageCapacity = poolCapacity, vertexPageCapacity = 3, indexPageCapacity = 2,
+                poolPageCapacity = poolCapacity, vertexPageCapacity = vertexCapacity, indexPageCapacity = indexCapacity,
                 pages = pages, addresses = addresses,
                 nodes = nodes
             };

@@ -99,8 +99,9 @@ namespace ClusterMesh
                 settings.EnableGlobalSharedGpuPool);
             int poolPages = EditorGUILayout.IntSlider(
                 new GUIContent("Shared Pool Pages",
-                    "每个兼容 Pool 分片的总容量基准，同时作为根页之外的目标细节窗口（不超过实际细节页，且容纳一个完整节点）；必要时按 2 的幂扩大至最多 4096 页。新增共享资产不能吃掉已有细节窗口，放不下时另建分片。纯根页资产不额外预留细节窗口。数值越大，显存占用越高。"),
+                    "每个兼容池的基准，与烘焙必需容量取最大后按 2 的幂对齐。不再因为细节需求自动扩容；不是全世界总显存上限。容量选项在重新加载资产后生效。"),
                 settings.SharedGpuPoolPageCapacity, 32, 2048);
+            bool packRoots = EditorGUILayout.Toggle(new GUIContent("紧凑存放常驻根页", "仅复用现有 GPU 页内空隙，不改模型或二进制文件。"), settings.PackRootPages);
 
             EditorGUILayout.Space(4);
             EditorGUILayout.LabelField("I/O 与上传预算（仅流式资产）", EditorStyles.boldLabel);
@@ -134,6 +135,7 @@ namespace ClusterMesh
                 Undo.RecordObject(settings, "ClusterMesh Streaming Settings");
                 settings.EnableGlobalSharedGpuPool = shared;
                 settings.SharedGpuPoolPageCapacity = poolPages;
+                settings.PackRootPages = packRoots;
                 settings.MaxConcurrentPageReads = reads;
                 settings.MaxPageUploadsPerUpdate = uploads;
                 settings.MaxReadMegabytesPerUpdate = readMb;
