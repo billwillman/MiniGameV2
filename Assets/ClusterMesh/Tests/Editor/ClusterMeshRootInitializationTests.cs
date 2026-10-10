@@ -81,6 +81,24 @@ namespace ClusterMesh.Tests
             }
         }
 
+        [Test]
+        public void ValueTypeRequestsPreservePriorityEscalationAndAge()
+        {
+            var runtime = CreateRuntime("request-values");
+            var queue = typeof(ClusterMeshPageRuntime).GetMethod("QueuePage", PrivateInstance);
+            var requests = (IDictionary)typeof(ClusterMeshPageRuntime).GetField("_requests", PrivateInstance).GetValue(runtime);
+            queue.Invoke(runtime, new object[] { 1, 10u });
+            var value = requests[1];
+            int firstTick = (int)value.GetType().GetField("firstTick").GetValue(value);
+            typeof(ClusterMeshPageRuntime).GetField("_tick", PrivateInstance).SetValue(runtime, 19);
+            queue.Invoke(runtime, new object[] { 1, 50u });
+            queue.Invoke(runtime, new object[] { 1, 5u });
+            value = requests[1];
+            Assert.That(value.GetType().IsValueType, Is.True);
+            Assert.That((uint)value.GetType().GetField("priority").GetValue(value), Is.EqualTo(50u));
+            Assert.That((int)value.GetType().GetField("firstTick").GetValue(value), Is.EqualTo(firstTick));
+        }
+
         static void CheckRoot(ClusterMeshPageRuntime runtime, int stride, int weights, float marker)
         {
             var table = new ClusterMeshStreamPageTableEntry[1]; runtime.PageTable.GetData(table, 0, 0, 1);

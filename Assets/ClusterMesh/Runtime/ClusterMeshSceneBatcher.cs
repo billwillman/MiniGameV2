@@ -40,6 +40,7 @@ namespace ClusterMesh
         static int _urpPreparedFrame = int.MinValue;
         static int _urpPreparedCameraId;
         static bool _loggedError;
+        static readonly BatchCallback PrepareUrpBatchCallback = PrepareUrpBatch;
         public static int UrpPreparedCountForTests => UrpPrepared.Count;
         public static int UrpShadowSubmitCountForTests { get; private set; }
 
@@ -139,21 +140,26 @@ namespace ClusterMesh
             _urpPreparedCameraId = cameraId;
             UrpShadowSubmitCountForTests++;
 
-            ForEachRegisteredBatch((seed, resolved, matrices, previousMatrices, motionVectorFlags, cpuCullFlags, cameraCullFlags, lightProbeFlags, ambientSkyFlags, fogFlags, clusterColors, lodT, batchCast) =>
-            {
-                if (resolved != camera)
-                    return;
-                ClusterMeshDrawContext ctx = GetOrCreate(seed);
-                if (ctx == null || !ctx.CanDraw)
-                    return;
-                ctx.EnableConeCull = seed.enableConeCull;
-                ctx.EnableClusterColor = clusterColors;
-                ctx.LodErrorThreshold = lodT;
-                if (ctx.PrepareUrpMotion(matrices, previousMatrices, motionVectorFlags,
-                        cpuCullFlags, cameraCullFlags, camera, batchCast, seed.receiveShadows,
-                        lightProbeFlags, ambientSkyFlags, fogFlags))
-                    UrpPrepared.Add(ctx);
-            });
+            ForEachRegisteredBatch(PrepareUrpBatchCallback);
+        }
+
+        static void PrepareUrpBatch(ClusterMeshRenderer seed, Camera resolved,
+            List<Matrix4x4> matrices, List<Matrix4x4> previousMatrices, List<bool> motionVectorFlags,
+            List<bool> cpuCullFlags, List<bool> cameraCullFlags, List<bool> lightProbeFlags,
+            List<bool> ambientSkyFlags, List<bool> fogFlags, bool clusterColors, float lodT, bool batchCast)
+        {
+            if (resolved == null || resolved.GetInstanceID() != _urpPreparedCameraId)
+                return;
+            ClusterMeshDrawContext ctx = GetOrCreate(seed);
+            if (ctx == null || !ctx.CanDraw)
+                return;
+            ctx.EnableConeCull = seed.enableConeCull;
+            ctx.EnableClusterColor = clusterColors;
+            ctx.LodErrorThreshold = lodT;
+            if (ctx.PrepareUrpMotion(matrices, previousMatrices, motionVectorFlags,
+                    cpuCullFlags, cameraCullFlags, resolved, batchCast, seed.receiveShadows,
+                    lightProbeFlags, ambientSkyFlags, fogFlags))
+                UrpPrepared.Add(ctx);
         }
 
         public static void SubmitUrpDepth(Camera camera, CommandBuffer cmd)

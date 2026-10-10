@@ -95,8 +95,10 @@ namespace ClusterMesh
         readonly uint[] _objectCameraCullFlags = new uint[ClusterMeshLimits.MaxBatchedObjects];
         readonly ClusterMeshObjectSH[] _objectSH = new ClusterMeshObjectSH[ClusterMeshLimits.MaxBatchedObjects];
         readonly List<UrpChunk> _urpChunks = new List<UrpChunk>();
-        readonly List<GraphicsBuffer> _extraArgs = new List<GraphicsBuffer>();
-        readonly List<GraphicsBuffer> _extraVisible = new List<GraphicsBuffer>();
+        // Active submissions are separate from retained storage. Never submit
+        // inactive chunks, even when a later camera keeps fewer objects.
+        readonly List<UrpChunk> _chunkCache = new List<UrpChunk>();
+        int _unusedChunkPrepares;
         int _visibleCapacity;
         bool _preparedSplit;
         bool _preparedCast;
@@ -586,10 +588,12 @@ namespace ClusterMesh
             IList<bool> enableAmbientSky = null,
             IList<bool> enableFog = null)
         {
-            ReleaseExtras();
             _urpChunks.Clear();
             if (!CanDraw || camera == null || count <= 0)
+            {
+                TrimChunkCache();
                 return false;
+            }
             // A streamed asset becomes drawable only after the always-resident
             // root pages are in the asset's physical pool. This is a normal
             // loading state, not a context creation error.
@@ -680,21 +684,10 @@ namespace ClusterMesh
                 if (n <= 0)
                     continue;
 
-                var stored = new UrpChunk
-                {
-                    n = n,
-                    hasMotionVectors = chunkHasMotionVectors,
-                    bounds = worldBounds,
-                    l2w = new Matrix4x4[n],
-                    previousL2w = chunkHasMotionVectors ? new Matrix4x4[n] : null,
-                    w2l = new Matrix4x4[n],
-                    motionVectorEnabled = chunkHasMotionVectors ? new float[n] : null,
-                    objectSH = new ClusterMeshObjectSH[n],
-                    colorArgs = new GraphicsBuffer[_materials.Length],
-                    shadowArgs = new GraphicsBuffer[_materials.Length],
-                    visible = new GraphicsBuffer[_materials.Length],
-                    shadowVisible = new GraphicsBuffer[_materials.Length]
-                };
+                var stored = GetChunk(_urpChunks.Count, n, chunkHasMotionVectors);
+                stored.n = n;
+                stored.hasMotionVectors = chunkHasMotionVectors;
+                stored.bounds = worldBounds;
                 Array.Copy(_l2w, stored.l2w, n);
                 Array.Copy(_w2l, stored.w2l, n);
                 Array.Copy(_objectSH, stored.objectSH, n);
@@ -703,23 +696,6 @@ namespace ClusterMesh
                     Array.Copy(_previousL2w, stored.previousL2w, n);
                     Array.Copy(_motionVectorEnabled, stored.motionVectorEnabled, n);
                 }
-                bool primary = chunk == 0;
-                for (int materialIndex = 0; materialIndex < _materials.Length; materialIndex++)
-                {
-                    stored.visible[materialIndex] = primary
-                        ? _visibleBuffers[materialIndex]
-                        : AllocVisible();
-                    stored.shadowVisible[materialIndex] = primary
-                        ? _shadowVisibleBuffers[materialIndex]
-                        : AllocVisible();
-                    stored.colorArgs[materialIndex] = primary
-                        ? _argsBuffers[materialIndex]
-                        : AllocExtraArgs();
-                    stored.shadowArgs[materialIndex] = primary
-                        ? _shadowArgsBuffers[materialIndex]
-                        : AllocExtraArgs();
-                }
-
                 DispatchCull(n, camera, splitShadows, stored.visible, stored.shadowVisible);
                 for (int materialIndex = 0; materialIndex < _materials.Length; materialIndex++)
                 {
@@ -734,6 +710,7 @@ namespace ClusterMesh
 
                 _urpChunks.Add(stored);
             }
+            TrimChunkCache();
             if (_streaming && _urpChunks.Count > 0 && _streamActiveRequestBuffer >= 0)
                 RequestStreamNodesFromGpu();
 
@@ -820,58 +797,68 @@ namespace ClusterMesh
             _cullShader.SetInt(StreamSelectionStampId, unchecked((int)_streamSelectionStamp));
         }
 
+        Action<AsyncGPUReadbackRequest> _streamReadback0, _streamReadback1;
+        void OnStreamReadback0(AsyncGPUReadbackRequest request) => CompleteStreamReadback(0, request);
+        void OnStreamReadback1(AsyncGPUReadbackRequest request) => CompleteStreamReadback(1, request);
+
         void RequestStreamNodesFromGpu()
         {
             int bufferIndex = _streamActiveRequestBuffer;
-            if (bufferIndex < 0 || _streamReadbackPending[bufferIndex])
-                return;
+            if (bufferIndex < 0 || _streamReadbackPending[bufferIndex]) return;
             try
             {
                 _streamReadbackPending[bufferIndex] = true;
                 _streamActiveRequestBuffer = -1;
-                AsyncGPUReadback.Request(_streamRequestedPages[bufferIndex], request =>
-                {
-                    _streamReadbackPending[bufferIndex] = false;
-                    if (_disposed)
-                    {
-                        _streamRequestedPages[bufferIndex]?.Dispose();
-                        return;
-                    }
-                    if (_streamRuntime == null)
-                        return;
-                    if (request.hasError)
-                    {
-                        _streamGpuReadbackFailures++;
-                        return;
-                    }
-                    _streamGpuReadbackFailures = 0;
-                    var requested = request.GetData<uint>();
-                    int words = Mathf.Min(requested.Length, _streamRuntime.RequestWordCount);
-                    for (int wordIndex = 0; wordIndex < words; wordIndex++)
-                    {
-                        uint bits = requested[wordIndex];
-                        if (bits == 0)
-                            continue;
-                        int baseNode = wordIndex << 5;
-                        for (int bit = 0; bit < 32; bit++)
-                        {
-                            int nodeIndex = baseNode + bit;
-                            if (nodeIndex >= _streamRuntime.NodeCount)
-                                break;
-                            if ((bits & (1u << bit)) != 0)
-                            {
-                                int priorityIndex = _streamRuntime.RequestWordCount + nodeIndex;
-                                uint priority = priorityIndex < requested.Length ? requested[priorityIndex] : 0u;
-                                _streamRuntime.RequestNode(nodeIndex, priority);
-                            }
-                        }
-                    }
-                });
+                // Two fixed slots, one cached callback per slot. The callback
+                // still owns pending-buffer release after context disposal.
+                var callback = bufferIndex == 0
+                    ? (_streamReadback0 ?? (_streamReadback0 = OnStreamReadback0))
+                    : (_streamReadback1 ?? (_streamReadback1 = OnStreamReadback1));
+                AsyncGPUReadback.Request(_streamRequestedPages[bufferIndex], callback);
             }
             catch (Exception)
             {
                 _streamReadbackPending[bufferIndex] = false;
                 _streamGpuReadbackFailures++;
+            }
+        }
+
+        void CompleteStreamReadback(int bufferIndex, AsyncGPUReadbackRequest request)
+        {
+            _streamReadbackPending[bufferIndex] = false;
+            if (_disposed)
+            {
+                _streamRequestedPages[bufferIndex]?.Dispose();
+                return;
+            }
+            if (_streamRuntime == null)
+                return;
+            if (request.hasError)
+            {
+                _streamGpuReadbackFailures++;
+                return;
+            }
+            _streamGpuReadbackFailures = 0;
+            var requested = request.GetData<uint>();
+            int words = Mathf.Min(requested.Length, _streamRuntime.RequestWordCount);
+            for (int wordIndex = 0; wordIndex < words; wordIndex++)
+            {
+                uint bits = requested[wordIndex];
+                if (bits == 0)
+                    continue;
+                int baseNode = wordIndex << 5;
+                for (int bit = 0; bit < 32; bit++)
+                {
+                    int nodeIndex = baseNode + bit;
+                    if (nodeIndex >= _streamRuntime.NodeCount)
+                        break;
+                    if ((bits & (1u << bit)) != 0)
+                    {
+                        int priorityIndex = _streamRuntime.RequestWordCount + nodeIndex;
+                        uint priority = priorityIndex < requested.Length ? requested[priorityIndex] : 0u;
+                        _streamRuntime.RequestNode(nodeIndex, priority);
+                    }
+                }
             }
         }
 
@@ -1022,7 +1009,6 @@ namespace ClusterMesh
         {
             var buffer = new GraphicsBuffer(GraphicsBuffer.Target.IndirectArguments, 1, 20);
             buffer.SetData(_argsSeed);
-            _extraArgs.Add(buffer);
             return buffer;
         }
 
@@ -1032,18 +1018,84 @@ namespace ClusterMesh
                 GraphicsBuffer.Target.Append | GraphicsBuffer.Target.Structured,
                 Mathf.Max(1, _visibleCapacity),
                 4);
-            _extraVisible.Add(buffer);
             return buffer;
+        }
+
+        UrpChunk GetChunk(int index, int count, bool motion)
+        {
+            if (index == _chunkCache.Count)
+            {
+                var created = new UrpChunk
+                {
+                    colorArgs = new GraphicsBuffer[_materials.Length],
+                    shadowArgs = new GraphicsBuffer[_materials.Length],
+                    visible = new GraphicsBuffer[_materials.Length],
+                    shadowVisible = new GraphicsBuffer[_materials.Length]
+                };
+                try
+                {
+                    for (int i = 0; i < _materials.Length; i++)
+                    {
+                        created.visible[i] = index == 0 ? _visibleBuffers[i] : AllocVisible();
+                        created.shadowVisible[i] = index == 0 ? _shadowVisibleBuffers[i] : AllocVisible();
+                        created.colorArgs[i] = index == 0 ? _argsBuffers[i] : AllocExtraArgs();
+                        created.shadowArgs[i] = index == 0 ? _shadowArgsBuffers[i] : AllocExtraArgs();
+                    }
+                    _chunkCache.Add(created);
+                }
+                catch
+                {
+                    if (index != 0) ReleaseChunkBuffers(created);
+                    throw;
+                }
+            }
+            var chunk = _chunkCache[index];
+            int capacity = Mathf.Min(ClusterMeshLimits.MaxBatchedObjects, Mathf.NextPowerOfTwo(count));
+            if (chunk.l2w == null || chunk.l2w.Length < count)
+            {
+                chunk.l2w = new Matrix4x4[capacity];
+                chunk.w2l = new Matrix4x4[capacity];
+                chunk.objectSH = new ClusterMeshObjectSH[capacity];
+            }
+            if (motion && (chunk.previousL2w == null || chunk.previousL2w.Length < count))
+            {
+                chunk.previousL2w = new Matrix4x4[capacity];
+                chunk.motionVectorEnabled = new float[capacity];
+            }
+            return chunk;
+        }
+
+        void TrimChunkCache()
+        {
+            // Keep one primary chunk; release surplus GPU storage after a
+            // sustained drop in demand, not every visibility/camera change.
+            int keep = Mathf.Max(1, _urpChunks.Count);
+            if (_chunkCache.Count <= keep) { _unusedChunkPrepares = 0; return; }
+            if (++_unusedChunkPrepares < 120) return;
+            for (int i = _chunkCache.Count - 1; i >= keep; i--)
+            {
+                ReleaseChunkBuffers(_chunkCache[i]);
+                _chunkCache.RemoveAt(i);
+            }
+            _unusedChunkPrepares = 0;
+        }
+
+        static void ReleaseChunkBuffers(UrpChunk chunk)
+        {
+            for (int i = 0; i < chunk.colorArgs.Length; i++)
+            {
+                chunk.colorArgs[i]?.Dispose();
+                chunk.shadowArgs[i]?.Dispose();
+                chunk.visible[i]?.Dispose();
+                chunk.shadowVisible[i]?.Dispose();
+            }
         }
 
         void ReleaseExtras()
         {
-            for (int i = 0; i < _extraArgs.Count; i++)
-                _extraArgs[i]?.Dispose();
-            _extraArgs.Clear();
-            for (int i = 0; i < _extraVisible.Count; i++)
-                _extraVisible[i]?.Dispose();
-            _extraVisible.Clear();
+            // Chunk zero borrows the context's primary buffers.
+            for (int i = 1; i < _chunkCache.Count; i++) ReleaseChunkBuffers(_chunkCache[i]);
+            _chunkCache.Clear();
         }
 
         Material DrawMaterial(int index)

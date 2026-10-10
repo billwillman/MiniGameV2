@@ -353,7 +353,7 @@ namespace ClusterMesh
         readonly Slot[] _slots;
         readonly ClusterMeshSharedGpuPool _sharedPool;
         readonly int _rootPageCount;
-        sealed class PageRequest
+        struct PageRequest
         {
             public uint priority;
             public int firstTick;
@@ -363,6 +363,7 @@ namespace ClusterMesh
         readonly Dictionary<int, Task<Payload>> _reads = new Dictionary<int, Task<Payload>>();
         readonly Dictionary<int, Payload> _completed = new Dictionary<int, Payload>();
         readonly List<int> _scratch = new List<int>();
+        Comparison<int> _requestComparer;
         Task<byte[]> _metadataRead;
         string _path;
         int _tick;
@@ -503,7 +504,11 @@ namespace ClusterMesh
         {
             if (_requests.TryGetValue(page, out PageRequest existing))
             {
-                if (priority > existing.priority) existing.priority = priority;
+                if (priority > existing.priority)
+                {
+                    existing.priority = priority;
+                    _requests[page] = existing;
+                }
                 return;
             }
             _requests.Add(page, new PageRequest { priority = priority, firstTick = _tick });
@@ -577,7 +582,7 @@ namespace ClusterMesh
                     continue;
                 _scratch.Add(id);
             }
-            _scratch.Sort(CompareRequestedPages);
+            _scratch.Sort(_requestComparer ?? (_requestComparer = CompareRequestedPages));
             for (int i = 0; i < _scratch.Count && readSlots > 0; i++)
             {
                 int id = _scratch[i];
@@ -633,7 +638,7 @@ namespace ClusterMesh
             _scratch.Clear();
             foreach (int id in _completed.Keys)
                 _scratch.Add(id);
-            _scratch.Sort(CompareRequestedPages);
+            _scratch.Sort(_requestComparer ?? (_requestComparer = CompareRequestedPages));
             bool nodesChanged = false;
             for (int i = 0; i < _scratch.Count && uploadSlots > 0; i++)
             {
