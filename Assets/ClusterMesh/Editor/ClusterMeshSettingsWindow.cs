@@ -99,7 +99,7 @@ namespace ClusterMesh
                 settings.EnableGlobalSharedGpuPool);
             int poolPages = EditorGUILayout.IntSlider(
                 new GUIContent("Shared Pool Pages",
-                    "每个兼容 Pool 分片的物理页数。页数越大，LOD 抖动和重复 I/O 越少，但常驻显存越高；当根页总量加一个完整细节节点的预留空间不足时会自动创建额外分片。"),
+                    "每个兼容 Pool 分片的总容量基准，同时作为根页之外的目标细节窗口（不超过实际细节页，且容纳一个完整节点）；必要时按 2 的幂扩大至最多 4096 页。新增共享资产不能吃掉已有细节窗口，放不下时另建分片。纯根页资产不额外预留细节窗口。数值越大，显存占用越高。"),
                 settings.SharedGpuPoolPageCapacity, 32, 2048);
 
             EditorGUILayout.Space(4);

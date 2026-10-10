@@ -12,7 +12,8 @@ namespace ClusterMesh
 
         [Header("Page Streaming")]
         [SerializeField] bool enableGlobalSharedGpuPool = true;
-        [SerializeField, Min(8)] int sharedGpuPoolPageCapacity = 256;
+        [SerializeField, Min(8), Tooltip("共享池总容量基准，同时作为根页之外的目标细节窗口（不超过实际细节页，并能容纳完整节点）。必要时按 2 的幂增大，最大 4096 页；数值越大显存越高。纯根页资产不额外保留细节窗口。")]
+        int sharedGpuPoolPageCapacity = 256;
         [SerializeField, Range(1, 32)] int maxConcurrentPageReads = 8;
         [SerializeField, Range(1, 16)] int maxPageUploadsPerUpdate = 4;
         [SerializeField, Min(1)] int maxReadMegabytesPerUpdate = 8;
