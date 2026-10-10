@@ -493,7 +493,7 @@ namespace ClusterMesh
             if (string.IsNullOrEmpty(directory))
                 throw new InvalidOperationException("ClusterMesh stream sidecar has no output directory.");
             Directory.CreateDirectory(directory);
-            string tempPath = fullPath + ".tmp-" + Guid.NewGuid().ToString("N");
+            string tempPath = Path.Combine(directory, Guid.NewGuid().ToString("N") + ".tmp");
             try
             {
                 int rootCount = 0;
