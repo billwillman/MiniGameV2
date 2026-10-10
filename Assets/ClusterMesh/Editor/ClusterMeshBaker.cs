@@ -37,6 +37,7 @@ namespace ClusterMesh
             {
                 int leafStart = clusters.Count;
                 int[] tris = mesh.GetTriangles(sub);
+                long leafTiming=ClusterMeshBakeTiming.Begin();
                 BakeSubmesh(
                     (uint)sub,
                     tris,
@@ -48,6 +49,7 @@ namespace ClusterMesh
                     clusters,
                     vertices,
                     indices);
+                ClusterMeshBakeTiming.End("Leaves",leafTiming);
                 if (settings.buildLodHierarchy)
                     ClusterMeshLodBaker.BuildHierarchy(
                         clusters, vertices, indices, groups, leafStart, clusters.Count, settings,

@@ -40,6 +40,10 @@ namespace ClusterMesh
                     var edgeCache = new Dictionary<int, HashSet<(int, int, int, int, int, int)>>();
                     HashSet<(int, int, int, int, int, int)> levelSharedEdges =
                         SharedBoundaryEdges(clusters, vertices, indices, pending, edgeCache);
+                    var neighbors=BuildLevelNeighbors(pending,edgeCache);
+                    var active=new HashSet<int>(pending);
+                    var ranks=new Dictionary<int,int>(pending.Count);
+                    for(int p=0;p<pending.Count;p++)ranks.Add(pending[p],p);
                     while (remaining.Count >= 2)
                     {
                         EditorUtility.DisplayProgressBar(
@@ -48,15 +52,19 @@ namespace ClusterMesh
                             1f - (remaining.Count / (float)Mathf.Max(1, levelStart)));
 
                         int size = remaining.Count >= 4 ? 4 : remaining.Count;
-                        List<int> group = PickGroup(clusters, vertices, indices, remaining, size, edgeCache, groups);
+                        long pickTiming=ClusterMeshBakeTiming.Begin();
+                        List<int> group = PickGroup(clusters, vertices, indices, remaining, size, edgeCache, groups,neighbors,active,ranks);
+                        ClusterMeshBakeTiming.End("PickGroup",pickTiming);
                         if (group.Count < 2)
                         {
                             remaining.Remove(group[0]);
+                            active.Remove(group[0]);
                             next.Add(group[0]);
                             continue;
                         }
 
                         RemoveAll(remaining, group);
+                        foreach(int member in group)active.Remove(member);
 
                         int startClusters = clusters.Count;
                         if (!TryEmitGroup(
@@ -223,7 +231,10 @@ namespace ClusterMesh
             List<int> remaining,
             int size,
             Dictionary<int, HashSet<(int, int, int, int, int, int)>> edgeCache,
-            List<ClusterGroup> groups)
+            List<ClusterGroup> groups,
+            Dictionary<int,HashSet<int>> neighbors,
+            HashSet<int> active,
+            Dictionary<int,int> ranks)
         {
             int first = remaining[0];
             for (int i = 1; i < remaining.Count; i++)
@@ -237,20 +248,21 @@ namespace ClusterMesh
             for (int i = 0; i < group.Count; i++)
                 groupEdges.UnionWith(BoundaryEdges(clusters, vertices, indices, group[i], edgeCache));
             var skip = new HashSet<int>();
+            var candidates=new HashSet<int>();
+            foreach(int member in group)candidates.UnionWith(neighbors[member]);
             while (group.Count < size)
             {
                 Vector3 pivot = AverageCenter(clusters, group);
                 int best = -1;
                 float bestD = float.MaxValue;
-                for (int i = 0; i < remaining.Count; i++)
+                foreach(int idx in candidates)
                 {
-                    int idx = remaining[i];
-                    if (Contains(group, idx) || skip.Contains(idx))
-                        continue;
-                    if (!SharesBoundaryEdge(groupEdges, clusters, vertices, indices, idx, edgeCache))
+                    if (!active.Contains(idx)||Contains(group, idx) || skip.Contains(idx))
                         continue;
                     float d = ((Vector3)clusters[idx].aabbCenter - pivot).sqrMagnitude;
-                    if (d >= bestD)
+                    // Preserve the original remaining-list tie break, not hash
+                    // iteration order. The selected geometry stays identical.
+                    if (d > bestD || d==bestD&&(best<0||ranks[idx]>=ranks[best]))
                         continue;
                     bestD = d;
                     best = idx;
@@ -278,10 +290,31 @@ namespace ClusterMesh
                         continue;
                     group.Add(extra[i]);
                     groupEdges.UnionWith(BoundaryEdges(clusters, vertices, indices, extra[i], edgeCache));
+                    candidates.UnionWith(neighbors[extra[i]]);
                 }
             }
 
             return group;
+        }
+
+        static Dictionary<int,HashSet<int>> BuildLevelNeighbors(
+            List<int> pending,Dictionary<int,HashSet<(int,int,int,int,int,int)>> edges)
+        {
+            var owners=new Dictionary<(int,int,int,int,int,int),List<int>>();
+            var result=new Dictionary<int,HashSet<int>>(pending.Count);
+            foreach(int cluster in pending)
+            {
+                result.Add(cluster,new HashSet<int>());
+                foreach(var edge in edges[cluster])
+                {
+                    if(!owners.TryGetValue(edge,out var list))owners.Add(edge,list=new List<int>(2));
+                    list.Add(cluster);
+                }
+            }
+            foreach(var ownersForEdge in owners.Values)
+                for(int i=0;i<ownersForEdge.Count;i++)for(int j=i+1;j<ownersForEdge.Count;j++)
+                {result[ownersForEdge[i]].Add(ownersForEdge[j]);result[ownersForEdge[j]].Add(ownersForEdge[i]);}
+            return result;
         }
 
         static List<int> OwningMembersInRemaining(int seed, List<int> remaining, List<ClusterGroup> groups)
@@ -489,7 +522,9 @@ namespace ClusterMesh
             MarkLocked(
                 pos, tris, locked, settings.preserveAssetOuterBoundary,
                 levelSharedEdges, sourceInteriorEdges);
+            long collapseTiming=ClusterMeshBakeTiming.Begin();
             CollapseHalf(pos, nrm, tan, uv, tris, locked, srcTriCount, settings.useQemSimplify);
+            ClusterMeshBakeTiming.End("Collapse",collapseTiming);
             if (tris.Count < 3 || tris.Count / 3 >= srcTriCount)
                 return false;
             if (CountBoundaryEdges(pos, tris) > CountBoundaryEdges(srcPos, srcTris))
@@ -511,11 +546,13 @@ namespace ClusterMesh
                 gmax = Vector3.Max(gmax, cmax);
             }
 
+            long deviationTiming=ClusterMeshBakeTiming.Begin();
             float lodError = Mathf.Max(
                 1e-6f,
                 childError,
                 SurfaceDeviation(pos, srcPos, srcTris),
                 SurfaceDeviation(srcPos, pos, tris));
+            ClusterMeshBakeTiming.End("Deviation",deviationTiming);
             int startClusters = clusters.Count;
             ClusterMeshBaker.ClusterTriangles(
                 clusters[group[0]].materialIndex,
@@ -770,10 +807,11 @@ namespace ClusterMesh
         {
             int target = Mathf.Max(1, srcTriCount / 2);
             int guard = pos.Count * 8 + 8;
+            var workspace=useQem?new ClusterMeshQem.Workspace(pos.Count):null;
             while (guard-- > 0 && tris.Count / 3 > target)
             {
                 bool collapsed = useQem
-                    ? ClusterMeshQem.TryCollapseQem(pos, nrm, tan, uv, tris, locked)
+                    ? ClusterMeshQem.TryCollapseQem(pos, nrm, tan, uv, tris, locked,workspace)
                     : TryCollapseShortest(pos, nrm, tan, uv, tris, locked);
                 if (!collapsed)
                     break;
@@ -944,6 +982,7 @@ namespace ClusterMesh
                         meshPos[meshTris[t + 2]]);
                     if (d < best)
                         best = d;
+                    if(best==0f)break; // Exact lower bound; preserves the result.
                 }
 
                 if (best < float.MaxValue)

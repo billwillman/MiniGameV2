@@ -166,7 +166,8 @@ namespace ClusterMesh.Tests
             {
                 maxVerticesPerCluster = 4,
                 maxTrianglesPerCluster = 2,
-                useQemSimplify = true
+                useQemSimplify = true,
+                preserveAssetOuterBoundary = true
             };
             var result = ClusterMeshBaker.Bake(mesh, new Material[1], settings);
             var children = new List<int>();

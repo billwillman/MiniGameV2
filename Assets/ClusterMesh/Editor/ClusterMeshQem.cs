@@ -8,6 +8,18 @@ namespace ClusterMesh
         public const float QemNormalWeight = 1f;
         public const float QemUvWeight = 1f;
 
+        internal sealed class Workspace
+        {
+            public readonly Quadric[] quadrics;
+            public readonly List<int>[] adjacency;
+            public readonly HashSet<long> seen=new HashSet<long>();
+            public Workspace(int vertices)
+            {
+                quadrics=new Quadric[vertices];adjacency=new List<int>[vertices];
+                for(int i=0;i<vertices;i++)adjacency[i]=new List<int>(6);
+            }
+        }
+
         public static bool TryCollapseQem(
             List<Vector3> pos,
             List<Vector3> nrm,
@@ -15,17 +27,22 @@ namespace ClusterMesh
             List<Vector2> uv,
             List<int> tris,
             List<bool> locked)
+            =>TryCollapseQem(pos,nrm,tan,uv,tris,locked,pos==null?null:new Workspace(pos.Count));
+
+        internal static bool TryCollapseQem(
+            List<Vector3> pos,List<Vector3> nrm,List<Vector4> tan,List<Vector2> uv,
+            List<int> tris,List<bool> locked,Workspace workspace)
         {
             if (pos == null || tris == null || locked == null || pos.Count == 0)
                 return false;
 
-            Quadric[] quads = BuildQuadrics(pos, tris);
-            List<int>[] adj = BuildAdj(pos.Count, tris);
+            Quadric[] quads = BuildQuadrics(pos, tris,workspace.quadrics);
+            List<int>[] adj = BuildAdj(pos.Count, tris,workspace.adjacency);
             int bestA = -1;
             int bestB = -1;
             Vector3 bestDest = default;
             float bestCost = float.MaxValue;
-            var seen = new HashSet<long>();
+            var seen = workspace.seen;seen.Clear();
 
             for (int t = 0; t + 2 < tris.Count; t += 3)
             {
@@ -141,11 +158,10 @@ namespace ClusterMesh
             bestDest = dest;
         }
 
-        static List<int>[] BuildAdj(int vertCount, List<int> tris)
+        static List<int>[] BuildAdj(int vertCount, List<int> tris,List<int>[] adj)
         {
-            var adj = new List<int>[vertCount];
             for (int i = 0; i < vertCount; i++)
-                adj[i] = new List<int>(6);
+                adj[i].Clear();
             for (int t = 0; t + 2 < tris.Count; t += 3)
             {
                 adj[tris[t]].Add(t);
@@ -192,9 +208,9 @@ namespace ClusterMesh
             return false;
         }
 
-        static Quadric[] BuildQuadrics(List<Vector3> pos, List<int> tris)
+        static Quadric[] BuildQuadrics(List<Vector3> pos, List<int> tris,Quadric[] quads)
         {
-            var quads = new Quadric[pos.Count];
+            System.Array.Clear(quads,0,pos.Count);
             for (int t = 0; t + 2 < tris.Count; t += 3)
             {
                 Vector3 a = pos[tris[t]];
@@ -240,7 +256,7 @@ namespace ClusterMesh
             return a + ab * t;
         }
 
-        struct Quadric
+        internal struct Quadric
         {
             public float q00, q01, q02, q03;
             public float q11, q12, q13;
