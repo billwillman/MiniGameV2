@@ -802,7 +802,7 @@ namespace ClusterMesh
                 {
                     int nodeIndex = _streamTraversalStack[--count];
                     ClusterMeshStreamNode node = nodes[nodeIndex];
-                    int[] children = _streamRuntime.GetNodeChildren(nodeIndex);
+                    var children = _streamRuntime.GetNodeChildren(nodeIndex);
                     bool desired = lodErrorThreshold <= 0f
                         ? node.lodLevel == 0
                         : ProjectedStreamError(node, objectToWorld, camera, projectionScale) < lodErrorThreshold;

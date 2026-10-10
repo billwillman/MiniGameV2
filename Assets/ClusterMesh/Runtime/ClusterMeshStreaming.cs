@@ -346,18 +346,13 @@ namespace ClusterMesh
         readonly ClusterMeshStreamDescriptor _descriptor;
         readonly ClusterMeshStreamPageTableEntry[] _pageTable;
         readonly uint[] _nodeResident;
-        readonly int[][] _nodePages;
-        readonly int[][] _nodeChildren;
+        readonly ClusterMeshNodeIndexTable _nodePages;
+        readonly ClusterMeshNodeIndexTable _nodeChildren;
         readonly int[] _rootNodes;
         readonly int[] _pageSlots;
         readonly Slot[] _slots;
         readonly ClusterMeshSharedGpuPool _sharedPool;
         readonly int _rootPageCount;
-        readonly ClusterPackedVertex[] _vertexStaging;
-        readonly ClusterPackedVertexTight[] _tightVertexStaging;
-        readonly uint[] _indexStaging;
-        readonly ClusterPackedSkinWeight[] _weightStaging;
-        readonly uint[] _weight8Staging;
         sealed class PageRequest
         {
             public uint priority;
@@ -390,8 +385,8 @@ namespace ClusterMesh
         // geometry pages and becomes resident only when all of them are uploaded.
         public int RequestWordCount => (NodeCount + 31) >> 5;
         internal int[] RootNodes => _rootNodes;
-        internal int[] GetNodeChildren(int nodeIndex) =>
-            nodeIndex >= 0 && nodeIndex < NodeCount ? _nodeChildren[nodeIndex] : Array.Empty<int>();
+        internal ClusterMeshNodeIndexTable.Range GetNodeChildren(int nodeIndex) =>
+            nodeIndex >= 0 && nodeIndex < NodeCount && _nodeChildren != null ? _nodeChildren[nodeIndex] : default;
         internal int InflightReadCount => _reads.Count;
         internal long PendingDecodedBytes
         {
@@ -424,13 +419,15 @@ namespace ClusterMesh
                 return;
             }
 
-            if (!ValidateDescriptor())
-                return;
+            long validationStamp = 0; ClusterMeshCpuTiming.Begin(ref validationStamp);
+            bool valid = ValidateDescriptor(out int[] pageCounts, out int rootPages, out int maxDetailPages);
+            ClusterMeshCpuTiming.End("RootValidation", validationStamp);
+            if (!valid) return;
             _pageTable = new ClusterMeshStreamPageTableEntry[descriptor.pages.Length];
             _nodeResident = new uint[descriptor.nodes.Length];
             _pageSlots = new int[descriptor.pages.Length];
             for (int i = 0; i < _pageSlots.Length; i++) _pageSlots[i] = -1;
-            _rootPageCount = CountRootPages();
+            _rootPageCount = rootPages;
             ClusterMeshSharedGpuPool sharedPool = null;
             if (ClusterMeshStreaming.UseGlobalSharedGpuPool)
             {
@@ -438,7 +435,7 @@ namespace ClusterMesh
                 {
                     sharedPool = ClusterMeshStreaming.AcquireSharedPool(
                         this, geometry.ResolvedVertexStride, descriptor, _rootPageCount,
-                        CountMaxDetailNodePages());
+                        maxDetailPages);
                 }
                 catch (Exception ex)
                 {
@@ -451,17 +448,11 @@ namespace ClusterMesh
                 _slots = new Slot[descriptor.poolPageCapacity];
                 for (int i = 0; i < _slots.Length; i++) _slots[i] = new Slot();
             }
-            bool tight = geometry.ResolvedVertexStride == ClusterMeshLimits.TightVertexStride;
-            _vertexStaging = tight ? null : new ClusterPackedVertex[descriptor.vertexPageCapacity];
-            _tightVertexStaging = tight ? new ClusterPackedVertexTight[descriptor.vertexPageCapacity] : null;
-            _indexStaging = new uint[descriptor.indexPageCapacity];
-            _weightStaging = descriptor.weightStride == ClusterSkinnedMeshAsset.PackedSkinWeightStride
-                ? new ClusterPackedSkinWeight[descriptor.vertexPageCapacity] : null;
-            _weight8Staging = descriptor.weightStride == ClusterSkinnedMeshAsset.PackedSkinWeightStride8
-                ? new uint[checked(descriptor.vertexPageCapacity * 2)] : null;
-            _nodePages = BuildNodePages(descriptor.nodes.Length, descriptor.pages);
-            _nodeChildren = BuildNodeChildren(descriptor.nodes);
+            long topologyStamp = 0; ClusterMeshCpuTiming.Begin(ref topologyStamp);
+            _nodePages = ClusterMeshNodeIndexTable.Pages(pageCounts, descriptor.pages);
+            _nodeChildren = ClusterMeshNodeIndexTable.Children(descriptor.nodes);
             _rootNodes = BuildRootNodes(descriptor.nodes);
+            ClusterMeshCpuTiming.End("RootTopology", topologyStamp);
             _path = ClusterMeshStreaming.ResolveFilePath(descriptor);
             if (string.IsNullOrEmpty(_path))
             {
@@ -487,7 +478,7 @@ namespace ClusterMesh
             if (_disposed || Failed || nodeIndex < 0 || nodeIndex >= NodeCount)
                 return;
             MarkNodeUsed(nodeIndex);
-            int[] pages = _nodePages[nodeIndex];
+            var pages = _nodePages[nodeIndex];
             for (int i = 0; i < pages.Length; i++)
             {
                 int page = pages[i];
@@ -497,10 +488,10 @@ namespace ClusterMesh
             if (ClusterMeshStreaming.EnablePrefetch)
             {
                 uint prefetchPriority = priority > 0x01000000u ? priority - 0x01000000u : 1u;
-                int[] children = _nodeChildren[nodeIndex];
+                var children = _nodeChildren[nodeIndex];
                 for (int childIndex = 0; childIndex < children.Length; childIndex++)
                 {
-                    int[] childPages = _nodePages[children[childIndex]];
+                    var childPages = _nodePages[children[childIndex]];
                     for (int i = 0; i < childPages.Length; i++)
                         if (_pageSlots[childPages[i]] < 0)
                             QueuePage(childPages[i], prefetchPriority);
@@ -522,7 +513,7 @@ namespace ClusterMesh
         {
             if (nodeIndex < 0 || nodeIndex >= NodeCount)
                 return;
-            int[] pages = _nodePages[nodeIndex];
+            var pages = _nodePages[nodeIndex];
             for (int i = 0; i < pages.Length; i++)
             {
                 int slot = _pageSlots[pages[i]];
@@ -706,39 +697,47 @@ namespace ClusterMesh
                 _loadingNode = page.nodeIndex;
             int vertexBase = slot * _descriptor.vertexPageCapacity;
             int indexBase = slot * _descriptor.indexPageCapacity;
-            byte[] raw = payload.raw;
-            int cursor = PayloadHeaderBytes;
-            if (_geometry.ResolvedVertexStride == ClusterMeshLimits.TightVertexStride)
+            var scratch = ClusterMeshUploadScratch.Acquire(
+                _geometry.ResolvedVertexStride == ClusterMeshLimits.TightVertexStride,
+                page.vertexCount, page.indexWordCount, page.weightCount, _descriptor.weightStride);
+            try
             {
-                CopyBytesToStructs(raw, cursor, _tightVertexStaging, page.vertexCount);
-                if (page.vertexCount > 0) VerticesTight.SetData(_tightVertexStaging, 0, vertexBase, page.vertexCount);
-            }
-            else
-            {
-                CopyBytesToStructs(raw, cursor, _vertexStaging, page.vertexCount);
-                if (page.vertexCount > 0) Vertices.SetData(_vertexStaging, 0, vertexBase, page.vertexCount);
-            }
-            cursor += page.vertexCount * _geometry.ResolvedVertexStride;
-            if (page.indexWordCount > 0)
-            {
-                Buffer.BlockCopy(raw, cursor, _indexStaging, 0, page.indexWordCount * 4);
-                Indices.SetData(_indexStaging, 0, indexBase, page.indexWordCount);
-            }
-            cursor += page.indexWordCount * 4;
-            if (_descriptor.weightStride == ClusterSkinnedMeshAsset.PackedSkinWeightStride)
-            {
-                CopyBytesToStructs(raw, cursor, _weightStaging, page.weightCount);
-                if (page.weightCount > 0) Weights.SetData(_weightStaging, 0, vertexBase, page.weightCount);
-            }
-            else if (_descriptor.weightStride == ClusterSkinnedMeshAsset.PackedSkinWeightStride8)
-            {
-                int count = page.weightCount * 2;
-                if (count > 0)
+                byte[] raw = payload.raw;
+                int cursor = PayloadHeaderBytes;
+                if (_geometry.ResolvedVertexStride == ClusterMeshLimits.TightVertexStride)
                 {
-                    Buffer.BlockCopy(raw, cursor, _weight8Staging, 0, count * 4);
-                    Weights8.SetData(_weight8Staging, 0, vertexBase * 2, count);
+                    CopyBytesToStructs(raw, cursor, scratch.tightVertices, page.vertexCount);
+                    if (page.vertexCount > 0) VerticesTight.SetData(scratch.tightVertices, 0, vertexBase, page.vertexCount);
                 }
+                else
+                {
+                    CopyBytesToStructs(raw, cursor, scratch.vertices, page.vertexCount);
+                    if (page.vertexCount > 0) Vertices.SetData(scratch.vertices, 0, vertexBase, page.vertexCount);
+                }
+                cursor += page.vertexCount * _geometry.ResolvedVertexStride;
+                if (page.indexWordCount > 0)
+                {
+                    Buffer.BlockCopy(raw, cursor, scratch.indices, 0, page.indexWordCount * 4);
+                    Indices.SetData(scratch.indices, 0, indexBase, page.indexWordCount);
+                }
+                cursor += page.indexWordCount * 4;
+                if (_descriptor.weightStride == ClusterSkinnedMeshAsset.PackedSkinWeightStride)
+                {
+                    CopyBytesToStructs(raw, cursor, scratch.weights, page.weightCount);
+                    if (page.weightCount > 0) Weights.SetData(scratch.weights, 0, vertexBase, page.weightCount);
+                }
+                else if (_descriptor.weightStride == ClusterSkinnedMeshAsset.PackedSkinWeightStride8)
+                {
+                    int count = page.weightCount * 2;
+                    if (count > 0)
+                    {
+                        Buffer.BlockCopy(raw, cursor, scratch.weights8, 0, count * 4);
+                        Weights8.SetData(scratch.weights8, 0, vertexBase * 2, count);
+                    }
+                }
+
             }
+            finally { ClusterMeshUploadScratch.Release(); }
 
             if (_sharedPool == null)
             {
@@ -806,46 +805,13 @@ namespace ClusterMesh
         {
             if (node < 0 || node >= NodeCount)
                 return;
-            int[] pages = _nodePages[node];
+            var pages = _nodePages[node];
             bool all = pages.Length > 0;
             for (int i = 0; i < pages.Length; i++)
             {
                 if (_pageSlots[pages[i]] < 0) { all = false; break; }
             }
             _nodeResident[node] = all ? 1u : 0u;
-        }
-
-        static int[][] BuildNodePages(int nodeCount, ClusterMeshStreamPage[] pages)
-        {
-            var counts = new int[nodeCount];
-            for (int i = 0; i < pages.Length; i++)
-                counts[pages[i].nodeIndex]++;
-            var result = new int[nodeCount][];
-            for (int i = 0; i < nodeCount; i++)
-                result[i] = new int[counts[i]];
-            Array.Clear(counts, 0, counts.Length);
-            for (int page = 0; page < pages.Length; page++)
-            {
-                int node = pages[page].nodeIndex;
-                result[node][counts[node]++] = page;
-            }
-            return result;
-        }
-
-        static int[][] BuildNodeChildren(ClusterMeshStreamNode[] nodes)
-        {
-            var counts = new int[nodes.Length];
-            for (int i = 0; i < nodes.Length; i++)
-                if (nodes[i].parentNodeIndex >= 0) counts[nodes[i].parentNodeIndex]++;
-            var result = new int[nodes.Length][];
-            for (int i = 0; i < nodes.Length; i++) result[i] = new int[counts[i]];
-            Array.Clear(counts, 0, counts.Length);
-            for (int i = 0; i < nodes.Length; i++)
-            {
-                int parent = nodes[i].parentNodeIndex;
-                if (parent >= 0) result[parent][counts[parent]++] = i;
-            }
-            return result;
         }
 
         static int[] BuildRootNodes(ClusterMeshStreamNode[] nodes)
@@ -863,28 +829,6 @@ namespace ClusterMesh
         {
             ClusterMeshStreamPage p = _descriptor.pages[page];
             return p.root || _descriptor.nodes[p.nodeIndex].parentNodeIndex < 0;
-        }
-
-        int CountRootPages()
-        {
-            int count = 0;
-            for (int i = 0; i < PageCount; i++) if (IsRootPage(i)) count++;
-            return count;
-        }
-
-        int CountMaxDetailNodePages()
-        {
-            var counts = new int[NodeCount];
-            for (int page = 0; page < PageCount; page++)
-            {
-                int node = _descriptor.pages[page].nodeIndex;
-                if (_descriptor.nodes[node].parentNodeIndex >= 0)
-                    counts[node]++;
-            }
-            int maximum = 0;
-            for (int node = 0; node < counts.Length; node++)
-                maximum = Mathf.Max(maximum, counts[node]);
-            return maximum;
         }
 
         void RequestRoots()
@@ -947,8 +891,11 @@ namespace ClusterMesh
             Nodes.SetData(NodeCount > 0 ? _descriptor.nodes : new ClusterMeshStreamNode[1]);
         }
 
-        bool ValidateDescriptor()
+        bool ValidateDescriptor(out int[] pageCounts, out int rootPageCount, out int maxDetailPages)
         {
+            pageCounts = null;
+            rootPageCount = 0;
+            maxDetailPages = 0;
             if (_descriptor.poolPageCapacity > 4096 || _descriptor.vertexPageCapacity > 65536 ||
                 _descriptor.indexPageCapacity > 131072 || NodeCount > 1_000_000 || PageCount > 1_000_000)
                 return FailInvalid("ClusterMesh streaming descriptor exceeds supported resource limits.");
@@ -970,6 +917,7 @@ namespace ClusterMesh
                     n.clusterStart > clusterCount - n.clusterCount)
                     return FailInvalid("ClusterMesh streaming node " + i + " is invalid.");
             }
+            pageCounts = new int[NodeCount + 1];
             long previousPageEnd = FileHeaderBytes + (long)DirectoryEntryBytes * PageCount;
             for (int i = 0; i < PageCount; i++)
             {
@@ -993,6 +941,8 @@ namespace ClusterMesh
                 if (_descriptor.fileSize > 0 && end > _descriptor.fileSize)
                     return FailInvalid("ClusterMesh streaming page lies outside the stream file.");
                 previousPageEnd = end;
+                pageCounts[p.nodeIndex + 1]++;
+                if (IsRootPage(i)) rootPageCount++;
                 if (_descriptor.weightStride == 0 && p.weightCount != 0)
                     return FailInvalid("ClusterMesh static streaming page has skin weights.");
                 if (_descriptor.weightStride != 0 && p.weightCount != p.vertexCount)
@@ -1012,11 +962,8 @@ namespace ClusterMesh
             }
             for (int nodeIndex = 0; nodeIndex < NodeCount; nodeIndex++)
             {
-                bool hasPage = false;
                 ClusterMeshStreamNode node = _descriptor.nodes[nodeIndex];
-                for (int page = 0; page < PageCount; page++)
-                    hasPage |= _descriptor.pages[page].nodeIndex == nodeIndex;
-                if (!hasPage)
+                if (pageCounts[nodeIndex + 1] == 0)
                     return FailInvalid("ClusterMesh streaming node " + nodeIndex + " has no pages.");
                 int end = node.clusterStart + node.clusterCount;
                 for (int cluster = node.clusterStart; cluster < end; cluster++)
@@ -1026,16 +973,12 @@ namespace ClusterMesh
                         return FailInvalid("ClusterMesh streaming cluster address crosses node ownership.");
                 }
             }
-            int rootPageCount = 0;
-            for (int page = 0; page < PageCount; page++)
-                if (IsRootPage(page)) rootPageCount++;
             for (int nodeIndex = 0; nodeIndex < NodeCount; nodeIndex++)
             {
                 if (_descriptor.nodes[nodeIndex].parentNodeIndex < 0)
                     continue;
-                int nodePages = 0;
-                for (int page = 0; page < PageCount; page++)
-                    if (_descriptor.pages[page].nodeIndex == nodeIndex) nodePages++;
+                int nodePages = pageCounts[nodeIndex + 1];
+                maxDetailPages = Math.Max(maxDetailPages, nodePages);
                 if (rootPageCount + nodePages > _descriptor.poolPageCapacity)
                     return FailInvalid(
                         "ClusterMesh streaming pool cannot hold root pages and one complete detail node.");
@@ -1284,6 +1227,7 @@ namespace ClusterMesh
         public static int ResidentGraceUpdates { get; set; } = 12;
         public static bool EnablePrefetch { get; set; } = true;
         public static int SharedGpuPoolCount => SharedPools.Count;
+        public static long UploadScratchBytes => ClusterMeshUploadScratch.RetainedBytes;
         internal static int UpdateSerial => _updateSerial;
 
         internal static bool UseGlobalSharedGpuPool
@@ -1479,6 +1423,7 @@ namespace ClusterMesh
             foreach (KeyValuePair<ClusterMeshAsset, ClusterMeshPageRuntime> pair in Runtimes) pair.Value?.Dispose();
             for (int i = SharedPools.Count - 1; i >= 0; i--) SharedPools[i]?.Dispose();
             SharedPools.Clear();
+            ClusterMeshUploadScratch.Clear();
             Runtimes.Clear(); References.Clear(); Stale.Clear(); Active.Clear(); _lastUpdateFrame = int.MinValue;
             _roundRobinStart = 0;
             _updateSerial = 0;

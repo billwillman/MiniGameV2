@@ -109,14 +109,17 @@ namespace ClusterMesh.Tests
                 "Assets/ClusterMesh/Editor/ClusterMeshRendererEditor.cs");
             string skinnedEditor = System.IO.File.ReadAllText(
                 "Assets/ClusterMesh/Editor/ClusterSkinnedMeshRendererEditor.cs");
-            Assert.That(staticEditor, Does.Contain("Radiant GI 公共"));
-            Assert.That(staticEditor, Does.Contain("Radiant GI Forward"));
-            Assert.That(staticEditor, Does.Contain("Radiant GI 延迟"));
-            Assert.That(skinnedEditor, Does.Contain("Radiant GI 公共"));
-            Assert.That(skinnedEditor, Does.Contain("Radiant GI Forward"));
-            Assert.That(skinnedEditor, Does.Contain("Radiant GI 延迟"));
-            Assert.That(staticEditor, Does.Contain("Organic Light"));
-            Assert.That(skinnedEditor, Does.Contain("Organic Light"));
+            const string sharedDrawCall = @"ClusterMeshRadiantPathInspector\s*\.\s*DrawGroups\s*\(\s*serializedObject\s*\)\s*;";
+            Assert.That(staticEditor, Does.Match(sharedDrawCall));
+            Assert.That(skinnedEditor, Does.Match(sharedDrawCall));
+            int sharedStart = staticEditor.IndexOf("static class ClusterMeshRadiantPathInspector", StringComparison.Ordinal);
+            Assert.That(sharedStart, Is.GreaterThanOrEqualTo(0));
+            string sharedInspector = staticEditor.Substring(sharedStart);
+            Assert.That(sharedInspector, Does.Contain("DrawGroups(SerializedObject so)"));
+            Assert.That(sharedInspector, Does.Contain("Radiant GI 公共"));
+            Assert.That(sharedInspector, Does.Contain("Radiant GI Forward"));
+            Assert.That(sharedInspector, Does.Contain("Radiant GI 延迟"));
+            Assert.That(sharedInspector, Does.Contain("Organic Light"));
             string staticRenderer = System.IO.File.ReadAllText(
                 "Assets/ClusterMesh/Runtime/ClusterMeshRenderer.cs");
             string skinnedRenderer = System.IO.File.ReadAllText(
@@ -215,10 +218,13 @@ namespace ClusterMesh.Tests
                 Assert.That(bridge, Does.Contain("m_NormalsTexture"));
                 Assert.That(bridge, Does.Contain("m_DepthTexture"));
                 Assert.That(bridge, Does.Contain("m_DepthNormalPrepass"));
-                Assert.That(bridge, Does.Not.Contain("cameraDepthTarget"));
+                // Check property accesses, not explanatory comments which name
+                // the forbidden attachment to document why it is inappropriate.
+                const string cameraDepthAccess = @"\.\s*cameraDepthTarget(?:Handle)?\b";
+                Assert.That(bridge, Does.Not.Match(cameraDepthAccess));
                 Assert.That(feature, Does.Contain("TryGetDepthNormalsTargets"));
                 Assert.That(feature, Does.Contain("AreCompatibleDepthNormalsTargets"));
-                Assert.That(feature, Does.Not.Contain("cameraDepthTarget"));
+                Assert.That(feature, Does.Not.Match(cameraDepthAccess));
             }
             finally
             {
