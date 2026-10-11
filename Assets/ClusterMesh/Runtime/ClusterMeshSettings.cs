@@ -17,7 +17,13 @@ namespace ClusterMesh
         [SerializeField, Tooltip("在既有 GPU 页池内紧凑排列常驻根页；不改模型和流式文件。重新加载资产后生效。")]
         bool packRootPages = true;
         [SerializeField, Range(1, 32)] int maxConcurrentPageReads = 8;
-        [SerializeField, Range(1, 16)] int maxPageUploadsPerUpdate = 4;
+        [SerializeField, Range(1, 64), Tooltip("相邻根页共用一次 FileStream 读取。1 关闭合批；仍受原读取字节、解码内存和上传预算限制。")]
+        int maxRootPagesPerRead = 16;
+        [SerializeField, Range(16, 1024)] int maxRootReadKiB = 256;
+        [SerializeField, Range(1, 64), Tooltip("同一紧凑物理槽中已解码、连续的静态根页合成一次上传。1 关闭；不等待凑批，不扩缓存，仍受字节/时间预算限制。")]
+        int maxRootPagesPerUpload = 16;
+        [SerializeField, Range(1, 16), Tooltip("每次中央更新最多上传的批次数；细节批次为一页，静态根页可同槽合批。字段名保留以兼容已有配置。")]
+        int maxPageUploadsPerUpdate = 4;
         [SerializeField, Min(1)] int maxReadMegabytesPerUpdate = 8;
         [SerializeField, Min(1)] int maxUploadMegabytesPerUpdate = 8;
         [SerializeField, Min(4)] int maxDecodedMegabytes = 32;
@@ -34,6 +40,9 @@ namespace ClusterMesh
         public bool PackRootPages { get => packRootPages; set => packRootPages = value; }
         public int SharedGpuPoolPageCapacity { get => Mathf.Clamp(sharedGpuPoolPageCapacity, 8, 4096); set => sharedGpuPoolPageCapacity = Mathf.Clamp(value, 8, 4096); }
         public int MaxConcurrentPageReads { get => Mathf.Clamp(maxConcurrentPageReads, 1, 32); set => maxConcurrentPageReads = Mathf.Clamp(value, 1, 32); }
+        public int MaxRootPagesPerRead { get => Mathf.Clamp(maxRootPagesPerRead, 1, 64); set => maxRootPagesPerRead = Mathf.Clamp(value, 1, 64); }
+        public int MaxRootReadKiB { get => Mathf.Clamp(maxRootReadKiB, 16, 1024); set => maxRootReadKiB = Mathf.Clamp(value, 16, 1024); }
+        public int MaxRootPagesPerUpload { get => Mathf.Clamp(maxRootPagesPerUpload, 1, 64); set => maxRootPagesPerUpload = Mathf.Clamp(value, 1, 64); }
         public int MaxPageUploadsPerUpdate { get => Mathf.Clamp(maxPageUploadsPerUpdate, 1, 16); set => maxPageUploadsPerUpdate = Mathf.Clamp(value, 1, 16); }
         public int MaxReadMegabytesPerUpdate { get => Mathf.Clamp(maxReadMegabytesPerUpdate, 1, 256); set => maxReadMegabytesPerUpdate = Mathf.Clamp(value, 1, 256); }
         public int MaxUploadMegabytesPerUpdate { get => Mathf.Clamp(maxUploadMegabytesPerUpdate, 1, 256); set => maxUploadMegabytesPerUpdate = Mathf.Clamp(value, 1, 256); }

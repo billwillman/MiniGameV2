@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Reflection;
 using System.Threading.Tasks;
 using NUnit.Framework;
@@ -343,6 +344,204 @@ namespace ClusterMesh.Tests
         static object SharedPool(ClusterMeshPageRuntime runtime) =>
             typeof(ClusterMeshPageRuntime).GetField("_sharedPool", PrivateInstance).GetValue(runtime);
 
+        [UnityTest] public IEnumerator AdjacentRootsUseOneRead()=>VerifyRootBatch(false);
+        [UnityTest] public IEnumerator PackedRootsUploadAsOneBoundedBatch()=>VerifyUploadBatch(false);
+        [UnityTest] public IEnumerator TightPackedRootsUploadAsOneBoundedBatch()=>VerifyUploadBatch(true);
+        IEnumerator VerifyUploadBatch(bool tight)
+        {
+            var runtime=CreateRuntime("upload-packed",4,detailNodeCount:0,vertexCapacity:12,indexCapacity:8,tight:tight,individualRoots:true);
+            yield return PrepareUploads(runtime,4);
+            var args=new object[]{0,0L,0L,1,1024L*1024};UpdateMethod.Invoke(runtime,args);
+            Assert.That((int)args[3],Is.Zero);Assert.That(runtime.IsReady,Is.True);
+            Assert.That(runtime.RootUploadOperations,Is.EqualTo(1));Assert.That(runtime.BatchedRootUploadPages,Is.EqualTo(4));
+            Assert.That((long)args[4],Is.EqualTo(1024L*1024-4*(3*runtime.Geometry.ResolvedVertexStride+8)));
+            Assert.That(PoolValue(runtime,"Capacity"),Is.EqualTo(8));
+            VerifyRootGpu(runtime,4,tight);
+        }
+        [UnityTest] public IEnumerator RootUploadBatchHonorsByteBudgetAndPartialNodeResidency()
+        {
+            var runtime=CreateRuntime("upload-bytes",4,detailNodeCount:0,vertexCapacity:12,indexCapacity:8);
+            yield return PrepareUploads(runtime,4);
+            long bytes=2*(PayloadBytes-12);var args=new object[]{0,0L,0L,1,bytes};UpdateMethod.Invoke(runtime,args);
+            Assert.That((long)args[4],Is.Zero);Assert.That(runtime.BatchedRootUploadPages,Is.EqualTo(2));
+            Assert.That(runtime.IsReady,Is.False);Assert.That(runtime.IsNodeResident(0),Is.False);
+            args=new object[]{0,0L,0L,1,bytes};UpdateMethod.Invoke(runtime,args);
+            Assert.That(runtime.IsReady,Is.True);Assert.That(runtime.RootUploadOperations,Is.EqualTo(2));VerifyRootGpu(runtime,4,false);
+        }
+        [UnityTest] public IEnumerator RootUploadDoesNotCrossSlotsOrWaitForFullBatch()
+        {
+            var runtime=CreateRuntime("upload-slots",4,detailNodeCount:0,vertexCapacity:6,indexCapacity:4);
+            yield return PrepareUploads(runtime,4);
+            var args=new object[]{0,0L,0L,1,1024L*1024};UpdateMethod.Invoke(runtime,args);
+            Assert.That(runtime.IsReady,Is.False);Assert.That(runtime.BatchedRootUploadPages,Is.EqualTo(2));
+            args=new object[]{0,0L,0L,1,1024L*1024};UpdateMethod.Invoke(runtime,args);
+            Assert.That(runtime.IsReady,Is.True);VerifyRootGpu(runtime,4,false);
+        }
+        [UnityTest] public IEnumerator RootUploadDisabledRetainsSinglePageQuota()
+        {
+            settings.MaxRootPagesPerUpload=1;
+            var runtime=CreateRuntime("upload-off",4,detailNodeCount:0,vertexCapacity:12,indexCapacity:8);
+            yield return PrepareUploads(runtime,4);
+            var args=new object[]{0,0L,0L,1,1024L*1024};UpdateMethod.Invoke(runtime,args);
+            Assert.That(runtime.IsReady,Is.False);Assert.That(runtime.RootUploadOperations,Is.EqualTo(1));
+            Assert.That(runtime.BatchedRootUploadPages,Is.Zero);
+            PumpWithBudget(runtime,1024*1024);Assert.That(runtime.IsReady,Is.True);VerifyRootGpu(runtime,4,false);
+        }
+        [UnityTest] public IEnumerator RootUploadMissingMiddleCannotOverwriteOrExposeMissingPage()
+        {
+            var runtime=CreateRuntime("upload-gap",4,detailNodeCount:0,vertexCapacity:12,indexCapacity:8);
+            yield return PrepareUploads(runtime,4);
+            var complete=(IDictionary)typeof(ClusterMeshPageRuntime).GetField("_completed",PrivateInstance).GetValue(runtime);
+            object middle=complete[1];complete.Remove(1);
+            try
+            {
+                var args=new object[]{0,0L,0L,1,1024L*1024};UpdateMethod.Invoke(runtime,args);
+                Assert.That(runtime.IsReady,Is.False);Assert.That(runtime.BatchedRootUploadPages,Is.Zero);
+                var table=new ClusterMeshStreamPageTableEntry[4];runtime.PageTable.GetData(table);
+                Assert.That(table[0].flags,Is.EqualTo(1));Assert.That(table[1].flags|table[2].flags|table[3].flags,Is.Zero);
+            }
+            finally{complete.Add(1,middle);}
+            var rest=new object[]{0,0L,0L,1,1024L*1024};UpdateMethod.Invoke(runtime,rest);
+            Assert.That(runtime.IsReady,Is.True);Assert.That(runtime.BatchedRootUploadPages,Is.EqualTo(3));VerifyRootGpu(runtime,4,false);
+        }
+        [UnityTest] public IEnumerator RootPriorityUsesGlobalQuotaAndReturnsToRoundRobinWhenReady()
+        {
+            var low=CreateRuntime("priority-low",4,detailNodeCount:0,vertexCapacity:12,indexCapacity:8);
+            var high=CreateRuntime("priority-high",4,detailNodeCount:0,vertexCapacity:12,indexCapacity:8);
+            yield return PrepareUploads(low,4);yield return PrepareUploads(high,4);
+            const BindingFlags flags=BindingFlags.Static|BindingFlags.NonPublic;
+            var map=(IDictionary)typeof(ClusterMeshStreaming).GetField("Runtimes",flags).GetValue(null);
+            var rotation=typeof(ClusterMeshStreaming).GetField("_roundRobinStart",flags);object previous=rotation.GetValue(null);
+            settings.MaxPageUploadsPerUpdate=1;high.RootLoadPriority=2;
+            map.Add(low.Geometry,low);map.Add(high.Geometry,high);rotation.SetValue(null,0);
+            try
+            {
+                ClusterMeshStreaming.Update();
+                Assert.That(high.IsReady,Is.True,"Visible terrain must receive the shared upload quota first.");
+                Assert.That(low.IsReady,Is.False,"Priority must not create a second upload budget.");
+                ClusterMeshStreaming.Update();Assert.That(low.IsReady,Is.True,"Ready high-priority assets cannot starve queued roots.");
+            }
+            finally{map.Remove(low.Geometry);map.Remove(high.Geometry);rotation.SetValue(null,previous);}
+        }
+        IEnumerator PrepareUploads(ClusterMeshPageRuntime runtime,int count)
+        {
+            var complete=(IDictionary)typeof(ClusterMeshPageRuntime).GetField("_completed",PrivateInstance).GetValue(runtime);
+            double until=EditorApplication.timeSinceStartup+10;
+            while(complete.Count<count)
+            {Assert.That(EditorApplication.timeSinceStartup,Is.LessThan(until));PumpWithBudget(runtime,1024*1024,0);yield return null;}
+        }
+        [UnityTest] public IEnumerator DetailPriorityLeavesRegularProgressForBackgroundRoots()
+        {
+            var high=CreateRuntime("detail-priority",1);
+            yield return PrepareUploads(high,1);PumpWithBudget(high,1024*1024);Assert.That(high.IsReady,Is.True);
+            var low=CreateRuntime("background-roots",4,detailNodeCount:0,vertexCapacity:12,indexCapacity:8);
+            yield return PrepareUploads(low,4);
+            high.RequestNode(1);yield return PrepareUploads(high,3);high.DetailLoadPriority=1;
+            const BindingFlags flags=BindingFlags.Static|BindingFlags.NonPublic;
+            var map=(IDictionary)typeof(ClusterMeshStreaming).GetField("Runtimes",flags).GetValue(null);
+            var rotation=typeof(ClusterMeshStreaming).GetField("_roundRobinStart",flags);
+            var serial=typeof(ClusterMeshStreaming).GetField("_updateSerial",flags);
+            object previous=rotation.GetValue(null),previousSerial=serial.GetValue(null);
+            settings.MaxPageUploadsPerUpdate=1;
+            map.Add(low.Geometry,low);map.Add(high.Geometry,high);rotation.SetValue(null,0);serial.SetValue(null,0);
+            try
+            {
+                ClusterMeshStreaming.Update();Assert.That(low.IsReady,Is.False);
+                var table=new ClusterMeshStreamPageTableEntry[high.PageCount];high.PageTable.GetData(table);
+                Assert.That(table[1].flags|table[2].flags|table[3].flags,Is.EqualTo(1),"Visible detail receives upload priority.");
+                rotation.SetValue(null,0);serial.SetValue(null,3);ClusterMeshStreaming.Update();
+                Assert.That(low.IsReady,Is.True,"Every fourth update returns to round-robin for background progress.");
+            }
+            finally{map.Remove(low.Geometry);map.Remove(high.Geometry);rotation.SetValue(null,previous);serial.SetValue(null,previousSerial);}
+        }
+        [UnityTest] public IEnumerator WarmPriorityDispatchDoesNotAllocate()
+        {
+            var a=CreateRuntime("dispatch-gc-a",1,detailNodeCount:0);
+            var b=CreateRuntime("dispatch-gc-b",1,detailNodeCount:0);
+            yield return PrepareUploads(a,1);yield return PrepareUploads(b,1);
+            PumpWithBudget(a,1024*1024);PumpWithBudget(b,1024*1024);
+            const BindingFlags flags=BindingFlags.Static|BindingFlags.NonPublic;
+            var map=(IDictionary)typeof(ClusterMeshStreaming).GetField("Runtimes",flags).GetValue(null);
+            map.Add(a.Geometry,a);map.Add(b.Geometry,b);b.DetailLoadPriority=1;
+            try
+            {
+                for(int i=0;i<8;i++)ClusterMeshStreaming.Update();
+                Assert.That(ClusterMeshGcTests.Measure(ClusterMeshStreaming.Update,64),Is.Zero,"Warm central priority dispatch must not allocate.");
+            }
+            finally{map.Remove(a.Geometry);map.Remove(b.Geometry);}
+        }
+        static void VerifyRootGpu(ClusterMeshPageRuntime runtime,int count,bool tight)
+        {
+            var table=new ClusterMeshStreamPageTableEntry[runtime.PageCount];runtime.PageTable.GetData(table);
+            for(int n=0;n<count;n++)
+            {
+                Assert.That(table[n].flags,Is.EqualTo(1));
+                if(tight){var v=new ClusterPackedVertexTight[1];runtime.VerticesTight.GetData(v,0,(int)table[n].vertexBase,1);Assert.That(v[0].px,Is.EqualTo(n+1));}
+                else{var v=new ClusterPackedVertex[1];runtime.Vertices.GetData(v,0,(int)table[n].vertexBase,1);Assert.That(v[0].position.x,Is.EqualTo(n+1));}
+                var indices=new uint[2];runtime.Indices.GetData(indices,0,(int)table[n].indexBase,2);Assert.That(indices[0],Is.EqualTo(n%2==0?0x00010000u:0x00020001u));
+                Assert.That(runtime.IsNodeResident(runtime.Descriptor.pages[n].nodeIndex),Is.True);
+            }
+        }
+        [UnityTest] public IEnumerator CompressedAdjacentRootsUseOneRead()=>VerifyRootBatch(true);
+        IEnumerator VerifyRootBatch(bool compressed)
+        {
+            var runtime=CreateRuntime("batch",4,detailNodeCount:0,vertexCapacity:12,indexCapacity:8,compress:compressed);
+            double until=EditorApplication.timeSinceStartup+10;
+            while(!runtime.IsReady)
+            {
+                Assert.That(EditorApplication.timeSinceStartup,Is.LessThan(until));
+                PumpWithBudget(runtime,1024*1024);yield return null;
+            }
+            Assert.That(runtime.RootReadOperations,Is.EqualTo(1));
+            Assert.That(runtime.BatchedRootPages,Is.EqualTo(4));
+            Assert.That(PoolValue(runtime,"Capacity"),Is.EqualTo(8));
+            var data=new ClusterPackedVertex[12];runtime.Vertices.GetData(data,0,0,12);
+            for(int n=0;n<4;n++)Assert.That(data[n*3].position.x,Is.EqualTo(n+1),"Batch slice boundaries must not alias.");
+        }
+        [UnityTest] public IEnumerator NonAdjacentRootsRemainSeparateReads()
+        {
+            var runtime=CreateRuntime("gapped",4,detailNodeCount:0,vertexCapacity:12,indexCapacity:8,gap:17);
+            double until=EditorApplication.timeSinceStartup+10;
+            while(!runtime.IsReady){Assert.That(EditorApplication.timeSinceStartup,Is.LessThan(until));PumpWithBudget(runtime,1024*1024);yield return null;}
+            Assert.That(runtime.RootReadOperations,Is.EqualTo(4));Assert.That(runtime.BatchedRootPages,Is.Zero);
+        }
+        [UnityTest] public IEnumerator RootBatchFallsBackWithinOnePageDecodeBudget()
+        {
+            var runtime=CreateRuntime("tiny-batch",4,detailNodeCount:0,vertexCapacity:12,indexCapacity:8);
+            double until=EditorApplication.timeSinceStartup+10;
+            while(!runtime.IsReady){Assert.That(EditorApplication.timeSinceStartup,Is.LessThan(until));PumpWithBudget(runtime,PayloadBytes);yield return null;}
+            Assert.That(runtime.RootReadOperations,Is.EqualTo(4));Assert.That(runtime.BatchedRootPages,Is.Zero);
+        }
+        [UnityTest] public IEnumerator CorruptRootBatchFailsWithoutPartialUploads()
+        {
+            var runtime=CreateRuntime("bad-batch",4,detailNodeCount:0,vertexCapacity:12,indexCapacity:8,corruptPage:2);
+            LogAssert.Expect(LogType.Error,"ClusterMesh page streaming: ClusterMesh stream page checksum is invalid.");
+            double until=EditorApplication.timeSinceStartup+10;
+            while(!runtime.Failed)
+            {
+                Assert.That(EditorApplication.timeSinceStartup,Is.LessThan(until));
+                var arguments=new object[]{1,1024L*1024,1024L*1024-(long)PendingBytes.GetValue(runtime),8,1024L*1024};
+                UpdateMethod.Invoke(runtime,arguments);yield return null;
+            }
+            Assert.That(runtime.IsReady,Is.False);Assert.That((long)PendingBytes.GetValue(runtime),Is.Zero);
+        }
+        [UnityTest] public IEnumerator DisposingInflightRootBatchReleasesStreams()
+        {
+            var runtime=CreateRuntime("dispose-batch",4,detailNodeCount:0,vertexCapacity:12,indexCapacity:8);
+            double until=EditorApplication.timeSinceStartup+10;
+            while(runtime.RootReadOperations==0)
+            {Assert.That(EditorApplication.timeSinceStartup,Is.LessThan(until));PumpWithBudget(runtime,1024*1024,0);yield return null;}
+            DisposeRuntime(runtime);foreach(var task in outstanding)while(!task.IsCompleted)yield return null;
+            using(var file=new FileStream(runtime.Descriptor.fileName,FileMode.Open,FileAccess.Read,FileShare.None))Assert.That(file.Length,Is.GreaterThan(0));
+            Assert.That((long)PendingBytes.GetValue(runtime),Is.Zero);
+        }
+        static void PumpWithBudget(ClusterMeshPageRuntime runtime,long budget,int uploads=8)
+        {
+            var arguments=new object[]{1,1024L*1024,budget-(long)PendingBytes.GetValue(runtime),uploads,1024L*1024};
+            UpdateMethod.Invoke(runtime,arguments);Assert.That(runtime.Failed,Is.False,runtime.Error);
+            Assert.That((long)PendingBytes.GetValue(runtime),Is.LessThanOrEqualTo(budget));
+        }
+
         static int PoolValue(ClusterMeshPageRuntime runtime, string name)
         {
             object pool = SharedPool(runtime);
@@ -382,22 +581,27 @@ namespace ClusterMesh.Tests
             if (metadata != null) outstanding.Add(metadata);
             var reads = (IDictionary)typeof(ClusterMeshPageRuntime).GetField("_reads", PrivateInstance).GetValue(runtime);
             foreach (Task task in reads.Values) outstanding.Add(task);
+            var batches=(IEnumerable)typeof(ClusterMeshPageRuntime).GetField("_rootBatches",PrivateInstance).GetValue(runtime);
+            foreach(var batch in batches)outstanding.Add((Task)batch.GetType().GetField("task").GetValue(batch));
             runtime.Dispose();
         }
 
         ClusterMeshPageRuntime CreateRuntime(string name, int rootPages = 1,
             int detailNodePages = 3, int detailNodeCount = 1, int poolCapacity = 8, bool expectFailure = false,
-            int vertexCapacity = 3, int indexCapacity = 2)
+            int vertexCapacity = 3, int indexCapacity = 2, bool compress=false, int gap=0, int corruptPage=-1,
+            bool tight=false, bool individualRoots=false)
         {
             // Default: one root page plus a three-page detail node. Both owners
             // fit eight GPU slots, but one detail node exceeds the decode budget.
             string path = Path.Combine(temporaryDirectory, name + ".cmstream");
             byte[] payload;
+            int stride=tight?ClusterMeshLimits.TightVertexStride:ClusterMeshLimits.ClusterVertexStride;
+            int payloadLength=12+3*stride+8;
             using (var memory = new MemoryStream())
             using (var writer = new BinaryWriter(memory))
             {
                 writer.Write(3); writer.Write(2); writer.Write(0);
-                writer.Write(new byte[PayloadBytes - 12]);
+                writer.Write(new byte[payloadLength - 12]);
                 payload = memory.ToArray();
             }
             int pageCount = checked(rootPages + detailNodePages * detailNodeCount);
@@ -409,6 +613,7 @@ namespace ClusterMesh.Tests
             {
                 payloads[i] = (byte[])payload.Clone();
                 Buffer.BlockCopy(BitConverter.GetBytes((float)(i + 1)), 0, payloads[i], 12, 4);
+                Buffer.BlockCopy(BitConverter.GetBytes(i%2==0?0x00010000u:0x00020001u),0,payloads[i],12+3*stride,4);
                 uint crc = 0xffffffffu;
                 foreach (byte value in payloads[i])
                 {
@@ -419,13 +624,27 @@ namespace ClusterMesh.Tests
                 pages[i] = new ClusterMeshStreamPage
                 {
                     fileOffset = 16 + 40 * pages.Length + i * PayloadBytes,
-                    compressedLength = PayloadBytes, uncompressedLength = PayloadBytes,
+                    compressedLength = payloadLength, uncompressedLength = payloadLength,
                     vertexCount = 3, indexWordCount = 2, crc32 = crc,
-                    nodeIndex = i < rootPages ? 0 : 1 + (i - rootPages) / detailNodePages,
+                    nodeIndex = i < rootPages ? (individualRoots?i:0) : (individualRoots?rootPages:1) + (i - rootPages) / detailNodePages,
                     flags = i < rootPages ? ClusterMeshStreamPageFlags.Root : 0
                 };
                 addresses[i] = new ClusterMeshStreamAddress { pageId = (uint)i };
                 clusters[i] = new ClusterHeader { vertexCount = 3, triangleCount = 1 };
+            }
+            long offset=16+40*pages.Length;
+            for(int i=0;i<pages.Length;i++)
+            {
+                if(compress)
+                {
+                    using(var packed=new MemoryStream())
+                    {
+                        using(var zip=new DeflateStream(packed,System.IO.Compression.CompressionLevel.Optimal,true))zip.Write(payloads[i],0,payloads[i].Length);
+                        payloads[i]=packed.ToArray();
+                    }
+                }
+                if(i==corruptPage)payloads[i][payloads[i].Length-1]^=1;
+                pages[i].fileOffset=offset;pages[i].compressedLength=payloads[i].Length;offset+=payloads[i].Length+gap;
             }
             using (var writer = new BinaryWriter(File.Create(path)))
             {
@@ -437,13 +656,14 @@ namespace ClusterMesh.Tests
                     writer.Write(page.vertexCount); writer.Write(page.indexWordCount); writer.Write(page.weightCount);
                     writer.Write(page.crc32); writer.Write(page.nodeIndex); writer.Write(page.flags);
                 }
-                foreach (var bytes in payloads) writer.Write(bytes);
+                foreach (var bytes in payloads){writer.Write(bytes);if(gap>0)writer.Write(new byte[gap]);}
             }
-            var nodes = new ClusterMeshStreamNode[1 + detailNodeCount];
-            nodes[0] = new ClusterMeshStreamNode
-            { clusterStart = 0, clusterCount = rootPages, parentNodeIndex = -1, lodLevel = 1 };
+            int rootNodeCount=individualRoots?rootPages:1;
+            var nodes = new ClusterMeshStreamNode[rootNodeCount + detailNodeCount];
+            for(int i=0;i<rootNodeCount;i++)nodes[i] = new ClusterMeshStreamNode
+            { clusterStart = individualRoots?i:0, clusterCount = individualRoots?1:rootPages, parentNodeIndex = -1, lodLevel = 1 };
             for (int i = 0; i < detailNodeCount; i++)
-                nodes[i + 1] = new ClusterMeshStreamNode
+                nodes[i + rootNodeCount] = new ClusterMeshStreamNode
                 {
                     clusterStart = rootPages + i * detailNodePages,
                     clusterCount = detailNodePages, parentNodeIndex = 0, lodLevel = 0
@@ -457,7 +677,7 @@ namespace ClusterMesh.Tests
                 nodes = nodes
             };
             var asset = ScriptableObject.CreateInstance<ClusterMeshAsset>();
-            asset.vertexStride = ClusterMeshLimits.ClusterVertexStride; asset.clusters = clusters; asset.streamDescriptor = descriptor;
+            asset.vertexStride = stride; asset.clusters = clusters; asset.streamDescriptor = descriptor;
             assets.Add(asset);
             var runtime = (ClusterMeshPageRuntime)Activator.CreateInstance(typeof(ClusterMeshPageRuntime), PrivateInstance,
                 null, new object[] { asset, descriptor }, null);

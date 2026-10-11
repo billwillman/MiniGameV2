@@ -479,6 +479,14 @@ namespace ClusterMesh
 
         readonly Dictionary<int, PageRequest> _requests = new Dictionary<int, PageRequest>();
         readonly Dictionary<int, Task<Payload>> _reads = new Dictionary<int, Task<Payload>>();
+        sealed class RootRead
+        {
+            public int[] ids;
+            public Task<Payload[]> task;
+            public long reservedBytes;
+        }
+        readonly List<RootRead> _rootBatches = new List<RootRead>();
+        readonly HashSet<int> _rootReading = new HashSet<int>();
         readonly Dictionary<int, Payload> _completed = new Dictionary<int, Payload>();
         readonly List<int> _scratch = new List<int>();
         Comparison<int> _requestComparer;
@@ -506,7 +514,18 @@ namespace ClusterMesh
         internal int[] RootNodes => _rootNodes;
         internal ClusterMeshNodeIndexTable.Range GetNodeChildren(int nodeIndex) =>
             nodeIndex >= 0 && nodeIndex < NodeCount && _nodeChildren != null ? _nodeChildren[nodeIndex] : default;
-        internal int InflightReadCount => _reads.Count;
+        internal int InflightReadCount => _reads.Count + _rootBatches.Count;
+        public int RootReadOperations { get; private set; }
+        public int BatchedRootPages { get; private set; }
+        public int RootUploadOperations { get; private set; }
+        public int BatchedRootUploadPages { get; private set; }
+        // Optional host hint, not a dependency on a map or camera. Higher values
+        // get the existing global IO/upload budget first while roots are missing.
+        // Ready assets return to ordinary round-robin detail scheduling.
+        public int RootLoadPriority { get; set; }
+        // Optional visible-detail hint. Every fourth central update ignores this
+        // hint so off-screen owners retain progress even under continuous demand.
+        public int DetailLoadPriority { get; set; }
         public int LogicalRootPageCount => _rootPageCount;
         public int PhysicalRootSlotCount => _sharedPool != null ? RootLayout.SlotCount : _rootPageCount;
         internal int MissingNodePageCount(int nodeIndex)
@@ -532,6 +551,7 @@ namespace ClusterMesh
             {
                 long total = 0;
                 foreach (int page in _reads.Keys) total += _descriptor.pages[page].uncompressedLength;
+                foreach (var batch in _rootBatches) total += batch.reservedBytes;
                 foreach (int page in _completed.Keys) total += _descriptor.pages[page].uncompressedLength;
                 return total;
             }
@@ -724,7 +744,7 @@ namespace ClusterMesh
             _scratch.Clear();
             foreach (int id in _requests.Keys)
             {
-                if (_pageSlots[id] >= 0 || _reads.ContainsKey(id) || _completed.ContainsKey(id))
+                if (_pageSlots[id] >= 0 || _reads.ContainsKey(id) || _rootReading.Contains(id) || _completed.ContainsKey(id))
                     continue;
                 _scratch.Add(id);
             }
@@ -737,6 +757,8 @@ namespace ClusterMesh
                     continue;
                 if (page.compressedLength > readBytes || page.uncompressedLength > decodedBytes)
                     continue;
+                if (IsRootPage(id) && TryStartRootBatch(ref i, ref readSlots, ref readBytes, ref decodedBytes))
+                    continue;
                 if (!IsRootPage(id))
                 {
                     // Acquire admission before reading: pages which cannot be
@@ -747,10 +769,42 @@ namespace ClusterMesh
                 }
                 _reads.Add(id, ReadPageAsync(_path, _descriptor.pages[id],
                     _geometry.ResolvedVertexStride, _descriptor.weightStride));
+                if (IsRootPage(id)) RootReadOperations++;
                 readSlots--;
                 readBytes -= page.compressedLength;
                 decodedBytes -= page.uncompressedLength;
             }
+        }
+
+        bool TryStartRootBatch(ref int cursor, ref int readSlots, ref long readBytes, ref long decodedBytes)
+        {
+            var settings = ClusterMeshSettings.OverrideForTests ?? ClusterMeshSettings.Loaded;
+            int limit = settings != null ? settings.MaxRootPagesPerRead : 16;
+            if (limit <= 1) return false;
+            long maxBytes = Math.Min(readBytes, (settings != null ? settings.MaxRootReadKiB : 256) * 1024L);
+            long packed = 0, decoded = 0, end = _descriptor.pages[_scratch[cursor]].fileOffset;
+            int count = 0;
+            while (cursor + count < _scratch.Count && count < limit)
+            {
+                int id = _scratch[cursor + count];
+                var page = _descriptor.pages[id];
+                if (!IsRootPage(id) || page.fileOffset != end) break;
+                long nextPacked = packed + page.compressedLength, nextDecoded = decoded + page.uncompressedLength;
+                // The contiguous compressed staging range is charged as well;
+                // batching cannot silently expand the existing decode allowance.
+                if (nextPacked > maxBytes || nextPacked + nextDecoded > decodedBytes) break;
+                packed = nextPacked; decoded = nextDecoded; end += page.compressedLength; count++;
+            }
+            if (count < 2) return false; // single-page progress works even with tiny budgets
+            var ids = new int[count]; var pages = new ClusterMeshStreamPage[count];
+            for (int n = 0; n < count; n++)
+            { ids[n] = _scratch[cursor + n]; pages[n] = _descriptor.pages[ids[n]]; _rootReading.Add(ids[n]); }
+            string path = _path; int stride = _geometry.ResolvedVertexStride, weightStride = _descriptor.weightStride;
+            _rootBatches.Add(new RootRead { ids = ids, reservedBytes = packed + decoded,
+                task = Task.Run(() => ReadRootBatchAsync(path, pages, stride, weightStride)) });
+            RootReadOperations++; BatchedRootPages += count;
+            readSlots--; readBytes -= packed; decodedBytes -= packed + decoded; cursor += count - 1;
+            return true;
         }
 
         int CompareRequestedPages(int a, int b)
@@ -760,11 +814,23 @@ namespace ClusterMesh
             ulong pa = (ulong)ra.priority + ((ulong)Mathf.Min(4095, _tick - ra.firstTick) << 20);
             ulong pb = (ulong)rb.priority + ((ulong)Mathf.Min(4095, _tick - rb.firstTick) << 20);
             int priority = pb.CompareTo(pa);
+            if (priority == 0 && IsRootPage(a) && IsRootPage(b))
+                return _descriptor.pages[a].fileOffset.CompareTo(_descriptor.pages[b].fileOffset);
             return priority != 0 ? priority : ra.firstTick.CompareTo(rb.firstTick);
         }
 
         void CollectReads()
         {
+            for (int n = _rootBatches.Count - 1; n >= 0; n--)
+            {
+                var batch = _rootBatches[n];
+                if (!batch.task.IsCompleted) continue;
+                _rootBatches.RemoveAt(n);
+                foreach (int id in batch.ids) _rootReading.Remove(id);
+                if (batch.task.IsFaulted || batch.task.IsCanceled)
+                { Fail(TaskError(batch.task, "Unable to read ClusterMesh root batch.")); return; }
+                for (int p = 0; p < batch.ids.Length; p++) _completed.Add(batch.ids[p], batch.task.Result[p]);
+            }
             _scratch.Clear();
             foreach (KeyValuePair<int, Task<Payload>> pair in _reads)
             {
@@ -803,10 +869,11 @@ namespace ClusterMesh
                 int bytes = _descriptor.pages[id].uncompressedLength - PayloadHeaderBytes;
                 if (bytes > uploadBytes)
                     continue;
+                int count = RootUploadCount(i, uploadBytes, ref bytes);
                 Payload payload = _completed[id];
                 try
                 {
-                    if (!UploadPage(id, payload, ref nodesChanged))
+                    if (!(count > 1 ? UploadRootBatch(id, count) : UploadPage(id, payload, ref nodesChanged)))
                         continue; // no evictable slot yet; retain decoded payload.
                 }
                 catch (Exception ex)
@@ -817,12 +884,102 @@ namespace ClusterMesh
                     Fail("Unable to upload ClusterMesh stream page " + id + ": " + ex.Message);
                     return;
                 }
-                payload.Dispose();
-                _completed.Remove(id);
-                _requests.Remove(id);
+                for (int p = 0; p < count; p++)
+                {
+                    int completedId = id + p;
+                    _completed[completedId].Dispose();
+                    _completed.Remove(completedId);
+                    _requests.Remove(completedId);
+                }
+                if (IsRootPage(id))
+                {
+                    RootUploadOperations++;
+                    if (count > 1) BatchedRootUploadPages += count;
+                }
+                i += count - 1;
                 uploadSlots--;
                 uploadBytes -= bytes;
             }
+        }
+
+        int RootUploadCount(int cursor, long budget, ref int bytes)
+        {
+            int first = _scratch[cursor];
+            // Local/non-packed pools and skin weights retain the existing path.
+            // A batch never spans owners, slots, missing pages or virtual IDs.
+            if (_sharedPool == null || !IsRootPage(first) || _descriptor.weightStride != 0 ||
+                _descriptor.kind != ClusterMeshStreamKind.Static) return 1;
+            var settings = ClusterMeshSettings.OverrideForTests ?? ClusterMeshSettings.Loaded;
+            int limit = settings != null ? settings.MaxRootPagesPerUpload : 16;
+            int count = 1;
+            var page = _descriptor.pages[first];
+            int vertexEnd = RootLayout.vertexOffsets[first] + page.vertexCount;
+            int indexEnd = RootLayout.indexOffsets[first] + page.indexWordCount;
+            while (count < limit && cursor + count < _scratch.Count)
+            {
+                int id = _scratch[cursor + count];
+                if (id != first + count || RootLayout.slots[id] != RootLayout.slots[first] ||
+                    RootLayout.vertexOffsets[id] != vertexEnd || RootLayout.indexOffsets[id] != indexEnd) break;
+                page = _descriptor.pages[id];
+                int next = page.uncompressedLength - PayloadHeaderBytes;
+                if ((long)bytes + next > budget) break;
+                bytes += next; vertexEnd += page.vertexCount; indexEnd += page.indexWordCount; count++;
+            }
+            return count;
+        }
+
+        bool UploadRootBatch(int first, int count)
+        {
+            var firstPage = _descriptor.pages[first];
+            if (!_sharedPool.TryAllocate(this, first, firstPage.nodeIndex, true,
+                ClusterMeshStreaming.UpdateSerial, out int slot)) return false;
+            int last = first + count - 1;
+            int vertices = RootLayout.vertexOffsets[last] + _descriptor.pages[last].vertexCount - RootLayout.vertexOffsets[first];
+            int indices = RootLayout.indexOffsets[last] + _descriptor.pages[last].indexWordCount - RootLayout.indexOffsets[first];
+            int vertexBase = slot * _descriptor.vertexPageCapacity + RootLayout.vertexOffsets[first];
+            int indexBase = slot * _descriptor.indexPageCapacity + RootLayout.indexOffsets[first];
+            bool tight = _geometry.ResolvedVertexStride == ClusterMeshLimits.TightVertexStride;
+            // Reuse the existing one-physical-page upload scratch. No new decoded
+            // buffer, GPU slot, cache or per-batch allocation is introduced.
+            var scratch = ClusterMeshUploadScratch.Acquire(tight, vertices, indices, 0, 0);
+            try
+            {
+                int v = 0, ix = 0;
+                for (int id = first; id <= last; id++)
+                {
+                    var page = _descriptor.pages[id]; byte[] raw = _completed[id].raw;
+                    if (tight) CopyBytesToStructs(raw, PayloadHeaderBytes, scratch.tightVertices, page.vertexCount, v);
+                    else CopyBytesToStructs(raw, PayloadHeaderBytes, scratch.vertices, page.vertexCount, v);
+                    Buffer.BlockCopy(raw, PayloadHeaderBytes + page.vertexCount * _geometry.ResolvedVertexStride,
+                        scratch.indices, ix * 4, page.indexWordCount * 4);
+                    v += page.vertexCount; ix += page.indexWordCount;
+                }
+                if (vertices > 0)
+                {
+                    if (tight) VerticesTight.SetData(scratch.tightVertices, 0, vertexBase, vertices);
+                    else Vertices.SetData(scratch.vertices, 0, vertexBase, vertices);
+                }
+                if (indices > 0) Indices.SetData(scratch.indices, 0, indexBase, indices);
+            }
+            finally { ClusterMeshUploadScratch.Release(); }
+            // Publish residency only after all payload uploads succeeded. An
+            // incomplete node still falls back to its resident ancestor as before.
+            for (int id = first; id <= last; id++)
+            {
+                int vb = slot * _descriptor.vertexPageCapacity + RootLayout.vertexOffsets[id];
+                _pageSlots[id] = slot;
+                _pageTable[id] = new ClusterMeshStreamPageTableEntry { vertexBase = (uint)vb, weightBase = (uint)vb,
+                    indexBase = (uint)(slot * _descriptor.indexPageCapacity + RootLayout.indexOffsets[id]), flags = Resident };
+            }
+            PageTable.SetData(_pageTable, first, first, count);
+            int previousNode = -1;
+            for (int id = first; id <= last; id++)
+            {
+                int node = _descriptor.pages[id].nodeIndex;
+                if (node == previousNode) continue;
+                RecomputeNodeResident(node); NodeResident.SetData(_nodeResident, node, node, 1); previousNode = node;
+            }
+            return true;
         }
 
         bool UploadPage(int pageId, Payload payload, ref bool nodesChanged)
@@ -1203,15 +1360,7 @@ namespace ClusterMesh
                             throw new InvalidDataException("ClusterMesh stream page decompressed length is invalid.");
                     }
                 }
-                if (Crc32(raw, page.uncompressedLength) != page.crc32)
-                    throw new InvalidDataException("ClusterMesh stream page checksum is invalid.");
-                if (ReadI32(raw, 0) != page.vertexCount || ReadI32(raw, 4) != page.indexWordCount ||
-                    ReadI32(raw, 8) != page.weightCount)
-                    throw new InvalidDataException("ClusterMesh stream page payload counts do not match.");
-                long expected = PayloadHeaderBytes + (long)page.vertexCount * vertexStride +
-                    (long)page.indexWordCount * 4 + (long)page.weightCount * weightStride;
-                if (expected != page.uncompressedLength)
-                    throw new InvalidDataException("ClusterMesh stream page payload layout is invalid.");
+                ValidatePayload(raw, page, vertexStride, weightStride);
                 var result = new Payload { raw = raw, length = page.uncompressedLength };
                 raw = null;
                 return result;
@@ -1221,6 +1370,51 @@ namespace ClusterMesh
                 if (packed != null) ArrayPool<byte>.Shared.Return(packed);
                 if (raw != null) ArrayPool<byte>.Shared.Return(raw);
             }
+        }
+
+        static void ValidatePayload(byte[] raw, ClusterMeshStreamPage page, int vertexStride, int weightStride)
+        {
+            if (Crc32(raw, page.uncompressedLength) != page.crc32)
+                throw new InvalidDataException("ClusterMesh stream page checksum is invalid.");
+            if (ReadI32(raw, 0) != page.vertexCount || ReadI32(raw, 4) != page.indexWordCount || ReadI32(raw, 8) != page.weightCount)
+                throw new InvalidDataException("ClusterMesh stream page payload counts do not match.");
+            long expected = PayloadHeaderBytes + (long)page.vertexCount * vertexStride + (long)page.indexWordCount * 4 + (long)page.weightCount * weightStride;
+            if (expected != page.uncompressedLength) throw new InvalidDataException("ClusterMesh stream page payload layout is invalid.");
+        }
+
+        static async Task<Payload[]> ReadRootBatchAsync(string path, ClusterMeshStreamPage[] pages, int vertexStride, int weightStride)
+        {
+            int length = checked((int)(pages[pages.Length - 1].fileOffset + pages[pages.Length - 1].compressedLength - pages[0].fileOffset));
+            byte[] packed = ArrayPool<byte>.Shared.Rent(length);
+            var results = new Payload[pages.Length];
+            try
+            {
+                await ReadRangeIntoAsync(path, pages[0].fileOffset, packed, length).ConfigureAwait(false);
+                for (int n = 0; n < pages.Length; n++)
+                {
+                    var page = pages[n]; int offset = checked((int)(page.fileOffset - pages[0].fileOffset));
+                    var result = new Payload { raw = ArrayPool<byte>.Shared.Rent(page.uncompressedLength), length = page.uncompressedLength };
+                    results[n] = result;
+                    if (page.compressedLength == page.uncompressedLength)
+                        Buffer.BlockCopy(packed, offset, result.raw, 0, page.uncompressedLength);
+                    else
+                    {
+                        using (var input = new MemoryStream(packed, offset, page.compressedLength, false, true))
+                        using (var zip = new DeflateStream(input, CompressionMode.Decompress))
+                        {
+                            int cursor = 0;
+                            while (cursor < page.uncompressedLength)
+                            { int read = zip.Read(result.raw, cursor, page.uncompressedLength - cursor); if (read <= 0) break; cursor += read; }
+                            if (cursor != page.uncompressedLength || zip.ReadByte() != -1)
+                                throw new InvalidDataException("ClusterMesh stream page decompressed length is invalid.");
+                        }
+                    }
+                    ValidatePayload(result.raw, page, vertexStride, weightStride);
+                }
+                return results;
+            }
+            catch { foreach (var result in results) result?.Dispose(); throw; }
+            finally { ArrayPool<byte>.Shared.Return(packed); }
         }
 
         static async Task ReadRangeIntoAsync(string path, long offset, byte[] result, int length)
@@ -1262,16 +1456,16 @@ namespace ClusterMesh
             return result;
         }
 
-        static void CopyBytesToStructs<T>(byte[] bytes, int sourceOffset, T[] destination, int count) where T : struct
+        static void CopyBytesToStructs<T>(byte[] bytes, int sourceOffset, T[] destination, int count, int destinationOffset = 0) where T : struct
         {
             if (count == 0) return;
             int stride = Marshal.SizeOf<T>();
             int byteCount = checked(count * stride);
-            if (bytes == null || destination == null || destination.Length < count ||
+            if (bytes == null || destination == null || destinationOffset < 0 || destinationOffset > destination.Length - count ||
                 sourceOffset < 0 || sourceOffset > bytes.Length - byteCount)
                 throw new InvalidDataException("ClusterMesh structured page data is invalid.");
             GCHandle h = GCHandle.Alloc(destination, GCHandleType.Pinned);
-            try { Marshal.Copy(bytes, sourceOffset, h.AddrOfPinnedObject(), byteCount); }
+            try { Marshal.Copy(bytes, sourceOffset, IntPtr.Add(h.AddrOfPinnedObject(), checked(destinationOffset * stride)), byteCount); }
             finally { h.Free(); }
         }
 
@@ -1343,6 +1537,13 @@ namespace ClusterMesh
 
         void ReleasePendingPayloads()
         {
+            foreach (var batch in _rootBatches)
+                batch.task.ContinueWith(t =>
+                {
+                    if (t.Status == TaskStatus.RanToCompletion) foreach (var payload in t.Result) payload?.Dispose();
+                    else { var ignored = t.Exception; }
+                }, TaskScheduler.Default);
+            _rootBatches.Clear(); _rootReading.Clear();
             foreach (Payload payload in _completed.Values) payload?.Dispose();
             _completed.Clear();
             foreach (Task<Payload> task in _reads.Values)
@@ -1378,6 +1579,25 @@ namespace ClusterMesh
             new Dictionary<ClusterMeshAsset, int>();
         static readonly List<ClusterMeshAsset> Stale = new List<ClusterMeshAsset>();
         static readonly List<ClusterMeshPageRuntime> Active = new List<ClusterMeshPageRuntime>();
+        struct DispatchEntry
+        {
+            public ClusterMeshPageRuntime runtime;
+            public int priority, order;
+        }
+        static readonly List<DispatchEntry> Dispatch = new List<DispatchEntry>();
+        static void SortDispatch()
+        {
+            // Mono's generic sort adapter allocates for this value-type list.
+            // The active-owner list is small; stable in-place insertion preserves
+            // round-robin order within each priority without an adapter or boxing.
+            for (int i = 1; i < Dispatch.Count; i++)
+            {
+                var item = Dispatch[i]; int j = i - 1;
+                while (j >= 0 && Dispatch[j].priority < item.priority)
+                { Dispatch[j + 1] = Dispatch[j]; j--; }
+                Dispatch[j + 1] = item;
+            }
+        }
         static readonly List<ClusterMeshSharedGpuPool> SharedPools = new List<ClusterMeshSharedGpuPool>();
         static int _lastUpdateFrame = int.MinValue;
         static int _roundRobinStart;
@@ -1541,10 +1761,20 @@ namespace ClusterMesh
             if (Active.Count > 0)
             {
                 int start = _roundRobinStart % Active.Count;
+                Dispatch.Clear();
                 for (int i = 0; i < Active.Count; i++)
-                    Active[(start + i) % Active.Count].Update(
-                        ref readSlots, ref readBytes, ref decodedBytes,
-                        ref uploadSlots, ref uploadBytes);
+                {
+                    var runtime = Active[(start + i) % Active.Count];
+                    Dispatch.Add(new DispatchEntry { runtime = runtime, order = i,
+                        priority = runtime.IsReady ? (_updateSerial % 4 == 0 ? 0 : runtime.DetailLoadPriority) : runtime.RootLoadPriority });
+                }
+                // Snapshot priorities before pumping: readiness changes during
+                // an update must not visit a runtime twice or skip another one.
+                SortDispatch();
+                    for (int i = 0; i < Active.Count; i++)
+                        Dispatch[i].runtime.Update(
+                            ref readSlots, ref readBytes, ref decodedBytes,
+                            ref uploadSlots, ref uploadBytes);
                 _roundRobinStart = (start + 1) % Active.Count;
             }
             for (int i = 0; i < Stale.Count; i++)
@@ -1617,7 +1847,7 @@ namespace ClusterMesh
             for (int i = SharedPools.Count - 1; i >= 0; i--) SharedPools[i]?.Dispose();
             SharedPools.Clear();
             ClusterMeshUploadScratch.Clear();
-            Runtimes.Clear(); References.Clear(); Stale.Clear(); Active.Clear(); _lastUpdateFrame = int.MinValue;
+            Runtimes.Clear(); References.Clear(); Stale.Clear(); Active.Clear(); Dispatch.Clear(); _lastUpdateFrame = int.MinValue;
             _roundRobinStart = 0;
             _updateSerial = 0;
         }

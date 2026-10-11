@@ -108,8 +108,11 @@ namespace ClusterMesh
             int reads = EditorGUILayout.IntSlider(
                 new GUIContent("Concurrent Reads", "所有流式资产共用的异步 FileStream 在途读取上限，防止资产数量把并发放大。"),
                 settings.MaxConcurrentPageReads, 1, 32);
+            int rootBatch = EditorGUILayout.IntSlider(new GUIContent("根页 / 单次读取", "仅文件中相邻根页合批；1 关闭。读取、解码、上传仍使用原预算。"), settings.MaxRootPagesPerRead, 1, 64);
+            int rootReadKiB = EditorGUILayout.IntSlider(new GUIContent("根页合批最大 KiB", "单个 FileStream 读取范围上限，不是新增缓存。"), settings.MaxRootReadKiB, 16, 1024);
+            int rootUploadBatch = EditorGUILayout.IntSlider(new GUIContent("根页 / 单次上传", "仅同一物理槽中的连续静态根页合批；不等凑批、不扩缓存。1 关闭。"), settings.MaxRootPagesPerUpload, 1, 64);
             int uploads = EditorGUILayout.IntSlider(
-                new GUIContent("Uploads / Update", "所有流式资产每次中央更新最多上传的页面数，限制主线程与 GPU 上传尖峰。"),
+                new GUIContent("上传批次 / Update", "所有资产共用。细节一页一批，静态根页允许同槽合批；仍受字节预算限制。"),
                 settings.MaxPageUploadsPerUpdate, 1, 16);
             int readMb = EditorGUILayout.IntSlider(
                 new GUIContent("Read MB / Update", "每次中央更新允许新启动的压缩文件读取字节预算。"),
@@ -137,6 +140,9 @@ namespace ClusterMesh
                 settings.SharedGpuPoolPageCapacity = poolPages;
                 settings.PackRootPages = packRoots;
                 settings.MaxConcurrentPageReads = reads;
+                settings.MaxRootPagesPerRead = rootBatch;
+                settings.MaxRootReadKiB = rootReadKiB;
+                settings.MaxRootPagesPerUpload = rootUploadBatch;
                 settings.MaxPageUploadsPerUpdate = uploads;
                 settings.MaxReadMegabytesPerUpdate = readMb;
                 settings.MaxUploadMegabytesPerUpdate = uploadMb;
