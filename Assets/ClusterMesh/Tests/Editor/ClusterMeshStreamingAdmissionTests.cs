@@ -151,7 +151,84 @@ namespace ClusterMesh.Tests
             Assert.That(SharedPool(first), Is.SameAs(SharedPool(second)));
             Assert.That(PoolValue(first, "Capacity"), Is.EqualTo(8));
             Assert.That(PoolValue(first, "ReservedRootPages"), Is.EqualTo(2));
-            Assert.That(PoolValue(first, "ReservedDetailHeadroom"), Is.EqualTo(3));
+            Assert.That(PoolValue(first, "ReservedDetailHeadroom"), Is.EqualTo(6));
+        }
+
+        [UnityTest]
+        public IEnumerator SharedPool_CompatibleSmallerPagesUsePhysicalStridesForRootsAndDetails()
+        {
+            var first = CreateRuntime("large-page-owner", 3, 3, 1, 16, vertexCapacity:9, indexCapacity:6);
+            long bytes = ClusterMeshStreaming.SharedGpuBufferBytes;
+            var second = CreateRuntime("small-page-owner", 4, 3, 1, 8, vertexCapacity:6, indexCapacity:4);
+            Assert.That(SharedPool(second), Is.SameAs(SharedPool(first)), "An existing larger compatible pool must be reused without reallocating it.");
+            Assert.That(ClusterMeshStreaming.SharedGpuBufferBytes, Is.EqualTo(bytes));
+            yield return WaitUntil(() => first.IsReady && second.IsReady);
+            VerifyRootGpu(first,3,false); VerifyRootGpu(second,4,false);
+            first.RequestNode(1); second.RequestNode(1);
+            yield return WaitUntil(() => first.IsNodeResident(1) && second.IsNodeResident(1));
+            var occupied=new HashSet<uint>();
+            foreach(var runtime in new[]{first,second})
+            {
+                var table=new ClusterMeshStreamPageTableEntry[runtime.PageCount];runtime.PageTable.GetData(table);
+                for(int p=0;p<table.Length;p++)
+                {
+                    Assert.That(table[p].flags,Is.EqualTo(1));
+                    var v=new ClusterPackedVertex[1];runtime.Vertices.GetData(v,0,(int)table[p].vertexBase,1);
+                    Assert.That(v[0].position.x,Is.EqualTo(p+1),"Sharing must not address another owner's payload.");
+                    Assert.That(occupied.Add(table[p].vertexBase),Is.True,"Every live page needs a disjoint physical range.");
+                    var ix=new uint[1];runtime.Indices.GetData(ix,0,(int)table[p].indexBase,1);
+                    Assert.That(ix[0],Is.EqualTo(p%2==0?0x00010000u:0x00020001u));
+                }
+            }
+            DisposeRuntime(first);
+            Assert.That(ClusterMeshStreaming.SharedGpuBufferBytes,Is.EqualTo(bytes),"A shared pool stays alive for its last owner.");
+            VerifyRootGpu(second,4,false);
+        }
+
+        [Test]
+        public void SharedPool_IncompatibleLayoutsCannotAlias()
+        {
+            var first=CreateRuntime("plain",1,detailNodeCount:0,vertexCapacity:9,indexCapacity:6);
+            var tight=CreateRuntime("tight",1,detailNodeCount:0,vertexCapacity:6,indexCapacity:4,tight:true);
+            var wide=CreateRuntime("wide-index",1,detailNodeCount:0,vertexCapacity:6,indexCapacity:8);
+            Assert.That(SharedPool(tight),Is.Not.SameAs(SharedPool(first)));
+            Assert.That(SharedPool(wide),Is.Not.SameAs(SharedPool(first)));
+        }
+
+        [Test]
+        public void SharedPool_SimultaneousOwnersReserveTheirCombinedDetailWorkingSet()
+        {
+            var first=CreateRuntime("working-set-a");
+            var second=CreateRuntime("working-set-b");
+            var third=CreateRuntime("working-set-overflow");
+            Assert.That(SharedPool(second),Is.SameAs(SharedPool(first)));
+            Assert.That(SharedPool(third),Is.Not.SameAs(SharedPool(first)),"Three hot three-page nodes cannot coexist with three roots in eight slots.");
+            DisposeRuntime(second);
+            var replacement=CreateRuntime("working-set-replacement");
+            Assert.That(SharedPool(replacement),Is.SameAs(SharedPool(first)),"Releasing an owner returns its detail reservation.");
+        }
+
+        [Test]
+        public void SharedPool_LargerBakedPoolRetainsItsEntireUsableDetailCache()
+        {
+            // A baked asset's budget can exceed the default requested eight.
+            // Reserving only eight detail slots would let new roots steal the
+            // old owner's existing thirteen-slot working cache.
+            var first=CreateRuntime("large-working-cache",3,1,15,16);
+            var other=CreateRuntime("cannot-steal-working-cache",1,detailNodeCount:0);
+            Assert.That(PoolValue(first,"ReservedDetailHeadroom"),Is.EqualTo(13));
+            Assert.That(SharedPool(other),Is.Not.SameAs(SharedPool(first)));
+            Assert.That(PoolValue(first,"Capacity"),Is.EqualTo(16));
+        }
+
+        [Test]
+        public void SharedPool_SelectsSmallestCompatiblePhysicalSlot()
+        {
+            var large=CreateRuntime("wide-vertex-pool",1,detailNodeCount:0,vertexCapacity:9,indexCapacity:6);
+            var small=CreateRuntime("wide-index-pool",1,detailNodeCount:0,vertexCapacity:6,indexCapacity:8);
+            Assert.That(SharedPool(small),Is.Not.SameAs(SharedPool(large)));
+            var next=CreateRuntime("best-fit-owner",1,detailNodeCount:0);
+            Assert.That(SharedPool(next),Is.SameAs(SharedPool(small)));
         }
 
         [Test]
