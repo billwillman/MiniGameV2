@@ -88,3 +88,12 @@
 ## 发布判断
 
 当前版本适合进入项目集成和真实场景性能验证。核心功能和非 Streaming 兼容边界已经具备；正式大规模发布前，应以目标设备压力测试和运行时统计数据作为最终验收依据。
+
+## 2026-10-11：读页复用与压缩选项
+
+- `ClusterMeshStreamReader` 为每个活动流式资产懒复用一个句柄及 64 KiB FileStream 缓冲。元数据、根页和细页在 Worker 读取；同文件 Seek+Read 原子化，解压/CRC 不持有读锁。卸载拒绝后续读请求，由在途 Worker 安全清理，不阻塞主线程等待 IO。
+- `ClusterMeshBakeSettings.streamingCompression` 当前默认 `ClusterMeshPageCompression.FastDeflate`（2026-10-12 按用户要求改回压缩），仍可显式选 `None`。在 `Tools → ClusterMesh → Baker` 的“几何页压缩”设置；静态和蒙皮烘焙入口均使用该项。仅在压缩后更小时保存压缩页。它只控制 `.cmstream` 几何页，不控制纹理/Unity 包的压缩，也不覆盖已有配置的显式选择。
+- 格式及读取兼容性不变；旧文件保持原压缩状态，改设置后需重新烘焙并发布，不能直接替换已发布文件而不更新描述。主工程 BigWorld 的 Profile、派生设置与缓存配方同步支持该选项，本轮未重烘焙已有正式地图。
+- 两库独立引擎回归：主库 167 通过、MiniGame 154 通过，各 0 失败、2 可选 Radiant 缺失跳过；压缩/不压缩静态网格实际烘焙并读取通过，8 Worker 并发读及卸载测试通过。暖态 128 次底层读复用测试 0 GC.Alloc 事件，不等于整个加载流程零 GC；蒙皮双模式专项、Player/IL2CPP/手机与全场景 GC 未验证。
+- 主库记录：`D:/MrGame/Docs/Navigation/地图制作与寻路验收.md` 第 72 节；原始报告 `D:/MrGame/MyMobileGame/Logs/ClusterMeshReadReuse-20261011/{ModuleFinal2,MiniGameFinal2}`。该同步保留两库已有差异，没有整体覆盖 BigWorld 或 MiniGame 配置。
+- 后续 Reader 接入恢复及大载荷回归：`RepairMain` 168 通过、`RepairMiniGame` 155 通过，各 0 失败、2 跳过。主工程正式地中海隔离快照静止/向东 240 单位/回程/卸载测试通过：同时打开 Reader 采样峰值 13，文件缓冲配置合计 0.8125 MiB，Clear 后句柄为 0。页解压数组/元数据/数组池保留另算，不把 64 KiB 每 Reader 或 32 MiB 逻辑解码预算当作总内存硬上限。详细口径见维护文档 72.1；全场景 GC 仍未验证。

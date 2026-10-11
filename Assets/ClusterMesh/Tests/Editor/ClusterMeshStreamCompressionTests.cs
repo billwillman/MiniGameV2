@@ -29,9 +29,10 @@ namespace ClusterMesh.Tests
             AssetDatabase.DeleteAsset(folder);
             Object.DestroyImmediate(mesh);
         }
-        ClusterMeshAsset Bake(string name, ClusterMeshPageCompression compression)
+        ClusterMeshAsset Bake(string name, ClusterMeshPageCompression? compression = null)
         {
-            var settings = new ClusterMeshBakeSettings { enableStreaming = true, streamingCompression = compression };
+            var settings = new ClusterMeshBakeSettings { enableStreaming = true };
+            if (compression.HasValue) settings.streamingCompression = compression.Value;
             var asset = ScriptableObject.CreateInstance<ClusterMeshAsset>();
             asset.CopyFrom(ClusterMeshBaker.Bake(mesh, new Material[1], settings), mesh, settings);
             string path = folder + "/" + name + ".asset";
@@ -51,11 +52,13 @@ namespace ClusterMesh.Tests
             using (var raw = new MemoryStream())
             { zip.CopyTo(raw); Assert.That(raw.Length, Is.EqualTo(p.uncompressedLength)); return raw.ToArray(); }
         }
-        [Test] public void DefaultIsUncompressedAndBothModesHaveIdenticalPayloads()
+        [Test] public void DefaultIsFastDeflateAndBothModesHaveIdenticalPayloads()
         {
-            Assert.That(new ClusterMeshBakeSettings().streamingCompression, Is.EqualTo(ClusterMeshPageCompression.None));
+            Assert.That(new ClusterMeshBakeSettings().streamingCompression, Is.EqualTo(ClusterMeshPageCompression.FastDeflate));
             var raw = Bake("Raw", ClusterMeshPageCompression.None).streamDescriptor;
             var zipped = Bake("Fast", ClusterMeshPageCompression.FastDeflate).streamDescriptor;
+            var defaultBake = Bake("Default").streamDescriptor;
+            Assert.That(defaultBake.contentHash, Is.EqualTo(zipped.contentHash), "Default baking must use the compressed storage recipe");
             Assert.That(raw.pages.Length, Is.EqualTo(zipped.pages.Length));
             Assert.That(raw.contentHash, Is.Not.EqualTo(zipped.contentHash), "Storage choice must change immutable stream identity");
             bool compressed = false;
@@ -68,6 +71,22 @@ namespace ClusterMesh.Tests
                 Assert.That(raw.pages[i].crc32, Is.EqualTo(zipped.pages[i].crc32));
             }
             Assert.That(compressed, Is.True, "Fixture must exercise the compressed branch too");
+        }
+        [Test] public void NewBakerWindowDefaultsToFastDeflate()
+        {
+            var window = ScriptableObject.CreateInstance<ClusterMeshBakerWindow>();
+            try
+            {
+                var field = typeof(ClusterMeshBakerWindow).GetField("_settings",
+                    System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                Assert.That(field, Is.Not.Null);
+                var settings = (ClusterMeshBakeSettings)field.GetValue(window);
+                Assert.That(settings.streamingCompression, Is.EqualTo(ClusterMeshPageCompression.FastDeflate));
+                settings.streamingCompression = ClusterMeshPageCompression.None;
+                Assert.That(((ClusterMeshBakeSettings)field.GetValue(window)).streamingCompression,
+                    Is.EqualTo(ClusterMeshPageCompression.None), "Explicit opt-out must remain available");
+            }
+            finally { Object.DestroyImmediate(window); }
         }
         [UnityTest] public IEnumerator UncompressedBakeLoadsThroughReusedReader() => VerifyRuntime(ClusterMeshPageCompression.None);
         [UnityTest] public IEnumerator CompressedBakeLoadsThroughReusedReader() => VerifyRuntime(ClusterMeshPageCompression.FastDeflate);

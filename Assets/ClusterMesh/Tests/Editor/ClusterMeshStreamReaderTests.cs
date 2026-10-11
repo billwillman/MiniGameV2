@@ -56,6 +56,27 @@ namespace ClusterMesh.Tests
             using (File.Open(path, FileMode.Open, FileAccess.ReadWrite, FileShare.None)) { }
         }
 
+        [Test] public void LargeCallerBuffersDoNotRequireAnotherFileHandle()
+        {
+            int fileBufferBytes = (int)ReaderType.GetField("BufferBytes", BindingFlags.Static | BindingFlags.NonPublic).GetRawConstantValue();
+            Assert.That(fileBufferBytes, Is.EqualTo(65536));
+            var small = new byte[128];
+            read(0, small, small.Length);
+            object first = Stream;
+            // The caller supplies the payload array; the reader must not retain
+            // one growing scratch allocation for every large page it reads.
+            var large = new byte[fileBufferBytes * 2];
+            for (int n = 0; n < 8; n++)
+            {
+                int offset = n * 997;
+                read(offset, large, large.Length);
+                for (int i = 0; i < large.Length; i++)
+                    if (large[i] != source[offset + i]) Assert.Fail("Large read differs at " + (offset + i));
+                Assert.That(Stream, Is.SameAs(first));
+            }
+            Assert.That(OpenCount, Is.EqualTo(1));
+        }
+
         [Test] public void ConcurrentWorkersCannotMixSeekPositionsOrPayloads()
         {
             var tasks = new Task[8];

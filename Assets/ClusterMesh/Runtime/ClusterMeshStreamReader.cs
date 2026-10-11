@@ -15,6 +15,9 @@ namespace ClusterMesh
         FileStream stream;
         int disposed;
         internal int OpenCount { get; private set; }
+        // Fixed FileStream buffer per opened reader (0.0625 MiB), NOT per
+        // request/worker. Caller-owned page/metadata arrays are additional.
+        // Reads larger than this buffer do not increase the configured size.
         internal const int BufferBytes = 65536;
 
         internal ClusterMeshStreamReader(string path)

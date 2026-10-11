@@ -97,8 +97,8 @@ namespace ClusterMesh
         public bool packTightRestVertices;
         [Tooltip("Write geometry into a page-streamed sidecar file. Disabled keeps the legacy embedded asset format unchanged.")]
         public bool enableStreaming;
-        [Tooltip("几何页存储：默认不压缩，免去运行时解压；快速压缩可减少磁盘/读取量。修改后需要重新烘焙，旧文件仍兼容。")]
-        public ClusterMeshPageCompression streamingCompression = ClusterMeshPageCompression.None;
+        [Tooltip("几何页存储：默认快速压缩（Deflate），仅在体积更小时采用；可选择不压缩以免去运行时解压。修改后需要重新烘焙，旧文件仍兼容。")]
+        public ClusterMeshPageCompression streamingCompression = ClusterMeshPageCompression.FastDeflate;
         [Range(8, 512)]
         [Tooltip("Maximum physical GPU page slots per streamed asset. Root LOD pages are always resident and may raise this minimum.")]
         public int streamingPagePoolCapacity = 64;
