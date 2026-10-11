@@ -239,18 +239,21 @@ namespace ClusterMesh
             _settings.enableStreaming = EditorGUILayout.Toggle(
                 new GUIContent(
                     "Page Streaming",
-                    "默认关闭。开启后生成独立 .cmstream 文件，根 LOD 常驻，细节 Cluster Page 通过异步 FileStream 按需进入有限 GPU Pool。关闭时完全保持旧 .asset 内嵌格式。"),
+                    "默认关闭。开启后生成独立 .cmstream 文件，根 LOD 常驻，细节 Cluster Page 在 Worker 上复用 FileStream 按需进入有限 GPU Pool。关闭时完全保持旧 .asset 内嵌格式。"),
                 _settings.enableStreaming);
             if (_settings.enableStreaming)
             {
                 _settings.buildLodHierarchy = true;
+                _settings.streamingCompression = (ClusterMeshPageCompression)EditorGUILayout.Popup(
+                    new GUIContent("几何页压缩", "默认不压缩；修改后重新烘焙才生效，已有压缩页仍可读取。"),
+                    (int)_settings.streamingCompression, new[] { "不压缩（默认）", "快速压缩（Deflate）" });
                 _settings.streamingPagePoolCapacity = EditorGUILayout.IntSlider(
                     new GUIContent(
                         "GPU Page Pool",
                         "流式资产的最低工作集与兼容模式物理页槽数。开启项目级 Global Shared GPU Pool 时，它参与共享池容量下限和整节点空间校验；关闭共享池时，它就是该资产独立页池的容量。根页永不驱逐。"),
                     Mathf.Clamp(_settings.streamingPagePoolCapacity, 8, 512), 8, 512);
                 EditorGUILayout.HelpBox(
-                    "流式资产会在 .asset 旁生成版本化 .cmstream。运行时只保存逻辑文件名，由 ClusterMeshStreaming.RootPath / FilePathResolver 映射到 persistentDataPath、热更目录或其他真实文件路径；读取只使用异步 FileStream。Page 缺失时回退到最近已驻留父 LOD，不应出现空洞。共享池和全局 I/O 预算位于 Tools/ClusterMesh/通用设置。",
+                    "流式资产会在 .asset 旁生成版本化 .cmstream。运行时只保存逻辑文件名，由 ClusterMeshStreaming.RootPath / FilePathResolver 映射到 persistentDataPath、热更目录或其他真实文件路径；文件读取在 Worker 执行并复用句柄。几何页默认不压缩；快速压缩仅在更小时采用。Page 缺失时回退到最近已驻留父 LOD。共享池和全局 I/O 预算位于 Tools/ClusterMesh/通用设置。",
                     MessageType.Info);
             }
             else

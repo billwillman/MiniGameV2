@@ -65,7 +65,7 @@ namespace ClusterMesh
         {
             if (asset == null || settings == null || !settings.enableStreaming)
                 return;
-            BuildResult result = Build(asset, null, ClusterMeshStreamKind.Static);
+            BuildResult result = Build(asset, null, ClusterMeshStreamKind.Static, settings.streamingCompression);
             ClusterMeshStreamDescriptor descriptor = WriteSidecar(assetPath, settings, result, ClusterMeshStreamKind.Static);
             ApplyGeometry(asset, result, descriptor);
         }
@@ -78,7 +78,7 @@ namespace ClusterMesh
             if (!asset.TryGetCullFrames(out ClusterSkinnedCullFrame[] oldCullFrames, out string cullError))
                 throw new InvalidOperationException(cullError ?? "Skinned ClusterMesh cull frames are missing.");
 
-            BuildResult result = Build(asset.geometry, asset, ClusterMeshStreamKind.Skinned);
+            BuildResult result = Build(asset.geometry, asset, ClusterMeshStreamKind.Skinned, settings.streamingCompression);
             ClusterSkinnedCullFrame[] reorderedCull = ReorderCullFrames(
                 asset, oldCullFrames, result.oldToNew, result.clusters.Length);
             ClusterMeshStreamDescriptor descriptor = WriteSidecar(assetPath, settings, result, ClusterMeshStreamKind.Skinned);
@@ -112,8 +112,10 @@ namespace ClusterMesh
         }
 
         static BuildResult Build(
-            ClusterMeshAsset geometry, ClusterSkinnedMeshAsset skinned, ClusterMeshStreamKind kind)
+            ClusterMeshAsset geometry, ClusterSkinnedMeshAsset skinned, ClusterMeshStreamKind kind, ClusterMeshPageCompression compression)
         {
+            if (compression != ClusterMeshPageCompression.None && compression != ClusterMeshPageCompression.FastDeflate)
+                throw new ArgumentOutOfRangeException(nameof(compression));
             if (geometry == null || geometry.clusters == null || geometry.clusters.Length == 0)
                 throw new InvalidOperationException("ClusterMesh streaming requires baked clusters.");
             if (geometry.hierarchyVersion < ClusterMeshLod.HierarchyVersionDag ||
@@ -207,7 +209,7 @@ namespace ClusterMesh
                     {
                         AddPage(pageBuilds, nodeIndex, node.parentNode < 0,
                             pageVertices, logicalIndices, pageWeights, pageVertexCount,
-                            weightStride, ref vertexPageCapacity, ref indexPageCapacity);
+                            weightStride, compression, ref vertexPageCapacity, ref indexPageCapacity);
                         pageVertices.SetLength(0);
                         pageWeights.SetLength(0);
                         logicalIndices.Clear();
@@ -251,7 +253,7 @@ namespace ClusterMesh
                 }
                 AddPage(pageBuilds, nodeIndex, node.parentNode < 0,
                     pageVertices, logicalIndices, pageWeights, pageVertexCount,
-                    weightStride, ref vertexPageCapacity, ref indexPageCapacity);
+                    weightStride, compression, ref vertexPageCapacity, ref indexPageCapacity);
                 pageVertices.Dispose();
                 pageWeights.Dispose();
             }
@@ -307,6 +309,7 @@ namespace ClusterMesh
             MemoryStream pageWeights,
             int pageVertexCount,
             int weightStride,
+            ClusterMeshPageCompression compression,
             ref int vertexPageCapacity,
             ref int indexPageCapacity)
         {
@@ -318,7 +321,7 @@ namespace ClusterMesh
                 pageVertices.ToArray(), pageWeights.ToArray());
             pages.Add(new PageBuild
             {
-                compressed = Deflate(raw),
+                compressed = compression == ClusterMeshPageCompression.None ? raw : Deflate(raw),
                 uncompressedLength = raw.Length,
                 vertexCount = pageVertexCount,
                 indexWordCount = pageIndexWords.Length,

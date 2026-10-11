@@ -496,6 +496,7 @@ namespace ClusterMesh
         readonly List<int> _scratch = new List<int>();
         Comparison<int> _requestComparer;
         Task<byte[]> _metadataRead;
+        ClusterMeshStreamReader _reader;
         string _path;
         int _tick;
         int _loadingNode = -1;
@@ -645,7 +646,9 @@ namespace ClusterMesh
                 Fail("ClusterMesh streaming directory is too large.");
                 return;
             }
-            _metadataRead = ReadRangeAsync(_path, 0, (int)bytes);
+            _reader = new ClusterMeshStreamReader(_path);
+            var reader = _reader;
+            _metadataRead = Task.Run(() => ReadRange(reader, 0, (int)bytes));
         }
 
         public bool IsNodeResident(int nodeIndex) =>
@@ -779,8 +782,11 @@ namespace ClusterMesh
                         continue;
                     _loadingNode = page.nodeIndex;
                 }
-                _reads.Add(id, ReadPageAsync(_path, _descriptor.pages[id],
-                    _geometry.ResolvedVertexStride, _descriptor.weightStride));
+                // File open and even synchronously-completed cached reads must
+                // not bring inflate/CRC back onto the Unity main thread.
+                var readPage=_descriptor.pages[id];int stride=_geometry.ResolvedVertexStride,weightStride=_descriptor.weightStride;
+                var reader=_reader;
+                _reads.Add(id, Task.Run(()=>ReadPage(reader, readPage,stride,weightStride)));
                 if (IsRootPage(id)) RootReadOperations++;
                 readSlots--;
                 readBytes -= page.compressedLength;
@@ -811,9 +817,9 @@ namespace ClusterMesh
             var ids = new int[count]; var pages = new ClusterMeshStreamPage[count];
             for (int n = 0; n < count; n++)
             { ids[n] = _scratch[cursor + n]; pages[n] = _descriptor.pages[ids[n]]; _rootReading.Add(ids[n]); }
-            string path = _path; int stride = _geometry.ResolvedVertexStride, weightStride = _descriptor.weightStride;
+            var reader = _reader; int stride = _geometry.ResolvedVertexStride, weightStride = _descriptor.weightStride;
             _rootBatches.Add(new RootRead { ids = ids, reservedBytes = packed + decoded,
-                task = Task.Run(() => ReadRootBatchAsync(path, pages, stride, weightStride)) });
+                task = Task.Run(() => ReadRootBatch(reader, pages, stride, weightStride)) });
             RootReadOperations++; BatchedRootPages += count;
             readSlots--; readBytes -= packed; decodedBytes -= packed + decoded; cursor += count - 1;
             return true;
@@ -1344,13 +1350,13 @@ namespace ClusterMesh
             }
         }
 
-        static async Task<Payload> ReadPageAsync(string path, ClusterMeshStreamPage page, int vertexStride, int weightStride)
+        static Payload ReadPage(ClusterMeshStreamReader reader, ClusterMeshStreamPage page, int vertexStride, int weightStride)
         {
             byte[] packed = ArrayPool<byte>.Shared.Rent(page.compressedLength);
             byte[] raw = null;
             try
             {
-                await ReadRangeIntoAsync(path, page.fileOffset, packed, page.compressedLength).ConfigureAwait(false);
+                reader.Read(page.fileOffset, packed, page.compressedLength);
                 if (page.compressedLength == page.uncompressedLength)
                 {
                     raw = packed;
@@ -1373,6 +1379,7 @@ namespace ClusterMesh
                             throw new InvalidDataException("ClusterMesh stream page decompressed length is invalid.");
                     }
                 }
+                reader.ThrowIfDisposed();
                 ValidatePayload(raw, page, vertexStride, weightStride);
                 var result = new Payload { raw = raw, length = page.uncompressedLength };
                 raw = null;
@@ -1395,17 +1402,18 @@ namespace ClusterMesh
             if (expected != page.uncompressedLength) throw new InvalidDataException("ClusterMesh stream page payload layout is invalid.");
         }
 
-        static async Task<Payload[]> ReadRootBatchAsync(string path, ClusterMeshStreamPage[] pages, int vertexStride, int weightStride)
+        static Payload[] ReadRootBatch(ClusterMeshStreamReader reader, ClusterMeshStreamPage[] pages, int vertexStride, int weightStride)
         {
             int length = checked((int)(pages[pages.Length - 1].fileOffset + pages[pages.Length - 1].compressedLength - pages[0].fileOffset));
             byte[] packed = ArrayPool<byte>.Shared.Rent(length);
             var results = new Payload[pages.Length];
             try
             {
-                await ReadRangeIntoAsync(path, pages[0].fileOffset, packed, length).ConfigureAwait(false);
+                reader.Read(pages[0].fileOffset, packed, length);
                 for (int n = 0; n < pages.Length; n++)
                 {
                     var page = pages[n]; int offset = checked((int)(page.fileOffset - pages[0].fileOffset));
+                    reader.ThrowIfDisposed();
                     var result = new Payload { raw = ArrayPool<byte>.Shared.Rent(page.uncompressedLength), length = page.uncompressedLength };
                     results[n] = result;
                     if (page.compressedLength == page.uncompressedLength)
@@ -1430,42 +1438,11 @@ namespace ClusterMesh
             finally { ArrayPool<byte>.Shared.Return(packed); }
         }
 
-        static async Task ReadRangeIntoAsync(string path, long offset, byte[] result, int length)
-        {
-            if (offset < 0 || length < 0 || result == null || result.Length < length)
-                throw new IOException("ClusterMesh stream range is invalid.");
-            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 65536,
-                FileOptions.Asynchronous | FileOptions.RandomAccess))
-            {
-                if (offset > stream.Length - length) throw new EndOfStreamException("ClusterMesh stream range exceeds file.");
-                stream.Seek(offset, SeekOrigin.Begin);
-                int cursor = 0;
-                while (cursor < length)
-                {
-                    int read = await stream.ReadAsync(result, cursor, length - cursor).ConfigureAwait(false);
-                    if (read <= 0) throw new EndOfStreamException("ClusterMesh stream ended unexpectedly.");
-                    cursor += read;
-                }
-            }
-        }
-
-        static async Task<byte[]> ReadRangeAsync(string path, long offset, int length)
+        static byte[] ReadRange(ClusterMeshStreamReader reader, long offset, int length)
         {
             if (offset < 0 || length < 0) throw new IOException("ClusterMesh stream range is invalid.");
             var result = new byte[length];
-            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 65536,
-                FileOptions.Asynchronous | FileOptions.RandomAccess))
-            {
-                if (offset > stream.Length - length) throw new EndOfStreamException("ClusterMesh stream range exceeds file.");
-                stream.Seek(offset, SeekOrigin.Begin);
-                int cursor = 0;
-                while (cursor < length)
-                {
-                    int read = await stream.ReadAsync(result, cursor, length - cursor).ConfigureAwait(false);
-                    if (read <= 0) throw new EndOfStreamException("ClusterMesh stream ended unexpectedly.");
-                    cursor += read;
-                }
-            }
+            reader.Read(offset, result, length);
             return result;
         }
 
@@ -1524,6 +1501,8 @@ namespace ClusterMesh
             Failed = true;
             IsReady = false;
             Error = text;
+            _reader?.Dispose();
+            ReleaseMetadataRead();
             ReleasePendingPayloads();
             ReleaseGpuBuffers();
             Debug.LogError("ClusterMesh page streaming: " + text);
@@ -1570,11 +1549,22 @@ namespace ClusterMesh
             _reads.Clear();
         }
 
+        void ReleaseMetadataRead()
+        {
+            if (_metadataRead == null) return;
+            // A retired worker can fail after unload. Observe that failure even
+            // when the main-thread polling path will never run again.
+            _metadataRead.ContinueWith(t => { var ignored = t.Exception; }, TaskScheduler.Default);
+            _metadataRead = null;
+        }
+
         public void Dispose()
         {
             if (_disposed) return;
             _disposed = true;
             IsReady = false;
+            _reader?.Dispose();
+            ReleaseMetadataRead();
             _requests.Clear();
             ReleasePendingPayloads();
             ReleaseGpuBuffers();

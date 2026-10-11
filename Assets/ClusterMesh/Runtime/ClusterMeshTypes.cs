@@ -79,6 +79,12 @@ namespace ClusterMesh
         public Vector4 shC;
     }
 
+    public enum ClusterMeshPageCompression
+    {
+        None = 0,
+        FastDeflate = 1
+    }
+
     [Serializable]
     public sealed class ClusterMeshBakeSettings
     {
@@ -91,6 +97,8 @@ namespace ClusterMesh
         public bool packTightRestVertices;
         [Tooltip("Write geometry into a page-streamed sidecar file. Disabled keeps the legacy embedded asset format unchanged.")]
         public bool enableStreaming;
+        [Tooltip("几何页存储：默认不压缩，免去运行时解压；快速压缩可减少磁盘/读取量。修改后需要重新烘焙，旧文件仍兼容。")]
+        public ClusterMeshPageCompression streamingCompression = ClusterMeshPageCompression.None;
         [Range(8, 512)]
         [Tooltip("Maximum physical GPU page slots per streamed asset. Root LOD pages are always resident and may raise this minimum.")]
         public int streamingPagePoolCapacity = 64;
