@@ -50,11 +50,14 @@ namespace ClusterMesh
         static readonly int StreamPageIndexCapacityId = Shader.PropertyToID("_StreamPageIndexCapacity");
         static readonly int ClusterStreamingEnabledId = Shader.PropertyToID("_ClusterStreamingEnabled");
         static readonly int StreamSelectionStampId = Shader.PropertyToID("_StreamSelectionStamp");
+        static readonly int StreamClearCountId = Shader.PropertyToID("_StreamClearCount");
+        static readonly int StreamClearOffsetId = Shader.PropertyToID("_StreamClearOffset");
 
         readonly ClusterMeshAsset _asset;
         readonly ComputeShader _cullShader;
         readonly Shader _litShader;
         readonly int _cullKernel;
+        readonly int _streamClearKernel;
         readonly Mesh _template;
         readonly GraphicsBuffer _clusterBuffer;
         readonly GraphicsBuffer _groupBuffer;
@@ -225,6 +228,7 @@ namespace ClusterMesh
 
             long setupStamp=0;ClusterMeshCpuTiming.Begin(ref setupStamp);
             _cullKernel = cullShader.FindKernel(_streaming ? "CullStreamedClusters" : "CullClusters");
+            if (_streaming) _streamClearKernel = cullShader.FindKernel("ClearStreamSelectionStamps");
             _template = ClusterMeshTemplate.Create();
             ClusterMeshCpuTiming.End("DrawSetup",setupStamp);
 
@@ -272,7 +276,7 @@ namespace ClusterMesh
                 }
                 _streamSelectedNodeStamps = new GraphicsBuffer(
                     GraphicsBuffer.Target.Structured, nodeCount * ClusterMeshLimits.MaxBatchedObjects, 4);
-                _streamSelectedNodeStamps.SetData(new uint[nodeCount * ClusterMeshLimits.MaxBatchedObjects]);
+                ClearStreamSelectionStamps();
             }
             else if (tightRest)
             {
@@ -791,10 +795,26 @@ namespace ClusterMesh
             if (++_streamSelectionStamp == 0)
             {
                 _streamSelectionStamp = 1;
-                _streamSelectedNodeStamps.SetData(
-                    new uint[_streamRuntime.NodeCount * ClusterMeshLimits.MaxBatchedObjects]);
+                ClearStreamSelectionStamps();
             }
             _cullShader.SetInt(StreamSelectionStampId, unchecked((int)_streamSelectionStamp));
+        }
+
+        void ClearStreamSelectionStamps()
+        {
+            // Immediate dispatches share the graphics queue with subsequent
+            // culling. No CPU zero array, readback, fence wait or extra buffer.
+            _cullShader.SetBuffer(_streamClearKernel, StreamSelectedNodeStampsId, _streamSelectedNodeStamps);
+            int count = _streamSelectedNodeStamps.count;
+            _cullShader.SetInt(StreamClearCountId, count);
+            const int chunk = 65535 * 64;
+            for (int offset = 0; offset < count;)
+            {
+                int elements = Math.Min(chunk, count - offset);
+                _cullShader.SetInt(StreamClearOffsetId, offset);
+                _cullShader.Dispatch(_streamClearKernel, (elements + 63) / 64, 1, 1);
+                offset += elements;
+            }
         }
 
         Action<AsyncGPUReadbackRequest> _streamReadback0, _streamReadback1;

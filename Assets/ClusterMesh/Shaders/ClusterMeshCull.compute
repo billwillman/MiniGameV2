@@ -1,5 +1,6 @@
 #pragma kernel CullClusters
 #pragma kernel CullStreamedClusters
+#pragma kernel ClearStreamSelectionStamps
 
 #include "ClusterMeshBuffers.hlsl"
 
@@ -35,6 +36,13 @@ StructuredBuffer<ClusterMeshStreamPageTableEntry> _StreamPageTable;
 StructuredBuffer<uint> _StreamNodeResident;
 RWStructuredBuffer<uint> _StreamRequestedPages;
 RWStructuredBuffer<uint> _StreamSelectedNodeStamps;
+uint _StreamClearCount, _StreamClearOffset;
+[numthreads(64, 1, 1)]
+void ClearStreamSelectionStamps(uint3 id : SV_DispatchThreadID)
+{
+    uint index = id.x + _StreamClearOffset;
+    if (index < _StreamClearCount) _StreamSelectedNodeStamps[index] = 0;
+}
 int _StreamNodeCount;
 int _StreamRequestPriorityOffset;
 int _StreamRequestEnabled;
