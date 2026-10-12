@@ -67,6 +67,46 @@ namespace ClusterMesh.Tests
 
         delegate void StartReadPump(ref int slots,ref long readBytes,ref long decodedBytes);
 
+        delegate bool RootBatchPump(ref int cursor, ref int slots, ref long readBytes, ref long decodedBytes);
+
+        [UnityTest] public IEnumerator RootBatchDisabledDoesNotAllocateClosures() => CheckDeclinedRootBatchAllocations(1);
+        [UnityTest] public IEnumerator SingleRootPageDoesNotAllocateBatchClosures() => CheckDeclinedRootBatchAllocations(16);
+
+        IEnumerator CheckDeclinedRootBatchAllocations(int limit)
+        {
+            var runtime = CreateRuntime("declined-root-batch-" + limit, detailNodeCount: 0);
+            yield return WaitUntil(() => runtime.IsReady);
+            var scratch = (List<int>)typeof(ClusterMeshPageRuntime).GetField("_scratch", PrivateInstance).GetValue(runtime);
+            scratch.Clear(); scratch.Add(0);
+            var method = typeof(ClusterMeshPageRuntime).GetMethod("TryStartRootBatch", PrivateInstance);
+            var pump = (RootBatchPump)Delegate.CreateDelegate(typeof(RootBatchPump), runtime, method);
+            int previousLimit = settings.MaxRootPagesPerRead;
+            int previousOperations = runtime.RootReadOperations, previousPages = runtime.BatchedRootPages;
+            settings.MaxRootPagesPerRead = limit;
+            try
+            {
+                bool incorrectlyStarted = false, budgetChanged = false;
+                Action declined = () =>
+                {
+                    int cursor = 0, slots = 8;
+                    long readBytes = 1024 * 1024, decodedBytes = 1024 * 1024;
+                    incorrectlyStarted |= pump(ref cursor, ref slots, ref readBytes, ref decodedBytes);
+                    budgetChanged |= cursor != 0 || slots != 8 || readBytes != 1024 * 1024 || decodedBytes != 1024 * 1024;
+                };
+                for (int i = 0; i < 16; i++) declined();
+                Assert.That(ClusterMeshGcTests.Measure(() => GC.KeepAlive(new byte[1024]), 1), Is.GreaterThan(0));
+                long events = ClusterMeshGcTests.Measure(declined, 128);
+                TestContext.Out.WriteLine($"Declined root batch limit={limit}: {events} GC.Alloc events / 128 calls.");
+                Assert.That(incorrectlyStarted, Is.False);
+                Assert.That(budgetChanged, Is.False);
+                Assert.That(runtime.RootReadOperations, Is.EqualTo(previousOperations));
+                Assert.That(runtime.BatchedRootPages, Is.EqualTo(previousPages));
+                Assert.That((long)PendingBytes.GetValue(runtime), Is.Zero, "Declined batches must not retain payloads.");
+                Assert.That(events, Is.Zero, "Declined root batches must not allocate task closures.");
+            }
+            finally { settings.MaxRootPagesPerRead = previousLimit; }
+        }
+
         [UnityTest] public IEnumerator BlockedReadBudgetDoesNotAllocateClosures()=>CheckBlockedReadAllocations(0);
         [UnityTest] public IEnumerator BlockedDecodedBudgetDoesNotAllocateClosures()=>CheckBlockedReadAllocations(1);
         [UnityTest] public IEnumerator BlockedLoadingNodeDoesNotAllocateClosures()=>CheckBlockedReadAllocations(2);

@@ -823,12 +823,18 @@ namespace ClusterMesh
             var ids = new int[count]; var pages = new ClusterMeshStreamPage[count];
             for (int n = 0; n < count; n++)
             { ids[n] = _scratch[cursor + n]; pages[n] = _descriptor.pages[ids[n]]; _rootReading.Add(ids[n]); }
-            var reader = _reader; int stride = _geometry.ResolvedVertexStride, weightStride = _descriptor.weightStride;
             _rootBatches.Add(new RootRead { ids = ids, reservedBytes = packed + decoded,
-                task = Task.Run(() => ReadRootBatch(reader, pages, stride, weightStride)) });
+                task = StartRootBatchRead(_reader, pages, _geometry.ResolvedVertexStride, _descriptor.weightStride) });
             RootReadOperations++; BatchedRootPages += count;
             readSlots--; readBytes -= packed; decodedBytes -= packed + decoded; cursor += count - 1;
             return true;
+        }
+
+        // Allocate the capture only after a batch is admitted. Keeping this
+        // lambda in TryStartRootBatch also allocates on its early-return paths.
+        static Task<Payload[]> StartRootBatchRead(ClusterMeshStreamReader reader, ClusterMeshStreamPage[] pages, int stride, int weightStride)
+        {
+            return Task.Run(() => ReadRootBatch(reader, pages, stride, weightStride));
         }
 
         int CompareRequestedPages(int a, int b)
