@@ -1,0 +1,19 @@
+// Bit-preserving copies of structured elements. The destination may be larger;
+// unlike Graphics.CopyBuffer this intentionally copies only the old prefix.
+#pragma kernel Copy4 WORDS=1
+#pragma kernel Copy16 WORDS=4
+#pragma kernel Copy24 WORDS=6
+#pragma kernel Copy32 WORDS=8
+#pragma kernel Copy40 WORDS=10
+
+struct Element { uint data[WORDS]; };
+StructuredBuffer<Element> _Source;
+RWStructuredBuffer<Element> _Destination;
+int _Count, _Offset;
+
+#define COPY_BODY uint i = id.x + (uint)_Offset; if (i < (uint)_Count) _Destination[i] = _Source[i];
+[numthreads(64, 1, 1)] void Copy4(uint3 id : SV_DispatchThreadID) { COPY_BODY }
+[numthreads(64, 1, 1)] void Copy16(uint3 id : SV_DispatchThreadID) { COPY_BODY }
+[numthreads(64, 1, 1)] void Copy24(uint3 id : SV_DispatchThreadID) { COPY_BODY }
+[numthreads(64, 1, 1)] void Copy32(uint3 id : SV_DispatchThreadID) { COPY_BODY }
+[numthreads(64, 1, 1)] void Copy40(uint3 id : SV_DispatchThreadID) { COPY_BODY }

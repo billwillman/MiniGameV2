@@ -103,3 +103,24 @@
 - Baker 默认改回 FastDeflate，保留显式 None，不重烘已有资源、不强改调用方显式配置。仅同步通用框架改动，保留两库既有 LOD、调度/预算差异；BigWorld 不同步到 MiniGame。
 - 本轮主库 169 通过、MiniGame 156 通过，各 0 失败、2 Radiant 缺失跳过；含默认窗口、默认烘焙与显式压缩一致性、双存储模式运行加载及 Reader 并发/释放。证据：`D:/MrGame/MyMobileGame/Logs/ClusterMeshCompressionDefault-20261012/{MainRestored,MiniGame}`。
 - 主工程原发布隔离快照 15 区 Reader 专项通过：加勒比峰值 14、南非 9、最高北欧 19，全部 Clear 后归零。是默认起点附近 240 单位往返实测，不是全局上限；Resources 新加载器专项、Player/手机及全场景 GC 未验证。完整表、方法和源码恢复记录见维护文档 72.2–72.3。
+
+
+## 2026-10-12：共享 GPU 缓冲按需增长和预算重建
+
+共享池现将常驻根页与细节页分开定尺寸；细节页无需占满烘焙根页的大槽。保留原最大缓存页数和完整节点接纳，细节 GPU 空间从小容量开始增长，无须改资产格式或重烘焙。
+
+在 `Tools/ClusterMesh/通用设置` 或运行时持有的 `ClusterMeshSettings` 上设置：
+
+```csharp
+settings.MaxSharedGpuMegabytes = 384; // 总共享几何预算，含迁移时的新旧缓冲
+settings.InitialDetailGpuKiB = 1024; // 每个新池的初始细节空间，至少一个完整节点
+settings.DetailGpuGrowthKiB = 1024;  // 增长步长，仍受原缓存页数上限约束
+```
+
+通用类默认总额为 256 MiB；MrGame 的配置资产显式设为 384 MiB，MiniGame 可自行配置。总额的 1/8 只作为重建余量，不提前分配：384 MiB 时普通空间为 336 MiB，迁移预留 48 MiB。统计 `SharedGpuBufferBytes` 包括未完成 GPU 复制的旧缓冲；`GpuMigrationBytes` 是其中的迁移部分，不能重复相加。
+
+预算不足会触发自动收缩细节缓存并重建，保留根页，细节回退到父 LOD，并记录包含容量及设置位置的 Error；不回退独立大缓冲或无限等容量。若连根页或最小重建峰值也放不下，将记录无法恢复的原因并拒绝新请求，保留已有几何。调整配置后可通过既有 `ClusterMeshStreaming.Retry(asset)` 重试。缩减预算至已使用量以下无法保证立即无损达标。
+
+迁移用 GPU 按位复制，没有同步等待或 CPU 几何回读；每次中央更新最多启动一池重建。发生迁移时会有短时双份缓冲，且收缩会损失部分细节缓存。总额不包含纹理、渲染目标、页表/簇/绘制缓冲或 CPU 内存，不是整个游戏显存限制。没有 Compute/异步回读的平台使用完整的紧凑槽容量，仍受预算约束。
+
+主工程模块 197 通过、MiniGame 实际模块 171 通过，各 0 失败、2 可选 Radiant 跳过；包含自动收缩恢复、数据位保真和迁移峰值测试。原稳定更新 GC 回归保留。完整实测与未验证项见 MrGame `Docs/Navigation/地图制作与寻路验收.md` 第 85 节；Player/IL2CPP/手机尚未验证。

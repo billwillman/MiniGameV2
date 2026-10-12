@@ -12,8 +12,14 @@ namespace ClusterMesh
 
         [Header("Page Streaming")]
         [SerializeField] bool enableGlobalSharedGpuPool = true;
-        [SerializeField, Min(8), Tooltip("每个兼容池的容量基准，与烘焙必需容量取最大后按 2 的幂对齐；不会因细节排队自动扩容。不是全世界总显存上限。重新加载资产后生效。")]
+        [SerializeField, Min(8), Tooltip("每个兼容池的容量基准，与烘焙必需容量取最大后按 2 的幂对齐；这是缓存页数上限，细节空间按需增长；总字节预算另设。重新加载资产后生效。")]
         int sharedGpuPoolPageCapacity = 256;
+        [SerializeField, Min(1), Tooltip("共享几何缓冲总上限，含扩容时尚未释放的旧缓冲；不含纹理、元数据、非共享模式和其他系统。其中 1/8 预留给重建迁移。到顶自动收缩细节池，保留根页，并记录 Error；低于根页或重建峰值时无法强行满足。")]
+        int maxSharedGpuMegabytes = 256;
+        [SerializeField, Min(0), Tooltip("每个新池的初始细节缓存 KiB；仍保证至少一个完整细节节点。根页另计且完整分配。重新加载资产后生效。")]
+        int initialDetailGpuKiB = 1024;
+        [SerializeField, Min(1), Tooltip("细节缓存每次增长的 KiB；至少容纳当前请求的完整节点，每次全局更新最多扩容一个池。不会超过原缓存页数或总字节上限。")]
+        int detailGpuGrowthKiB = 1024;
         [SerializeField, Tooltip("在既有 GPU 页池内紧凑排列常驻根页；不改模型和流式文件。重新加载资产后生效。")]
         bool packRootPages = true;
         [SerializeField, Range(1, 32)] int maxConcurrentPageReads = 8;
@@ -37,6 +43,9 @@ namespace ClusterMesh
         }
 
         public bool EnableGlobalSharedGpuPool { get => enableGlobalSharedGpuPool; set => enableGlobalSharedGpuPool = value; }
+        public int MaxSharedGpuMegabytes { get => Mathf.Clamp(maxSharedGpuMegabytes, 1, 4096); set => maxSharedGpuMegabytes = Mathf.Clamp(value, 1, 4096); }
+        public int InitialDetailGpuKiB { get => Mathf.Clamp(initialDetailGpuKiB, 0, 262144); set => initialDetailGpuKiB = Mathf.Clamp(value, 0, 262144); }
+        public int DetailGpuGrowthKiB { get => Mathf.Clamp(detailGpuGrowthKiB, 1, 262144); set => detailGpuGrowthKiB = Mathf.Clamp(value, 1, 262144); }
         public bool PackRootPages { get => packRootPages; set => packRootPages = value; }
         public int SharedGpuPoolPageCapacity { get => Mathf.Clamp(sharedGpuPoolPageCapacity, 8, 4096); set => sharedGpuPoolPageCapacity = Mathf.Clamp(value, 8, 4096); }
         public int MaxConcurrentPageReads { get => Mathf.Clamp(maxConcurrentPageReads, 1, 32); set => maxConcurrentPageReads = Mathf.Clamp(value, 1, 32); }

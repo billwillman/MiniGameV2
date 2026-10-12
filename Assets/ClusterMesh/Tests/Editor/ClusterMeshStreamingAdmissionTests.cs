@@ -13,7 +13,7 @@ using UnityEngine.TestTools;
 
 namespace ClusterMesh.Tests
 {
-    public sealed class ClusterMeshStreamingAdmissionTests
+    public sealed partial class ClusterMeshStreamingAdmissionTests
     {
         const int PayloadBytes = 12 + 3 * ClusterMeshLimits.ClusterVertexStride + 2 * 4;
         const long DecodedBudget = 2 * PayloadBytes;
@@ -359,7 +359,7 @@ namespace ClusterMesh.Tests
             Assert.That(runtime.LogicalRootPageCount, Is.EqualTo(3));
             Assert.That(runtime.PhysicalRootSlotCount, Is.EqualTo(1));
             Assert.That(PoolValue(runtime, "Capacity"), Is.EqualTo(8));
-            Assert.That(runtime.Vertices.count, Is.EqualTo(8 * 9));
+            Assert.That(runtime.Vertices.count, Is.EqualTo(5 * 9 + 3 * 3));
             var table = new ClusterMeshStreamPageTableEntry[runtime.PageCount];
             runtime.PageTable.GetData(table);
             for (int i = 0; i < 3; i++)
@@ -596,7 +596,8 @@ namespace ClusterMesh.Tests
                 ClusterMeshStreaming.Update();Assert.That(low.IsReady,Is.False);
                 var table=new ClusterMeshStreamPageTableEntry[high.PageCount];high.PageTable.GetData(table);
                 Assert.That(table[1].flags|table[2].flags|table[3].flags,Is.EqualTo(1),"Visible detail receives upload priority.");
-                rotation.SetValue(null,0);serial.SetValue(null,3);ClusterMeshStreaming.Update();
+                int lowIndex=0;foreach(DictionaryEntry pair in map){if(ReferenceEquals(pair.Key,low.Geometry))break;lowIndex++;}
+                rotation.SetValue(null,lowIndex);serial.SetValue(null,3);ClusterMeshStreaming.Update();
                 Assert.That(low.IsReady,Is.True,"Every fourth update returns to round-robin for background progress.");
             }
             finally{map.Remove(low.Geometry);map.Remove(high.Geometry);rotation.SetValue(null,previous);serial.SetValue(null,previousSerial);}
