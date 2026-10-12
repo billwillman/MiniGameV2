@@ -1,70 +1,18 @@
 using System;
 using System.Collections;
 using System.IO;
-using System.IO.Compression;
 using System.Reflection;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.TestTools;
-using CompressionLevel = System.IO.Compression.CompressionLevel;
 
 namespace ClusterMesh.Tests
 {
-    public sealed class ClusterMeshDecodeWorkspaceTests
+    public sealed class ClusterMeshGpuClearTests
     {
         const BindingFlags Hidden = BindingFlags.Instance | BindingFlags.NonPublic;
-        static Action<byte[], int, int, byte[], int> Decoder()
-        {
-            var type = typeof(ClusterMeshStreaming).Assembly.GetType("ClusterMesh.ClusterMeshPageInflater", true);
-            var target = Activator.CreateInstance(type, true);
-            return (Action<byte[], int, int, byte[], int>)Delegate.CreateDelegate(
-                typeof(Action<byte[], int, int, byte[], int>), target, type.GetMethod("Inflate", Hidden));
-        }
-        static byte[] Compress(byte[] data, CompressionLevel level)
-        {
-            using (var output = new MemoryStream())
-            {
-                using (var zip = new DeflateStream(output, level, true)) zip.Write(data, 0, data.Length);
-                return output.ToArray();
-            }
-        }
-        [TestCase(0)] [TestCase(1)] [TestCase(65535)] [TestCase(185356)]
-        public void IndependentPagesAndFailuresDoNotRetainDecoderState(int size)
-        {
-            var inflate = Decoder(); var raw = new byte[size]; var actual = new byte[size + 1];
-            var random = new System.Random(1951);
-            foreach (CompressionLevel level in new[] { CompressionLevel.NoCompression, CompressionLevel.Fastest, CompressionLevel.Optimal })
-            {
-                for (int mode = 0; mode < 3; mode++)
-                {
-                    if (mode == 2) random.NextBytes(raw);
-                    else for (int i = 0; i < raw.Length; i++) raw[i] = (byte)(mode == 0 ? 0 : i % 71);
-                    byte[] packed = Compress(raw, level);
-                    // Some system compressors emit no raw stream for empty input.
-                    if (packed.Length == 0) packed = new byte[] { 3, 0 };
-                    inflate(packed, 0, packed.Length, actual, size);
-                    for (int i = 0; i < size; i++) if (actual[i] != raw[i]) Assert.Fail("Decoded byte " + i);
-                    Assert.Throws<InvalidDataException>(() => inflate(packed, 0, packed.Length - 1, actual, size));
-                    Assert.Throws<InvalidDataException>(() => inflate(packed, 0, packed.Length, actual, size + 1));
-                    inflate(packed, 0, packed.Length, actual, size);
-                }
-            }
-        }
-        [Test]
-        public void WarmDynamicPageInflateHasNoManagedAllocations()
-        {
-            var inflate = Decoder(); var raw = new byte[65536]; var decoded = new byte[raw.Length];
-            var random = new System.Random(45);
-            for (int i = 0; i < raw.Length; i++) raw[i] = (byte)(random.Next(32));
-            byte[] packed = Compress(raw, CompressionLevel.Optimal);
-            Action run = () => inflate(packed, 0, packed.Length, decoded, raw.Length);
-            for (int i = 0; i < 8; i++) run();
-            Assert.That(decoded, Is.EqualTo(raw));
-            Assert.That(ClusterMeshGcTests.Measure(() => GC.KeepAlive(new byte[4096]), 1), Is.GreaterThan(0));
-            Assert.That(ClusterMeshGcTests.Measure(run, 64), Is.Zero);
-        }
         [Test]
         public void ClearKernelHonorsRangeAndDispatchTail()
         {
@@ -120,8 +68,8 @@ namespace ClusterMesh.Tests
                 var metadata = (System.Threading.Tasks.Task)runtime.GetType().GetField("_metadataRead", Hidden).GetValue(runtime);
                 context.Dispose(); context = null;
                 double until = EditorApplication.timeSinceStartup + 15;
-                while ((ClusterMeshStreaming.ActiveDecodeContexts > 0 || (metadata != null && !metadata.IsCompleted)) && EditorApplication.timeSinceStartup < until) yield return null;
-                Assert.That(ClusterMeshStreaming.ActiveDecodeContexts, Is.Zero);
+                while (metadata != null && !metadata.IsCompleted && EditorApplication.timeSinceStartup < until) yield return null;
+                Assert.That(metadata == null || metadata.IsCompleted, Is.True, "Disposed metadata read did not finish");
             }
             finally
             {

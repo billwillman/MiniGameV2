@@ -2,6 +2,7 @@ using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -807,11 +808,7 @@ namespace ClusterMesh
                 }
                 // File open and even synchronously-completed cached reads must
                 // not bring inflate/CRC back onto the Unity main thread.
-                if (!ClusterMeshInflatePool.TryRent(out var inflater)) break;
-                Task<Payload> task;
-                try { task = StartPageRead(_reader, page, _geometry.ResolvedVertexStride, _descriptor.weightStride, inflater); }
-                catch { ClusterMeshInflatePool.Return(inflater); throw; }
-                _reads.Add(id, task);
+                _reads.Add(id, StartPageRead(_reader,page,_geometry.ResolvedVertexStride,_descriptor.weightStride));
                 if (IsRootPage(id)) RootReadOperations++;
                 readSlots--;
                 readBytes -= page.compressedLength;
@@ -822,13 +819,9 @@ namespace ClusterMesh
         // Keep the closure in its own method: a lambda in the loop makes the
         // compiler allocate its capture object before the admission/continue
         // checks. Only admitted reads need a task; no extra retained cache.
-        static Task<Payload> StartPageRead(ClusterMeshStreamReader reader,ClusterMeshStreamPage page,int stride,int weightStride,ClusterMeshPageInflater inflater)
+        static Task<Payload> StartPageRead(ClusterMeshStreamReader reader,ClusterMeshStreamPage page,int stride,int weightStride)
         {
-            return Task.Run(() =>
-            {
-                try { return ReadPage(reader, page, stride, weightStride, inflater); }
-                finally { ClusterMeshInflatePool.Return(inflater); }
-            });
+            return Task.Run(()=>ReadPage(reader,page,stride,weightStride));
         }
 
         bool TryStartRootBatch(ref int cursor, ref int readSlots, ref long readBytes, ref long decodedBytes)
@@ -851,18 +844,11 @@ namespace ClusterMesh
                 packed = nextPacked; decoded = nextDecoded; end += page.compressedLength; count++;
             }
             if (count < 2) return false; // single-page progress works even with tiny budgets
-            if (!ClusterMeshInflatePool.TryRent(out var inflater)) return false;
-            bool transferred = false;
-            try
-            {
-                var ids = new int[count]; var pages = new ClusterMeshStreamPage[count];
-                for (int n = 0; n < count; n++)
-                { ids[n] = _scratch[cursor + n]; pages[n] = _descriptor.pages[ids[n]]; _rootReading.Add(ids[n]); }
-                var task = StartRootBatchRead(_reader, pages, _geometry.ResolvedVertexStride, _descriptor.weightStride, inflater);
-                transferred = true;
-                _rootBatches.Add(new RootRead { ids = ids, reservedBytes = packed + decoded, task = task });
-            }
-            finally { if (!transferred) ClusterMeshInflatePool.Return(inflater); }
+            var ids = new int[count]; var pages = new ClusterMeshStreamPage[count];
+            for (int n = 0; n < count; n++)
+            { ids[n] = _scratch[cursor + n]; pages[n] = _descriptor.pages[ids[n]]; _rootReading.Add(ids[n]); }
+            _rootBatches.Add(new RootRead { ids = ids, reservedBytes = packed + decoded,
+                task = StartRootBatchRead(_reader, pages, _geometry.ResolvedVertexStride, _descriptor.weightStride) });
             RootReadOperations++; BatchedRootPages += count;
             readSlots--; readBytes -= packed; decodedBytes -= packed + decoded; cursor += count - 1;
             return true;
@@ -870,13 +856,9 @@ namespace ClusterMesh
 
         // Allocate the capture only after a batch is admitted. Keeping this
         // lambda in TryStartRootBatch also allocates on its early-return paths.
-        static Task<Payload[]> StartRootBatchRead(ClusterMeshStreamReader reader, ClusterMeshStreamPage[] pages, int stride, int weightStride, ClusterMeshPageInflater inflater)
+        static Task<Payload[]> StartRootBatchRead(ClusterMeshStreamReader reader, ClusterMeshStreamPage[] pages, int stride, int weightStride)
         {
-            return Task.Run(() =>
-            {
-                try { return ReadRootBatch(reader, pages, stride, weightStride, inflater); }
-                finally { ClusterMeshInflatePool.Return(inflater); }
-            });
+            return Task.Run(() => ReadRootBatch(reader, pages, stride, weightStride));
         }
 
         int CompareRequestedPages(int a, int b)
@@ -1415,7 +1397,7 @@ namespace ClusterMesh
             }
         }
 
-        static Payload ReadPage(ClusterMeshStreamReader reader, ClusterMeshStreamPage page, int vertexStride, int weightStride, ClusterMeshPageInflater inflater)
+        static Payload ReadPage(ClusterMeshStreamReader reader, ClusterMeshStreamPage page, int vertexStride, int weightStride)
         {
             byte[] packed = ArrayPool<byte>.Shared.Rent(page.compressedLength);
             byte[] raw = null;
@@ -1430,7 +1412,19 @@ namespace ClusterMesh
                 else
                 {
                     raw = ArrayPool<byte>.Shared.Rent(page.uncompressedLength);
-                    inflater.Inflate(packed, 0, page.compressedLength, raw, page.uncompressedLength);
+                    using (var input = new MemoryStream(packed, 0, page.compressedLength, false, true))
+                    using (var zip = new DeflateStream(input, CompressionMode.Decompress))
+                    {
+                        int cursor = 0;
+                        while (cursor < page.uncompressedLength)
+                        {
+                            int read = zip.Read(raw, cursor, page.uncompressedLength - cursor);
+                            if (read <= 0) break;
+                            cursor += read;
+                        }
+                        if (cursor != page.uncompressedLength || zip.ReadByte() != -1)
+                            throw new InvalidDataException("ClusterMesh stream page decompressed length is invalid.");
+                    }
                 }
                 reader.ThrowIfDisposed();
                 ValidatePayload(raw, page, vertexStride, weightStride);
@@ -1455,7 +1449,7 @@ namespace ClusterMesh
             if (expected != page.uncompressedLength) throw new InvalidDataException("ClusterMesh stream page payload layout is invalid.");
         }
 
-        static Payload[] ReadRootBatch(ClusterMeshStreamReader reader, ClusterMeshStreamPage[] pages, int vertexStride, int weightStride, ClusterMeshPageInflater inflater)
+        static Payload[] ReadRootBatch(ClusterMeshStreamReader reader, ClusterMeshStreamPage[] pages, int vertexStride, int weightStride)
         {
             int length = checked((int)(pages[pages.Length - 1].fileOffset + pages[pages.Length - 1].compressedLength - pages[0].fileOffset));
             byte[] packed = ArrayPool<byte>.Shared.Rent(length);
@@ -1472,7 +1466,17 @@ namespace ClusterMesh
                     if (page.compressedLength == page.uncompressedLength)
                         Buffer.BlockCopy(packed, offset, result.raw, 0, page.uncompressedLength);
                     else
-                        inflater.Inflate(packed, offset, page.compressedLength, result.raw, page.uncompressedLength);
+                    {
+                        using (var input = new MemoryStream(packed, offset, page.compressedLength, false, true))
+                        using (var zip = new DeflateStream(input, CompressionMode.Decompress))
+                        {
+                            int cursor = 0;
+                            while (cursor < page.uncompressedLength)
+                            { int read = zip.Read(result.raw, cursor, page.uncompressedLength - cursor); if (read <= 0) break; cursor += read; }
+                            if (cursor != page.uncompressedLength || zip.ReadByte() != -1)
+                                throw new InvalidDataException("ClusterMesh stream page decompressed length is invalid.");
+                        }
+                    }
                     ValidatePayload(result.raw, page, vertexStride, weightStride);
                 }
                 return results;
@@ -1654,16 +1658,7 @@ namespace ClusterMesh
         static int _roundRobinStart;
         static int _updateSerial;
 
-        static int maxConcurrentReads = 8;
-        public static int MaxConcurrentReads
-        {
-            get => maxConcurrentReads;
-            set { maxConcurrentReads = Math.Max(0, value); ClusterMeshInflatePool.SetLimit(maxConcurrentReads); }
-        }
-        public static int ActiveDecodeContexts => ClusterMeshInflatePool.Active;
-        public static int RetainedDecodeContexts => ClusterMeshInflatePool.Retained;
-        // Fixed array payload only; excludes object/array headers and page data.
-        public static long DecodeWorkspacePayloadBytes => ClusterMeshInflatePool.WorkspacePayloadBytes;
+        public static int MaxConcurrentReads { get; set; } = 8;
         public static int MaxUploadsPerUpdate { get; set; } = 4;
         public static long MaxReadBytesPerUpdate { get; set; } = 8L * 1024L * 1024L;
         public static long MaxUploadBytesPerUpdate { get; set; } = 8L * 1024L * 1024L;
@@ -1916,7 +1911,6 @@ namespace ClusterMesh
                 runtime.Dispose();
             }
             Runtimes.Remove(geometry);
-            if (Runtimes.Count == 0) ClusterMeshInflatePool.Clear();
         }
         public static void Release(ClusterMeshPageRuntime runtime)
         {
@@ -1950,7 +1944,6 @@ namespace ClusterMesh
             for (int i = SharedPools.Count - 1; i >= 0; i--) SharedPools[i]?.Dispose();
             SharedPools.Clear();
             ClusterMeshUploadScratch.Clear();
-            ClusterMeshInflatePool.Clear();
             Runtimes.Clear(); References.Clear(); Stale.Clear(); Active.Clear(); Dispatch.Clear(); _lastUpdateFrame = int.MinValue;
             _roundRobinStart = 0;
             _updateSerial = 0;
