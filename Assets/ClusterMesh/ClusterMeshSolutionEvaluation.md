@@ -97,3 +97,9 @@
 - 两库独立引擎回归：主库 167 通过、MiniGame 154 通过，各 0 失败、2 可选 Radiant 缺失跳过；压缩/不压缩静态网格实际烘焙并读取通过，8 Worker 并发读及卸载测试通过。暖态 128 次底层读复用测试 0 GC.Alloc 事件，不等于整个加载流程零 GC；蒙皮双模式专项、Player/IL2CPP/手机与全场景 GC 未验证。
 - 主库记录：`D:/MrGame/Docs/Navigation/地图制作与寻路验收.md` 第 72 节；原始报告 `D:/MrGame/MyMobileGame/Logs/ClusterMeshReadReuse-20261011/{ModuleFinal2,MiniGameFinal2}`。该同步保留两库已有差异，没有整体覆盖 BigWorld 或 MiniGame 配置。
 - 后续 Reader 接入恢复及大载荷回归：`RepairMain` 168 通过、`RepairMiniGame` 155 通过，各 0 失败、2 跳过。主工程正式地中海隔离快照静止/向东 240 单位/回程/卸载测试通过：同时打开 Reader 采样峰值 13，文件缓冲配置合计 0.8125 MiB，Clear 后句柄为 0。页解压数组/元数据/数组池保留另算，不把 64 KiB 每 Reader 或 32 MiB 逻辑解码预算当作总内存硬上限。详细口径见维护文档 72.1；全场景 GC 仍未验证。
+
+## 2026-10-12：默认压缩与全区域 Reader 复核
+
+- Baker 默认改回 FastDeflate，保留显式 None，不重烘已有资源、不强改调用方显式配置。仅同步通用框架改动，保留两库既有 LOD、调度/预算差异；BigWorld 不同步到 MiniGame。
+- 本轮主库 169 通过、MiniGame 156 通过，各 0 失败、2 Radiant 缺失跳过；含默认窗口、默认烘焙与显式压缩一致性、双存储模式运行加载及 Reader 并发/释放。证据：`D:/MrGame/MyMobileGame/Logs/ClusterMeshCompressionDefault-20261012/{MainRestored,MiniGame}`。
+- 主工程原发布隔离快照 15 区 Reader 专项通过：加勒比峰值 14、南非 9、最高北欧 19，全部 Clear 后归零。是默认起点附近 240 单位往返实测，不是全局上限；Resources 新加载器专项、Player/手机及全场景 GC 未验证。完整表、方法和源码恢复记录见维护文档 72.2–72.3。

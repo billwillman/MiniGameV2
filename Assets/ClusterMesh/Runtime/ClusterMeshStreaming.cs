@@ -784,14 +784,20 @@ namespace ClusterMesh
                 }
                 // File open and even synchronously-completed cached reads must
                 // not bring inflate/CRC back onto the Unity main thread.
-                var readPage=_descriptor.pages[id];int stride=_geometry.ResolvedVertexStride,weightStride=_descriptor.weightStride;
-                var reader=_reader;
-                _reads.Add(id, Task.Run(()=>ReadPage(reader, readPage,stride,weightStride)));
+                _reads.Add(id, StartPageRead(_reader,page,_geometry.ResolvedVertexStride,_descriptor.weightStride));
                 if (IsRootPage(id)) RootReadOperations++;
                 readSlots--;
                 readBytes -= page.compressedLength;
                 decodedBytes -= page.uncompressedLength;
             }
+        }
+
+        // Keep the closure in its own method: a lambda in the loop makes the
+        // compiler allocate its capture object before the admission/continue
+        // checks. Only admitted reads need a task; no extra retained cache.
+        static Task<Payload> StartPageRead(ClusterMeshStreamReader reader,ClusterMeshStreamPage page,int stride,int weightStride)
+        {
+            return Task.Run(()=>ReadPage(reader,page,stride,weightStride));
         }
 
         bool TryStartRootBatch(ref int cursor, ref int readSlots, ref long readBytes, ref long decodedBytes)

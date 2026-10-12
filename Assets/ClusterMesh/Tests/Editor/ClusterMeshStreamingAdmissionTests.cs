@@ -65,6 +65,36 @@ namespace ClusterMesh.Tests
             runtimes.Clear(); assets.Clear(); outstanding.Clear();
         }
 
+        delegate void StartReadPump(ref int slots,ref long readBytes,ref long decodedBytes);
+
+        [UnityTest] public IEnumerator BlockedReadBudgetDoesNotAllocateClosures()=>CheckBlockedReadAllocations(0);
+        [UnityTest] public IEnumerator BlockedDecodedBudgetDoesNotAllocateClosures()=>CheckBlockedReadAllocations(1);
+        [UnityTest] public IEnumerator BlockedLoadingNodeDoesNotAllocateClosures()=>CheckBlockedReadAllocations(2);
+
+        IEnumerator CheckBlockedReadAllocations(int reason)
+        {
+            var runtime=CreateRuntime("blocked-allocation-"+reason,detailNodeCount:2);
+            yield return WaitUntil(()=>runtime.IsReady);
+            runtime.RequestNode(1);
+            var method=typeof(ClusterMeshPageRuntime).GetMethod("StartReads",PrivateInstance);
+            var pump=(StartReadPump)Delegate.CreateDelegate(typeof(StartReadPump),runtime,method);
+            var loading=typeof(ClusterMeshPageRuntime).GetField("_loadingNode",PrivateInstance);
+            int previous=(int)loading.GetValue(runtime);
+            if(reason==2)loading.SetValue(runtime,2);
+            try
+            {
+                Action blocked=()=>{int slots=8;long readBytes=reason==0?1:1024*1024,decodedBytes=reason==1?1:1024*1024;pump(ref slots,ref readBytes,ref decodedBytes);};
+                for(int i=0;i<16;i++)blocked();
+                Assert.That(ClusterMeshGcTests.Measure(()=>GC.KeepAlive(new byte[1024]),1),Is.GreaterThan(0));
+                long events=ClusterMeshGcTests.Measure(blocked,128);
+                TestContext.Out.WriteLine($"Blocked reads reason={reason}: {events} GC.Alloc events / 128 pumps.");
+                Assert.That((long)PendingBytes.GetValue(runtime),Is.Zero,"Skipped pages must not queue payloads or grow retained IO memory.");
+                Assert.That(events,Is.Zero,"Pending pages must not allocate task closures until their read is admitted.");
+            }
+            finally{loading.SetValue(runtime,previous);}
+            yield return WaitUntil(()=>runtime.IsNodeResident(1));
+        }
+
         [UnityTest]
         public IEnumerator SharedPool_ReadAdmissionMakesProgressWithLessThanOneNodeOfDecodedMemory()
         {
