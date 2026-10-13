@@ -22,6 +22,10 @@ namespace ClusterMesh
         int detailGpuGrowthKiB = 1024;
         [SerializeField, Tooltip("在既有 GPU 页池内紧凑排列常驻根页；不改模型和流式文件。重新加载资产后生效。")]
         bool packRootPages = true;
+        public const string ReuseDecompressionWarning = "实验选项，默认关闭。开启可减少逐页解压的 GC 分配，但当前托管实现 CPU 更慢：团结 Mono 同一批语料实测原生约 752 ms、复用版约 1704 ms（约 2.27 倍；不是单页耗时或所有平台的固定比例）。\n航行 A/B 的 GC 次数减少，但移动长帧没有稳定改善，不保证消除卡顿。开关两种模式都在 Worker 解压，仍保留 Reader 和外层数组池。\n上下文按 Concurrent Reads 有界复用：每个数组载荷 3174 B，8 个约 24.8 KiB，另有静态数组约 2.8 KiB，均不含对象头及页面数组。\n切换仅影响后续接纳的任务；关闭后丢弃空闲工作区，在途任务完成后归还且不再缓存。已初始化的静态表保留到域重载。";
+
+        [SerializeField, InspectorName("复用解压器（实验）"), Tooltip(ReuseDecompressionWarning)]
+        bool reuseDecompressionContexts = false;
         [SerializeField, Range(1, 32)] int maxConcurrentPageReads = 8;
         [SerializeField, Range(1, 64), Tooltip("相邻根页共用一次 FileStream 读取。1 关闭合批；仍受原读取字节、解码内存和上传预算限制。")]
         int maxRootPagesPerRead = 16;
@@ -48,6 +52,7 @@ namespace ClusterMesh
         public int DetailGpuGrowthKiB { get => Mathf.Clamp(detailGpuGrowthKiB, 1, 262144); set => detailGpuGrowthKiB = Mathf.Clamp(value, 1, 262144); }
         public bool PackRootPages { get => packRootPages; set => packRootPages = value; }
         public int SharedGpuPoolPageCapacity { get => Mathf.Clamp(sharedGpuPoolPageCapacity, 8, 4096); set => sharedGpuPoolPageCapacity = Mathf.Clamp(value, 8, 4096); }
+        public bool ReuseDecompressionContexts { get => reuseDecompressionContexts; set => reuseDecompressionContexts = value; }
         public int MaxConcurrentPageReads { get => Mathf.Clamp(maxConcurrentPageReads, 1, 32); set => maxConcurrentPageReads = Mathf.Clamp(value, 1, 32); }
         public int MaxRootPagesPerRead { get => Mathf.Clamp(maxRootPagesPerRead, 1, 64); set => maxRootPagesPerRead = Mathf.Clamp(value, 1, 64); }
         public int MaxRootReadKiB { get => Mathf.Clamp(maxRootReadKiB, 16, 1024); set => maxRootReadKiB = Mathf.Clamp(value, 16, 1024); }

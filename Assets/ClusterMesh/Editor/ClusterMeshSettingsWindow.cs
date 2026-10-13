@@ -111,6 +111,10 @@ namespace ClusterMesh
             int reads = EditorGUILayout.IntSlider(
                 new GUIContent("Concurrent Reads", "所有流式资产共用的异步 FileStream 在途读取上限，防止资产数量把并发放大。"),
                 settings.MaxConcurrentPageReads, 1, 32);
+            bool reuseDecompression = EditorGUILayout.Toggle(
+                new GUIContent("复用解压器（实验）", ClusterMeshSettings.ReuseDecompressionWarning),
+                settings.ReuseDecompressionContexts);
+            EditorGUILayout.HelpBox(ClusterMeshSettings.ReuseDecompressionWarning, MessageType.Warning);
             int rootBatch = EditorGUILayout.IntSlider(new GUIContent("根页 / 单次读取", "仅文件中相邻根页合批；1 关闭。读取、解码、上传仍使用原预算。"), settings.MaxRootPagesPerRead, 1, 64);
             int rootReadKiB = EditorGUILayout.IntSlider(new GUIContent("根页合批最大 KiB", "单个 FileStream 读取范围上限，不是新增缓存。"), settings.MaxRootReadKiB, 16, 1024);
             int rootUploadBatch = EditorGUILayout.IntSlider(new GUIContent("根页 / 单次上传", "仅同一物理槽中的连续静态根页合批；不等凑批、不扩缓存。1 关闭。"), settings.MaxRootPagesPerUpload, 1, 64);
@@ -146,6 +150,7 @@ namespace ClusterMesh
                 settings.DetailGpuGrowthKiB = growthKiB;
                 settings.PackRootPages = packRoots;
                 settings.MaxConcurrentPageReads = reads;
+                settings.ReuseDecompressionContexts = reuseDecompression;
                 settings.MaxRootPagesPerRead = rootBatch;
                 settings.MaxRootReadKiB = rootReadKiB;
                 settings.MaxRootPagesPerUpload = rootUploadBatch;

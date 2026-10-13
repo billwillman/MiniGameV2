@@ -15,6 +15,7 @@ namespace ClusterMesh.Tests
     {
         string folder;
         Mesh mesh;
+        ClusterMeshSettings runtimeSettings, previousSettings;
         readonly List<ClusterMeshAsset> assets = new List<ClusterMeshAsset>();
         [SetUp] public void SetUp()
         {
@@ -28,6 +29,12 @@ namespace ClusterMesh.Tests
             assets.Clear();
             AssetDatabase.DeleteAsset(folder);
             Object.DestroyImmediate(mesh);
+            if (runtimeSettings != null)
+            {
+                ClusterMeshSettings.OverrideForTests = previousSettings;
+                ClusterMeshStreaming.ReuseDecompressionContexts = false;
+                Object.DestroyImmediate(runtimeSettings);
+            }
         }
         ClusterMeshAsset Bake(string name, ClusterMeshPageCompression? compression = null)
         {
@@ -90,8 +97,17 @@ namespace ClusterMesh.Tests
         }
         [UnityTest] public IEnumerator UncompressedBakeLoadsThroughReusedReader() => VerifyRuntime(ClusterMeshPageCompression.None);
         [UnityTest] public IEnumerator CompressedBakeLoadsThroughReusedReader() => VerifyRuntime(ClusterMeshPageCompression.FastDeflate);
-        IEnumerator VerifyRuntime(ClusterMeshPageCompression compression)
+        [UnityTest] public IEnumerator CompressedBakeLoadsWithReusedDecoderSinglePages() => VerifyRuntime(ClusterMeshPageCompression.FastDeflate, true, 1);
+        [UnityTest] public IEnumerator CompressedBakeLoadsWithReusedDecoderRootBatches() => VerifyRuntime(ClusterMeshPageCompression.FastDeflate, true, 16);
+        [UnityTest] public IEnumerator UncompressedBakeLoadsWithReuseEnabled() => VerifyRuntime(ClusterMeshPageCompression.None, true, 16);
+        IEnumerator VerifyRuntime(ClusterMeshPageCompression compression, bool reuse = false, int rootBatch = 16)
         {
+            previousSettings = ClusterMeshSettings.OverrideForTests;
+            runtimeSettings = ScriptableObject.CreateInstance<ClusterMeshSettings>();
+            runtimeSettings.ReuseDecompressionContexts = reuse;
+            runtimeSettings.MaxConcurrentPageReads = 2;
+            runtimeSettings.MaxRootPagesPerRead = rootBatch;
+            ClusterMeshSettings.OverrideForTests = runtimeSettings;
             var asset = Bake("Runtime", compression);
             var runtime = ClusterMeshStreaming.Acquire(asset);
             Assert.That(runtime, Is.Not.Null);
@@ -103,6 +119,9 @@ namespace ClusterMesh.Tests
                 ClusterMeshStreaming.Update(); yield return null;
             }
             Assert.That(runtime.MetadataReady, Is.True);
+            Assert.That(ClusterMeshStreaming.ReuseDecompressionContexts, Is.EqualTo(reuse));
+            Assert.That(ClusterMeshStreaming.ActiveDecodeContexts, Is.Zero);
+            Assert.That(ClusterMeshStreaming.RetainedDecodeContexts, Is.InRange(reuse ? 1 : 0, reuse ? 2 : 0));
         }
         [Test] public void UnknownCompressionModeIsRejected()
         {
