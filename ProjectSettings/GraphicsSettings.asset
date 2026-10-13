@@ -66,6 +66,7 @@ GraphicsSettings:
   m_DefaultRenderingLayerMask: 1
   m_LogWhenShaderIsCompiled: 0
   m_NoExactGfxBuffer: 0
+  m_DisableClearAlpha: 0
   m_SRPDefaultSettings:
     UnityEngine.Rendering.Universal.UniversalRenderPipeline: {fileID: 11400000, guid: 18dc0cd2c080841dea60987a38ce93fa,
       type: 2}
@@ -74,3 +75,8 @@ GraphicsSettings:
   m_CameraRelativeShadowCulling: 0
   m_GenerateGeometryBuffer: 0
   m_EnableGDRP: 0
+  m_EnableTuanjieGI: 0
+  m_VariableRateShadingMode: 0
+  m_RelativeRateShadingLevel: 1
+  m_MaxDistanceRatio: 500
+  m_MinDistanceRatio: 1

@@ -48,6 +48,7 @@ namespace ClusterMesh.Tests
         public IEnumerator TearDown()
         {
             foreach (var runtime in runtimes) DisposeRuntime(runtime);
+            while (ClusterMeshPageRuntime.ActivePageReads != 0) yield return null;
             foreach (Task task in outstanding)
                 while (!task.IsCompleted) yield return null;
             foreach (var asset in assets) UnityEngine.Object.DestroyImmediate(asset);
@@ -200,8 +201,6 @@ namespace ClusterMesh.Tests
             if (runtime.IsDisposed) return;
             var metadata = (Task)typeof(ClusterMeshPageRuntime).GetField("_metadataRead", PrivateInstance).GetValue(runtime);
             if (metadata != null) outstanding.Add(metadata);
-            var reads = (IDictionary)typeof(ClusterMeshPageRuntime).GetField("_reads", PrivateInstance).GetValue(runtime);
-            foreach (Task task in reads.Values) outstanding.Add(task);
             runtime.Dispose();
         }
 

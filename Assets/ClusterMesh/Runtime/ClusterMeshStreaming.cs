@@ -442,7 +442,7 @@ namespace ClusterMesh
         const uint Resident = 1u;
         static readonly uint[] CrcTable = BuildCrcTable();
 
-        sealed class Payload : IDisposable
+        internal sealed class Payload : IDisposable
         {
             public byte[] raw;
             public int length;
@@ -485,7 +485,22 @@ namespace ClusterMesh
         }
 
         readonly Dictionary<int, PageRequest> _requests = new Dictionary<int, PageRequest>();
-        readonly Dictionary<int, Task<Payload>> _reads = new Dictionary<int, Task<Payload>>();
+        internal struct PageReadInput
+        {
+            public ClusterMeshStreamReader reader;
+            public ClusterMeshStreamPage page;
+            public int stride, weightStride;
+            public ClusterMeshPageInflater inflater;
+        }
+        static readonly ClusterMeshReadWorkPool<PageReadInput, Payload> PageReads =
+            new ClusterMeshReadWorkPool<PageReadInput, Payload>(ExecutePageRead);
+        internal static void SetPageReadLimit(int value) => PageReads.SetLimit(value);
+        internal static void ClearPageReads() => PageReads.Clear();
+        internal static int PageReadWorkers => PageReads.WorkerCount;
+        internal static int ActivePageReads => PageReads.InUse;
+        internal static long PageReadStackBytes => (long)PageReads.WorkerCount * ClusterMeshReadWorkPool<PageReadInput, Payload>.RequestedStackBytes;
+        readonly Dictionary<int, ClusterMeshReadWorkPool<PageReadInput, Payload>.Work> _reads =
+            new Dictionary<int, ClusterMeshReadWorkPool<PageReadInput, Payload>.Work>();
         sealed class RootRead
         {
             public int[] ids;
@@ -810,9 +825,10 @@ namespace ClusterMesh
                 // not bring inflate/CRC back onto the Unity main thread.
                 ClusterMeshPageInflater inflater = null;
                 if (ClusterMeshStreaming.ReuseDecompressionContexts && !ClusterMeshInflatePool.TryRent(out inflater)) break;
-                Task<Payload> task;
+                ClusterMeshReadWorkPool<PageReadInput, Payload>.Work task;
                 try { task = StartPageRead(_reader, page, _geometry.ResolvedVertexStride, _descriptor.weightStride, inflater); }
                 catch { ClusterMeshInflatePool.Return(inflater); throw; }
+                if (task == null) { ClusterMeshInflatePool.Return(inflater); break; }
                 _reads.Add(id, task);
                 if (IsRootPage(id)) RootReadOperations++;
                 readSlots--;
@@ -821,16 +837,17 @@ namespace ClusterMesh
             }
         }
 
-        // Keep the closure in its own method: a lambda in the loop makes the
-        // compiler allocate its capture object before the admission/continue
-        // checks. Only admitted reads need a task; no extra retained cache.
-        static Task<Payload> StartPageRead(ClusterMeshStreamReader reader,ClusterMeshStreamPage page,int stride,int weightStride,ClusterMeshPageInflater inflater)
+        // Called only after admission. Reuse a bounded worker/handle rather than
+        // creating a Task, closure and Unity ExecutionContext for every LOD page.
+        internal static ClusterMeshReadWorkPool<PageReadInput, Payload>.Work StartPageRead(ClusterMeshStreamReader reader,ClusterMeshStreamPage page,int stride,int weightStride,ClusterMeshPageInflater inflater)
         {
-            return Task.Run(() =>
-            {
-                try { return ReadPage(reader, page, stride, weightStride, inflater); }
-                finally { if (inflater != null) ClusterMeshInflatePool.Return(inflater); }
-            });
+            return PageReads.TryStart(new PageReadInput { reader=reader, page=page,
+                stride=stride, weightStride=weightStride, inflater=inflater });
+        }
+        static Payload ExecutePageRead(PageReadInput input)
+        {
+            try { return ReadPage(input.reader, input.page, input.stride, input.weightStride, input.inflater); }
+            finally { if (input.inflater != null) ClusterMeshInflatePool.Return(input.inflater); }
         }
 
         bool TryStartRootBatch(ref int cursor, ref int readSlots, ref long readBytes, ref long decodedBytes)
@@ -907,7 +924,7 @@ namespace ClusterMesh
                 for (int p = 0; p < batch.ids.Length; p++) _completed.Add(batch.ids[p], batch.task.Result[p]);
             }
             _scratch.Clear();
-            foreach (KeyValuePair<int, Task<Payload>> pair in _reads)
+            foreach (var pair in _reads)
             {
                 if (pair.Value.IsCompleted)
                     _scratch.Add(pair.Key);
@@ -915,14 +932,16 @@ namespace ClusterMesh
             for (int i = 0; i < _scratch.Count; i++)
             {
                 int id = _scratch[i];
-                Task<Payload> task = _reads[id];
+                var task = _reads[id];
                 _reads.Remove(id);
-                if (task.IsFaulted || task.IsCanceled)
+                Payload payload = task.TakeResult(out Exception failure);
+                if (failure != null)
                 {
-                    Fail(TaskError(task, "Unable to read ClusterMesh stream page " + id + "."));
+                    payload?.Dispose();
+                    Fail(failure.Message);
                     return;
                 }
-                _completed[id] = task.Result;
+                _completed[id] = payload;
             }
         }
 
@@ -1617,14 +1636,7 @@ namespace ClusterMesh
             _rootBatches.Clear(); _rootReading.Clear();
             foreach (Payload payload in _completed.Values) payload?.Dispose();
             _completed.Clear();
-            foreach (Task<Payload> task in _reads.Values)
-            {
-                task.ContinueWith(t =>
-                {
-                    if (t.Status == TaskStatus.RanToCompletion) t.Result?.Dispose();
-                    else { var ignored = t.Exception; }
-                }, TaskScheduler.Default);
-            }
+            foreach (var task in _reads.Values) task.Abandon();
             _reads.Clear();
         }
 
@@ -1693,6 +1705,7 @@ namespace ClusterMesh
             set
             {
                 maxConcurrentReads = Math.Max(0, value);
+                ClusterMeshPageRuntime.SetPageReadLimit(maxConcurrentReads);
                 if (reuseDecompressionContexts) ClusterMeshInflatePool.SetLimit(maxConcurrentReads);
             }
         }
@@ -1709,6 +1722,10 @@ namespace ClusterMesh
             }
         }
         public static int ActiveDecodeContexts => ClusterMeshInflatePool.Active;
+        public static int PageReadWorkerCount => ClusterMeshPageRuntime.PageReadWorkers;
+        // Requested stack reservation, not measured process/working-set memory.
+        public static long PageReadWorkerStackReservationBytes =>
+            ClusterMeshPageRuntime.PageReadStackBytes;
         public static int RetainedDecodeContexts => ClusterMeshInflatePool.Retained;
         // Fixed array payload only; excludes object headers, static tables and page arrays.
         public static long DecodeWorkspacePayloadBytes => ClusterMeshInflatePool.WorkspacePayloadBytes;
@@ -1999,6 +2016,7 @@ namespace ClusterMesh
             SharedPools.Clear();
             ClusterMeshUploadScratch.Clear();
             ClusterMeshInflatePool.Clear();
+            ClusterMeshPageRuntime.ClearPageReads();
             Runtimes.Clear(); References.Clear(); Stale.Clear(); Active.Clear(); Dispatch.Clear(); _lastUpdateFrame = int.MinValue;
             _roundRobinStart = 0;
             _updateSerial = 0;

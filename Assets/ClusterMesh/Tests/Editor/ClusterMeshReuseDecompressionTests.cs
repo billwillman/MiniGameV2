@@ -3,6 +3,7 @@ using System.IO;
 using System.IO.Compression;
 using CompressionLevel = System.IO.Compression.CompressionLevel;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using UnityEngine;
@@ -160,12 +161,27 @@ namespace ClusterMesh.Tests
                 File.WriteAllBytes(path, new byte[] { 7, 0 }); // Reserved DEFLATE block type.
                 reader = Activator.CreateInstance(readerType, BindingFlags.Instance | BindingFlags.NonPublic, null, new object[] { path }, null);
                 var page = new ClusterMeshStreamPage { fileOffset = 0, compressedLength = 2, uncompressedLength = 32 };
-                var start = typeof(ClusterMeshPageRuntime).GetMethod(batch ? "StartRootBatchRead" : "StartPageRead", StaticHidden);
-                task = (Task)start.Invoke(null, new object[] { reader, batch ? (object)new[] { page } : page, 32, 0, context });
-                context = null; // The worker now owns the lease, including failure cleanup.
-                Assert.Throws<AggregateException>(() => task.Wait(TimeSpan.FromSeconds(10)));
-                Assert.That(task.IsFaulted, Is.True);
-                Assert.That(task.Exception.InnerException, Is.TypeOf<InvalidDataException>());
+                if (batch)
+                {
+                    var start = typeof(ClusterMeshPageRuntime).GetMethod("StartRootBatchRead", StaticHidden);
+                    task = (Task)start.Invoke(null, new object[] { reader, new[] { page }, 32, 0, context });
+                    context = null;
+                    Assert.Throws<AggregateException>(() => task.Wait(TimeSpan.FromSeconds(10)));
+                    Assert.That(task.IsFaulted, Is.True);
+                    Assert.That(task.Exception.InnerException, Is.TypeOf<InvalidDataException>());
+                }
+                else
+                {
+                    var work = ClusterMeshPageRuntime.StartPageRead((ClusterMeshStreamReader)reader, page, 32, 0, (ClusterMeshPageInflater)context);
+                    Assert.That(work, Is.Not.Null); context = null;
+                    try
+                    {
+                        Assert.That(SpinWait.SpinUntil(() => work.IsCompleted, 10000), Is.True);
+                        var payload = work.TakeResult(out Exception failure); work = null;
+                        payload?.Dispose(); Assert.That(failure, Is.TypeOf<InvalidDataException>());
+                    }
+                    finally { work?.Abandon(); }
+                }
                 Assert.That(ClusterMeshStreaming.ActiveDecodeContexts, Is.Zero);
                 Assert.That(ClusterMeshStreaming.RetainedDecodeContexts, Is.EqualTo(1));
             }
