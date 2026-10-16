@@ -141,6 +141,7 @@ namespace ClusterMesh
         bool _preparedUseGpuAnimationTexture;
         bool _preparedHasMotionVectors;
         readonly bool[] _streamReadbackPending = new bool[2];
+        readonly AsyncGPUReadbackRequest[] _streamReadbackRequests = new AsyncGPUReadbackRequest[2];
         int _streamActiveRequestBuffer = -1;
         int _streamGpuReadbackFailures;
         int _streamCpuFallbackSerial;
@@ -743,12 +744,12 @@ namespace ClusterMesh
             {
                 _streamReadbackPending[bufferIndex] = true;
                 _streamActiveRequestBuffer = -1;
-                AsyncGPUReadback.Request(_streamRequests[bufferIndex], request =>
+                _streamReadbackRequests[bufferIndex] = AsyncGPUReadback.Request(_streamRequests[bufferIndex], request =>
                 {
                     _streamReadbackPending[bufferIndex] = false;
                     if (_disposed)
                     {
-                        _streamRequests[bufferIndex]?.Dispose();
+                        ClusterMeshReadbackRetirement.Release(_streamRequests, bufferIndex);
                         return;
                     }
                     if (_streamRuntime == null)
@@ -1188,7 +1189,8 @@ namespace ClusterMesh
             _weights?.Dispose(); _weights8?.Dispose(); _cullFrames?.Dispose(); _segments?.Dispose(); _cameraCull?.Dispose();
             if (_streamRequests != null)
                 for (int i = 0; i < _streamRequests.Length; i++)
-                    if (!_streamReadbackPending[i]) _streamRequests[i]?.Dispose();
+                    if (_streamReadbackPending[i]) ClusterMeshReadbackRetirement.Retire(_streamRequests, i, _streamReadbackRequests[i]);
+                    else ClusterMeshReadbackRetirement.Release(_streamRequests, i);
             _streamSelectionStamps?.Dispose();
             if (_streamRuntime != null) ClusterMeshStreaming.Release(_streamRuntime);
             // The page runtime owns shared physical geometry/weight pools and is

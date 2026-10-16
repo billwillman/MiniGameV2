@@ -109,6 +109,7 @@ namespace ClusterMesh
         bool _preparedHasMotionVectors;
         uint _streamSelectionStamp;
         readonly bool[] _streamReadbackPending = new bool[2];
+        readonly AsyncGPUReadbackRequest[] _streamReadbackRequests = new AsyncGPUReadbackRequest[2];
         int _streamActiveRequestBuffer = -1;
         int _streamGpuReadbackFailures;
         int _streamCpuFallbackSerial;
@@ -834,7 +835,7 @@ namespace ClusterMesh
                 var callback = bufferIndex == 0
                     ? (_streamReadback0 ?? (_streamReadback0 = OnStreamReadback0))
                     : (_streamReadback1 ?? (_streamReadback1 = OnStreamReadback1));
-                AsyncGPUReadback.Request(_streamRequestedPages[bufferIndex], callback);
+                _streamReadbackRequests[bufferIndex] = AsyncGPUReadback.Request(_streamRequestedPages[bufferIndex], callback);
             }
             catch (Exception)
             {
@@ -848,7 +849,7 @@ namespace ClusterMesh
             _streamReadbackPending[bufferIndex] = false;
             if (_disposed)
             {
-                _streamRequestedPages[bufferIndex]?.Dispose();
+                ClusterMeshReadbackRetirement.Release(_streamRequestedPages, bufferIndex);
                 return;
             }
             if (_streamRuntime == null)
@@ -1210,7 +1211,8 @@ namespace ClusterMesh
             _indexBuffer?.Dispose();
             if (_streamRequestedPages != null)
                 for (int i = 0; i < _streamRequestedPages.Length; i++)
-                    if (!_streamReadbackPending[i]) _streamRequestedPages[i]?.Dispose();
+                    if (_streamReadbackPending[i]) ClusterMeshReadbackRetirement.Retire(_streamRequestedPages, i, _streamReadbackRequests[i]);
+                    else ClusterMeshReadbackRetirement.Release(_streamRequestedPages, i);
             _streamSelectedNodeStamps?.Dispose();
             if (_streamRuntime != null)
                 ClusterMeshStreaming.Release(_streamRuntime);

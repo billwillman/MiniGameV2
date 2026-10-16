@@ -120,8 +120,10 @@ namespace ClusterMesh
                     ClusterSkinnedMeshSceneBatcher.DisposeCachedContexts();
                     ClusterSkinnedMeshSceneViewRenderer.DisposeCachedContexts();
                     ClusterMeshStreaming.DisposeAll();
+                    ClusterMeshReadbackRetirement.Drain();
                     break;
                 case PlayModeStateChange.EnteredPlayMode:
+                    ClusterMeshReadbackRetirement.Resume();
                     SyncEditModeTick(true);
                     SyncSceneViewTick(true);
                     break;
@@ -131,8 +133,10 @@ namespace ClusterMesh
                     ClusterSkinnedMeshSceneBatcher.DisposeCachedContexts();
                     ClusterSkinnedMeshSceneViewRenderer.DisposeCachedContexts();
                     ClusterMeshStreaming.DisposeAll();
+                    ClusterMeshReadbackRetirement.Drain();
                     break;
                 case PlayModeStateChange.EnteredEditMode:
+                    ClusterMeshReadbackRetirement.Resume();
                     SyncSceneViewTick(true);
                     SyncEditModeTick(false);
                     break;
@@ -148,6 +152,7 @@ namespace ClusterMesh
             ClusterSkinnedMeshSceneBatcher.DisposeCachedContexts();
             ClusterSkinnedMeshSceneViewRenderer.DisposeCachedContexts();
             ClusterMeshStreaming.DisposeAll();
+            ClusterMeshReadbackRetirement.BeginShutdown();
         }
 
         static void OnQuitting()
@@ -159,6 +164,7 @@ namespace ClusterMesh
             ClusterSkinnedMeshSceneBatcher.DisposeCachedContexts();
             ClusterSkinnedMeshSceneViewRenderer.DisposeCachedContexts();
             ClusterMeshStreaming.DisposeAll();
+            ClusterMeshReadbackRetirement.BeginShutdown();
         }
     }
 }
